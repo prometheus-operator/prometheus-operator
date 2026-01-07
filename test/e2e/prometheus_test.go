@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -138,31 +138,36 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 		{
 			Port:     "mtls",
 			Interval: "1s",
-			Scheme:   "https",
-			TLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					ServerName: ptr.To("caandserver.com"),
-					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
+			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+				HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							ServerName: ptr.To("caandserver.com"),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CAKey,
+								},
 							},
-							Key: testFramework.CAKey,
-						},
-					},
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: testFramework.ScrapingTLSSecret,
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: testFramework.ScrapingTLSSecret,
+									},
+									Key: testFramework.CertKey,
+								},
 							},
-							Key: testFramework.CertKey,
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: testFramework.ScrapingTLSSecret,
+								},
+								Key: testFramework.PrivateKey,
+							},
 						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: testFramework.ScrapingTLSSecret,
-						},
-						Key: testFramework.PrivateKey,
 					},
 				},
 			},
@@ -1124,6 +1129,10 @@ func testPromStorageUpdate(t *testing.T) {
 	}
 }
 
+// testPromReloadConfig checks that the Prometheus configuration gets reloaded
+// when users provision the configuration only via additionalScrapeConfigs.
+// The test also ensures that the Reconciled condition highlights that no
+// resources have been selected.
 func testPromReloadConfig(t *testing.T) {
 	for _, tc := range []struct {
 		reloadStrategy monitoringv1.ReloadStrategyType
@@ -1146,86 +1155,65 @@ func testPromReloadConfig(t *testing.T) {
 			p := framework.MakeBasicPrometheus(ns, name, name, 1)
 			p.Spec.ServiceMonitorSelector = nil
 			p.Spec.PodMonitorSelector = nil
+			p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: fmt.Sprintf("additional-config-%s", name),
+				},
+				Key: "config.yaml",
+			}
 			p.Spec.ReloadStrategy = ptr.To(tc.reloadStrategy)
-
-			firstConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-`
-
-			var bufOne bytes.Buffer
-			if err := operator.GzipConfig(&bufOne, []byte(firstConfig)); err != nil {
-				t.Fatal(err)
-			}
-			firstConfigCompressed := bufOne.Bytes()
-
-			cfg := &v1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: fmt.Sprintf("prometheus-%s", name),
-				},
-				Data: map[string][]byte{
-					"prometheus.yaml.gz": firstConfigCompressed,
-					"configmaps.json":    []byte("{}"),
-				},
-			}
 
 			svc := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
 
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{}); err != nil {
-				t.Fatal(err)
+			cfg := &v1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: fmt.Sprintf("additional-config-%s", name),
+				},
+				Data: map[string][]byte{
+					"config.yaml": []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+`),
+				},
 			}
 
-			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
-				t.Fatal(err)
-			}
+			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), cfg, metav1.CreateOptions{})
+			require.NoError(t, err)
 
-			if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc); err != nil {
-				t.Fatal(err)
-			} else {
-				testCtx.AddFinalizerFn(finalizerFn)
-			}
+			p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+			require.NoError(t, err)
 
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1); err != nil {
-				t.Fatal(err)
+			var found bool
+			for _, cond := range p.Status.Conditions {
+				if cond.Type == monitoringv1.Reconciled {
+					require.Equal(t, operator.NoSelectedResourcesReason, cond.Reason)
+					found = true
+				}
 			}
+			require.True(t, found)
 
-			secondConfig := `
-global:
-  scrape_interval: 1m
-scrape_configs:
-  - job_name: testReloadConfig
-    metrics_path: /metrics
-    static_configs:
-      - targets:
-        - 111.111.111.111:9090
-        - 111.111.111.112:9090
-`
+			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
+			require.NoError(t, err)
 
-			var bufTwo bytes.Buffer
-			if err := operator.GzipConfig(&bufTwo, []byte(secondConfig)); err != nil {
-				t.Fatal(err)
-			}
-			secondConfigCompressed := bufTwo.Bytes()
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 1)
+			require.NoError(t, err)
 
-			cfg, err := framework.KubeClient.CoreV1().Secrets(ns).Get(context.Background(), cfg.Name, metav1.GetOptions{})
-			if err != nil {
-				t.Fatal(fmt.Errorf("could not retrieve previous secret: %w", err))
-			}
+			cfg.Data["config.yaml"] = []byte(`
+- job_name: testReloadConfig
+  metrics_path: /metrics
+  static_configs:
+    - targets:
+      - 111.111.111.111:9090
+      - 111.111.111.112:9090
+`)
+			_, err = framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{})
+			require.NoError(t, err)
 
-			cfg.Data["prometheus.yaml.gz"] = secondConfigCompressed
-			if _, err := framework.KubeClient.CoreV1().Secrets(ns).Update(context.Background(), cfg, metav1.UpdateOptions{}); err != nil {
-				t.Fatal(err)
-			}
-
-			if err := framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2); err != nil {
-				t.Fatal(err)
-			}
+			err = framework.WaitForActiveTargets(context.Background(), ns, svc.Name, 2)
+			require.NoError(t, err)
 		})
 	}
 }
@@ -1549,68 +1537,67 @@ func testPromRulesExceedingConfigMapLimit(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
+
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	prometheusRules := []*monitoringv1.PrometheusRule{}
-	for i := range 2 {
-		rule := generateHugePrometheusRule(ns, strconv.Itoa(i))
-		rule, err := framework.CreateRule(context.Background(), ns, rule)
-		if err != nil {
-			t.Fatal(err)
-		}
-		prometheusRules = append(prometheusRules, rule)
-	}
+
+	rule, err := framework.CreateRule(context.Background(), ns, generateHugePrometheusRule(ns, "a"))
+	require.NoError(t, err)
+	prometheusRules = append(prometheusRules, rule)
 
 	name := "test"
-
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
-	if err != nil {
-		t.Fatal(err)
-	}
+
+	p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	// Record the statefulset's generation.
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	require.NoError(t, err)
+	generation := sts.Generation
 
 	pSVC := framework.MakePrometheusService(p.Name, "not-relevant", v1.ServiceTypeClusterIP)
-	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC); err != nil {
-		t.Fatal(fmt.Errorf("creating Prometheus service failed: %w", err))
-	} else {
-		testCtx.AddFinalizerFn(finalizerFn)
-	}
-
-	for i := range prometheusRules {
-		_, err := framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	// Make sure both rule files ended up in the Prometheus Pod
-	for i := range prometheusRules {
-		err := framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, "my-alert-"+strconv.Itoa(i))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err = framework.DeleteRule(context.Background(), ns, prometheusRules[1].Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC)
+	require.NoError(t, err)
 
 	_, err = framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = framework.WaitForConfigMapNotExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1")
-	if err != nil {
-		t.Fatal(err)
+	require.NoError(t, err)
+	require.NoError(t, framework.WaitForConfigMapNotExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-1"))
+
+	// Check that at least 1 alert of the PrometheusRule object fires.
+	for _, pr := range prometheusRules {
+		alertName := pr.Spec.Groups[0].Rules[0].Alert
+		require.NotEmpty(t, alertName)
+
+		require.NoError(t, framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, alertName))
 	}
 
-	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, "my-alert-0")
-	if err != nil {
-		t.Fatal(err)
+	// Generate another large PrometheusRule object.
+	rule, err = framework.CreateRule(context.Background(), ns, generateHugePrometheusRule(ns, "b"))
+	require.NoError(t, err)
+
+	// Verify that 2 configmaps exist.
+	prometheusRules = append(prometheusRules, rule)
+	for i := range 2 {
+		_, err := framework.WaitForConfigMapExist(context.Background(), ns, "prometheus-"+p.Name+"-rulefiles-"+strconv.Itoa(i))
+		require.NoError(t, err)
 	}
+
+	// Check that at least 1 alert from each PrometheusRule object fires.
+	for _, pr := range prometheusRules {
+		alertName := pr.Spec.Groups[0].Rules[0].Alert
+		require.NotEmpty(t, alertName)
+
+		require.NoError(t, framework.WaitForPrometheusFiringAlert(context.Background(), ns, pSVC.Name, alertName))
+	}
+
+	// Verify that the statefulset's generation hasn't changed.
+	sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), fmt.Sprintf("prometheus-%s", p.Name), metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, generation, sts.Generation)
 }
 
 func testPromRulesMustBeAnnotated(t *testing.T) {
@@ -1685,26 +1672,24 @@ func testPromReconcileStatusWhenInvalidRuleCreated(t *testing.T) {
 	}
 }
 
-// generateHugePrometheusRule returns a Prometheus rule instance that would fill
+// generateHugePrometheusRule returns a Prometheus rule object that would fill
 // more than half of the space of a Kubernetes ConfigMap.
 func generateHugePrometheusRule(ns, identifier string) *monitoringv1.PrometheusRule {
-	alertName := "my-alert"
-	groups := []monitoringv1.RuleGroup{
-		{
-			Name:  alertName,
-			Rules: []monitoringv1.Rule{},
-		},
-	}
 	// One rule marshaled as yaml is ~34 bytes long, the max is ~524288 bytes.
+	rules := make([]monitoringv1.Rule, 0, 12000)
 	for range 12000 {
-		groups[0].Rules = append(groups[0].Rules, monitoringv1.Rule{
-			Alert: alertName + "-" + identifier,
+		rules = append(rules, monitoringv1.Rule{
+			Alert: "alert-" + identifier,
 			Expr:  intstr.FromString("vector(1)"),
 		})
 	}
-	rule := framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, groups)
 
-	return rule
+	return framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, []monitoringv1.RuleGroup{
+		{
+			Name:  "rules-group",
+			Rules: rules,
+		},
+	})
 }
 
 // Make sure the Prometheus operator only updates the Prometheus config secret
@@ -3000,11 +2985,17 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				BearerTokenSecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BearerTokenSecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "bearer-token",
+							},
+						},
 					},
-					Key: "bearer-token",
 				},
 			},
 			expectTargets: true,
@@ -3019,10 +3010,16 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							TLSFilesConfig: monitoringv1.TLSFilesConfig{
+								CAFile:   "/etc/ca-certificates/cert.pem",
+								CertFile: "/etc/ca-certificates/cert.pem",
+								KeyFile:  "/etc/ca-certificates/key.pem",
+							},
+						},
+					},
 				},
 			},
 			expectTargets: true,
@@ -3034,10 +3031,16 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					CAFile:   "/etc/ca-certificates/cert.pem",
-					CertFile: "/etc/ca-certificates/cert.pem",
-					KeyFile:  "/etc/ca-certificates/key.pem",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							TLSFilesConfig: monitoringv1.TLSFilesConfig{
+								CAFile:   "/etc/ca-certificates/cert.pem",
+								CertFile: "/etc/ca-certificates/cert.pem",
+								KeyFile:  "/etc/ca-certificates/key.pem",
+							},
+						},
+					},
 				},
 			},
 			expectTargets: false,
@@ -3049,30 +3052,34 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								InsecureSkipVerify: ptr.To(true),
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "key.pem",
+								},
 							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3086,30 +3093,34 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			},
 			endpoint: monitoringv1.Endpoint{
 				Port: "web",
-				TLSConfig: &monitoringv1.TLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						TLSConfig: &monitoringv1.TLSConfig{
+							SafeTLSConfig: monitoringv1.SafeTLSConfig{
+								InsecureSkipVerify: ptr.To(true),
+								CA: monitoringv1.SecretOrConfigMap{
+									ConfigMap: &v1.ConfigMapKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
-							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
+								Cert: monitoringv1.SecretOrConfigMap{
+									ConfigMap: &v1.ConfigMapKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: name,
+										},
+										Key: "cert.pem",
+									},
 								},
-								Key: "cert.pem",
+								KeySecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "key.pem",
+								},
 							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3341,23 +3352,27 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 		{
 			Port:     "mtls",
 			Interval: "30s",
-			Scheme:   "https",
-			TLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					InsecureSkipVerify: ptr.To(true),
-					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: tlsCertsSecret.Name,
+			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
+			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+				HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: tlsCertsSecret.Name,
+									},
+									Key: "cert.pem",
+								},
 							},
-							Key: "cert.pem",
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: tlsCertsSecret.Name,
+								},
+								Key: "key.pem",
+							},
 						},
-					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: tlsCertsSecret.Name,
-						},
-						Key: "key.pem",
 					},
 				},
 			},
@@ -3503,19 +3518,23 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "basic-auth-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "user",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "password",
+								},
 							},
-							Key: "user",
-						},
-						Password: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "password",
 						},
 					},
 				},
@@ -3528,12 +3547,16 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "bearer-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port: ptr.To("web"),
-				HTTPConfig: monitoringv1.HTTPConfig{
-					BearerTokenSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: name,
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BearerTokenSecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: name,
+								},
+								Key: "bearer-token",
+							},
 						},
-						Key: "bearer-token",
 					},
 				},
 				Path: "/bearer-metrics",
@@ -3546,31 +3569,33 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-secret",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
-				HTTPConfig: monitoringv1.HTTPConfig{
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: "key.pem",
 							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							Secret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -3581,31 +3606,33 @@ func testPromSecurePodMonitor(t *testing.T) {
 			name: "tls-configmap",
 			endpoint: monitoringv1.PodMetricsEndpoint{
 				Port:   ptr.To("mtls"),
-				Scheme: "https",
-				HTTPConfig: monitoringv1.HTTPConfig{
-					TLSConfig: &monitoringv1.SafeTLSConfig{
-						InsecureSkipVerify: ptr.To(true),
-						CA: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
+				Scheme: ptr.To(monitoringv1.SchemeHTTPS),
+				HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							InsecureSkipVerify: ptr.To(true),
+							CA: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &v1.ConfigMapKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Key: "cert.pem",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
 									Name: name,
 								},
-								Key: "cert.pem",
+								Key: "key.pem",
 							},
-						},
-						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: name,
-								},
-								Key: "cert.pem",
-							},
-						},
-						KeySecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: name,
-							},
-							Key: "key.pem",
 						},
 					},
 				},
@@ -4665,8 +4692,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Name:            "test",
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4694,8 +4721,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 							Name:            "test",
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4722,8 +4749,8 @@ func testPrometheusCRDValidation(t *testing.T) {
 						{
 							Namespace:       ptr.To("default"),
 							Port:            intstr.FromInt(9797),
-							Scheme:          "https",
-							PathPrefix:      "/alerts",
+							Scheme:          ptr.To(monitoringv1.SchemeHTTPS),
+							PathPrefix:      ptr.To("/alerts"),
 							BearerTokenFile: "/file",
 							APIVersion:      ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 						},
@@ -4849,6 +4876,31 @@ func testPrometheusCRDValidation(t *testing.T) {
 					TerminationGracePeriodSeconds: ptr.To(int64(100)),
 				},
 			},
+		},
+		{
+			name: "invalid-updateStrategy",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas: &replicas,
+					UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
+						Type: monitoringv1.StatefulSetUpdateStrategyType(""),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-ondelete-with-rollingupdate",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas: &replicas,
+					UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
+						Type:          monitoringv1.OnDeleteStatefulSetStrategyType,
+						RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
+					},
+				},
+			},
+			expectedError: true,
 		},
 	}
 
@@ -5497,6 +5549,9 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 }
 
 func testPrometheusUTF8MetricsSupport(t *testing.T) {
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		t.Skip("UTF-8 metrics support is not available in Prometheus v2")
+	}
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -5579,14 +5634,20 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 			Endpoints: []monitoringv1.Endpoint{{
 				Port:     "web",
 				Interval: "30s",
-				BasicAuth: &monitoringv1.BasicAuth{
-					Username: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "username",
-					},
-					Password: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "password",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "username",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "password",
+								},
+							},
+						},
 					},
 				},
 			}},
@@ -5723,6 +5784,10 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 }
 
 func testPrometheusUTF8LabelSupport(t *testing.T) {
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		t.Skip("UTF-8 label support is not available in Prometheus v2")
+	}
+
 	t.Parallel()
 
 	testCtx := framework.NewTestCtx(t)
@@ -5806,14 +5871,20 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 					TargetLabel:  "service_clustér_label",
 					Action:       "replace",
 				}},
-				BasicAuth: &monitoringv1.BasicAuth{
-					Username: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "username",
-					},
-					Password: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
-						Key:                  "password",
+				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+							BasicAuth: &monitoringv1.BasicAuth{
+								Username: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "username",
+								},
+								Password: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "basic-auth"},
+									Key:                  "password",
+								},
+							},
+						},
 					},
 				},
 			}},
@@ -5869,6 +5940,103 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 	require.NoError(t, err, "UTF-8 label queries should work in Prometheus 3.0+ queries")
 }
 
+// testStuckStatefulSetRollout ensures that when the rollout of a statefulset
+// pod gets stuck, it will get unstuck after fixing the spec.
+func testStuckStatefulSetRollout(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	prom, err := framework.CreatePrometheusAndWaitUntilReady(
+		context.Background(),
+		ns,
+		framework.MakeBasicPrometheus(ns, "statefulset-rollout", "test", 2),
+	)
+	require.NoError(t, err)
+
+	badImage := "quay.io/prometheus/prometheus:foobar"
+	prom, err = framework.PatchPrometheus(
+		context.Background(),
+		prom.Name,
+		prom.Namespace,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: &badImage,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	var loopError error
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		current, err := framework.MonClientV1.Prometheuses(prom.Namespace).Get(ctx, prom.Name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionTrue); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionDegraded); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// The rollout should start from the highest pod ordinal.
+		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, "prometheus-"+prom.Name+"-1", metav1.GetOptions{})
+		if err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// Ensure that the Prometheus container is stuck on ErrImagePull or ImagePullBackOff.
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.Image != badImage {
+				continue
+			}
+
+			if cs.State.Waiting == nil {
+				loopError = fmt.Errorf("container not waiting")
+				return false, nil
+			}
+
+			if cs.State.Waiting.Reason != "ErrPullImage" && cs.State.Waiting.Reason != "ImagePullBackOff" {
+				loopError = fmt.Errorf("container waiting with reason %q", cs.State.Waiting.Reason)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("found no container with image %q", badImage)
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("%v: %v", err, loopError)
+	}
+
+	// Fix the bad image location and ensure that the resource goes back to ready.
+	prom, err = framework.PatchPrometheusAndWaitUntilReady(
+		context.Background(),
+		prom.Name,
+		prom.Namespace,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: ptr.To(operator.DefaultPrometheusImage),
+			},
+		},
+	)
+	require.NoError(t, err)
+}
+
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
@@ -5920,8 +6088,8 @@ func assertExpectedAlertmanagerTargets(ams []*alertmanagerTarget, expectedTarget
 		existingTargets = append(existingTargets, am.URL)
 	}
 
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
+	slices.Sort(expectedTargets)
+	slices.Sort(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
 		log.Printf("Existing Alertmanager Targets: %#+v\n", existingTargets)

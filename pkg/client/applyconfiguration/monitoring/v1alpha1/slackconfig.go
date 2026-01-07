@@ -17,6 +17,7 @@
 package v1alpha1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -45,6 +46,7 @@ type SlackConfigApplyConfiguration struct {
 	MrkdwnIn     []string                        `json:"mrkdwnIn,omitempty"`
 	Actions      []SlackActionApplyConfiguration `json:"actions,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration   `json:"httpConfig,omitempty"`
+	Timeout      *monitoringv1.Duration          `json:"timeout,omitempty"`
 }
 
 // SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with
@@ -238,5 +240,13 @@ func (b *SlackConfigApplyConfiguration) WithActions(values ...*SlackActionApplyC
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *SlackConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration) *SlackConfigApplyConfiguration {
+	b.Timeout = &value
 	return b
 }

@@ -2492,6 +2492,7 @@
                           },
                           apiURL: {
                             description: 'apiURL defines the URL to send OpsGenie API requests to.\nWhen not specified, defaults to the standard OpsGenie API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           description: {
@@ -3236,22 +3237,27 @@
                         properties: {
                           class: {
                             description: 'class defines the class/type of the event.',
+                            minLength: 1,
                             type: 'string',
                           },
                           client: {
                             description: 'client defines the client identification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
                             description: 'component defines the part or component of the affected system that is broken.',
+                            minLength: 1,
                             type: 'string',
                           },
                           description: {
                             description: 'description of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -3276,9 +3282,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           group: {
                             description: 'group defines a cluster or grouping of sources.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -3926,20 +3934,24 @@
                               properties: {
                                 alt: {
                                   description: 'alt is the optional alternative text for the image.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
                                   description: 'src of the image being attached to the incident',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pagerDutyLinkConfigs: {
                             description: 'pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.',
@@ -3948,16 +3960,19 @@
                               properties: {
                                 alt: {
                                   description: "alt defines the text that describes the purpose of the link, and can be used as the link's text.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           routingKey: {
                             description: "routingKey defines the secret's key that contains the PagerDuty integration key (when using\nEvents API v2). Either this field or `serviceKey` needs to be defined.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -4005,14 +4020,22 @@
                           },
                           severity: {
                             description: 'severity of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           source: {
                             description: 'source defines the unique location of the affected system.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          timeout: {
+                            description: 'timeout is the maximum time allowed to invoke the pagerduty\nIt requires Alertmanager >= v0.30.0.',
+                            pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                             type: 'string',
                           },
                           url: {
                             description: 'url defines the URL to send requests to.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                         },
@@ -4027,6 +4050,7 @@
                         properties: {
                           device: {
                             description: "device defines the name of a specific device to send the notification to.\nIf not specified, the notification is sent to all user's devices.",
+                            minLength: 1,
                             type: 'string',
                           },
                           expire: {
@@ -4035,7 +4059,7 @@
                             type: 'string',
                           },
                           html: {
-                            description: 'html defines whether notification message is HTML or plain text.\nWhen true, the message can include HTML formatting tags.',
+                            description: 'html defines whether notification message is HTML or plain text.\nWhen true, the message can include HTML formatting tags.\nhtml and monospace formatting are mutually exclusive.',
                             type: 'boolean',
                           },
                           httpConfig: {
@@ -4678,10 +4702,16 @@
                           },
                           message: {
                             description: 'message defines the notification message content.\nThis is the main body text of the Pushover notification.',
+                            minLength: 1,
                             type: 'string',
+                          },
+                          monospace: {
+                            description: 'monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html\nhtml and monospace formatting are mutually exclusive.',
+                            type: 'boolean',
                           },
                           priority: {
                             description: 'priority defines the notification priority level.\nSee https://pushover.net/api#priority for valid values and behavior.',
+                            minLength: 1,
                             type: 'string',
                           },
                           retry: {
@@ -4695,10 +4725,12 @@
                           },
                           sound: {
                             description: "sound defines the name of one of the sounds supported by device clients.\nThis overrides the user's default sound choice for this notification.",
+                            minLength: 1,
                             type: 'string',
                           },
                           title: {
                             description: 'title defines the notification title displayed in the Pushover message.\nThis appears as the bold header text in the notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           token: {
@@ -4732,10 +4764,12 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
                             description: 'urlTitle defines a title for the supplementary URL.\nIf not specified, the raw URL is shown instead.',
+                            minLength: 1,
                             type: 'string',
                           },
                           userKey: {
@@ -6398,6 +6432,11 @@
                             description: 'thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.',
                             type: 'string',
                           },
+                          timeout: {
+                            description: 'timeout defines the maximum time to wait for a webhook request to complete,\nbefore failing the request and allowing it to be retried.\nIt requires Alertmanager >= v0.30.0.',
+                            pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
+                            type: 'string',
+                          },
                           title: {
                             description: 'title defines the title text displayed in the Slack message attachment.',
                             type: 'string',
@@ -7143,7 +7182,7 @@
                                 'x-kubernetes-map-type': 'atomic',
                               },
                               useFIPSSTSEndpoint: {
-                                description: 'useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.',
+                                description: 'useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.\nIt requires Prometheus >= v2.54.0.',
                                 type: 'boolean',
                               },
                             },
@@ -7173,6 +7212,7 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the Telegram API URL, e.g. https://api.telegram.org.\nIf not specified, the default Telegram API URL will be used.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           botToken: {
@@ -7903,6 +7943,7 @@
                           },
                           apiUrl: {
                             description: 'apiUrl defines the VictorOps API URL.\nWhen not specified, defaults to the standard VictorOps API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           customFields: {
@@ -7927,9 +7968,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           entityDisplayName: {
                             description: 'entityDisplayName contains a summary of the alerted problem.\nThis appears as the main title or identifier for the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -8572,14 +8615,17 @@
                           },
                           messageType: {
                             description: 'messageType describes the behavior of the alert.\nValid values are "CRITICAL", "WARNING", and "INFO".',
+                            minLength: 1,
                             type: 'string',
                           },
                           monitoringTool: {
                             description: 'monitoringTool defines the monitoring tool the state message is from.\nThis helps identify the source system that generated the alert.',
+                            minLength: 1,
                             type: 'string',
                           },
                           routingKey: {
                             description: 'routingKey defines a key used to map the alert to a team.\nThis determines which VictorOps team will receive the alert notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -8588,9 +8634,13 @@
                           },
                           stateMessage: {
                             description: 'stateMessage contains a long explanation of the alerted problem.\nThis provides detailed context about the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
+                        required: [
+                          'routingKey',
+                        ],
                         type: 'object',
                       },
                       type: 'array',
@@ -9924,6 +9974,7 @@
                           },
                           url: {
                             description: 'url defines the URL to send HTTP POST requests to.\nurlSecret takes precedence over url. One of urlSecret and url should be defined.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlSecret: {
@@ -9982,6 +10033,7 @@
                           },
                           apiURL: {
                             description: 'apiURL defines the WeChat API URL.\nWhen not specified, defaults to the standard WeChat Work API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           corpID: {
@@ -10848,6 +10900,112 @@
             },
             type: 'object',
           },
+          status: {
+            description: 'status defines the status subresource. It is under active development and is updated only when the\n"StatusForConfigurationResources" feature gate is enabled.\n\nMost recent observed status of the ServiceMonitor. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status',
+            properties: {
+              bindings: {
+                description: 'bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.',
+                items: {
+                  description: 'WorkloadBinding is a link between a configuration resource and a workload resource.',
+                  properties: {
+                    conditions: {
+                      description: 'conditions defines the current state of the configuration resource when bound to the referenced Workload object.',
+                      items: {
+                        description: 'ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.',
+                        properties: {
+                          lastTransitionTime: {
+                            description: 'lastTransitionTime defines the time of the last update to the current status property.',
+                            format: 'date-time',
+                            type: 'string',
+                          },
+                          message: {
+                            description: "message defines the human-readable message indicating details for the condition's last transition.",
+                            type: 'string',
+                          },
+                          observedGeneration: {
+                            description: 'observedGeneration defines the .metadata.generation that the\ncondition was set based upon. For instance, if `.metadata.generation` is\ncurrently 12, but the `.status.conditions[].observedGeneration` is 9, the\ncondition is out of date with respect to the current state of the object.',
+                            format: 'int64',
+                            type: 'integer',
+                          },
+                          reason: {
+                            description: "reason for the condition's last transition.",
+                            type: 'string',
+                          },
+                          status: {
+                            description: 'status of the condition.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          type: {
+                            description: 'type of the condition being reported.\nCurrently, only "Accepted" is supported.',
+                            enum: [
+                              'Accepted',
+                            ],
+                            minLength: 1,
+                            type: 'string',
+                          },
+                        },
+                        required: [
+                          'lastTransitionTime',
+                          'status',
+                          'type',
+                        ],
+                        type: 'object',
+                      },
+                      type: 'array',
+                      'x-kubernetes-list-map-keys': [
+                        'type',
+                      ],
+                      'x-kubernetes-list-type': 'map',
+                    },
+                    group: {
+                      description: 'group defines the group of the referenced resource.',
+                      enum: [
+                        'monitoring.coreos.com',
+                      ],
+                      type: 'string',
+                    },
+                    name: {
+                      description: 'name defines the name of the referenced object.',
+                      minLength: 1,
+                      type: 'string',
+                    },
+                    namespace: {
+                      description: 'namespace defines the namespace of the referenced object.',
+                      minLength: 1,
+                      type: 'string',
+                    },
+                    resource: {
+                      description: 'resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).',
+                      enum: [
+                        'prometheuses',
+                        'prometheusagents',
+                        'thanosrulers',
+                        'alertmanagers',
+                      ],
+                      type: 'string',
+                    },
+                  },
+                  required: [
+                    'group',
+                    'name',
+                    'namespace',
+                    'resource',
+                  ],
+                  type: 'object',
+                },
+                type: 'array',
+                'x-kubernetes-list-map-keys': [
+                  'group',
+                  'resource',
+                  'name',
+                  'namespace',
+                ],
+                'x-kubernetes-list-type': 'map',
+              },
+            },
+            type: 'object',
+          },
         },
         required: [
           'spec',
@@ -10857,5 +11015,8 @@
     },
     served: true,
     storage: false,
+    subresources: {
+      status: {},
+    },
   },
 ] } }

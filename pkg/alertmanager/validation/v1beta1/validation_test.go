@@ -132,7 +132,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "http://%><invalid.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
 								},
 							},
 						},
@@ -346,6 +346,66 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fail to validate PushoverConfigs - html and monospace both true",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									HTML:      ptr.To(true),
+									Monospace: ptr.To(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - invalid URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									HTML: ptr.To(true),
+									URL:  ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -457,7 +517,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To("https://www.test.com"),
+									URL: ptr.To(monitoringv1beta1.URL("https://www.test.com")),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -466,7 +526,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
 								{
-									APIURL: "https://test.com",
+									APIURL: ptr.To(monitoringv1beta1.URL("https://test.com")),
 								},
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
@@ -502,8 +562,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									Retry:  "10m",
-									Expire: "5m",
+									Retry:  ptr.To("10m"),
+									Expire: ptr.To("5m"),
 								},
 							},
 						},

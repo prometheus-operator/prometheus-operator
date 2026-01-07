@@ -52,8 +52,11 @@ func (f *Framework) AssertCondition(conds []monitoringv1.Condition, expectedType
 // If the resource isn't available within the given timeout, it returns an error.
 func (f *Framework) WaitForResourceAvailable(ctx context.Context, getResourceStatus func(context.Context) (resourceStatus, error), timeout time.Duration) error {
 	var pollErr error
-	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(ctx context.Context) (bool, error) {
-		var status resourceStatus
+	if err := wait.PollUntilContextTimeout(ctx, 5*time.Second, timeout, false, func(_ context.Context) (bool, error) {
+		var (
+			ctx    = context.Background()
+			status resourceStatus
+		)
 		status, pollErr = getResourceStatus(ctx)
 		if pollErr != nil {
 			return false, nil

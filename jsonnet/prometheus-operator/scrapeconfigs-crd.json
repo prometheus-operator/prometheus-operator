@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.85.0"
+      "operator.prometheus.io/version": "0.87.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -1314,8 +1314,10 @@
                           "type": "string"
                         },
                         "scheme": {
-                          "description": "scheme defines the HTTP Scheme default \"http\"",
+                          "description": "scheme defines the HTTP Scheme.",
                           "enum": [
+                            "http",
+                            "https",
                             "HTTP",
                             "HTTPS"
                           ],
@@ -11643,8 +11645,10 @@
                     "type": "array"
                   },
                   "scheme": {
-                    "description": "scheme defines the protocol scheme used for requests.\nIf empty, Prometheus uses HTTP by default.",
+                    "description": "scheme defines the protocol scheme used for requests.",
                     "enum": [
+                      "http",
+                      "https",
                       "HTTP",
                       "HTTPS"
                     ],
@@ -11663,6 +11667,10 @@
                     "description": "scrapeInterval defines the interval between consecutive scrapes.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
+                  },
+                  "scrapeNativeHistograms": {
+                    "description": "scrapeNativeHistograms defines whether to enable scraping of native histograms.\nIt requires Prometheus >= v3.8.0.",
+                    "type": "boolean"
                   },
                   "scrapeProtocols": {
                     "description": "scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the\nprotocols supported by Prometheus in order of preference (from most to least preferred).\n\nIf unset, Prometheus uses its default value.\n\nIt requires Prometheus >= v2.49.0.",

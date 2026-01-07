@@ -459,7 +459,7 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	createMutualTLSSecret(t, secretName, ns)
 
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
-	sc.Spec.Scheme = ptr.To("HTTPS")
+	sc.Spec.Scheme = ptr.To(monitoringv1.SchemeHTTPS)
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
 		Credentials: &v1.SecretKeySelector{
 			LocalObjectReference: v1.LocalObjectReference{
@@ -860,7 +860,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To("HTTP"),
+					Scheme: ptr.To(monitoringv1.SchemeHTTP),
 				},
 			},
 		},
@@ -872,7 +872,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To("HTTPS"),
+					Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 				},
 			},
 		},
@@ -884,7 +884,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server: "valid-server",
-					Scheme: ptr.To(""),
+					Scheme: ptr.To(monitoringv1.Scheme("")),
 				},
 			},
 		},
@@ -1712,21 +1712,21 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 	{
 		name: "Scheme: Invalid Value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("FTP"),
+			Scheme: ptr.To(monitoringv1.Scheme("FTP")),
 		},
 		expectedError: true,
 	},
 	{
 		name: "Scheme: Valid Value HTTP",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("HTTP"),
+			Scheme: ptr.To(monitoringv1.SchemeHTTP),
 		},
 		expectedError: false,
 	},
 	{
 		name: "Scheme: Valid Value HTTPS",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			Scheme: ptr.To("HTTPS"),
+			Scheme: ptr.To(monitoringv1.SchemeHTTPS),
 		},
 		expectedError: false,
 	},

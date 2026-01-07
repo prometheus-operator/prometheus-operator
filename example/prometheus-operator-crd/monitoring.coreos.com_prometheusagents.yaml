@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.85.0
+    operator.prometheus.io/version: 0.87.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5136,6 +5136,21 @@ spec:
                       the replica count to be deleted.
                     type: string
                 type: object
+              podManagementPolicy:
+                description: |-
+                  podManagementPolicy defines the policy for creating/deleting pods when
+                  scaling up and down.
+
+                  Unlike the default StatefulSet behavior, the default policy is
+                  `Parallel` to avoid manual intervention in case a pod gets stuck during
+                  a rollout.
+
+                  Note that updating this value implies the recreation of the StatefulSet
+                  which incurs a service outage.
+                enum:
+                - OrderedReady
+                - Parallel
+                type: string
               podMetadata:
                 description: |-
                   podMetadata defines labels and annotations which are propagated to the Prometheus pods.
@@ -5497,11 +5512,12 @@ spec:
                             Cannot be set at the same time as `oauth` or `sdk`.
                           properties:
                             clientId:
-                              description: clientId defines defines the Azure User-assigned
-                                Managed identity.
+                              description: |-
+                                clientId defines the Azure User-assigned Managed identity.
+
+                                For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
+                              minLength: 1
                               type: string
-                          required:
-                          - clientId
                           type: object
                         oauth:
                           description: |-
@@ -5678,8 +5694,11 @@ spec:
                       - V2.0
                       type: string
                     metadataConfig:
-                      description: metadataConfig defines how to send a series metadata
-                        to the remote storage.
+                      description: |-
+                        metadataConfig defines how to send a series metadata to the remote storage.
+
+                        When the field is empty, **no metadata** is sent. But when the field is
+                        null, metadata is sent.
                       properties:
                         maxSamplesPerSend:
                           description: |-
@@ -6251,7 +6270,7 @@ spec:
                           x-kubernetes-map-type: atomic
                         useFIPSSTSEndpoint:
                           description: |-
-                            useFIPSSTSEndpoint defines FIPS mode for AWS STS endpoint.
+                            useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
                             It requires Prometheus >= v2.54.0.
                           type: boolean
                       type: object
@@ -7261,6 +7280,11 @@ spec:
                   Default: "30s"
                 pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                 type: string
+              scrapeNativeHistograms:
+                description: |-
+                  scrapeNativeHistograms defines whether to enable scraping of native histograms.
+                  It requires Prometheus >= v3.8.0.
+                type: boolean
               scrapeProtocols:
                 description: |-
                   scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
@@ -8662,16 +8686,19 @@ spec:
                 properties:
                   clientType:
                     description: clientType defines the client used to export the
-                      traces. Supported values are `http` or `grpc`.
+                      traces. Supported values are `HTTP` and `GRPC`.
                     enum:
                     - http
                     - grpc
+                    - HTTP
+                    - GRPC
                     type: string
                   compression:
                     description: compression key for supported compression types.
-                      The only supported value is `gzip`.
+                      The only supported value is `Gzip`.
                     enum:
                     - gzip
+                    - Gzip
                     type: string
                   endpoint:
                     description: endpoint to send the traces to. Should be provided
@@ -8903,6 +8930,48 @@ spec:
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
                 type: object
+              updateStrategy:
+                description: |-
+                  updateStrategy indicates the strategy that will be employed to update
+                  Pods in the StatefulSet when a revision is made to statefulset's Pod
+                  Template.
+
+                  The default strategy is RollingUpdate.
+                properties:
+                  rollingUpdate:
+                    description: rollingUpdate is used to communicate parameters when
+                      type is RollingUpdate.
+                    properties:
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        description: |-
+                          maxUnavailable is the maximum number of pods that can be unavailable
+                          during the update. The value can be an absolute number (ex: 5) or a
+                          percentage of desired pods (ex: 10%). Absolute number is calculated from
+                          percentage by rounding up. This can not be 0.  Defaults to 1. This field
+                          is alpha-level and is only honored by servers that enable the
+                          MaxUnavailableStatefulSet feature. The field applies to all pods in the
+                          range 0 to Replicas-1.  That means if there is any unavailable pod in
+                          the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
+                        x-kubernetes-int-or-string: true
+                    type: object
+                  type:
+                    description: |-
+                      type indicates the type of the StatefulSetUpdateStrategy.
+
+                      Default is RollingUpdate.
+                    enum:
+                    - OnDelete
+                    - RollingUpdate
+                    type: string
+                required:
+                - type
+                type: object
+                x-kubernetes-validations:
+                - message: rollingUpdate requires type to be RollingUpdate
+                  rule: '!(self.type != ''RollingUpdate'' && has(self.rollingUpdate))'
               version:
                 description: |-
                   version of Prometheus being deployed. The operator uses this information
@@ -11173,6 +11242,17 @@ spec:
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.scrapeConfigSelector))'
             - message: probeSelector cannot be set when mode is DaemonSet
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.probeSelector))'
+            - message: scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.scrapeConfigNamespaceSelector))'
+            - message: probeNamespaceSelector cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.probeNamespaceSelector))'
+            - message: serviceMonitorSelector cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.serviceMonitorSelector))'
+            - message: serviceMonitorNamespaceSelector cannot be set when mode is
+                DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.serviceMonitorNamespaceSelector))'
+            - message: additionalScrapeConfigs cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.additionalScrapeConfigs))'
           status:
             description: |-
               status defines the most recent observed status of the Prometheus cluster. Read-only.

@@ -23,6 +23,12 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+const (
+	// NoSelectedResourcesReason is used in status conditions to indicate that
+	// a workload resource selected no configuration resources.
+	NoSelectedResourcesReason = "NoSelectedResources"
+)
+
 type StatusReconciler interface {
 	Iterate(func(metav1.Object, []monitoringv1.Condition))
 	RefreshStatusFor(metav1.Object)

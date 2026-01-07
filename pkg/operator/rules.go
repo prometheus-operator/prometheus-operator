@@ -15,9 +15,13 @@
 package operator
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
+	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -26,9 +30,11 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
+	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
@@ -54,6 +60,8 @@ const (
 // overall maximum size of a ConfigMap. Thereby lets leave a large buffer.
 var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
 
+// PrometheusRuleSelector selects PrometheusRule resources and translates them
+// to Prometheus/Thanos configuration format.
 type PrometheusRuleSelector struct {
 	ruleFormat   RuleConfigurationFormat
 	version      semver.Version
@@ -66,6 +74,28 @@ type PrometheusRuleSelector struct {
 	logger *slog.Logger
 }
 
+type PrometheusRuleSelection struct {
+	selection TypedResourcesSelection[*monitoringv1.PrometheusRule] // PrometheusRules selected.
+	ruleFiles map[string]string                                     // Map of rule configuration files serialized to the Prometheus format (key=filename).
+}
+
+func (prs *PrometheusRuleSelection) RuleFiles() map[string]string {
+	return prs.ruleFiles
+}
+
+func (prs *PrometheusRuleSelection) Selected() TypedResourcesSelection[*monitoringv1.PrometheusRule] {
+	return prs.selection
+}
+
+func (prs *PrometheusRuleSelection) SelectedLen() int {
+	return len(prs.selection)
+}
+
+func (prs *PrometheusRuleSelection) RejectedLen() int {
+	return len(prs.selection) - len(prs.ruleFiles)
+}
+
+// NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
 func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
@@ -130,8 +160,8 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	if prs.ruleFormat == ThanosFormat {
 		minVersionKeepFiringFor = semver.MustParse("0.34.0")
 		minVersionLimits = semver.MustParse("0.24.0")
-		minVersionQueryOffset = semver.MustParse("100.0.0")     // Arbitrary very high major version because it's not yet supported by Thanos.
-		minVersionRuleGroupLabels = semver.MustParse("100.0.0") // Arbitrary very high major version because it's not yet supported by Thanos.
+		minVersionQueryOffset = semver.MustParse("0.38.0")
+		minVersionRuleGroupLabels = semver.MustParse("0.39.0")
 		component = "Thanos"
 	}
 
@@ -202,9 +232,8 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 	return errs
 }
 
-// Select selects PrometheusRules and translates them into native Prometheus/Thanos configurations.
-// The second returned value is the number of rejected PrometheusRule objects.
-func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]string, int, error) {
+// Select selects PrometheusRules by Prometheus or ThanosRuler.
+func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSelection, error) {
 	promRules := map[string]*monitoringv1.PrometheusRule{}
 
 	for _, ns := range namespaces {
@@ -215,15 +244,22 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				return
 			}
 
+			// Generate a truly unique identifier for each PrometheusRule resource.
+			// We use the UID to avoid collisions between foo-bar/fred and foo/bar-fred.
 			promRules[fmt.Sprintf("%v-%v-%v.yaml", promRule.Namespace, promRule.Name, promRule.UID)] = promRule
 		})
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to list prometheus rules in namespace %s: %w", ns, err)
+			return PrometheusRuleSelection{}, fmt.Errorf("failed to list PrometheusRule objects in namespace %s: %w", ns, err)
 		}
 	}
 
-	var rejected int
-	rules := make(map[string]string, len(promRules))
+	var (
+		marshalRules    = make(map[string]string, len(promRules))
+		rules           = make(TypedResourcesSelection[*monitoringv1.PrometheusRule], len(promRules))
+		namespacedNames = make([]string, 0, len(promRules))
+	)
+
+	accessor := NewAccessor(prs.logger)
 
 	for ruleName, promRule := range promRules {
 		var err error
@@ -232,9 +268,14 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 			continue
 		}
 
+		k, ok := accessor.MetaNamespaceKey(promRule)
+		if !ok {
+			continue
+		}
+
+		var reason string
 		content, err = prs.generateRulesConfiguration(promRule)
 		if err != nil {
-			rejected++
 			prs.logger.Warn(
 				"skipping prometheusrule",
 				"error", err.Error(),
@@ -242,21 +283,198 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (map[string]strin
 				"namespace", promRule.Namespace,
 			)
 			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
-			continue
+			reason = InvalidConfigurationEvent
+		} else {
+			marshalRules[ruleName] = content
+			namespacedNames = append(namespacedNames, fmt.Sprintf("%s/%s", promRule.Namespace, promRule.Name))
 		}
 
-		rules[ruleName] = content
+		rules[k] = TypedConfigurationResource[*monitoringv1.PrometheusRule]{
+			resource:   promRule,
+			err:        err,
+			reason:     reason,
+			generation: promRule.GetGeneration(),
+		}
 	}
 
-	ruleNames := []string{}
-	for name := range rules {
-		ruleNames = append(ruleNames, name)
-	}
+	slices.Sort(namespacedNames)
 
 	prs.logger.Debug(
 		"selected Rules",
-		"rules", strings.Join(ruleNames, ","),
+		"rules", strings.Join(namespacedNames, ","),
 	)
 
-	return rules, rejected, nil
+	return PrometheusRuleSelection{
+		selection: rules,
+		ruleFiles: marshalRules,
+	}, nil
+}
+
+// PrometheusRuleSyncer knows how to synchronize ConfigMaps holding
+// Prometheus or Thanos rule configuration.
+type PrometheusRuleSyncer struct {
+	namePrefix string
+	opts       []ObjectOption
+	cmClient   clientv1.ConfigMapInterface
+	cmSelector labels.Set
+
+	logger *slog.Logger
+}
+
+func NewPrometheusRuleSyncer(
+	logger *slog.Logger,
+	namePrefix string,
+	cmClient clientv1.ConfigMapInterface,
+	cmSelector labels.Set,
+	options []ObjectOption,
+) *PrometheusRuleSyncer {
+	return &PrometheusRuleSyncer{
+		logger:     logger,
+		namePrefix: namePrefix,
+		cmClient:   cmClient,
+		cmSelector: cmSelector,
+		opts:       options,
+	}
+}
+
+// AppendConfigMapNames adds "virtual" ConfigMap names to the given slice until
+// it reaches the limit.
+//
+// The goal is to avoid statefulset redeployments when the number of "concrete"
+// ConfigMaps changes. Because rule's ConfigMaps are mounted with "optional:
+// true", the statefulset will be rolled out successfully even if the
+// ConfigMaps don't exist and if more ConfigMaps are generated, the operator
+// doesn't have to update the statefulset's spec.
+func (prs *PrometheusRuleSyncer) AppendConfigMapNames(configMapNames []string, limit int) []string {
+	if len(configMapNames) >= limit {
+		return configMapNames
+	}
+
+	for i := len(configMapNames); i < limit; i++ {
+		configMapNames = append(configMapNames, prs.configMapNameAt(i))
+	}
+
+	return configMapNames
+}
+
+func (prs *PrometheusRuleSyncer) configMapNameAt(i int) string {
+	return fmt.Sprintf("%s-rulefiles-%d", prs.namePrefix, i)
+}
+
+// Sync synchronizes the ConfigMap(s) holding the provided list of rules.
+// It returns the list of ConfigMap names.
+func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]string) ([]string, error) {
+	listConfigMapOpts := metav1.ListOptions{LabelSelector: prs.cmSelector.String()}
+	cmList, err := prs.cmClient.List(ctx, listConfigMapOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	current := cmList.Items
+	currentRules := map[string]string{}
+	for _, cm := range current {
+		maps.Copy(currentRules, cm.Data)
+	}
+
+	if equal := reflect.DeepEqual(rules, currentRules); equal && len(current) != 0 {
+		// Return early because current and generated configmaps are identical
+		// (and at least 1 configmap already exists).
+		prs.logger.Debug("no PrometheusRule changes")
+		return configMapNames(current), nil
+	}
+
+	configMaps, err := prs.makeConfigMapsFromRules(rules)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate ConfigMaps for PrometheusRule: %w", err)
+	}
+
+	// Delete and recreate the configmap(s). It's not very efficient but proved
+	// to be robust enough so far.
+	if len(current) > 0 {
+		prs.logger.Debug("deleting ConfigMaps for PrometheusRule")
+		// In theory we could use DeleteCollection but the method isn't
+		// supported by the fake client.
+		// See https://github.com/kubernetes/kubernetes/issues/105357
+		for _, cm := range current {
+			err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("failed to delete ConfigMap %q: %w", cm.Name, err)
+			}
+		}
+	}
+
+	prs.logger.Debug("creating ConfigMaps for PrometheusRule")
+	for _, cm := range configMaps {
+		_, err = prs.cmClient.Create(ctx, &cm, metav1.CreateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create ConfigMap %q: %w", cm.Name, err)
+		}
+	}
+
+	return configMapNames(configMaps), nil
+}
+
+func configMapNames(cms []v1.ConfigMap) []string {
+	return slices.Sorted(slices.Values(slices.Collect(func(yield func(string) bool) {
+		for _, cm := range cms {
+			if !yield(cm.Name) {
+				return
+			}
+		}
+	})))
+}
+
+type bucket struct {
+	rules map[string]string
+	size  int
+}
+
+// makeConfigMapsFromRules takes a map of rule files (keys: filenames) and returns
+// a list of Kubernetes ConfigMaps to be later on mounted into the a container.
+//
+// If the total size of rule files exceeds the Kubernetes ConfigMap limit,
+// they are split up via the simple first-fit [1] bin packing algorithm. In the
+// future this can be replaced by a more sophisticated algorithm, but for now
+// simplicity should be sufficient.
+//
+// [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
+func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]v1.ConfigMap, error) {
+	var (
+		i       int
+		buckets = []bucket{{rules: map[string]string{}}}
+	)
+	// To make bin packing algorithm deterministic, sort ruleFiles filenames
+	// and iterate over the filenames instead of the key/value pairs.
+	for _, filename := range sortutil.SortedKeys(rules) {
+		// If the rule file doesn't fit into the current bucket, create a new bucket.
+		if (buckets[i].size + len(rules[filename])) > MaxConfigMapDataSize {
+			buckets = append(buckets, bucket{rules: map[string]string{}})
+			i++
+		}
+
+		buckets[i].rules[filename] = rules[filename]
+		buckets[i].size += len(rules[filename])
+	}
+
+	configMaps := make([]v1.ConfigMap, 0, len(buckets))
+	for i, bucket := range buckets {
+		cm := v1.ConfigMap{
+			Data: bucket.rules,
+		}
+
+		UpdateObject(
+			&cm,
+			prs.opts...,
+		)
+
+		UpdateObject(
+			&cm,
+			WithLabels(prs.cmSelector),
+			WithName(prs.configMapNameAt(i)),
+		)
+
+		configMaps = append(configMaps, cm)
+	}
+
+	return configMaps, nil
 }

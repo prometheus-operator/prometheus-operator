@@ -42,6 +42,7 @@ const (
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
+// +kubebuilder:subresource:status
 
 // The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
 //
@@ -55,6 +56,14 @@ type AlertmanagerConfig struct {
 	// spec defines the specification of AlertmanagerConfigSpec
 	// +required
 	Spec AlertmanagerConfigSpec `json:"spec"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	// +optional
+	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
@@ -125,7 +134,7 @@ type Route struct {
 	// sibling nodes. It will always be overridden to true for the first-level
 	// route by the Prometheus operator.
 	// +optional
-	Continue bool `json:"continue,omitempty"`
+	Continue bool `json:"continue,omitempty"` // nolint:kubeapilinter
 	// routes defines the child routes.
 	// +optional
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
@@ -221,7 +230,7 @@ type Receiver struct {
 type PagerDutyConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// routingKey defines the secret's key that contains the PagerDuty integration key (when using
 	// Events API v2). Either this field or `serviceKey` needs to be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -237,66 +246,83 @@ type PagerDutyConfig struct {
 	ServiceKey *SecretKeySelector `json:"serviceKey,omitempty"`
 	// url defines the URL to send requests to.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// client defines the client identification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Client string `json:"client,omitempty"`
+	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL string `json:"clientURL,omitempty"`
+	ClientURL *URL `json:"clientURL,omitempty"`
 	// description of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// severity of the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Severity string `json:"severity,omitempty"`
+	Severity *string `json:"severity,omitempty"`
 	// class defines the class/type of the event.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Class string `json:"class,omitempty"`
+	Class *string `json:"class,omitempty"`
 	// group defines a cluster or grouping of sources.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Group string `json:"group,omitempty"`
+	Group *string `json:"group,omitempty"`
 	// component defines the part or component of the affected system that is broken.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Component string `json:"component,omitempty"`
+	Component *string `json:"component,omitempty"`
 	// details defines the arbitrary key/value pairs that provide further detail about the incident.
+	// +listType=atomic
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`
 	// pagerDutyImageConfigs defines a list of image details to attach that provide further detail about an incident.
+	// +listType=atomic
 	// +optional
 	PagerDutyImageConfigs []PagerDutyImageConfig `json:"pagerDutyImageConfigs,omitempty"`
 	// pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.
+	// +listType=atomic
 	// +optional
 	PagerDutyLinkConfigs []PagerDutyLinkConfig `json:"pagerDutyLinkConfigs,omitempty"`
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// source defines the unique location of the affected system.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Source *string `yaml:"source,omitempty" json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
+	// timeout is the maximum time allowed to invoke the pagerduty
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // PagerDutyImageConfig attaches images to an incident
 type PagerDutyImageConfig struct {
 	// src of the image being attached to the incident
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Src string `json:"src,omitempty"`
+	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Alt string `json:"alt,omitempty"`
+	Alt *string `json:"alt,omitempty"`
 }
 
 // PagerDutyLinkConfig attaches text links to an incident
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	Href string `json:"href,omitempty"`
+	Href *URL `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text string `json:"alt,omitempty"`
+	Text *string `json:"alt,omitempty"`
 }
 
 // DiscordConfig configures notifications via Discord.
@@ -304,7 +330,7 @@ type PagerDutyLinkConfig struct {
 type DiscordConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -337,7 +363,7 @@ type DiscordConfig struct {
 type SlackConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the secret's key that contains the Slack webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -371,7 +397,7 @@ type SlackConfig struct {
 	// shortFields determines whether fields are displayed in a compact format.
 	// When true, fields are shown side by side when possible.
 	// +optional
-	ShortFields bool `json:"shortFields,omitempty"`
+	ShortFields bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
 	// footer defines small text displayed at the bottom of the message attachment.
 	// +optional
 	Footer string `json:"footer,omitempty"`
@@ -397,7 +423,7 @@ type SlackConfig struct {
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
-	LinkNames bool `json:"linkNames,omitempty"`
+	LinkNames bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
 	// +optional
@@ -408,6 +434,11 @@ type SlackConfig struct {
 	// httpConfig defines the HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // Validate ensures SlackConfig is valid.
@@ -539,7 +570,7 @@ type SlackField struct {
 	// When true, Slack may display this field side by side with other short fields.
 	// When false or not specified, the field takes the full width of the message.
 	// +optional
-	Short *bool `json:"short,omitempty"`
+	Short *bool `json:"short,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate ensures SlackField is valid
@@ -560,11 +591,11 @@ func (sf *SlackField) Validate() error {
 type WebhookConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// +optional
-	URL *string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -591,7 +622,7 @@ type WebhookConfig struct {
 type OpsGenieConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiKey defines the secret's key that contains the OpsGenie API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -600,7 +631,7 @@ type OpsGenieConfig struct {
 	// apiURL defines the URL to send OpsGenie API requests to.
 	// When not specified, defaults to the standard OpsGenie API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
 	// +optional
@@ -742,12 +773,12 @@ type HTTPConfig struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// When true, the client will automatically follow redirect responses.
 	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// enableHttp2 can be used to disable HTTP2.
 	//
 	// +optional
-	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 }
 
 // WebexConfig configures notification via Cisco Webex
@@ -755,7 +786,7 @@ type HTTPConfig struct {
 type WebexConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 
 	// apiURL defines the Webex Teams API URL i.e. https://webexapis.com/v1/messages
 	// +optional
@@ -781,7 +812,7 @@ type WebexConfig struct {
 type WeChatConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiSecret defines the secret's key that contains the WeChat API key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -790,7 +821,7 @@ type WeChatConfig struct {
 	// apiURL defines the WeChat API URL.
 	// When not specified, defaults to the standard WeChat Work API endpoint.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
 	// +optional
@@ -828,7 +859,7 @@ type WeChatConfig struct {
 type EmailConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// to defines the email address to send notifications to.
 	// This is the recipient address for alert notifications.
 	// +optional
@@ -879,7 +910,7 @@ type EmailConfig struct {
 	// requireTLS defines the SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
-	RequireTLS *bool `json:"requireTLS,omitempty"`
+	RequireTLS *bool `json:"requireTLS,omitempty"` // nolint:kubeapilinter
 	// tlsConfig defines the TLS configuration for SMTP connections.
 	// This includes settings for certificates, CA validation, and TLS protocol options.
 	// +optional
@@ -891,7 +922,7 @@ type EmailConfig struct {
 type VictorOpsConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiKey defines the secret's key that contains the API key to use when talking to the VictorOps API.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -900,29 +931,35 @@ type VictorOpsConfig struct {
 	// apiUrl defines the VictorOps API URL.
 	// When not specified, defaults to the standard VictorOps API endpoint.
 	// +optional
-	APIURL string `json:"apiUrl,omitempty"`
+	APIURL *URL `json:"apiUrl,omitempty"`
 	// routingKey defines a key used to map the alert to a team.
 	// This determines which VictorOps team will receive the alert notification.
-	// +optional
+	// +kubebuilder:validation:MinLength=1
+	// +required
 	RoutingKey string `json:"routingKey"`
 	// messageType describes the behavior of the alert.
 	// Valid values are "CRITICAL", "WARNING", and "INFO".
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MessageType string `json:"messageType,omitempty"`
+	MessageType *string `json:"messageType,omitempty"`
 	// entityDisplayName contains a summary of the alerted problem.
 	// This appears as the main title or identifier for the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	EntityDisplayName string `json:"entityDisplayName,omitempty"`
+	EntityDisplayName *string `json:"entityDisplayName,omitempty"`
 	// stateMessage contains a long explanation of the alerted problem.
 	// This provides detailed context about the incident.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	StateMessage string `json:"stateMessage,omitempty"`
+	StateMessage *string `json:"stateMessage,omitempty"`
 	// monitoringTool defines the monitoring tool the state message is from.
 	// This helps identify the source system that generated the alert.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MonitoringTool string `json:"monitoringTool,omitempty"`
+	MonitoringTool *string `json:"monitoringTool,omitempty"`
 	// customFields defines additional custom fields for notification.
 	// These provide extra metadata that will be included with the VictorOps incident.
+	// +listType=atomic
 	// +optional
 	CustomFields []KeyValue `json:"customFields,omitempty"`
 	// httpConfig defines the HTTP client's configuration for VictorOps API requests.
@@ -935,7 +972,7 @@ type VictorOpsConfig struct {
 type PushoverConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// userKey defines the secret's key that contains the recipient user's user key.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -962,50 +999,61 @@ type PushoverConfig struct {
 	TokenFile *string `json:"tokenFile,omitempty"`
 	// title defines the notification title displayed in the Pushover message.
 	// This appears as the bold header text in the notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// message defines the notification message content.
 	// This is the main body text of the Pushover notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	URLTitle string `json:"urlTitle,omitempty"`
+	URLTitle *string `json:"urlTitle,omitempty"`
 	// ttl defines the time to live for the alert notification.
 	// This determines how long the notification remains active before expiring.
 	// +optional
 	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
 	// device defines the name of a specific device to send the notification to.
 	// If not specified, the notification is sent to all user's devices.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Device *string `json:"device,omitempty"`
 	// sound defines the name of one of the sounds supported by device clients.
 	// This overrides the user's default sound choice for this notification.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Sound string `json:"sound,omitempty"`
+	Sound *string `json:"sound,omitempty"`
 	// priority defines the notification priority level.
 	// See https://pushover.net/api#priority for valid values and behavior.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Priority string `json:"priority,omitempty"`
+	Priority *string `json:"priority,omitempty"`
 	// retry defines how often the Pushover servers will send the same notification to the user.
 	// Must be at least 30 seconds. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	Retry string `json:"retry,omitempty"`
+	Retry *string `json:"retry,omitempty"`
 	// expire defines how long your notification will continue to be retried for,
 	// unless the user acknowledges the notification. Only applies to priority 2 notifications.
 	// +kubebuilder:validation:Pattern=`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// +optional
-	Expire string `json:"expire,omitempty"`
+	Expire *string `json:"expire,omitempty"`
 	// html defines whether notification message is HTML or plain text.
 	// When true, the message can include HTML formatting tags.
+	// html and monospace formatting are mutually exclusive.
 	// +optional
-	HTML bool `json:"html,omitempty"`
+	HTML *bool `json:"html,omitempty"` //nolint:kubeapilinter
+	// monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
+	// html and monospace formatting are mutually exclusive.
+	// +optional
+	Monospace *bool `json:"monospace,omitempty"` //nolint:kubeapilinter
 	// httpConfig defines the HTTP client configuration for Pushover API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
@@ -1016,7 +1064,7 @@ type PushoverConfig struct {
 type SNSConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
@@ -1048,6 +1096,7 @@ type SNSConfig struct {
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
 	// +optional
+	//nolint:kubeapilinter
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional
@@ -1059,11 +1108,11 @@ type SNSConfig struct {
 type TelegramConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
 	// If not specified, the default Telegram API URL will be used.
 	// +optional
-	APIURL string `json:"apiURL,omitempty"`
+	APIURL *URL `json:"apiURL,omitempty"`
 	// botToken defines the Telegram bot token. It is mutually exclusive with `botTokenFile`.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -1092,7 +1141,7 @@ type TelegramConfig struct {
 	// disableNotifications controls whether Telegram notifications are sent silently.
 	// When true, users will receive the message without notification sounds.
 	// +optional
-	DisableNotifications *bool `json:"disableNotifications,omitempty"`
+	DisableNotifications *bool `json:"disableNotifications,omitempty"` // nolint:kubeapilinter
 	// parseMode defines the parse mode for telegram message formatting.
 	// Valid values are "MarkdownV2", "Markdown", and "HTML".
 	// This determines how text formatting is interpreted in the message.
@@ -1109,7 +1158,7 @@ type TelegramConfig struct {
 type MSTeamsConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// webhookUrl defines the MSTeams webhook URL for sending notifications.
 	// This is the incoming webhook URL configured in your Teams channel.
 	// +required
@@ -1138,7 +1187,7 @@ type MSTeamsConfig struct {
 type MSTeamsV2Config struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// webhookURL defines the MSTeams incoming webhook URL for adaptive card notifications.
 	// This webhook must support the newer adaptive cards format required by Teams flows.
 	// +optional
@@ -1163,7 +1212,7 @@ type MSTeamsV2Config struct {
 type RocketChatConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// apiURL defines the API URL for RocketChat.
 	// Defaults to https://open.rocket.chat/ if not specified.
 	// +optional
@@ -1218,7 +1267,7 @@ type RocketChatConfig struct {
 	// shortFields defines whether to use short fields in the message layout.
 	// When true, fields may be displayed side by side to save space.
 	// +optional
-	ShortFields *bool `json:"shortFields,omitempty"`
+	ShortFields *bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
 	// imageURL defines the image URL to display within the message.
 	// This embeds an image directly in the message attachment.
 	// +optional
@@ -1230,7 +1279,7 @@ type RocketChatConfig struct {
 	// linkNames defines whether to enable automatic linking of usernames and channels.
 	// When true, @username and #channel references become clickable links.
 	// +optional
-	LinkNames *bool `json:"linkNames,omitempty"`
+	LinkNames *bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
 	// actions defines interactive actions to include in the message.
 	// These appear as buttons that users can click to trigger responses.
 	// +kubebuilder:validation:MinItems=1
@@ -1256,7 +1305,7 @@ type RocketChatFieldConfig struct {
 	// short defines whether this field should be a short field.
 	// When true, the field may be displayed inline with other short fields to save space.
 	// +optional
-	Short *bool `json:"short,omitempty"`
+	Short *bool `json:"short,omitempty"` // nolint:kubeapilinter
 }
 
 // RocketChatActionConfig defines actions for RocketChat messages.

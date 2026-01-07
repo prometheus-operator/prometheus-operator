@@ -791,11 +791,29 @@ spec:
                       description: |-
                         port defines the `Pod` port name which exposes the endpoint.
 
+                        If the pod doesn't expose a port with the same name, it will result
+                        in no targets being discovered.
+
+                        If a `Pod` has multiple `Port`s with the same name (which is not
+                        recommended), one target instance per unique port number will be
+                        generated.
+
                         It takes precedence over the `portNumber` and `targetPort` fields.
                       type: string
                     portNumber:
-                      description: portNumber defines the `Pod` port number which
-                        exposes the endpoint.
+                      description: |-
+                        portNumber defines the `Pod` port number which exposes the endpoint.
+
+                        The `Pod` must declare the specified `Port` in its spec or the
+                        target will be dropped by Prometheus.
+
+                        This cannot be used to enable scraping of an undeclared port.
+                        To scrape targets on a port which isn't exposed, you need to use
+                        relabeling to override the `__address__` label (but beware of
+                        duplicate targets if the `Pod` has other declared ports).
+
+                        In practice Prometheus will select targets for which the
+                        matches the target's __meta_kubernetes_pod_container_port_number.
                       format: int32
                       maximum: 65535
                       minimum: 1
@@ -940,16 +958,12 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: |-
-                        scheme defines the HTTP scheme to use for scraping.
-
-                        `http` and `https` are the expected values unless you rewrite the
-                        `__scheme__` label via relabeling.
-
-                        If empty, Prometheus uses the default value `http`.
+                      description: scheme defines the HTTP scheme to use for scraping.
                       enum:
                       - http
                       - https
+                      - HTTP
+                      - HTTPS
                       type: string
                     scrapeTimeout:
                       description: |-
@@ -1171,6 +1185,11 @@ spec:
                   It requires Prometheus >= v2.45.0.
 
                   Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
+                type: boolean
+              scrapeNativeHistograms:
+                description: |-
+                  scrapeNativeHistograms defines whether to enable scraping of native histograms.
+                  It requires Prometheus >= v3.8.0.
                 type: boolean
               scrapeProtocols:
                 description: |-

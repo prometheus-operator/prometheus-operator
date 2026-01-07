@@ -1,3 +1,61 @@
+## Unreleased
+
+* [CHANGE] Use narrower selectors for statefulset informers in Alertmanager and ThanosRuler controllers. It is recommended to upgrade from v0.85.0 (at least). #8246
+* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8119
+* [FEATURE] Add `updateStrategy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8202
+* [ENHANCEMENT] Use `.spec.minReadySeconds` to delay the first flush of aggregation groups in Alertmanager. #8201
+* [ENHANCEMENT] Update operator instrumentation to expose native histograms. #8194
+
+## 0.87.1 / 2025-12-10
+
+* [BUGFIX] Fix the generated Alertmanager configuration for `html` and `monospace` fields of `pushoverConfig` receiver in AlertmanagerConfig CRD. #8153
+
+## 0.87.0 / 2025-11-20
+
+* [FEATURE] Add status subresource for `PrometheusRule` custom resources (requires the `StatusForConfigurationResources` feature gate). #8069 #8086 #8024 #8005
+* [ENHANCEMENT] Avoid statefulset's rollout due to changes in the number of rule configmaps for `Prometheus` and `ThanosRuler`. #8010
+* [ENHANCEMENT] Support Azure system-assigned managed identities for remote-write configuration. #7815
+* [ENHANCEMENT] Add `monospace` field to to `pushoverConfig` receiver in AlertmanagerConfig CRD. #8018
+* [BUGFIX] Propagate Certificate Authority updates for HTTP configuration in Alertmanager's global configuration. #8089
+
+## 0.86.2 / 2025-11-07
+
+* [CHANGE/BUGFIX] Fix operator's permissions to emit Kubernetes events. #8077
+
+## 0.86.1 / 2025-10-13
+
+* [BUGFIX] Fix formatting of Kubernetes events. #8015
+
+## 0.86.0 / 2025-10-07
+
+> [!NOTE]
+> This release introduces the status subresource (behind the `StatusForConfigurationResources` feature gate) for `ServiceMonitor`, `PodMonitor`, `Probe` and `Scrapeconfig` custom resources. It is only supported for `Prometheus` resources.
+
+> [!IMPORTANT]
+> This release enables automatic UTF-8 character support in label names, metric names and PrometheusRule expressions for Prometheus/PrometheusAgent resources running with version >= 3.0.0.
+>
+> To preserve backward compatibility, the admission webhook service validates PrometheusRule resources against the legacy Prometheus scheme by default (but it can be changed with the `--name-validation-scheme` flag).
+
+* [CHANGE] Remove automatic addition of the `metadata-wal-records` feature flag for Prometheus versions >= 3.4. #7893
+* [CHANGE] Add miscellaneous validations to the `ScrapeConfig` CRD. #7856 #7823 #7835 #7838 #7838 #7966
+* [CHANGE/FEATURE] Add support for UTF-8 characters to label names and metric names in `PrometheusRule` resources and relabel configurations. #7637 #7985
+* [FEATURE] Add the flag `--name-validation-scheme` to admission webhook to select between utf8 and legacy validations. #7985
+* [FEATURE] Add status subresource for `ServiceMonitor` custom resources (requires the `StatusForConfigurationResources` feature gate). #7767 #7836 #7827 #7795
+* [FEATURE] Add status subresource for `PodMonitor` custom resources (requires the `StatusForConfigurationResources` feature gate). #7929 #7914 #7936
+* [FEATURE] Add status subresource for `ScrapeConfig` custom resources (requires the `StatusForConfigurationResources` feature gate). #7958 #7964 #7969
+* [FEATURE] Add status subresource for `Probe` custom resources (requires the `StatusForConfigurationResources` feature gate). #7933 #7934 #7980
+* [FEATURE] Add `serviceDiscoveryRole` field to ServiceMonitor. #7982
+* [FEATURE] Add `useFIPSSTSEndpoint` field to Sigv4 config. #7987
+* [FEATURE] Add `UnderscoreEscapingWithoutSuffixes` to the `translationStrategy` field for the Prometheus and PrometheusAgent CRDs. #7947
+* [FEATURE] Add `promoteScopeMetadata` field to the Prometheus and PrometheusAgent CRDs. #7803
+* [FEATURE] Add `enableHttp2` field to Alertmanager and AlertmanagerConfig CRDs. #7963
+* [ENHANCEMENT] Add the related object to the events emitted by the operator. #7867 #7953
+* [ENHANCEMENT] Add webhook validation for the MSTeams V2 receiver of `AlertmanagerConfig` CRD. #7906
+* [ENHANCEMENT] Add `app.kubernetes.io/managed-by: prometheus-operator` label to all managed resources. #7939
+* [BUGFIX] Prevent duplicate authentication settings in PodMonitor. #7975
+* [BUGFIX] Use distinct port name for the config-reloader init container to avoid duplicate port name warnings. #7904
+* [BUGFIX] Validate the PagerDuty URL in the Alertmanager's global configuration. #7945
+
 ## 0.85.0 / 2025-08-21
 
 * [CHANGE/BUGFIX] Add the `--watch-referenced-objects-in-all-namespaces` CLI argument. When enabled, the operator watches for secrets and configmaps in both workload and configuration resources. It ensures that reconciliation happens when a referenced secret/configmap is updated. #7615
