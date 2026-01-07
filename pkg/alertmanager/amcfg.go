@@ -2566,6 +2566,12 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		return errors.New("either monospace or html must be configured")
 	}
 
+	if poc.URL != "" {
+		if _, err := validation.ValidateURL(poc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
 	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 
