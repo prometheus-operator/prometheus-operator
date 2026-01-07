@@ -83,8 +83,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "www.test.com",
-											Name: "c",
+											URL:  ptr.To(monitoringv1beta1.URL("www.test.com")),
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -500,8 +500,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "https://www.test.com",
-											Name: "c",
+											URL:  ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},

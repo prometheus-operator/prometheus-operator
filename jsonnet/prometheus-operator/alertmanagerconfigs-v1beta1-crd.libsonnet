@@ -5627,10 +5627,12 @@
                                   properties: {
                                     dismissText: {
                                       description: 'dismissText defines the label for the cancel button in the dialog.\nWhen not specified, defaults to "Cancel". This button cancels the action.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                     okText: {
                                       description: 'okText defines the label for the confirmation button in the dialog.\nWhen not specified, defaults to "Okay". This button proceeds with the action.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                     text: {
@@ -5640,6 +5642,7 @@
                                     },
                                     title: {
                                       description: 'title defines the title text displayed at the top of the confirmation dialog.\nWhen not specified, a default title will be used.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                   },
@@ -5650,10 +5653,12 @@
                                 },
                                 name: {
                                   description: 'name defines a unique identifier for the action within the message.\nThis value is sent back to your application when the action is triggered.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 style: {
                                   description: 'style defines the visual appearance of the action element.\nValid values include "default", "primary" (green), and "danger" (red).',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 text: {
@@ -5668,10 +5673,12 @@
                                 },
                                 url: {
                                   description: 'url defines the URL to open when the action is triggered.\nOnly applicable for button-type actions. When set, clicking the button opens this URL.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 value: {
                                   description: 'value defines the payload sent when the action is triggered.\nThis data is included in the callback sent to your application.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
@@ -5681,7 +5688,9 @@
                               ],
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           apiURL: {
                             description: "apiURL defines the secret's key that contains the Slack webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -5705,18 +5714,22 @@
                           },
                           callbackId: {
                             description: 'callbackId defines an identifier for the message used in interactive components.',
+                            minLength: 1,
                             type: 'string',
                           },
                           channel: {
                             description: 'channel defines the channel or user to send notifications to.',
+                            minLength: 1,
                             type: 'string',
                           },
                           color: {
                             description: 'color defines the color of the left border of the Slack message attachment.\nCan be a hex color code (e.g., "#ff0000") or a predefined color name.',
+                            minLength: 1,
                             type: 'string',
                           },
                           fallback: {
                             description: "fallback defines a plain-text summary of the attachment for clients that don't support attachments.",
+                            minLength: 1,
                             type: 'string',
                           },
                           fields: {
@@ -5745,10 +5758,13 @@
                               ],
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           footer: {
                             description: 'footer defines small text displayed at the bottom of the message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -6391,14 +6407,17 @@
                           },
                           iconEmoji: {
                             description: "iconEmoji defines the emoji to use as the bot's avatar (e.g., \":ghost:\").",
+                            minLength: 1,
                             type: 'string',
                           },
                           iconURL: {
                             description: "iconURL defines the URL to an image to use as the bot's avatar.",
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the URL to an image file that will be displayed inside the message attachment.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -6408,12 +6427,16 @@
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
                             items: {
+                              minLength: 1,
                               type: 'string',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pretext: {
                             description: 'pretext defines optional text that appears above the message attachment block.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -6426,10 +6449,12 @@
                           },
                           text: {
                             description: 'text defines the main text content of the Slack message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           thumbURL: {
                             description: 'thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           timeout: {
@@ -6439,14 +6464,17 @@
                           },
                           title: {
                             description: 'title defines the title text displayed in the Slack message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           titleLink: {
                             description: 'titleLink defines the URL that the title will link to when clicked.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           username: {
                             description: 'username defines the slack bot user name.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
