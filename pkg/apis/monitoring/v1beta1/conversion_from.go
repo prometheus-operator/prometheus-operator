@@ -475,7 +475,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		TokenFile:    in.TokenFile,
 		Title:        in.Title,
 		Message:      in.Message,
-		URL:          in.URL,
+		URL:          (*URL)(in.URL),
 		URLTitle:     in.URLTitle,
 		Device:       in.Device,
 		Sound:        in.Sound,
