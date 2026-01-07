@@ -44,6 +44,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
+	crd "github.com/prometheus-operator/prometheus-operator/example/prometheus-operator-crd"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
@@ -766,5 +767,46 @@ func run(fs *flag.FlagSet) int {
 }
 
 func main() {
+	// Handle 'crd' subcommand before parsing flags
+	if len(os.Args) > 1 && os.Args[1] == "crd" {
+		os.Exit(runCRDCommand(os.Args[2:]))
+	}
 	os.Exit(run(flag.CommandLine))
+}
+
+// runCRDCommand handles the 'crd' subcommand for printing embedded CRDs.
+func runCRDCommand(args []string) int {
+	if len(args) == 0 {
+		fmt.Fprintln(os.Stderr, "Usage: operator crd <command>")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Commands:")
+		fmt.Fprintln(os.Stderr, "  print    Print all CRDs to stdout")
+		fmt.Fprintln(os.Stderr, "  list     List available CRD names")
+		return 1
+	}
+
+	switch args[0] {
+	case "print":
+		if err := crd.PrintAll(os.Stdout); err != nil {
+			fmt.Fprintf(os.Stderr, "Error printing CRDs: %v\n", err)
+			return 1
+		}
+		return 0
+
+	case "list":
+		names, err := crd.ListNames()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error listing CRDs: %v\n", err)
+			return 1
+		}
+		for _, name := range names {
+			fmt.Println(name)
+		}
+		return 0
+
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown crd command: %s\n", args[0])
+		fmt.Fprintln(os.Stderr, "Run 'operator crd' for usage.")
+		return 1
+	}
 }
