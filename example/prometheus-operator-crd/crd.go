@@ -21,7 +21,8 @@ import (
 	"embed"
 	"fmt"
 	"io"
-	"sort"
+	"io/fs"
+	"slices"
 	"strings"
 )
 
@@ -44,8 +45,8 @@ func PrintAll(w io.Writer) error {
 	}
 
 	// Sort files for consistent output order
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Name() < files[j].Name()
+	slices.SortFunc(files, func(a, b fs.DirEntry) int {
+		return strings.Compare(a.Name(), b.Name())
 	})
 
 	for i, file := range files {
@@ -86,7 +87,7 @@ func ListNames() ([]string, error) {
 		names = append(names, f.Name())
 	}
 
-	sort.Strings(names)
+	slices.Sort(names)
 	return names, nil
 }
 
