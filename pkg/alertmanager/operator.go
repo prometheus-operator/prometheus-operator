@@ -285,17 +285,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			c.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				// TODO(simonpasquier): use a more restrictive label selector
-				// selecting only Alertmanager statefulsets (e.g.
-				// "app.kubernetes.io/name in (alertmanager)").
-				//
-				// We need to wait for a couple of releases after [1] merges to
-				// ensure that the expected labels have been propagated to the
-				// Alertmanager statefulsets otherwise the informer won't
-				// select any object.
-				//
-				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
-				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+				options.LabelSelector = labelSelectorForStatefulSets()
 			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
@@ -775,6 +765,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
+// makeSelectorLabels returns the default selector for the pods of the Alertmanager statefulset.
 func makeSelectorLabels(name string) map[string]string {
 	return map[string]string{
 		operator.ApplicationNameLabelKey:     applicationNameLabelValue,
@@ -782,6 +773,16 @@ func makeSelectorLabels(name string) map[string]string {
 		operator.ApplicationInstanceLabelKey: name,
 		"alertmanager":                       name,
 	}
+}
+
+// labelSelectorForStatefulSets returns a label selector which selects
+// all Alertmanager statefulsets.
+func labelSelectorForStatefulSets() string {
+	return fmt.Sprintf(
+		"%s in (%s),%s in (%s)",
+		operator.ManagedByLabelKey, operator.ManagedByLabelValue,
+		operator.ApplicationNameLabelKey, applicationNameLabelValue,
+	)
 }
 
 func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
