@@ -942,6 +942,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
 			reset := resetFieldFn("none")
 			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity)
+		}
 
 		// Thanos does not support azureAD.scope in any version
 		if rw.AzureAD != nil && rw.AzureAD.Scope != nil {
