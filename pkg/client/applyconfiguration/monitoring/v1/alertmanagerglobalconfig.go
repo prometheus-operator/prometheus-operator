@@ -29,6 +29,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	HTTPConfigWithProxy *HTTPConfigWithProxyApplyConfiguration    `json:"httpConfig,omitempty"`
 	SlackAPIURL         *corev1.SecretKeySelector                 `json:"slackApiUrl,omitempty"`
 	SlackAppToken       *corev1.SecretKeySelector                 `json:"slackAppToken,omitempty"`
+	SlackAppURL         *monitoringv1.URL                         `json:"slackAppUrl,omitempty"`
 	OpsGenieAPIURL      *corev1.SecretKeySelector                 `json:"opsGenieApiUrl,omitempty"`
 	OpsGenieAPIKey      *corev1.SecretKeySelector                 `json:"opsGenieApiKey,omitempty"`
 	PagerdutyURL        *monitoringv1.URL                         `json:"pagerdutyUrl,omitempty"`
@@ -83,6 +84,14 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAPIURL(value corev
 // If called multiple times, the SlackAppToken field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAppToken(value corev1.SecretKeySelector) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.SlackAppToken = &value
+	return b
+}
+
+// WithSlackAppURL sets the SlackAppURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SlackAppURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAppURL(value monitoringv1.URL) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.SlackAppURL = &value
 	return b
 }
 

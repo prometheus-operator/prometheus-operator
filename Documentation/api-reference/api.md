@@ -6435,6 +6435,20 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
+<code>slackAppUrl</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>slackAppUrl defines the default URL for Slack App message posting API.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>opsGenieApiUrl</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
@@ -35703,6 +35717,20 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>appURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appURL defines the URL used for Slack App message posting API.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>channel</code><br/>
 <em>
 string
@@ -40326,6 +40354,20 @@ SecretKeySelector
 <p>appToken defines the secret&rsquo;s key that contains the Slack app token.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>appURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appURL defines the URL used for Slack App message posting API.</p>
 </td>
 </tr>
 <tr>

@@ -375,6 +375,9 @@ type SlackConfig struct {
 	// object and accessible by the Prometheus Operator.
 	// +optional
 	AppToken *SecretKeySelector `json:"appToken,omitempty"`
+	// appURL defines the URL used for Slack App message posting API.
+	// +optional
+	AppURL *URL `json:"appURL,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

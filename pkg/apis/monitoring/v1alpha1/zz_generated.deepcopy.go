@@ -3092,6 +3092,11 @@ func (in *SlackConfig) DeepCopyInto(out *SlackConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AppURL != nil {
+		in, out := &in.AppURL, &out.AppURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.Channel != nil {
 		in, out := &in.Channel, &out.Channel
 		*out = new(string)

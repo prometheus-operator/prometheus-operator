@@ -2036,6 +2036,11 @@ spec:
                         - key
                         type: object
                         x-kubernetes-map-type: atomic
+                      slackAppUrl:
+                        description: slackAppUrl defines the default URL for Slack
+                          App message posting API.
+                        pattern: ^(http|https)://.+$
+                        type: string
                       smtp:
                         description: smtp defines global SMTP parameters.
                         properties:

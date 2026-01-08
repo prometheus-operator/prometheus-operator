@@ -5732,6 +5732,11 @@
                             ],
                             type: 'object',
                           },
+                          appURL: {
+                            description: 'appURL defines the URL used for Slack App message posting API.',
+                            pattern: '^https?://.+$',
+                            type: 'string',
+                          },
                           callbackId: {
                             description: 'callbackId defines an identifier for the message used in interactive components.',
                             minLength: 1,

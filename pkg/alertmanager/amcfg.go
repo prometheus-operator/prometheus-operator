@@ -940,6 +940,10 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.AppToken = appToken
 	}
 
+	if ptr.Deref(in.AppURL, "") != "" {
+		out.AppURL = string(*in.AppURL)
+	}
+
 	if ptr.Deref(in.TitleLink, "") != "" {
 		out.TitleLink = string(*in.TitleLink)
 	}
