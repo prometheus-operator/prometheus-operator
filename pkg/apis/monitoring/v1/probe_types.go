@@ -42,7 +42,7 @@ const (
 type Probe struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline,omitempty"`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -143,7 +143,7 @@ type ProbeSpec struct {
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
 	// +optional
-	NativeHistogramConfig `json:",inline"`
+	NativeHistogramConfig `json:",inline,omitempty"`
 
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
@@ -275,7 +275,7 @@ type ProberSpec struct {
 	Path string `json:"path,omitempty"`
 
 	// +optional
-	ProxyConfig `json:",inline"`
+	ProxyConfig `json:",inline,omitempty"`
 }
 
 // ProbeList is a list of Probes.
@@ -283,7 +283,7 @@ type ProberSpec struct {
 type ProbeList struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline,omitempty"`
 	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
