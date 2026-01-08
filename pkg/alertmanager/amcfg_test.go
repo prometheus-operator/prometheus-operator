@@ -7092,6 +7092,68 @@ func TestSanitizeMSTeamsConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeWebexConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "webex invalid api_url returns error",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "not-a-valid-url",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "webex valid api_url passes validation",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "https://webexapis.com/v1/messages",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+			golden: "webex_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.DiscardHandler)

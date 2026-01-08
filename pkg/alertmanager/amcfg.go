@@ -2863,6 +2863,12 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		return fmt.Errorf("mandatory field %q is empty", "room_id")
 	}
 
+	if tc.APIURL != "" {
+		if _, err := validation.ValidateURL(tc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
