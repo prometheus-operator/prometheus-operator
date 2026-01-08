@@ -1138,7 +1138,7 @@ func (l *Prometheus) DeepCopyObject() runtime.Object {
 type PrometheusList struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline,omitempty"`
 	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -1156,7 +1156,7 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	// +optional
-	CommonPrometheusFields `json:",inline"`
+	CommonPrometheusFields `json:",inline,omitempty"`
 
 	// baseImage is deprecated: use 'spec.image' instead.
 	// +optional
@@ -1348,22 +1348,22 @@ type PrometheusStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"` // nolint:kubeapilinter
+	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// replicas defines the total number of non-terminated pods targeted by this Prometheus deployment
 	// (their labels match the selector).
 	// +optional
-	Replicas int32 `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 	// updatedReplicas defines the total number of non-terminated pods targeted by this Prometheus deployment
 	// that have the desired version spec.
 	// +optional
-	UpdatedReplicas int32 `json:"updatedReplicas"`
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Prometheus deployment.
 	// +optional
-	AvailableReplicas int32 `json:"availableReplicas"`
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 	// unavailableReplicas defines the total number of unavailable pods targeted by this Prometheus deployment.
 	// +optional
-	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 	// conditions defines the current state of the Prometheus deployment.
 	// +listType=map
 	// +listMapKey=type
@@ -1445,7 +1445,7 @@ type QuerySpec struct {
 // +k8s:openapi-gen=true
 type PrometheusWebSpec struct {
 	// +optional
-	WebConfigFileFields `json:",inline"`
+	WebConfigFileFields `json:",inline,omitempty"`
 	// pageTitle defines the prometheus web page title.
 	// +optional
 	PageTitle *string `json:"pageTitle,omitempty"`
@@ -1743,7 +1743,7 @@ type RemoteWriteSpec struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline"`
+	ProxyConfig `json:",inline,omitempty"`
 
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
@@ -1931,7 +1931,7 @@ type ManagedIdentity struct {
 	//
 	// +optional
 	// +kubebuilder:validation:MinLength:=1
-	ClientID *string `json:"clientId"`
+	ClientID *string `json:"clientId,omitempty"`
 }
 
 // AzureSDK is used to store azure SDK config values.
@@ -2035,7 +2035,7 @@ type RemoteReadSpec struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline"`
+	ProxyConfig `json:",inline,omitempty"`
 
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
@@ -2159,7 +2159,7 @@ type APIServerConfig struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline"`
+	ProxyConfig `json:",inline,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=v1;V1;v2;V2
@@ -2242,7 +2242,7 @@ type AlertmanagerEndpoints struct {
 
 	// ProxyConfig
 	// +optional
-	ProxyConfig `json:",inline"`
+	ProxyConfig `json:",inline,omitempty"`
 
 	// apiVersion defines the version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "V1" or "V2".
@@ -2411,7 +2411,7 @@ func (c *SafeAuthorization) Validate() error {
 
 type Authorization struct {
 	// +optional
-	SafeAuthorization `json:",inline"`
+	SafeAuthorization `json:",inline,omitempty"`
 
 	// credentialsFile defines the file to read a secret from, mutually exclusive with `credentials`.
 	// +optional
