@@ -89,7 +89,7 @@ type AlertmanagerConfigSpec struct {
 	// namespace. If present, it will be added to the generated Alertmanager
 	// configuration as a first-level route.
 	// +optional
-	Route *Route `json:"route"`
+	Route *Route `json:"route,omitempty"`
 	// receivers defines the list of receivers.
 	// +listType=map
 	// +listMapKey=name
@@ -111,7 +111,7 @@ type Route struct {
 	// receiver defines the name of the receiver for this route. If not empty, it should be listed in
 	// the `receivers` field.
 	// +optional
-	Receiver string `json:"receiver"`
+	Receiver string `json:"receiver,omitempty"`
 	// groupBy defines the list of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
@@ -1432,7 +1432,7 @@ type Matcher struct {
 	// value defines the label value to match.
 	// This is the expected value for the specified label.
 	// +optional
-	Value string `json:"value"`
+	Value string `json:"value,omitempty"`
 	// matchType defines the match operation available with AlertManager >= v0.22.0.
 	// Takes precedence over Regex (deprecated) if non-empty.
 	// Valid values: "=" (equality), "!=" (inequality), "=~" (regex match), "!~" (regex non-match).
