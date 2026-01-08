@@ -7316,6 +7316,68 @@ func TestSanitizeWebexConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeSNSConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "sns invalid api_url returns error",
+			againstVersion: versionSNSAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "not-a-valid-url",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "sns valid api_url passes validation",
+			againstVersion: versionSNSAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+							},
+						},
+					},
+				},
+			},
+			golden: "sns_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
 func TestSanitizeWeChatConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionWeChatAllowed := semver.Version{Major: 0, Minor: 26}

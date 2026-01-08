@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  sns_configs:
+  - api_url: https://sns.us-east-1.amazonaws.com
+    topic_arn: arn:aws:sns:us-east-1:123456789012:test
+templates: []
