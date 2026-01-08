@@ -212,6 +212,16 @@ update-go-deps:
 	(cd pkg/apis/monitoring && go get -u ./...)
 	@echo "Don't forget to run 'make tidy'"
 
+.PHONY: update-go-deps-non-k8s
+update-go-deps-non-k8s:
+	for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all | grep -v -E '^k8s\.io/|^sigs\.k8s\.io/'); do \
+		go get -u $$m; \
+	done
+	(cd pkg/client && for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all | grep -v -E '^k8s\.io/|^sigs\.k8s\.io/'); do go get -u $$m; done)
+	(cd pkg/apis/monitoring && for m in $$(go list -mod=readonly -m -f '{{ if and (not .Indirect) (not .Main)}}{{.Path}}{{end}}' all | grep -v -E '^k8s\.io/|^sigs\.k8s\.io/'); do go get -u $$m; done)
+	@echo "Updated all non-Kubernetes dependencies"
+	@echo "Don't forget to run 'make tidy'"
+
 ##############
 # Generating #
 ##############
