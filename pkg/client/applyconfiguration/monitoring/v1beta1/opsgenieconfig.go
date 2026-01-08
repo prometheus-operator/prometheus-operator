@@ -16,12 +16,16 @@
 
 package v1beta1
 
+import (
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+)
+
 // OpsGenieConfigApplyConfiguration represents a declarative configuration of the OpsGenieConfig type for use
 // with apply.
 type OpsGenieConfigApplyConfiguration struct {
 	SendResolved *bool                                       `json:"sendResolved,omitempty"`
 	APIKey       *SecretKeySelectorApplyConfiguration        `json:"apiKey,omitempty"`
-	APIURL       *string                                     `json:"apiURL,omitempty"`
+	APIURL       *monitoringv1beta1.URL                      `json:"apiURL,omitempty"`
 	Message      *string                                     `json:"message,omitempty"`
 	Description  *string                                     `json:"description,omitempty"`
 	Source       *string                                     `json:"source,omitempty"`
@@ -60,7 +64,7 @@ func (b *OpsGenieConfigApplyConfiguration) WithAPIKey(value *SecretKeySelectorAp
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *OpsGenieConfigApplyConfiguration) WithAPIURL(value string) *OpsGenieConfigApplyConfiguration {
+func (b *OpsGenieConfigApplyConfiguration) WithAPIURL(value monitoringv1beta1.URL) *OpsGenieConfigApplyConfiguration {
 	b.APIURL = &value
 	return b
 }

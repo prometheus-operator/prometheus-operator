@@ -4643,6 +4643,21 @@ spec:
                   paused defines when a ThanosRuler deployment is paused, no actions except for deletion
                   will be performed on the underlying objects.
                 type: boolean
+              podManagementPolicy:
+                description: |-
+                  podManagementPolicy defines the policy for creating/deleting pods when
+                  scaling up and down.
+
+                  Unlike the default StatefulSet behavior, the default policy is
+                  `Parallel` to avoid manual intervention in case a pod gets stuck during
+                  a rollout.
+
+                  Note that updating this value implies the recreation of the StatefulSet
+                  which incurs a service outage.
+                enum:
+                - OrderedReady
+                - Parallel
+                type: string
               podMetadata:
                 description: |-
                   podMetadata defines labels and annotations which are propagated to the ThanosRuler pods.
@@ -4836,19 +4851,20 @@ spec:
                         managedIdentity:
                           description: |-
                             managedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth` or `sdk`.
+                            Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
                           properties:
                             clientId:
-                              description: clientId defines defines the Azure User-assigned
-                                Managed identity.
+                              description: |-
+                                clientId defines the Azure User-assigned Managed identity.
+
+                                For Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.
+                              minLength: 1
                               type: string
-                          required:
-                          - clientId
                           type: object
                         oauth:
                           description: |-
                             oauth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity` or `sdk`.
+                            Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
                           properties:
@@ -4896,11 +4912,17 @@ spec:
                           - clientSecret
                           - tenantId
                           type: object
+                        scope:
+                          description: |-
+                            scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+                            It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+                          pattern: ^[\w\s:/.\\-]+$
+                          type: string
                         sdk:
                           description: |-
                             sdk defines the Azure SDK config that is being used to authenticate.
                             See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+                            Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
                           properties:
@@ -4910,6 +4932,27 @@ spec:
                                 authenticate.
                               pattern: ^[0-9a-zA-Z-.]+$
                               type: string
+                          type: object
+                        workloadIdentity:
+                          description: |-
+                            workloadIdentity defines the Azure Workload Identity authentication.
+                            Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+
+                            It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
+                          properties:
+                            clientId:
+                              description: clientId is the clientID of the Azure Active
+                                Directory application.
+                              minLength: 1
+                              type: string
+                            tenantId:
+                              description: tenantId is the tenant ID of the Azure
+                                Active Directory application.
+                              minLength: 1
+                              type: string
+                          required:
+                          - clientId
+                          - tenantId
                           type: object
                       type: object
                     basicAuth:
@@ -5020,8 +5063,11 @@ spec:
                       - V2.0
                       type: string
                     metadataConfig:
-                      description: metadataConfig defines how to send a series metadata
-                        to the remote storage.
+                      description: |-
+                        metadataConfig defines how to send a series metadata to the remote storage.
+
+                        When the field is empty, **no metadata** is sent. But when the field is
+                        null, metadata is sent.
                       properties:
                         maxSamplesPerSend:
                           description: |-
@@ -5591,6 +5637,11 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        useFIPSSTSEndpoint:
+                          description: |-
+                            useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+                            It requires Prometheus >= v2.54.0.
+                          type: boolean
                       type: object
                     tlsConfig:
                       description: tlsConfig to use for the URL.
@@ -5848,9 +5899,9 @@ spec:
                               configured regular expression.
                             items:
                               description: |-
-                                LabelName is a valid Prometheus label name which may only contain ASCII
-                                letters, numbers, as well as underscores.
-                              pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+                                LabelName is a valid Prometheus label name.
+                                For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                                For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
                               type: string
                             type: array
                           targetLabel:
@@ -7309,6 +7360,48 @@ spec:
 
                   This field takes precedence over `tracingConfig`.
                 type: string
+              updateStrategy:
+                description: |-
+                  updateStrategy indicates the strategy that will be employed to update
+                  Pods in the StatefulSet when a revision is made to statefulset's Pod
+                  Template.
+
+                  The default strategy is RollingUpdate.
+                properties:
+                  rollingUpdate:
+                    description: rollingUpdate is used to communicate parameters when
+                      type is RollingUpdate.
+                    properties:
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        description: |-
+                          maxUnavailable is the maximum number of pods that can be unavailable
+                          during the update. The value can be an absolute number (ex: 5) or a
+                          percentage of desired pods (ex: 10%). Absolute number is calculated from
+                          percentage by rounding up. This can not be 0.  Defaults to 1. This field
+                          is alpha-level and is only honored by servers that enable the
+                          MaxUnavailableStatefulSet feature. The field applies to all pods in the
+                          range 0 to Replicas-1.  That means if there is any unavailable pod in
+                          the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
+                        x-kubernetes-int-or-string: true
+                    type: object
+                  type:
+                    description: |-
+                      type indicates the type of the StatefulSetUpdateStrategy.
+
+                      Default is RollingUpdate.
+                    enum:
+                    - OnDelete
+                    - RollingUpdate
+                    type: string
+                required:
+                - type
+                type: object
+                x-kubernetes-validations:
+                - message: rollingUpdate requires type to be RollingUpdate
+                  rule: '!(self.type != ''RollingUpdate'' && has(self.rollingUpdate))'
               version:
                 description: version of Thanos to be deployed.
                 type: string

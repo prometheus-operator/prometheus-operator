@@ -470,7 +470,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("http://test.local"),
+								URL: ptr.To(monitoringv1alpha1.URL("http://test.local")),
 							},
 						},
 					}},
@@ -565,7 +565,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
 								CorpID: "testingCorpID",
-								APIURL: "http://::invalid-url",
+								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
 					}},
@@ -743,7 +743,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										URL:  "http://localhost",
+										URL:  ptr.To(monitoringv1alpha1.URL("http://localhost")),
 									},
 								},
 							},
@@ -771,7 +771,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 									},
 								},
 							},
@@ -799,7 +799,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "",
 										},
@@ -830,7 +830,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -940,7 +940,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: "my-action",
+										Name: ptr.To("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},

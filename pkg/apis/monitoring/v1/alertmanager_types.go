@@ -198,9 +198,10 @@ type AlertmanagerSpec struct {
 	// paused if set to true all actions on the underlying managed objects are not
 	// going to be performed, except for delete actions.
 	// +optional
-	Paused bool `json:"paused,omitempty"`
+	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
+	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
@@ -228,7 +229,7 @@ type AlertmanagerSpec struct {
 	DNSConfig *PodDNSConfig `json:"dnsConfig,omitempty"`
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	// +optional
-	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
+	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"` // nolint:kubeapilinter
 	// serviceName defines the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Alertmanager resource in the same namespace and it must define a selector that matches the pod labels.
 	// If empty, the operator will create and manage a headless service named `alertmanager-operated` for Alertmanager resources.
@@ -245,7 +246,30 @@ type AlertmanagerSpec struct {
 	// does not bind against the Pod IP. Note this is only for the Alertmanager
 	// UI, not the gossip communication.
 	// +optional
-	ListenLocal bool `json:"listenLocal,omitempty"`
+	ListenLocal bool `json:"listenLocal,omitempty"` // nolint:kubeapilinter
+
+	// podManagementPolicy defines the policy for creating/deleting pods when
+	// scaling up and down.
+	//
+	// Unlike the default StatefulSet behavior, the default policy is
+	// `Parallel` to avoid manual intervention in case a pod gets stuck during
+	// a rollout.
+	//
+	// Note that updating this value implies the recreation of the StatefulSet
+	// which incurs a service outage.
+	//
+	// +optional
+	PodManagementPolicy *PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
+
+	// updateStrategy indicates the strategy that will be employed to update
+	// Pods in the StatefulSet when a revision is made to statefulset's Pod
+	// Template.
+	//
+	// The default strategy is RollingUpdate.
+	//
+	// +optional
+	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
+
 	// containers allows injecting additional containers. This is meant to
 	// allow adding an authentication proxy to an Alertmanager pod.
 	// Containers described here modify an operator generated container if they
@@ -299,7 +323,7 @@ type AlertmanagerSpec struct {
 	// forceEnableClusterMode ensures Alertmanager does not deactivate the cluster mode when running with a single replica.
 	// Use case is e.g. spanning an Alertmanager cluster across Kubernetes clusters with a single replica in each.
 	// +optional
-	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"`
+	ForceEnableClusterMode bool `json:"forceEnableClusterMode,omitempty"` // nolint:kubeapilinter
 	// alertmanagerConfigSelector defines the selector to be used for to merge and configure Alertmanager with.
 	// +optional
 	AlertmanagerConfigSelector *metav1.LabelSelector `json:"alertmanagerConfigSelector,omitempty"`
@@ -313,10 +337,18 @@ type AlertmanagerSpec struct {
 	// +optional
 	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 
-	// minReadySeconds defines the minimum number of seconds for which a newly created pod should be ready
-	// without any of its container crashing for it to be considered available.
+	// minReadySeconds defines the minimum number of seconds for which a newly
+	// created pod should be ready without any of its container crashing for it
+	// to be considered available.
 	//
 	// If unset, pods will be considered available as soon as they are ready.
+	//
+	// When the Alertmanager version is greater than or equal to v0.30.0, the
+	// duration is also used to delay the first flush of the aggregation
+	// groups. This delay helps ensuring that all alerts have been resent by
+	// the Prometheus instances to Alertmanager after a roll-out. It is
+	// possible to override this behavior passing a custom value via
+	// `.spec.additionalArgs`.
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
@@ -332,6 +364,7 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.
@@ -349,7 +382,7 @@ type AlertmanagerSpec struct {
 	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
 	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
 	// +optional
-	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"`
+	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty"` // nolint:kubeapilinter
 	// enableFeatures defines the Alertmanager's feature flags. By default, no features are enabled.
 	// Enabling features which are disabled by default is entirely outside the
 	// scope of what the maintainers will support and by doing so, you accept
@@ -385,7 +418,7 @@ type AlertmanagerSpec struct {
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	//
 	// +optional
-	HostUsers *bool `json:"hostUsers,omitempty"`
+	HostUsers *bool `json:"hostUsers,omitempty"` // nolint:kubeapilinter
 }
 
 type AlertmanagerConfigMatcherStrategy struct {
@@ -452,7 +485,7 @@ type AlertmanagerGlobalConfig struct {
 
 	// httpConfig defines the default HTTP configuration.
 	// +optional
-	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	HTTPConfigWithProxy *HTTPConfigWithProxy `json:"httpConfig,omitempty"`
 
 	// slackApiUrl defines the default Slack API URL.
 	// +optional
@@ -486,7 +519,7 @@ type AlertmanagerGlobalConfig struct {
 	// +optional
 	RocketChatConfig *GlobalRocketChatConfig `json:"rocketChat,omitempty"`
 
-	// webex defines the default configuration for Jira.
+	// webex defines the default configuration for Webex.
 	// +optional
 	WebexConfig *GlobalWebexConfig `json:"webex,omitempty"`
 
@@ -503,7 +536,7 @@ type AlertmanagerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"`
+	Paused bool `json:"paused"` // nolint:kubeapilinter
 	// replicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object (their labels match the selector).
 	// +optional
@@ -607,7 +640,7 @@ type GlobalSMTPConfig struct {
 	// requireTLS defines the default SMTP TLS requirement.
 	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
 	// +optional
-	RequireTLS *bool `json:"requireTLS,omitempty"`
+	RequireTLS *bool `json:"requireTLS,omitempty"` // nolint:kubeapilinter
 
 	// tlsConfig defines the default TLS configuration for SMTP receivers
 	// +optional

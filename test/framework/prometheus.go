@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -351,9 +351,8 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:              "web",
-					Interval:          "30s",
-					BearerTokenSecret: &v1.SecretKeySelector{},
+					Port:     "web",
+					Interval: "30s",
 				},
 			},
 		},
@@ -724,8 +723,8 @@ func assertExpectedTargets(targets []*Target, expectedTargets []string) error {
 		existingTargets = append(existingTargets, t.ScrapeURL)
 	}
 
-	sort.Strings(expectedTargets)
-	sort.Strings(existingTargets)
+	slices.Sort(expectedTargets)
+	slices.Sort(existingTargets)
 
 	if !reflect.DeepEqual(expectedTargets, existingTargets) {
 		return fmt.Errorf(

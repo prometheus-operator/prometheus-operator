@@ -15,13 +15,55 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
 )
 
-// HTTPConfig defines the configuration for the HTTP client.
-type HTTPConfig struct {
+// HTTPConfigWithProxyAndTLSFiles defines the configuration for the HTTP client
+// with proxy configuration and TLS configuration. It is used for
+// ServiceMonitor endpoints.
+type HTTPConfigWithProxyAndTLSFiles struct {
+	HTTPConfigWithTLSFiles `json:",inline"`
+	ProxyConfig            `json:",inline"`
+}
+
+// Validate semantically validates the given TLSConfig.
+func (c *HTTPConfigWithProxyAndTLSFiles) Validate() error {
+	if err := c.HTTPConfigWithTLSFiles.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.ProxyConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// HTTPConfigWithProxy defines the configuration for the HTTP client with proxy
+// configuration. It is used for PodMonitor endpoints and Probes.
+type HTTPConfigWithProxy struct {
+	HTTPConfig  `json:",inline"`
+	ProxyConfig `json:",inline"`
+}
+
+// Validate semantically validates the given HTTPConfigWithProxy.
+func (hc *HTTPConfigWithProxy) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	if err := hc.HTTPConfig.Validate(); err != nil {
+		return err
+	}
+
+	return hc.ProxyConfig.Validate()
+}
+
+// HTTPConfigWithoutTLS defines the configuration for the HTTP client.
+type HTTPConfigWithoutTLS struct {
 	// authorization configures the Authorization header credentials used by
 	// the client.
 	//
@@ -59,23 +101,69 @@ type HTTPConfig struct {
 	// Deprecated: use `authorization` instead.
 	BearerTokenSecret *v1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 
-	// tlsConfig defines the TLS configuration used by the client.
-	//
-	// +optional
-	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
-
-	ProxyConfig `json:",inline"`
-
 	// followRedirects defines whether the client should follow HTTP 3xx
 	// redirects.
 	//
 	// +optional
-	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
 
 	// enableHttp2 can be used to disable HTTP2.
 	//
 	// +optional
-	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+}
+
+// Validate semantically validates the given HTTPConfigWithoutTLS.
+func (hc *HTTPConfigWithoutTLS) Validate() error {
+	if hc == nil {
+		return nil
+	}
+
+	// Check duplicate authentication methods.
+	switch {
+	case hc.Authorization != nil:
+		switch {
+		case hc.BasicAuth != nil:
+			return errors.New("authorization and basicAuth cannot be configured at the same time")
+		case hc.BearerTokenSecret != nil:
+			return errors.New("authorization and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("authorization and oauth2 cannot be configured at the same time")
+		}
+	case hc.BasicAuth != nil:
+		switch {
+		case hc.BearerTokenSecret != nil:
+			return errors.New("basicAuth and bearerTokenSecret cannot be configured at the same time")
+		case hc.OAuth2 != nil:
+			return errors.New("basicAuth and oauth2 cannot be configured at the same time")
+		}
+	case hc.BearerTokenSecret != nil:
+		switch {
+		case hc.OAuth2 != nil:
+			return errors.New("bearerTokenSecret and oauth2 cannot be configured at the same time")
+		}
+	}
+
+	if err := hc.Authorization.Validate(); err != nil {
+		return fmt.Errorf("authorization: %w", err)
+	}
+
+	if err := hc.OAuth2.Validate(); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	return nil
+}
+
+// HTTPConfig defines the HTTP configuration + TLS configuration (only from
+// secret/configmap references).
+type HTTPConfig struct {
+	HTTPConfigWithoutTLS `json:",inline"`
+
+	// tlsConfig defines the TLS configuration used by the client.
+	//
+	// +optional
+	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // Validate semantically validates the given HTTPConfig.
@@ -84,42 +172,35 @@ func (hc *HTTPConfig) Validate() error {
 		return nil
 	}
 
-	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
-		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
-	}
-
-	if hc.Authorization != nil {
-		if hc.BearerTokenSecret != nil {
-			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
-		}
-
-		if hc.BasicAuth != nil || hc.OAuth2 != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
-		}
-
-		if err := hc.Authorization.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if hc.OAuth2 != nil {
-		if hc.BasicAuth != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
-		}
-
-		if err := hc.OAuth2.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if hc.TLSConfig != nil {
-		if err := hc.TLSConfig.Validate(); err != nil {
-			return err
-		}
-	}
-
-	if err := hc.ProxyConfig.Validate(); err != nil {
+	if err := hc.HTTPConfigWithoutTLS.Validate(); err != nil {
 		return err
+	}
+	if err := hc.TLSConfig.Validate(); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	return nil
+}
+
+// HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
+// (from secret/configmap references as well as files).
+type HTTPConfigWithTLSFiles struct {
+	HTTPConfigWithoutTLS `json:",inline"`
+
+	// tlsConfig defines TLS configuration used by the client.
+	//
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+}
+
+// Validate semantically validates the given HTTPConfigWithTLSFiles.
+func (c *HTTPConfigWithTLSFiles) Validate() error {
+	if err := c.HTTPConfigWithoutTLS.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.TLSConfig.Validate(); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
 	return nil

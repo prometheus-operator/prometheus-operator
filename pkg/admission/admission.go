@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/prometheus/common/model"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -71,21 +72,23 @@ var (
 )
 
 // Admission control for:
-// 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Promethues
+// 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Prometheus
 // 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring.
 type Admission struct {
-	logger *slog.Logger
-	wh     http.Handler
+	logger           *slog.Logger
+	wh               http.Handler
+	validationScheme model.ValidationScheme
 }
 
-func New(logger *slog.Logger) *Admission {
+func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admission {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(monitoringv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(monitoringv1beta1.AddToScheme(scheme))
 
 	return &Admission{
-		logger: logger,
-		wh:     conversion.NewWebhookHandler(scheme),
+		logger:           logger,
+		wh:               conversion.NewWebhookHandler(scheme),
+		validationScheme: validationScheme,
 	}
 }
 
@@ -166,7 +169,10 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 		responseAdmissionReview.Response = admit(requestedAdmissionReview)
 	}
 
-	responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+	// Adding nil check here since request can be nil if deserialization fails.
+	if requestedAdmissionReview.Request != nil {
+		responseAdmissionReview.Response.UID = requestedAdmissionReview.Request.UID
+	}
 	responseAdmissionReview.APIVersion = requestedAdmissionReview.APIVersion
 	responseAdmissionReview.Kind = requestedAdmissionReview.Kind
 
@@ -233,7 +239,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
-	errors := promoperator.ValidateRule(promRule.Spec)
+	errors := promoperator.ValidateRule(promRule.Spec, a.validationScheme)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
 		a.logger.Debug(m, "content", promRule.Spec)

@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // PushoverConfigApplyConfiguration represents a declarative configuration of the PushoverConfig type for use
@@ -30,7 +31,7 @@ type PushoverConfigApplyConfiguration struct {
 	TokenFile    *string                              `json:"tokenFile,omitempty"`
 	Title        *string                              `json:"title,omitempty"`
 	Message      *string                              `json:"message,omitempty"`
-	URL          *string                              `json:"url,omitempty"`
+	URL          *monitoringv1beta1.URL               `json:"url,omitempty"`
 	URLTitle     *string                              `json:"urlTitle,omitempty"`
 	TTL          *v1.Duration                         `json:"ttl,omitempty"`
 	Device       *string                              `json:"device,omitempty"`
@@ -39,6 +40,7 @@ type PushoverConfigApplyConfiguration struct {
 	Retry        *string                              `json:"retry,omitempty"`
 	Expire       *string                              `json:"expire,omitempty"`
 	HTML         *bool                                `json:"html,omitempty"`
+	Monospace    *bool                                `json:"monospace,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
 }
 
@@ -107,7 +109,7 @@ func (b *PushoverConfigApplyConfiguration) WithMessage(value string) *PushoverCo
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *PushoverConfigApplyConfiguration) WithURL(value string) *PushoverConfigApplyConfiguration {
+func (b *PushoverConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL) *PushoverConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }
@@ -173,6 +175,14 @@ func (b *PushoverConfigApplyConfiguration) WithExpire(value string) *PushoverCon
 // If called multiple times, the HTML field is set to the value of the last call.
 func (b *PushoverConfigApplyConfiguration) WithHTML(value bool) *PushoverConfigApplyConfiguration {
 	b.HTML = &value
+	return b
+}
+
+// WithMonospace sets the Monospace field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Monospace field is set to the value of the last call.
+func (b *PushoverConfigApplyConfiguration) WithMonospace(value bool) *PushoverConfigApplyConfiguration {
+	b.Monospace = &value
 	return b
 }
 

@@ -19,9 +19,24 @@ import (
 	"fmt"
 
 	"github.com/prometheus/alertmanager/config"
+	"k8s.io/utils/ptr"
 )
 
-// ValidateURL against the config.URL
+// ValidateURLPtr validates a URL string pointer.
+// If the pointer is nil, it will return no error.
+func ValidateURLPtr(url *string) error {
+	if ptr.Deref(url, "") == "" {
+		return nil
+	}
+
+	if _, err := ValidateURL(*url); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateURL validates a URL string against the config.URL.
 // This could potentially become a regex and be validated via OpenAPI
 // but right now, since we know we need to unmarshal into an upstream type
 // after conversion, we validate we don't error when doing so.

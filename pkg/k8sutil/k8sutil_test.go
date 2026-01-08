@@ -230,7 +230,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 			modifiedSset := sset.DeepCopy()
 			modifiedSset.Spec.Template.Annotations = tc.new
 
-			err := UpdateStatefulSet(ctx, ssetClient, modifiedSset)
+			err := updateStatefulSet(ctx, ssetClient, modifiedSset)
 			require.NoError(t, err)
 
 			updatedSset, err := ssetClient.Get(ctx, "prometheus", metav1.GetOptions{})
@@ -390,7 +390,7 @@ func TestMergeMetadata(t *testing.T) {
 				_, err := ssetClient.Update(context.Background(), modifiedSset, metav1.UpdateOptions{})
 				require.NoError(t, err)
 
-				err = UpdateStatefulSet(context.Background(), ssetClient, sset)
+				err = updateStatefulSet(context.Background(), ssetClient, sset)
 				require.NoError(t, err)
 
 				updatedSset, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})

@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -231,7 +231,7 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 	for value := range valueSet {
 		selectors = append(selectors, field+"!="+value)
 	}
-	sort.Strings(selectors)
+	slices.Sort(selectors)
 
 	if options.FieldSelector != "" {
 		selectors = append(selectors, options.FieldSelector)

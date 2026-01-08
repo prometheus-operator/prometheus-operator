@@ -486,6 +486,22 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithListenLocal(value bool) *Pro
 	return b
 }
 
+// WithPodManagementPolicy sets the PodManagementPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PodManagementPolicy field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithPodManagementPolicy(value monitoringv1.PodManagementPolicyType) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.PodManagementPolicy = &value
+	return b
+}
+
+// WithUpdateStrategy sets the UpdateStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateStrategy field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithUpdateStrategy(value *v1.StatefulSetUpdateStrategyApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.UpdateStrategy = value
+	return b
+}
+
 // WithEnableServiceLinks sets the EnableServiceLinks field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnableServiceLinks field is set to the value of the last call.
@@ -666,6 +682,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithConvertClassicHistogramsToNH
 	return b
 }
 
+// WithScrapeNativeHistograms sets the ScrapeNativeHistograms field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeNativeHistograms field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeNativeHistograms(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.ScrapeNativeHistograms = &value
+	return b
+}
+
 // WithScrapeClassicHistograms sets the ScrapeClassicHistograms field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
@@ -750,7 +774,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithPodTargetLabels(values ...st
 // WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TracingConfig field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithTracingConfig(value *v1.PrometheusTracingConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithTracingConfig(value *v1.TracingConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.TracingConfig = value
 	return b
 }

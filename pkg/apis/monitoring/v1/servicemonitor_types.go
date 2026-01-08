@@ -198,6 +198,15 @@ type ServiceMonitorSpec struct {
 	//
 	// +optional
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
+
+	// serviceDiscoveryRole defines the service discovery role used to discover targets.
+	//
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// Otherwise it defaults to the value defined in the
+	// Prometheus/PrometheusAgent resource.
+	//
+	// +optional
+	ServiceDiscoveryRole *ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // ServiceMonitorList is a list of ServiceMonitors.

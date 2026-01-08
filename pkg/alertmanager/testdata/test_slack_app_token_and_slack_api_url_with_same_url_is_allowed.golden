@@ -1,0 +1,5 @@
+global:
+  slack_api_url: https://slack.com/api/chat.postMessage
+  slack_app_token: xoxb-token
+  slack_app_url: https://slack.com/api/chat.postMessage
+templates: []
