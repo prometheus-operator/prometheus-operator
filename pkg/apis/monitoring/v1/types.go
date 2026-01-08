@@ -701,7 +701,7 @@ type OAuth2 struct {
 	// It requires Prometheus >= v2.43.0.
 	//
 	// +optional
-	ProxyConfig `json:",inline,omitempty"`
+	ProxyConfig `json:",inline"`
 }
 
 func (o *OAuth2) Validate() error {

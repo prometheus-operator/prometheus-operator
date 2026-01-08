@@ -554,7 +554,7 @@ type ThanosRulerSpec struct {
 // +k8s:openapi-gen=true
 type ThanosRulerWebSpec struct {
 	// +optional
-	WebConfigFileFields `json:",inline,omitempty"`
+	WebConfigFileFields `json:",inline"`
 }
 
 // ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.

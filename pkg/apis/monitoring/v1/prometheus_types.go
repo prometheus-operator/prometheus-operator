@@ -1138,7 +1138,7 @@ func (l *Prometheus) DeepCopyObject() runtime.Object {
 type PrometheusList struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline,omitempty"`
+	metav1.TypeMeta `json:",inline"`
 	// metadata defines ListMeta as metadata for collection responses.
 	// +optional
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -1156,7 +1156,7 @@ func (l *PrometheusList) DeepCopyObject() runtime.Object {
 // +k8s:openapi-gen=true
 type PrometheusSpec struct {
 	// +optional
-	CommonPrometheusFields `json:",inline,omitempty"`
+	CommonPrometheusFields `json:",inline"`
 
 	// baseImage is deprecated: use 'spec.image' instead.
 	// +optional
@@ -1445,7 +1445,7 @@ type QuerySpec struct {
 // +k8s:openapi-gen=true
 type PrometheusWebSpec struct {
 	// +optional
-	WebConfigFileFields `json:",inline,omitempty"`
+	WebConfigFileFields `json:",inline"`
 	// pageTitle defines the prometheus web page title.
 	// +optional
 	PageTitle *string `json:"pageTitle,omitempty"`
@@ -1743,7 +1743,7 @@ type RemoteWriteSpec struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline,omitempty"`
+	ProxyConfig `json:",inline"`
 
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
@@ -2035,7 +2035,7 @@ type RemoteReadSpec struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline,omitempty"`
+	ProxyConfig `json:",inline"`
 
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
@@ -2159,7 +2159,7 @@ type APIServerConfig struct {
 
 	// Optional ProxyConfig.
 	// +optional
-	ProxyConfig `json:",inline,omitempty"`
+	ProxyConfig `json:",inline"`
 }
 
 // +kubebuilder:validation:Enum=v1;V1;v2;V2
@@ -2242,7 +2242,7 @@ type AlertmanagerEndpoints struct {
 
 	// ProxyConfig
 	// +optional
-	ProxyConfig `json:",inline,omitempty"`
+	ProxyConfig `json:",inline"`
 
 	// apiVersion defines the version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "V1" or "V2".
@@ -2411,7 +2411,7 @@ func (c *SafeAuthorization) Validate() error {
 
 type Authorization struct {
 	// +optional
-	SafeAuthorization `json:",inline,omitempty"`
+	SafeAuthorization `json:",inline"`
 
 	// credentialsFile defines the file to read a secret from, mutually exclusive with `credentials`.
 	// +optional

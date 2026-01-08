@@ -168,7 +168,7 @@ type ServiceMonitorSpec struct {
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
 	// +optional
-	NativeHistogramConfig `json:",inline,omitempty"`
+	NativeHistogramConfig `json:",inline"`
 
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
