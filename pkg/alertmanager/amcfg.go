@@ -2452,6 +2452,13 @@ func (ec *emailConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		ec.AuthPasswordFile = ""
 	}
 
+	for key, value := range ec.Headers {
+		if strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://") {
+			if _, err := validation.ValidateURL(value); err != nil {
+				return fmt.Errorf("invalid URL in header %q: %w", key, err)
+			}
+		}
+	}
 	return nil
 }
 

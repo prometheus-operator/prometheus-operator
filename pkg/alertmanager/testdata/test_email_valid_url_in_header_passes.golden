@@ -1,0 +1,8 @@
+receivers:
+- name: ""
+  email_configs:
+  - to: test@example.com
+    headers:
+      List-Archive: http://archive.example.com
+      List-Unsubscribe: https://example.com/unsubscribe
+templates: []
