@@ -426,10 +426,8 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	}
 
 	if r.GroupInterval != nil {
-		if topLevelRoute {
-			if err := validation.ValidateNonZeroDuration(string(*r.GroupInterval)); err != nil {
-				return fmt.Errorf("groupInterval: %w", err)
-			}
+		if err := validation.ValidateNonZeroDuration(string(*r.GroupInterval)); err != nil {
+			return fmt.Errorf("groupInterval: %w", err)
 		}
 	}
 
@@ -440,10 +438,8 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	}
 
 	if r.RepeatInterval != nil {
-		if topLevelRoute {
-			if err := validation.ValidateNonZeroDuration(string(*r.RepeatInterval)); err != nil {
-				return fmt.Errorf("repeatInterval: %w", err)
-			}
+		if err := validation.ValidateNonZeroDuration(string(*r.RepeatInterval)); err != nil {
+			return fmt.Errorf("repeatInterval: %w", err)
 		}
 	}
 
