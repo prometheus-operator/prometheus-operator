@@ -19,11 +19,9 @@ import (
 	"log/slog"
 
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
-	policyv1 "k8s.io/api/policy/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func (o *Operator) resolveStuckStatefulSet(ctx context.Context, logger *slog.Logger, tr *monitoringv1.ThanosRuler, sset *appsv1.StatefulSet) error {
@@ -32,64 +30,5 @@ func (o *Operator) resolveStuckStatefulSet(ctx context.Context, logger *slog.Log
 	}
 
 	policy := *tr.Spec.UpdateStrategy.RollingUpdate.RepairPolicy
-	if policy == monitoringv1.NoneRepairPolicy {
-		return nil
-	}
-
-	selector, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
-	if err != nil {
-		return err
-	}
-
-	pods, err := o.kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: selector.String(),
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, pod := range pods.Items {
-		if isPodReady(pod) {
-			continue
-		}
-
-		if pod.Labels[appsv1.ControllerRevisionHashLabelKey] == sset.Status.UpdateRevision {
-			continue
-		}
-
-		logger.Info("found not ready pod during rollout", "pod", pod.Name, "policy", policy)
-
-		switch policy {
-		case monitoringv1.EvictNotReadyPodsRepairPolicy:
-			err := o.kclient.CoreV1().Pods(pod.Namespace).EvictV1(ctx, &policyv1.Eviction{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      pod.Name,
-					Namespace: pod.Namespace,
-				},
-			})
-			if err != nil {
-				logger.Error("failed to evict pod", "pod", pod.Name, "err", err)
-			}
-		case monitoringv1.DeleteNotReadyPodsRepairPolicy:
-			// Set propagation policy to Background to delete the pod immediately.
-			propagationPolicy := metav1.DeletePropagationBackground
-			err := o.kclient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, metav1.DeleteOptions{
-				PropagationPolicy: &propagationPolicy,
-			})
-			if err != nil {
-				logger.Error("failed to delete pod", "pod", pod.Name, "err", err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func isPodReady(pod v1.Pod) bool {
-	for _, c := range pod.Status.Conditions {
-		if c.Type == v1.PodReady && c.Status == v1.ConditionTrue {
-			return true
-		}
-	}
-	return false
+	return operator.ResolveStuckStatefulSet(ctx, logger, o.kclient, sset, policy)
 }
