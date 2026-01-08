@@ -756,7 +756,7 @@ type AzureSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
@@ -927,7 +927,7 @@ type DigitalOceanSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
@@ -969,7 +969,7 @@ type KumaSDConfig struct {
 	FetchTimeout *v1.Duration `json:"fetchTimeout,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1016,7 +1016,7 @@ type EurekaSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
@@ -1041,7 +1041,7 @@ type DockerSDConfig struct {
 	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	// +optionals
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1106,7 +1106,7 @@ type HetznerSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
@@ -1176,7 +1176,7 @@ type NomadSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
-	v1.ProxyConfig `json:",inline"`
+	v1.ProxyConfig `json:",inline,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
