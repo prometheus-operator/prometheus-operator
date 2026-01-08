@@ -536,22 +536,22 @@ type AlertmanagerStatus struct {
 	// paused defines whether any actions on the underlying managed objects are
 	// being performed. Only delete actions will be performed.
 	// +optional
-	Paused bool `json:"paused"` // nolint:kubeapilinter
+	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// replicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object (their labels match the selector).
 	// +optional
-	Replicas int32 `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 	// updatedReplicas defines the total number of non-terminated pods targeted by this Alertmanager
 	// object that have the desired version spec.
 	// +optional
-	UpdatedReplicas int32 `json:"updatedReplicas"`
+	UpdatedReplicas int32 `json:"updatedReplicas,omitempty"`
 	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
 	// targeted by this Alertmanager cluster.
 	// +optional
-	AvailableReplicas int32 `json:"availableReplicas"`
+	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 	// unavailableReplicas defines the total number of unavailable pods targeted by this Alertmanager object.
 	// +optional
-	UnavailableReplicas int32 `json:"unavailableReplicas"`
+	UnavailableReplicas int32 `json:"unavailableReplicas,omitempty"`
 	// selector used to match the pods targeted by this Alertmanager object.
 	// +optional
 	Selector string `json:"selector,omitempty"`
