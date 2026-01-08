@@ -34,10 +34,26 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
+	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return fmt.Errorf("webex: %w", err)
+	}
+
 	return nil
 }
 
 func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
 	if wc == nil {
 		return nil
 	}
