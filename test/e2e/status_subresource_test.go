@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -1304,4 +1305,135 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
 	require.NoError(t, err)
+}
+
+// testAlertmanagerConfigStatusSubresource validates AlertmanagerConfig status updates upon Alertmanager selection.
+func testAlertmanagerConfigStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-subresource-test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	// Create a first AlertmanagerConfig to check that the operator only updates the binding when needed.
+	alc1 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "amcfg1",
+			Namespace: ns,
+			Labels:    map[string]string{},
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "default",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "default",
+					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+						{
+							URL: func(s string) *monitoringv1alpha1.URL {
+								u := monitoringv1alpha1.URL(s)
+								return &u
+							}("http://test.url"),
+						},
+					},
+				},
+			},
+		},
+	}
+	alc1.Labels["group"] = name
+
+	alc1, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc1, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	// Create a second AlertmanagerConfig to check that the operator updates the binding when the condition changes.
+	alc2 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "amcfg2",
+			Namespace: ns,
+			Labels:    map[string]string{},
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "default",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "default",
+					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+						{
+							URL: func(s string) *monitoringv1alpha1.URL {
+								u := monitoringv1alpha1.URL(s)
+								return &u
+							}("http://test.url"),
+						},
+					},
+				},
+			},
+		},
+	}
+	alc2.Labels["group"] = name
+	alc2, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc2, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	alc2, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Update the labels of the first AlertmanagerConfig. A label update doesn't
+	// change the status of the AlertmanagerConfig and the observed timestamp
+	// should be the same as before.
+	alc1.Labels["test"] = "test"
+	alc1, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Update(ctx, alc1, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Update the second AlertmanagerConfig to have an invalid rule expression.
+	invalidURL := monitoringv1alpha1.URL("//invalid-url")
+	alc2.Spec.Receivers[0].WebhookConfigs[0].URL = &invalidURL
+	alc2, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Update(ctx, alc2, v1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second AlertmanagerConfig should change to Accepted=False.
+	_, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first AlertmanagerConfig should remain unchanged.
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
