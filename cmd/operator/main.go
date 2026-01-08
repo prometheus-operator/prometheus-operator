@@ -247,6 +247,11 @@ func run(fs *flag.FlagSet) int {
 		return 0
 	}
 
+	// Handle CLI commands (crds, start, etc.)
+	if exitCode, handled := handleCommand(fs); handled {
+		return exitCode
+	}
+
 	logger, err := logging.NewLoggerSlog(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
@@ -767,46 +772,29 @@ func run(fs *flag.FlagSet) int {
 }
 
 func main() {
-	// Handle 'crd' subcommand before parsing flags
-	if len(os.Args) > 1 && os.Args[1] == "crd" {
-		os.Exit(runCRDCommand(os.Args[2:]))
-	}
 	os.Exit(run(flag.CommandLine))
 }
 
-// runCRDCommand handles the 'crd' subcommand for printing embedded CRDs.
-func runCRDCommand(args []string) int {
-	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "Usage: operator crd <command>")
-		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Commands:")
-		fmt.Fprintln(os.Stderr, "  print    Print all CRDs to stdout")
-		fmt.Fprintln(os.Stderr, "  list     List available CRD names")
-		return 1
+// handleCommand checks for CLI commands after flag parsing.
+func handleCommand(fs *flag.FlagSet) (int, bool) {
+	if fs.NArg() == 0 {
+		return 0, false
 	}
 
-	switch args[0] {
-	case "print":
+	switch fs.Arg(0) {
+	case "crds":
 		if err := crd.PrintAll(os.Stdout); err != nil {
 			fmt.Fprintf(os.Stderr, "Error printing CRDs: %v\n", err)
-			return 1
+			return 1, true
 		}
-		return 0
+		return 0, true
 
-	case "list":
-		names, err := crd.ListNames()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error listing CRDs: %v\n", err)
-			return 1
-		}
-		for _, name := range names {
-			fmt.Println(name)
-		}
-		return 0
+	case "start":
+		return 0, false
 
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown crd command: %s\n", args[0])
-		fmt.Fprintln(os.Stderr, "Run 'operator crd' for usage.")
-		return 1
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", fs.Arg(0))
+		fmt.Fprintln(os.Stderr, "Available commands: crds, start")
+		return 1, true
 	}
 }
