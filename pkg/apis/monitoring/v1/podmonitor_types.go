@@ -42,7 +42,7 @@ const (
 type PodMonitor struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline,omitempty"`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -199,7 +199,7 @@ type PodMonitorSpec struct {
 type PodMonitorList struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	// +optional
-	metav1.TypeMeta `json:",inline"`
+	metav1.TypeMeta `json:",inline,omitempty"`
 	// metadata defines ListMeta as metadata for collection responses.
 	metav1.ListMeta `json:"metadata,omitempty"`
 	// List of PodMonitors
