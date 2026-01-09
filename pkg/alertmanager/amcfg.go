@@ -2778,6 +2778,12 @@ func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 }
 
 func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if sc.APIUrl != "" {
+		if _, err := validation.ValidateURL(sc.APIUrl); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return sc.HTTPConfig.sanitize(amVersion, logger)
 }
 
