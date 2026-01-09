@@ -3175,7 +3175,7 @@ func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
+		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
 	}
 
 	return nil
