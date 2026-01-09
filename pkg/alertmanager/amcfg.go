@@ -3144,7 +3144,7 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
-	if err := cb.checkGlobalWebexConfig(ctx, gc.WebexConfig); err != nil {
+	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return err
 	}
 
@@ -3169,7 +3169,7 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 	return nil
 }
 
-func (cb *ConfigBuilder) checkGlobalWebexConfig(ctx context.Context, wc *monitoringv1.GlobalWebexConfig) error {
+func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
 	if wc == nil {
 		return nil
 	}
