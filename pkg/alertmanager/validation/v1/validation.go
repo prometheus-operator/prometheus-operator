@@ -34,6 +34,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
+	if err := validateGlobalJiraConfig(gc.JiraConfig); err != nil {
+		return fmt.Errorf("wechatConfig: %w", err)
+	}
+
 	return nil
 }
 
@@ -43,6 +47,18 @@ func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
+	if jc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(jc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 
