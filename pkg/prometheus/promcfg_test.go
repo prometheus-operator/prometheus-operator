@@ -152,7 +152,6 @@ func TestGlobalSettings(t *testing.T) {
 			Version:        "v2.30.0",
 			ScrapeInterval: "30s",
 			ScrapeTimeout:  "60s",
-			Golden:         "partial/invalid_scrape_timeout_specified_when_scrape_interval_specified.golden",
 			ExpectError:    true,
 		},
 		{
@@ -353,9 +352,9 @@ func TestGlobalSettings(t *testing.T) {
 
 			if tc.ExpectError {
 				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+				return
 			}
+			require.NoError(t, err)
 
 			golden.Assert(t, string(cfg), tc.Golden)
 		})

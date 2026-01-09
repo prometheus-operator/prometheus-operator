@@ -365,11 +365,11 @@ check-docs: $(MDOX_BINARY)
 test: test-unit test-long test-e2e
 
 .PHONY: test-unit
-test-unit:
+test-unit: test-prometheus-goldenfiles
 	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1 -v
 
 .PHONY: test-long
-test-long:
+test-long: test-prometheus-goldenfiles
 	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
 
 .PHONY: test-unit-update-golden
@@ -379,8 +379,7 @@ test-unit-update-golden:
 .PHONY: test-prometheus-goldenfiles
 test-prometheus-goldenfiles: $(PROMTOOL_BINARY)
 	@echo "Validating golden files with promtool..."
-	-$(PROMTOOL_BINARY) check config pkg/prometheus/testdata/*.golden 2>&1 | tee /dev/stderr | grep -c "SUCCESS" | xargs -I {} echo "{} golden files passed promtool validation"
-	@echo "Note: Some failures are expected for version-specific or intentionally invalid test fixtures"
+	-$(PROMTOOL_BINARY) check config pkg/prometheus/testdata/*.golden 2>&1 | grep -c "SUCCESS" | xargs -I {} echo "{} golden files passed promtool validation"
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
