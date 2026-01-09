@@ -78,6 +78,7 @@ require (
 	github.com/go-openapi/swag/yamlutils v0.25.4 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
+	github.com/golangci/plugin-module-register v0.1.2 // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
@@ -92,7 +93,10 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20251002181428-27f1f14c8bb9 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
+	k8s.io/gengo/v2 v2.0.0-20250922181213-ec3ebc5fd46b // indirect
+	sigs.k8s.io/kube-api-linter v0.0.0-20260105171240-d42ba1d7b50c // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 )
