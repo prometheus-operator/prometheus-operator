@@ -58,7 +58,7 @@ const (
 	noSelectedResourcesMessage = "No ServiceMonitor, PodMonitor, Probe, ScrapeConfig, and PrometheusRule have been selected."
 
 	unmanagedConfigurationReason  = "ConfigurationUnmanaged"
-	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead."
+	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead. Unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')."
 )
 
 // Operator manages the life cycle of Prometheus deployments and
@@ -1280,9 +1280,10 @@ func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, p *mo
 	}
 
 	if len(deprecations) > 0 {
-		msg := strings.Join(deprecations, "; ")
-		logger.Warn(msg)
-		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, msg)
+		for _, m := range deprecations {
+			logger.Warn(m)
+		}
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
 		return
 	}
 

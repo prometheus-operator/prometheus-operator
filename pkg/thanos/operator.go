@@ -656,9 +656,10 @@ func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *m
 	}
 
 	if len(deprecations) > 0 {
-		msg := strings.Join(deprecations, "; ")
-		logger.Warn(msg)
-		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, msg)
+		for _, m := range deprecations {
+			logger.Warn(m)
+		}
+		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
 	}
 }
 
