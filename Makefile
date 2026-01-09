@@ -382,10 +382,6 @@ test-prometheus-goldenfiles: $(PROMTOOL_BINARY)
 	-$(PROMTOOL_BINARY) check config pkg/prometheus/testdata/*.golden 2>&1 | tee /dev/stderr | grep -c "SUCCESS" | xargs -I {} echo "{} golden files passed promtool validation"
 	@echo "Note: Some failures are expected for version-specific or intentionally invalid test fixtures"
 
-$(PROMTOOL_BINARY): scripts/go.mod scripts/go.sum scripts/tools.go
-	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod github.com/prometheus/prometheus/cmd/promtool
-
-
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
 
