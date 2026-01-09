@@ -1104,6 +1104,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
 					APIURL: &v1.SecretKeySelector{
@@ -1116,7 +1117,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: "my-action",
+							Name: ptr.To("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1536,6 +1537,7 @@ receivers:
   - api_key: 1234abc
   pagerduty_configs:
   - routing_key: 1234abc
+    url: https://pagerduty.example.com
   slack_configs:
   - api_url: http://slack.example.com
     fields:

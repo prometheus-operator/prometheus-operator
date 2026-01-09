@@ -3237,22 +3237,27 @@
                         properties: {
                           class: {
                             description: 'class defines the class/type of the event.',
+                            minLength: 1,
                             type: 'string',
                           },
                           client: {
                             description: 'client defines the client identification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
                             description: 'component defines the part or component of the affected system that is broken.',
+                            minLength: 1,
                             type: 'string',
                           },
                           description: {
                             description: 'description of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -3277,9 +3282,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           group: {
                             description: 'group defines a cluster or grouping of sources.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -3927,20 +3934,24 @@
                               properties: {
                                 alt: {
                                   description: 'alt is the optional alternative text for the image.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
                                   description: 'src of the image being attached to the incident',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pagerDutyLinkConfigs: {
                             description: 'pagerDutyLinkConfigs defines a list of link details to attach that provide further detail about an incident.',
@@ -3949,16 +3960,19 @@
                               properties: {
                                 alt: {
                                   description: "alt defines the text that describes the purpose of the link, and can be used as the link's text.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           routingKey: {
                             description: "routingKey defines the secret's key that contains the PagerDuty integration key (when using\nEvents API v2). Either this field or `serviceKey` needs to be defined.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -4006,10 +4020,12 @@
                           },
                           severity: {
                             description: 'severity of the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           source: {
                             description: 'source defines the unique location of the affected system.',
+                            minLength: 1,
                             type: 'string',
                           },
                           timeout: {
@@ -4019,6 +4035,7 @@
                           },
                           url: {
                             description: 'url defines the URL to send requests to.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                         },
@@ -4033,6 +4050,7 @@
                         properties: {
                           device: {
                             description: "device defines the name of a specific device to send the notification to.\nIf not specified, the notification is sent to all user's devices.",
+                            minLength: 1,
                             type: 'string',
                           },
                           expire: {
@@ -4684,6 +4702,7 @@
                           },
                           message: {
                             description: 'message defines the notification message content.\nThis is the main body text of the Pushover notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           monospace: {
@@ -4692,6 +4711,7 @@
                           },
                           priority: {
                             description: 'priority defines the notification priority level.\nSee https://pushover.net/api#priority for valid values and behavior.',
+                            minLength: 1,
                             type: 'string',
                           },
                           retry: {
@@ -4705,10 +4725,12 @@
                           },
                           sound: {
                             description: "sound defines the name of one of the sounds supported by device clients.\nThis overrides the user's default sound choice for this notification.",
+                            minLength: 1,
                             type: 'string',
                           },
                           title: {
                             description: 'title defines the notification title displayed in the Pushover message.\nThis appears as the bold header text in the notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           token: {
@@ -4742,10 +4764,12 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
                             description: 'urlTitle defines a title for the supplementary URL.\nIf not specified, the raw URL is shown instead.',
+                            minLength: 1,
                             type: 'string',
                           },
                           userKey: {
@@ -5603,10 +5627,12 @@
                                   properties: {
                                     dismissText: {
                                       description: 'dismissText defines the label for the cancel button in the dialog.\nWhen not specified, defaults to "Cancel". This button cancels the action.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                     okText: {
                                       description: 'okText defines the label for the confirmation button in the dialog.\nWhen not specified, defaults to "Okay". This button proceeds with the action.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                     text: {
@@ -5616,6 +5642,7 @@
                                     },
                                     title: {
                                       description: 'title defines the title text displayed at the top of the confirmation dialog.\nWhen not specified, a default title will be used.',
+                                      minLength: 1,
                                       type: 'string',
                                     },
                                   },
@@ -5626,10 +5653,12 @@
                                 },
                                 name: {
                                   description: 'name defines a unique identifier for the action within the message.\nThis value is sent back to your application when the action is triggered.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 style: {
                                   description: 'style defines the visual appearance of the action element.\nValid values include "default", "primary" (green), and "danger" (red).',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 text: {
@@ -5644,10 +5673,12 @@
                                 },
                                 url: {
                                   description: 'url defines the URL to open when the action is triggered.\nOnly applicable for button-type actions. When set, clicking the button opens this URL.',
+                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 value: {
                                   description: 'value defines the payload sent when the action is triggered.\nThis data is included in the callback sent to your application.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
@@ -5657,7 +5688,9 @@
                               ],
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           apiURL: {
                             description: "apiURL defines the secret's key that contains the Slack webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
@@ -5681,18 +5714,22 @@
                           },
                           callbackId: {
                             description: 'callbackId defines an identifier for the message used in interactive components.',
+                            minLength: 1,
                             type: 'string',
                           },
                           channel: {
                             description: 'channel defines the channel or user to send notifications to.',
+                            minLength: 1,
                             type: 'string',
                           },
                           color: {
                             description: 'color defines the color of the left border of the Slack message attachment.\nCan be a hex color code (e.g., "#ff0000") or a predefined color name.',
+                            minLength: 1,
                             type: 'string',
                           },
                           fallback: {
                             description: "fallback defines a plain-text summary of the attachment for clients that don't support attachments.",
+                            minLength: 1,
                             type: 'string',
                           },
                           fields: {
@@ -5721,10 +5758,13 @@
                               ],
                               type: 'object',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           footer: {
                             description: 'footer defines small text displayed at the bottom of the message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -6367,14 +6407,17 @@
                           },
                           iconEmoji: {
                             description: "iconEmoji defines the emoji to use as the bot's avatar (e.g., \":ghost:\").",
+                            minLength: 1,
                             type: 'string',
                           },
                           iconURL: {
                             description: "iconURL defines the URL to an image to use as the bot's avatar.",
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the URL to an image file that will be displayed inside the message attachment.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -6384,12 +6427,16 @@
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
                             items: {
+                              minLength: 1,
                               type: 'string',
                             },
+                            minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           pretext: {
                             description: 'pretext defines optional text that appears above the message attachment block.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -6402,10 +6449,12 @@
                           },
                           text: {
                             description: 'text defines the main text content of the Slack message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           thumbURL: {
                             description: 'thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           timeout: {
@@ -6415,14 +6464,17 @@
                           },
                           title: {
                             description: 'title defines the title text displayed in the Slack message attachment.',
+                            minLength: 1,
                             type: 'string',
                           },
                           titleLink: {
                             description: 'titleLink defines the URL that the title will link to when clicked.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           username: {
                             description: 'username defines the slack bot user name.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
@@ -7919,6 +7971,7 @@
                           },
                           apiUrl: {
                             description: 'apiUrl defines the VictorOps API URL.\nWhen not specified, defaults to the standard VictorOps API endpoint.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           customFields: {
@@ -7943,9 +7996,11 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           entityDisplayName: {
                             description: 'entityDisplayName contains a summary of the alerted problem.\nThis appears as the main title or identifier for the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -8588,14 +8643,17 @@
                           },
                           messageType: {
                             description: 'messageType describes the behavior of the alert.\nValid values are "CRITICAL", "WARNING", and "INFO".',
+                            minLength: 1,
                             type: 'string',
                           },
                           monitoringTool: {
                             description: 'monitoringTool defines the monitoring tool the state message is from.\nThis helps identify the source system that generated the alert.',
+                            minLength: 1,
                             type: 'string',
                           },
                           routingKey: {
                             description: 'routingKey defines a key used to map the alert to a team.\nThis determines which VictorOps team will receive the alert notification.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -8604,9 +8662,13 @@
                           },
                           stateMessage: {
                             description: 'stateMessage contains a long explanation of the alerted problem.\nThis provides detailed context about the incident.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
+                        required: [
+                          'routingKey',
+                        ],
                         type: 'object',
                       },
                       type: 'array',

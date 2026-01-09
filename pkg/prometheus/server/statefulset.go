@@ -335,10 +335,8 @@ func makeStatefulSetSpec(
 		ServiceName:         ptr.Deref(cpf.ServiceName, governingServiceName),
 		Replicas:            cpf.Replicas,
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
-		MinReadySeconds: ptr.Deref(p.Spec.MinReadySeconds, 0),
+		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(cpf.UpdateStrategy),
+		MinReadySeconds:     ptr.Deref(p.Spec.MinReadySeconds, 0),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},

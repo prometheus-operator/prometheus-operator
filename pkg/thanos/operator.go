@@ -250,17 +250,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			o.kclient,
 			resyncPeriod,
 			func(options *metav1.ListOptions) {
-				// TODO(simonpasquier): use a more restrictive label selector
-				// selecting only ThanosRuler statefulsets (e.g.
-				// "app.kubernetes.io/name in (thanos-ruler)").
-				//
-				// We need to wait for a couple of releases after [1] to ensure
-				// that the expected labels have been propagated to the
-				// ThanosRuler statefulsets otherwise the informer won't select
-				// any object.
-				//
-				// [1] https://github.com/prometheus-operator/prometheus-operator/pull/7786
-				options.LabelSelector = operator.ManagedByOperatorLabelSelector()
+				options.LabelSelector = labelSelectorForStatefulSets()
 			},
 		),
 		appsv1.SchemeGroupVersion.WithResource("statefulsets"),
@@ -617,28 +607,11 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-	err = k8sutil.UpdateStatefulSet(ctx, ssetClient, sset)
-	sErr, ok := err.(*apierrors.StatusError)
-
-	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
+	if err = k8sutil.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 		o.metrics.StsDeleteCreateCounter().Inc()
-
-		// Gather only reason for failed update
-		failMsg := make([]string, len(sErr.ErrStatus.Details.Causes))
-		for i, cause := range sErr.ErrStatus.Details.Causes {
-			failMsg[i] = cause.Message
-		}
-
-		logger.Info("recreating ThanosRuler StatefulSet because the update operation wasn't possible", "reason", strings.Join(failMsg, ", "))
-		propagationPolicy := metav1.DeletePropagationForeground
-		if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: &propagationPolicy}); err != nil {
-			return fmt.Errorf("failed to delete StatefulSet to avoid forbidden action: %w", err)
-		}
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("updating StatefulSet failed: %w", err)
+		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
+	}); err != nil {
+		return err
 	}
 
 	return nil
@@ -913,6 +886,16 @@ func makeSelectorLabels(name string) map[string]string {
 	}
 }
 
+// labelSelectorForStatefulSets returns a label selector which selects
+// all ThanosRuler statefulsets.
+func labelSelectorForStatefulSets() string {
+	return fmt.Sprintf(
+		"%s in (%s),%s in (%s)",
+		operator.ManagedByLabelKey, operator.ManagedByLabelValue,
+		operator.ApplicationNameLabelKey, applicationNameLabelValue,
+	)
+}
+
 func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *assets.StoreBuilder, tr *monitoringv1.ThanosRuler) error {
 	sClient := o.kclient.CoreV1().Secrets(tr.GetNamespace())
 
@@ -955,6 +938,18 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	}
 
 	for i, rw := range tr.Spec.RemoteWrite {
+		// Thanos does not support azureAD.workloadIdentity in any version
+		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
+			reset := resetFieldFn("none")
+			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity)
+		}
+
+		// Thanos does not support azureAD.scope in any version
+		if rw.AzureAD != nil && rw.AzureAD.Scope != nil {
+			reset := resetFieldFn("none")
+			reset("azureAD.scope", &rw.AzureAD.Scope)
+		}
+
 		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.
 		if version.LT(semver.MustParse("0.40.0")) {
 			if rw.AzureAD != nil && rw.AzureAD.ManagedIdentity != nil {
@@ -963,7 +958,6 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 				}
 			}
 		}
-
 		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
 		if version.LT(semver.MustParse("0.38.0")) {
 			reset := resetFieldFn("0.38.0")

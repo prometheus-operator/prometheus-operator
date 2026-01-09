@@ -16,12 +16,16 @@
 
 package v1alpha1
 
+import (
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+)
+
 // SlackActionApplyConfiguration represents a declarative configuration of the SlackAction type for use
 // with apply.
 type SlackActionApplyConfiguration struct {
 	Type         *string                                   `json:"type,omitempty"`
 	Text         *string                                   `json:"text,omitempty"`
-	URL          *string                                   `json:"url,omitempty"`
+	URL          *monitoringv1alpha1.URL                   `json:"url,omitempty"`
 	Style        *string                                   `json:"style,omitempty"`
 	Name         *string                                   `json:"name,omitempty"`
 	Value        *string                                   `json:"value,omitempty"`
@@ -53,7 +57,7 @@ func (b *SlackActionApplyConfiguration) WithText(value string) *SlackActionApply
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *SlackActionApplyConfiguration) WithURL(value string) *SlackActionApplyConfiguration {
+func (b *SlackActionApplyConfiguration) WithURL(value monitoringv1alpha1.URL) *SlackActionApplyConfiguration {
 	b.URL = &value
 	return b
 }

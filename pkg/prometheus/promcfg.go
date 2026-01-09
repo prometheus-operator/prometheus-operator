@@ -44,6 +44,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 )
 
 const (
@@ -198,7 +199,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	)
 
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		lcv, err := NewLabelConfigValidator(p)
+		lcv, err := validation.NewLabelConfigValidator(p)
 		if err != nil {
 			return nil, "", err
 		}
@@ -2802,8 +2803,21 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 					})
 			}
 
+			if spec.AzureAD.WorkloadIdentity != nil {
+				workloadIdentityConfig := yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
+					{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
+				}
+
+				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
+			}
+
 			if spec.AzureAD.Cloud != nil {
 				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
+			}
+
+			if scope := ptr.Deref(spec.AzureAD.Scope, ""); scope != "" {
+				azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)

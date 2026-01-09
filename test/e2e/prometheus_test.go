@@ -4877,6 +4877,31 @@ func testPrometheusCRDValidation(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "invalid-updateStrategy",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas: &replicas,
+					UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
+						Type: monitoringv1.StatefulSetUpdateStrategyType(""),
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-ondelete-with-rollingupdate",
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas: &replicas,
+					UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
+						Type:          monitoringv1.OnDeleteStatefulSetStrategyType,
+						RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
+					},
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {

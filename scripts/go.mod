@@ -8,7 +8,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.3.1-0.20241111191808-71fefeed8910
 	github.com/brancz/gojsontoyaml v0.1.0
 	github.com/bwplotka/mdox v0.9.1-0.20220713080221-769034ad8cfe
-	github.com/golangci/golangci-lint/v2 v2.7.2
+	github.com/golangci/golangci-lint/v2 v2.8.0
 	github.com/google/go-jsonnet v0.21.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.6.0
 	github.com/prometheus/prometheus v0.308.1
@@ -24,6 +24,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	codeberg.org/chavacava/garif v0.2.0 // indirect
+	codeberg.org/polyfloyd/go-errorlint v1.9.0 // indirect
 	dev.gaijin.team/go/exhaustruct/v4 v4.0.0 // indirect
 	dev.gaijin.team/go/golib v0.6.0 // indirect
 	github.com/4meepo/tagalign v1.4.3 // indirect
@@ -47,16 +48,21 @@ require (
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/MirrexOne/unqueryvet v1.3.0 // indirect
+	github.com/BurntSushi/toml v1.6.0 // indirect
+	github.com/Djarvur/go-err113 v0.1.1 // indirect
+	github.com/Kunde21/markdownfmt/v2 v2.1.1-0.20210810103848-727f02f4c51c // indirect
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
+	github.com/MirrexOne/unqueryvet v1.4.0 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.1 // indirect
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
-	github.com/alecthomas/chroma/v2 v2.20.0 // indirect
+	github.com/alecthomas/chroma/v2 v2.21.1 // indirect
 	github.com/alecthomas/go-check-sumtype v0.3.1 // indirect
 	github.com/alecthomas/kingpin/v2 v2.4.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/alexkohler/nakedret/v2 v2.0.6 // indirect
-	github.com/alexkohler/prealloc v1.0.0 // indirect
+	github.com/alexkohler/prealloc v1.0.1 // indirect
 	github.com/alfatraining/structtag v1.0.0 // indirect
 	github.com/alingse/asasalint v0.0.11 // indirect
 	github.com/alingse/nilnesserr v0.2.0 // indirect
@@ -145,8 +151,8 @@ require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/ghostiam/protogetter v0.3.17 // indirect
-	github.com/go-critic/go-critic v0.14.2 // indirect
+	github.com/ghostiam/protogetter v0.3.18 // indirect
+	github.com/go-critic/go-critic v0.14.3 // indirect
 	github.com/go-kit/kit v0.10.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -174,7 +180,7 @@ require (
 	github.com/gobuffalo/flect v1.0.3 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly/v2 v2.1.1-0.20201013153555-8252c346cfb0 // indirect
-	github.com/godoc-lint/godoc-lint v0.10.2 // indirect
+	github.com/godoc-lint/godoc-lint v0.11.1 // indirect
 	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gohugoio/hugo v0.101.0 // indirect
@@ -186,7 +192,7 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.1 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
-	github.com/golangci/golines v0.0.0-20250217134842-442fd0091d95 // indirect
+	github.com/golangci/golines v0.14.0 // indirect
 	github.com/golangci/misspell v0.7.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.2 // indirect
 	github.com/golangci/revgrep v0.8.0 // indirect
@@ -247,8 +253,9 @@ require (
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
 	github.com/ldez/exptostd v0.4.5 // indirect
-	github.com/ldez/gomoddirectives v0.7.1 // indirect
+	github.com/ldez/gomoddirectives v0.8.0 // indirect
 	github.com/ldez/grignotin v0.10.1 // indirect
+	github.com/ldez/structtags v0.6.1 // indirect
 	github.com/ldez/tagliatelle v0.7.2 // indirect
 	github.com/ldez/usetesting v0.5.0 // indirect
 	github.com/leonklingele/grouper v1.1.2 // indirect
@@ -311,6 +318,10 @@ require (
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/prometheus/sigv4 v0.3.0 // indirect
+	github.com/prometheus/client_golang v1.22.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.5 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.23 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
@@ -329,6 +340,7 @@ require (
 	github.com/sashamelentyev/usestdlibvars v1.29.0 // indirect
 	github.com/scaleway/scaleway-sdk-go v1.0.0-beta.35 // indirect
 	github.com/securego/gosec/v2 v2.22.11-0.20251204091113-daccba6b93d7 // indirect
+	github.com/securego/gosec/v2 v2.22.11 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sivchari/containedctx v1.0.3 // indirect
@@ -399,6 +411,14 @@ require (
 	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
 	google.golang.org/api v0.252.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20251023183803-a4bb9ffd2546 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/tools v0.40.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250929231259-57b25ae835d4 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251002232023-7c0ddcbb5797 // indirect

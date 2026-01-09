@@ -109,7 +109,7 @@ type ProxyConfig struct {
 	//
 	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
 	// +optional
-	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"` // nolint:kubeapilinter
 	// proxyConnectHeader optionally specifies headers to send to
 	// proxies during CONNECT requests.
 	//
@@ -227,7 +227,7 @@ type ArbitraryFSAccessThroughSMsConfig struct {
 	// Setting this to true enhances security by preventing potential credential theft attacks.
 	//
 	// +optional
-	Deny bool `json:"deny,omitempty"`
+	Deny bool `json:"deny,omitempty"` // nolint:kubeapilinter
 }
 
 // Condition represents the state of the resources associated with the
@@ -360,7 +360,7 @@ type WebHTTPConfig struct {
 	// When TLSConfig is not configured, HTTP/2 will be disabled.
 	// Whenever the value of the field changes, a rolling update will be triggered.
 	// +optional
-	HTTP2 *bool `json:"http2,omitempty"`
+	HTTP2 *bool `json:"http2,omitempty"` // nolint:kubeapilinter
 	// headers defines a list of headers that can be added to HTTP responses.
 	// +optional
 	Headers *WebHTTPHeaders `json:"headers,omitempty"`
@@ -485,7 +485,7 @@ type WebTLSConfig struct {
 	// the order of elements in cipherSuites, is used.
 	//
 	// +optional
-	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"` // nolint:kubeapilinter
 
 	// curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference
 	// order.
@@ -594,13 +594,13 @@ type Endpoint struct {
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
 	// +optional
-	HonorLabels bool `json:"honorLabels,omitempty"`
+	HonorLabels bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	//
 	// +optional
-	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
+	HonorTimestamps *bool `json:"honorTimestamps,omitempty"` // nolint:kubeapilinter
 
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
@@ -609,7 +609,7 @@ type Endpoint struct {
 	// It requires Prometheus >= v2.48.0.
 	//
 	// +optional
-	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
+	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"` // nolint:kubeapilinter
 
 	// metricRelabelings defines the relabeling rules to apply to the
 	// samples before ingestion.
@@ -637,7 +637,7 @@ type Endpoint struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	//
 	// +optional
-	FilterRunning *bool `json:"filterRunning,omitempty"`
+	FilterRunning *bool `json:"filterRunning,omitempty"` // nolint:kubeapilinter
 
 	// bearerTokenFile defines the file to read bearer token for scraping the target.
 	//
@@ -656,7 +656,7 @@ type AttachMetadata struct {
 	// permissions on the `Nodes` objects.
 	//
 	// +optional
-	Node *bool `json:"node,omitempty"`
+	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
 
 // OAuth2 configures OAuth2 settings.
@@ -791,7 +791,7 @@ type NamespaceSelector struct {
 	// any defines the boolean describing whether all namespaces are selected in contrast to a
 	// list restricting them.
 	// +optional
-	Any bool `json:"any,omitempty"`
+	Any bool `json:"any,omitempty"` // nolint:kubeapilinter
 	// matchNames defines the list of namespace names to select from.
 	// +optional
 	MatchNames []string `json:"matchNames,omitempty"`
@@ -830,7 +830,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.8.0.
 	//
 	// +optional
-	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"`
+	ScrapeNativeHistograms *bool `json:"scrapeNativeHistograms,omitempty"` // nolint:kubeapilinter
 
 	// scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.
 	// It requires Prometheus >= v2.45.0.
@@ -838,7 +838,7 @@ type NativeHistogramConfig struct {
 	// Notice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.
 	//
 	// +optional
-	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"` // nolint:kubeapilinter
 
 	// nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,
 	// buckets will be merged to stay within the limit.
@@ -858,7 +858,7 @@ type NativeHistogramConfig struct {
 	// It requires Prometheus >= v3.0.0.
 	//
 	// +optional
-	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"`
+	ConvertClassicHistogramsToNHCB *bool `json:"convertClassicHistogramsToNHCB,omitempty"` // nolint:kubeapilinter
 }
 
 // +kubebuilder:validation:Enum=RelabelConfig;RoleSelector
@@ -974,6 +974,64 @@ const (
 	ParallelPodManagement PodManagementPolicyType = "Parallel"
 )
 
+// StatefulSetUpdateStrategy indicates the strategy used when updating the
+// StatefulSet. It includes any additional parameters necessary to perform the
+// update for the indicated strategy.
+//
+// +kubebuilder:validation:XValidation:rule="!(self.type != 'RollingUpdate' && has(self.rollingUpdate))",message="rollingUpdate requires type to be RollingUpdate"
+type StatefulSetUpdateStrategy struct {
+	// type indicates the type of the StatefulSetUpdateStrategy.
+	//
+	// Default is RollingUpdate.
+	//
+	// +required
+	Type StatefulSetUpdateStrategyType `json:"type"`
+
+	// rollingUpdate is used to communicate parameters when type is RollingUpdate.
+	//
+	// +optional
+	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+// RollingUpdateStatefulSetStrategy is used to communicate parameter for the RollingUpdate strategy.
+type RollingUpdateStatefulSetStrategy struct {
+	// maxUnavailable is the maximum number of pods that can be unavailable
+	// during the update. The value can be an absolute number (ex: 5) or a
+	// percentage of desired pods (ex: 10%). Absolute number is calculated from
+	// percentage by rounding up. This can not be 0.  Defaults to 1. This field
+	// is alpha-level and is only honored by servers that enable the
+	// MaxUnavailableStatefulSet feature. The field applies to all pods in the
+	// range 0 to Replicas-1.  That means if there is any unavailable pod in
+	// the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
+	//
+	//	+kubebuilder:validation:XIntOrString
+	// +optional
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"varint,2,opt,name=maxUnavailable"`
+}
+
+// StatefulSetUpdateStrategyType is a string enumeration type that enumerates
+// all possible update strategies for the StatefulSet pods.
+//
+// +kubebuilder:validation:Enum=OnDelete;RollingUpdate
+type StatefulSetUpdateStrategyType string
+
+const (
+	// RollingUpdateStatefulSetStrategyType indicates that update will be
+	// applied to all Pods in the StatefulSet with respect to the StatefulSet
+	// ordering constraints. When a scale operation is performed with this
+	// strategy, new Pods will be created from the specification version indicated
+	// by the StatefulSet's updateRevision.
+	RollingUpdateStatefulSetStrategyType StatefulSetUpdateStrategyType = "RollingUpdate"
+
+	// OnDeleteStatefulSetStrategyType triggers the legacy behavior. Version
+	// tracking and ordered rolling restarts are disabled. Pods are recreated
+	// from the StatefulSetSpec when they are manually deleted. When a scale
+	// operation is performed with this strategy, new Pods will be created from
+	// the the specification version indicated by the StatefulSet's
+	// currentRevision.
+	OnDeleteStatefulSetStrategyType StatefulSetUpdateStrategyType = "OnDelete"
+)
+
 type TracingConfig struct {
 	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
 	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
@@ -991,7 +1049,7 @@ type TracingConfig struct {
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure",omitempty`
+	Insecure *bool `json:"insecure",omitempty` // nolint:kubeapilinter
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional

@@ -15,7 +15,6 @@
 package operator
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,30 +23,63 @@ import (
 )
 
 func TestBuildArgs(t *testing.T) {
-	args := []v1.Argument{
-		{Name: "test", Value: "value"},
-		{Name: "test2-test", Value: "value2"},
-		{Name: "test3.test", Value: "value3"},
-	}
-
-	additionalArgs := []v1.Argument{
-		{Name: "addtest", Value: "value"},
-		{Name: "addtest2-test", Value: "value2"},
-		{Name: "addtest3.test", Value: "value3"},
-	}
-
-	containerArgs, err := BuildArgs(args, additionalArgs)
-	if err != nil {
-		t.Errorf("BuildArgs returned an error: %s", err.Error())
-	}
-
-	for _, arg := range args {
-		argString := fmt.Sprintf("--%s=%s", arg.Name, arg.Value)
-		require.Contains(t, containerArgs, argString, "expected containerArgs to contain arg %v, got %v", argString, containerArgs)
-	}
-
-	for _, arg := range additionalArgs {
-		argString := fmt.Sprintf("--%s=%s", arg.Name, arg.Value)
-		require.Contains(t, containerArgs, argString, "expected containerArgs to contain additionalArg %v, got %v", argString, containerArgs)
+	for _, tc := range []struct {
+		a   []v1.Argument
+		b   []v1.Argument
+		exp []string
+		err bool
+	}{
+		{
+			a: []v1.Argument{
+				{Name: "test", Value: "value"},
+				{Name: "test2-test", Value: "value2"},
+				{Name: "test3.test", Value: "value3"},
+			},
+			b: []v1.Argument{
+				{Name: "addtest", Value: "value"},
+				{Name: "addtest2-test", Value: "value2"},
+				{Name: "addtest3.test", Value: "value3"},
+			},
+			exp: []string{
+				"--test=value",
+				"--test2-test=value2",
+				"--test3.test=value3",
+				"--addtest=value",
+				"--addtest2-test=value2",
+				"--addtest3.test=value3",
+			},
+		},
+		{
+			a: []v1.Argument{
+				{Name: "test", Value: "value"},
+				{Name: "test2", Value: "value2"},
+			},
+			b: []v1.Argument{
+				{Name: "addtest", Value: "value"},
+				{Name: "test2", Value: "value3"},
+			},
+			err: true,
+		},
+		{
+			a: []v1.Argument{
+				{Name: "test", Value: "value"},
+				{Name: "test2", Value: ""},
+			},
+			b: []v1.Argument{
+				{Name: "addtest", Value: "value"},
+				{Name: "no-test2", Value: ""},
+			},
+			err: true,
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			args, err := BuildArgs(tc.a, tc.b)
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.exp, args)
+		})
 	}
 }

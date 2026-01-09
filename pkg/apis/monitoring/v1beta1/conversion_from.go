@@ -219,7 +219,7 @@ func convertPagerDutyImageConfigsFrom(in []v1alpha1.PagerDutyImageConfig) []Page
 	for i := range in {
 		out[i] = PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: in[i].Href,
+			Href: (*URL)(in[i].Href),
 			Alt:  in[i].Alt,
 		}
 	}
@@ -232,7 +232,7 @@ func convertPagerDutyLinkConfigsFrom(in []v1alpha1.PagerDutyLinkConfig) []PagerD
 
 	for i := range in {
 		out[i] = PagerDutyLinkConfig{
-			Href: in[i].Href,
+			Href: (*URL)(in[i].Href),
 			Text: in[i].Text,
 		}
 	}
@@ -245,9 +245,9 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 		SendResolved:          in.SendResolved,
 		RoutingKey:            convertSecretKeySelectorFrom(in.RoutingKey),
 		ServiceKey:            convertSecretKeySelectorFrom(in.ServiceKey),
-		URL:                   in.URL,
+		URL:                   (*URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             in.ClientURL,
+		ClientURL:             (*URL)(in.ClientURL),
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,
@@ -349,7 +349,7 @@ func convertSlackActionsFrom(in []v1alpha1.SlackAction) []SlackAction {
 		out[i] = SlackAction{
 			Type:  in[i].Type,
 			Text:  in[i].Text,
-			URL:   in[i].URL,
+			URL:   (*URL)(in[i].URL),
 			Style: in[i].Style,
 			Name:  in[i].Name,
 			Value: in[i].Value,
@@ -375,7 +375,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Username:     in.Username,
 		Color:        in.Color,
 		Title:        in.Title,
-		TitleLink:    in.TitleLink,
+		TitleLink:    (*URL)(in.TitleLink),
 		Pretext:      in.Pretext,
 		Text:         in.Text,
 		Fields:       convertSlackFieldsFrom(in.Fields),
@@ -384,9 +384,9 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Fallback:     in.Fallback,
 		CallbackID:   in.CallbackID,
 		IconEmoji:    in.IconEmoji,
-		IconURL:      in.IconURL,
-		ImageURL:     in.ImageURL,
-		ThumbURL:     in.ThumbURL,
+		IconURL:      (*URL)(in.IconURL),
+		ImageURL:     (*URL)(in.ImageURL),
+		ThumbURL:     (*URL)(in.ThumbURL),
 		LinkNames:    in.LinkNames,
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsFrom(in.Actions),
@@ -455,7 +455,7 @@ func convertVictorOpsConfigFrom(in v1alpha1.VictorOpsConfig) VictorOpsConfig {
 	return VictorOpsConfig{
 		SendResolved:      in.SendResolved,
 		APIKey:            convertSecretKeySelectorFrom(in.APIKey),
-		APIURL:            in.APIURL,
+		APIURL:            (*URL)(in.APIURL),
 		RoutingKey:        in.RoutingKey,
 		MessageType:       in.MessageType,
 		EntityDisplayName: in.EntityDisplayName,
@@ -475,7 +475,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		TokenFile:    in.TokenFile,
 		Title:        in.Title,
 		Message:      in.Message,
-		URL:          in.URL,
+		URL:          (*URL)(in.URL),
 		URLTitle:     in.URLTitle,
 		Device:       in.Device,
 		Sound:        in.Sound,

@@ -1,6 +1,6 @@
 receivers:
 - name: ""
-  incidentio_config:
+  incidentio_configs:
   - http_config:
       authorization:
         type: Bearer

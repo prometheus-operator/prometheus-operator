@@ -4125,6 +4125,34 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
 		},
 		{
+			version: "v3.7.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
+		},
+		{
+			version: "v3.6.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
@@ -4478,6 +4506,34 @@ func TestRemoteWriteConfig(t *testing.T) {
 				MetadataConfig: &monitoringv1.MetadataConfig{},
 			},
 			golden: "RemoteWriteConfigWithEmptyMetadataConfig.golden",
+		},
+		{
+			version: "v3.8.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+				},
+			},
+			golden: "RemoteWriteConfig_AzureADScope_v3.8.0.golden",
+		},
+		{
+			version: "v3.9.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+				},
+			},
+			golden: "RemoteWriteConfig_AzureADScope_v3.9.0.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {

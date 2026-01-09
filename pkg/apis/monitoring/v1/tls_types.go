@@ -108,7 +108,7 @@ type SafeTLSConfig struct {
 
 	// insecureSkipVerify defines how to disable target certificate validation.
 	// +optional
-	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"` // nolint:kubeapilinter
 
 	// minVersion defines the minimum acceptable TLS version.
 	//

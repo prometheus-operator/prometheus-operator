@@ -303,8 +303,14 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	}
 
-	if version.GTE(semver.MustParse("0.30.0")) && a.Spec.DispatchStartDelay != nil {
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "dispatch.start-delay", Value: string(*a.Spec.DispatchStartDelay)})
+	if version.GTE(semver.MustParse("0.30.0")) && a.Spec.MinReadySeconds != nil {
+		startDelayArg := monitoringv1.Argument{
+			Name:  "dispatch.start-delay",
+			Value: fmt.Sprintf("%ds", *a.Spec.MinReadySeconds),
+		}
+		if i := operator.ArgumentsIntersection([]monitoringv1.Argument{startDelayArg}, a.Spec.AdditionalArgs); len(i) == 0 {
+			amArgs = append(amArgs, startDelayArg)
+		}
 	}
 
 	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
@@ -782,9 +788,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		Replicas:            a.Spec.Replicas,
 		MinReadySeconds:     ptr.Deref(a.Spec.MinReadySeconds, 0),
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
-		UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		},
+		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(a.Spec.UpdateStrategy),
 		Selector: &metav1.LabelSelector{
 			MatchLabels: finalSelectorLabels,
 		},

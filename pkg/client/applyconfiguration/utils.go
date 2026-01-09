@@ -70,6 +70,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureOAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureSDK"):
 		return &monitoringv1.AzureSDKApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureWorkloadIdentity"):
+		return &monitoringv1.AzureWorkloadIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
@@ -186,6 +188,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.RemoteWriteSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RetainConfig"):
 		return &monitoringv1.RetainConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("RollingUpdateStatefulSetStrategy"):
+		return &monitoringv1.RollingUpdateStatefulSetStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Rule"):
 		return &monitoringv1.RuleApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("RuleGroup"):
@@ -214,6 +218,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ShardStatusApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Sigv4"):
 		return &monitoringv1.Sigv4ApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("StatefulSetUpdateStrategy"):
+		return &monitoringv1.StatefulSetUpdateStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("StorageSpec"):
 		return &monitoringv1.StorageSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ThanosRuler"):
