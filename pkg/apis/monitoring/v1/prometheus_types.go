@@ -2399,11 +2399,11 @@ func (c *SafeAuthorization) Validate() error {
 	}
 
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
-		return errors.New("authorization type cannot be set to \"basic\", use \"basicAuth\" instead")
+		return errors.New("'authorization' type cannot be set to \"basic\", use \"basicAuth\" instead")
 	}
 
 	if c.Credentials == nil {
-		return errors.New("authorization credentials are required")
+		return errors.New("'authorization' credentials are required")
 	}
 
 	return nil
