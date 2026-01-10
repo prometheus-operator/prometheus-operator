@@ -519,15 +519,15 @@ type SlackAction struct {
 // Validate ensures SlackAction is valid.
 func (sa *SlackAction) Validate() error {
 	if sa.Type == "" {
-		return errors.New("missing type in Slack action configuration")
+		return errors.New("missing 'type' in Slack action configuration")
 	}
 
 	if sa.Text == "" {
-		return errors.New("missing text in Slack action configuration")
+		return errors.New("missing 'text' in Slack action configuration")
 	}
 
 	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
-		return errors.New("missing name or url in Slack action configuration")
+		return errors.New("missing 'name' or 'url' in Slack action configuration")
 	}
 
 	if sa.ConfirmField != nil {
@@ -570,7 +570,7 @@ type SlackConfirmationField struct {
 // Validate ensures SlackConfirmationField is valid.
 func (scf *SlackConfirmationField) Validate() error {
 	if scf.Text == "" {
-		return errors.New("missing text in Slack confirmation configuration")
+		return errors.New("missing 'text' in Slack confirmation configuration")
 	}
 	return nil
 }
@@ -600,11 +600,11 @@ type SlackField struct {
 // Validate ensures SlackField is valid
 func (sf *SlackField) Validate() error {
 	if sf.Title == "" {
-		return errors.New("missing title in Slack field configuration")
+		return errors.New("missing 'title' in Slack field configuration")
 	}
 
 	if sf.Value == "" {
-		return errors.New("missing value in Slack field configuration")
+		return errors.New("missing 'value' in Slack field configuration")
 	}
 
 	return nil
