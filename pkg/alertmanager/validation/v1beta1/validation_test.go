@@ -486,9 +486,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 								{
 									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
-											ID:       "a",
-											Name:     "b",
-											Username: "c",
+											ID:       ptr.To("a"),
+											Name:     ptr.To("b"),
+											Username: ptr.To("c"),
 											Type:     "user",
 										},
 									},
