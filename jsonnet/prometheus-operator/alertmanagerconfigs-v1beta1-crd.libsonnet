@@ -2468,6 +2468,7 @@
                         properties: {
                           actions: {
                             description: 'actions defines a comma separated list of actions that will be available for the alert.\nThese appear as action buttons in the OpsGenie interface.',
+                            minLength: 1,
                             type: 'string',
                           },
                           apiKey: {
@@ -2497,6 +2498,7 @@
                           },
                           description: {
                             description: 'description defines the detailed description of the incident.\nThis provides additional context beyond the message field.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -2524,6 +2526,7 @@
                           },
                           entity: {
                             description: 'entity defines an optional field that can be used to specify which domain alert is related to.\nThis helps group related alerts together in OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -3166,14 +3169,17 @@
                           },
                           message: {
                             description: 'message defines the alert text limited to 130 characters.\nThis appears as the main alert title in OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                           note: {
                             description: 'note defines an additional alert note.\nThis provides supplementary information about the alert.',
+                            minLength: 1,
                             type: 'string',
                           },
                           priority: {
                             description: 'priority defines the priority level of alert.\nPossible values are P1, P2, P3, P4, and P5, where P1 is highest priority.',
+                            minLength: 1,
                             type: 'string',
                           },
                           responders: {
@@ -3183,10 +3189,12 @@
                               properties: {
                                 id: {
                                   description: "id defines the unique identifier of the responder.\nThis corresponds to the responder's ID within OpsGenie.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 name: {
                                   description: 'name defines the display name of the responder.\nThis is used when the responder is identified by name rather than ID.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 type: {
@@ -3203,6 +3211,7 @@
                                 },
                                 username: {
                                   description: 'username defines the username of the responder.\nThis is typically used for user-type responders when identifying by username.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
@@ -3219,10 +3228,12 @@
                           },
                           source: {
                             description: 'source defines the backlink to the sender of the notification.\nThis helps identify where the alert originated from.',
+                            minLength: 1,
                             type: 'string',
                           },
                           tags: {
                             description: 'tags defines a comma separated list of tags attached to the notifications.\nThese help categorize and filter alerts within OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },

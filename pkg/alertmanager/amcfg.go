@@ -1101,14 +1101,14 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		Message:       in.Message,
-		Description:   in.Description,
-		Source:        in.Source,
-		Tags:          in.Tags,
-		Note:          in.Note,
-		Priority:      in.Priority,
-		Actions:       in.Actions,
-		Entity:        in.Entity,
+		Message:       ptr.Deref(in.Message, ""),
+		Description:   ptr.Deref(in.Description, ""),
+		Source:        ptr.Deref(in.Source, ""),
+		Tags:          ptr.Deref(in.Tags, ""),
+		Note:          ptr.Deref(in.Note, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
+		Actions:       ptr.Deref(in.Actions, ""),
+		Entity:        ptr.Deref(in.Entity, ""),
 		UpdateAlerts:  in.UpdateAlerts,
 	}
 
@@ -1138,9 +1138,9 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		responders = make([]opsgenieResponder, 0, l)
 		for _, r := range in.Responders {
 			responder := opsgenieResponder{
-				ID:       r.ID,
-				Name:     r.Name,
-				Username: r.Username,
+				ID:       ptr.Deref(r.ID, ""),
+				Name:     ptr.Deref(r.Name, ""),
+				Username: ptr.Deref(r.Username, ""),
 				Type:     r.Type,
 			}
 			responders = append(responders, responder)

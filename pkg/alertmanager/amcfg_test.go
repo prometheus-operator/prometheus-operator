@@ -2840,7 +2840,7 @@ func TestGenerateConfig(t *testing.T) {
 									Key: "apiKey",
 								},
 								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
-									Name: "myname",
+									Name: ptr.To("myname"),
 									Type: "team",
 								}},
 							}},

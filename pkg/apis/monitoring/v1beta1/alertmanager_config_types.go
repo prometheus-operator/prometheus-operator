@@ -658,28 +658,34 @@ type OpsGenieConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// description defines the detailed description of the incident.
 	// This provides additional context beyond the message field.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// source defines the backlink to the sender of the notification.
 	// This helps identify where the alert originated from.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Source string `json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
 	// tags defines a comma separated list of tags attached to the notifications.
 	// These help categorize and filter alerts within OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Tags string `json:"tags,omitempty"`
+	Tags *string `json:"tags,omitempty"`
 	// note defines an additional alert note.
 	// This provides supplementary information about the alert.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Note string `json:"note,omitempty"`
+	Note *string `json:"note,omitempty"`
 	// priority defines the priority level of alert.
 	// Possible values are P1, P2, P3, P4, and P5, where P1 is highest priority.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Priority string `json:"priority,omitempty"`
+	Priority *string `json:"priority,omitempty"`
 	// details defines a set of arbitrary key/value pairs that provide further detail about the incident.
 	// These appear as additional fields in the OpsGenie alert.
 	// +optional
@@ -693,12 +699,14 @@ type OpsGenieConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// entity defines an optional field that can be used to specify which domain alert is related to.
 	// This helps group related alerts together in OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Entity string `json:"entity,omitempty"`
+	Entity *string `json:"entity,omitempty"`
 	// actions defines a comma separated list of actions that will be available for the alert.
 	// These appear as action buttons in the OpsGenie interface.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Actions string `json:"actions,omitempty"`
+	Actions *string `json:"actions,omitempty"`
 }
 
 // Validate ensures OpsGenieConfig is valid
@@ -717,16 +725,19 @@ func (o *OpsGenieConfig) Validate() error {
 type OpsGenieConfigResponder struct {
 	// id defines the unique identifier of the responder.
 	// This corresponds to the responder's ID within OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 	// name defines the display name of the responder.
 	// This is used when the responder is identified by name rather than ID.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// username defines the username of the responder.
 	// This is typically used for user-type responders when identifying by username.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Username string `json:"username,omitempty"`
+	Username *string `json:"username,omitempty"`
 	// type defines the type of responder.
 	// Valid values include "user", "team", "schedule", and "escalation".
 	// This determines how OpsGenie interprets the other identifier fields.
@@ -742,7 +753,7 @@ var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
 
 // Validate ensures OpsGenieConfigResponder is valid.
 func (r *OpsGenieConfigResponder) Validate() error {
-	if r.ID == "" && r.Name == "" && r.Username == "" {
+	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
 		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
