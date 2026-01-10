@@ -558,6 +558,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -774,6 +778,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -1067,6 +1075,10 @@
                               },
                               serverName: {
                                 description: 'serverName is used to verify the hostname for the targets.',
+                                type: 'string',
+                              },
+                              serviceName: {
+                                description: 'serviceName is the service name of the target.',
                                 type: 'string',
                               },
                             },
@@ -1500,6 +1512,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -1716,6 +1732,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -2190,6 +2210,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -2406,6 +2430,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -2940,6 +2968,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -3156,6 +3188,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -3703,6 +3739,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -3919,6 +3959,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -4476,6 +4520,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -4692,6 +4740,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -5291,6 +5343,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -5507,6 +5563,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -6181,6 +6241,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -6397,6 +6461,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -6912,6 +6980,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -7128,6 +7200,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -7690,6 +7766,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -7906,6 +7986,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -8417,6 +8501,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -8633,6 +8721,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -9097,6 +9189,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -9313,6 +9409,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -9761,6 +9861,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -9977,6 +10081,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
@@ -10482,6 +10590,10 @@
                                         description: 'serverName is used to verify the hostname for the targets.',
                                         type: 'string',
                                       },
+                                      serviceName: {
+                                        description: 'serviceName is the service name of the target.',
+                                        type: 'string',
+                                      },
                                     },
                                     type: 'object',
                                   },
@@ -10698,6 +10810,10 @@
                                   },
                                   serverName: {
                                     description: 'serverName is used to verify the hostname for the targets.',
+                                    type: 'string',
+                                  },
+                                  serviceName: {
+                                    description: 'serviceName is the service name of the target.',
                                     type: 'string',
                                   },
                                 },
