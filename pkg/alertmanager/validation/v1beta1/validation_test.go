@@ -172,8 +172,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "invalid",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("invalid"),
 								},
 							},
 						},
@@ -531,8 +531,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "b:8080",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("b:8080"),
 									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",

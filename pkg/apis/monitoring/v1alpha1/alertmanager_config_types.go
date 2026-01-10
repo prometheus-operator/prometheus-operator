@@ -917,24 +917,29 @@ type EmailConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// to defines the email address to send notifications to.
 	// This is the recipient address for alert notifications.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	To string `json:"to,omitempty"`
+	To *string `json:"to,omitempty"`
 	// from defines the sender address for email notifications.
 	// This appears as the "From" field in the email header.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	From string `json:"from,omitempty"`
+	From *string `json:"from,omitempty"`
 	// hello defines the hostname to identify to the SMTP server.
 	// This is used in the SMTP HELO/EHLO command during the connection handshake.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Hello string `json:"hello,omitempty"`
+	Hello *string `json:"hello,omitempty"`
 	// smarthost defines the SMTP host and port through which emails are sent.
 	// Format should be "hostname:port", e.g. "smtp.example.com:587".
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Smarthost string `json:"smarthost,omitempty"`
+	Smarthost *string `json:"smarthost,omitempty"`
 	// authUsername defines the username to use for SMTP authentication.
 	// This is used for SMTP AUTH when the server requires authentication.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AuthUsername string `json:"authUsername,omitempty"`
+	AuthUsername *string `json:"authUsername,omitempty"`
 	// authPassword defines the secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -948,8 +953,9 @@ type EmailConfig struct {
 	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
 	// authIdentity defines the identity to use for SMTP authentication.
 	// This is typically used with PLAIN authentication mechanism.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AuthIdentity string `json:"authIdentity,omitempty"`
+	AuthIdentity *string `json:"authIdentity,omitempty"`
 	// headers defines additional email header key/value pairs.
 	// These override any headers previously set by the notification implementation.
 	// +listType=atomic
@@ -957,10 +963,12 @@ type EmailConfig struct {
 	Headers []KeyValue `json:"headers,omitempty"`
 	// html defines the HTML body of the email notification.
 	// This allows for rich formatting in the email content.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	HTML *string `json:"html,omitempty"`
 	// text defines the plain text body of the email notification.
 	// This provides a fallback for email clients that don't support HTML.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// requireTLS defines the SMTP TLS requirement.

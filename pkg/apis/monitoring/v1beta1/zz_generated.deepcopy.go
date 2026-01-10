@@ -182,6 +182,31 @@ func (in *EmailConfig) DeepCopyInto(out *EmailConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.To != nil {
+		in, out := &in.To, &out.To
+		*out = new(string)
+		**out = **in
+	}
+	if in.From != nil {
+		in, out := &in.From, &out.From
+		*out = new(string)
+		**out = **in
+	}
+	if in.Hello != nil {
+		in, out := &in.Hello, &out.Hello
+		*out = new(string)
+		**out = **in
+	}
+	if in.Smarthost != nil {
+		in, out := &in.Smarthost, &out.Smarthost
+		*out = new(string)
+		**out = **in
+	}
+	if in.AuthUsername != nil {
+		in, out := &in.AuthUsername, &out.AuthUsername
+		*out = new(string)
+		**out = **in
+	}
 	if in.AuthPassword != nil {
 		in, out := &in.AuthPassword, &out.AuthPassword
 		*out = new(SecretKeySelector)
@@ -190,6 +215,11 @@ func (in *EmailConfig) DeepCopyInto(out *EmailConfig) {
 	if in.AuthSecret != nil {
 		in, out := &in.AuthSecret, &out.AuthSecret
 		*out = new(SecretKeySelector)
+		**out = **in
+	}
+	if in.AuthIdentity != nil {
+		in, out := &in.AuthIdentity, &out.AuthIdentity
+		*out = new(string)
 		**out = **in
 	}
 	if in.Headers != nil {

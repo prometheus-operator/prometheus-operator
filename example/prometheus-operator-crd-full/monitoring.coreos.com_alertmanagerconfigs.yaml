@@ -1020,6 +1020,7 @@ spec:
                             description: |-
                               authIdentity defines the identity to use for SMTP authentication.
                               This is typically used with PLAIN authentication mechanism.
+                            minLength: 1
                             type: string
                           authPassword:
                             description: |-
@@ -1080,11 +1081,13 @@ spec:
                             description: |-
                               authUsername defines the username to use for SMTP authentication.
                               This is used for SMTP AUTH when the server requires authentication.
+                            minLength: 1
                             type: string
                           from:
                             description: |-
                               from defines the sender address for email notifications.
                               This appears as the "From" field in the email header.
+                            minLength: 1
                             type: string
                           headers:
                             description: |-
@@ -1114,11 +1117,13 @@ spec:
                             description: |-
                               hello defines the hostname to identify to the SMTP server.
                               This is used in the SMTP HELO/EHLO command during the connection handshake.
+                            minLength: 1
                             type: string
                           html:
                             description: |-
                               html defines the HTML body of the email notification.
                               This allows for rich formatting in the email content.
+                            minLength: 1
                             type: string
                           requireTLS:
                             description: |-
@@ -1133,11 +1138,13 @@ spec:
                             description: |-
                               smarthost defines the SMTP host and port through which emails are sent.
                               Format should be "hostname:port", e.g. "smtp.example.com:587".
+                            minLength: 1
                             type: string
                           text:
                             description: |-
                               text defines the plain text body of the email notification.
                               This provides a fallback for email clients that don't support HTML.
+                            minLength: 1
                             type: string
                           tlsConfig:
                             description: |-
@@ -1312,6 +1319,7 @@ spec:
                             description: |-
                               to defines the email address to send notifications to.
                               This is the recipient address for alert notifications.
+                            minLength: 1
                             type: string
                         type: object
                       type: array
@@ -13182,6 +13190,7 @@ spec:
                             description: |-
                               authIdentity defines the identity to use for SMTP authentication.
                               This is typically used with PLAIN authentication mechanism.
+                            minLength: 1
                             type: string
                           authPassword:
                             description: |-
@@ -13228,11 +13237,13 @@ spec:
                             description: |-
                               authUsername defines the username to use for SMTP authentication.
                               This is used for SMTP AUTH when the server requires authentication.
+                            minLength: 1
                             type: string
                           from:
                             description: |-
                               from defines the sender address for email notifications.
                               This appears as the "From" field in the email header.
+                            minLength: 1
                             type: string
                           headers:
                             description: |-
@@ -13261,11 +13272,13 @@ spec:
                             description: |-
                               hello defines the hostname to identify to the SMTP server.
                               This is used in the SMTP HELO/EHLO command during the connection handshake.
+                            minLength: 1
                             type: string
                           html:
                             description: |-
                               html defines the HTML body of the email notification.
                               This allows for rich formatting in the email content.
+                            minLength: 1
                             type: string
                           requireTLS:
                             description: |-
@@ -13280,11 +13293,13 @@ spec:
                             description: |-
                               smarthost defines the SMTP host and port through which emails are sent.
                               Format should be "hostname:port", e.g. "smtp.example.com:587".
+                            minLength: 1
                             type: string
                           text:
                             description: |-
                               text defines the plain text body of the email notification.
                               This provides a fallback for email clients that don't support HTML.
+                            minLength: 1
                             type: string
                           tlsConfig:
                             description: |-
@@ -13459,6 +13474,7 @@ spec:
                             description: |-
                               to defines the email address to send notifications to.
                               This is the recipient address for alert notifications.
+                            minLength: 1
                             type: string
                         type: object
                       type: array
