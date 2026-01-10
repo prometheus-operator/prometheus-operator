@@ -27,11 +27,11 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 	}
 
 	if err := gc.HTTPConfigWithProxy.Validate(); err != nil {
-		return fmt.Errorf("httpConfig: %w", err)
+		return fmt.Errorf("'httpConfig': %w", err)
 	}
 
 	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
-		return fmt.Errorf("wechatConfig: %w", err)
+		return fmt.Errorf("'wechat': %w", err)
 	}
 
 	return nil
@@ -43,7 +43,7 @@ func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
