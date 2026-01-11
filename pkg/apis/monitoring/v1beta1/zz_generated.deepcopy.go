@@ -1554,6 +1554,41 @@ func (in *WeChatConfig) DeepCopyInto(out *WeChatConfig) {
 		*out = new(URL)
 		**out = **in
 	}
+	if in.CorpID != nil {
+		in, out := &in.CorpID, &out.CorpID
+		*out = new(string)
+		**out = **in
+	}
+	if in.AgentID != nil {
+		in, out := &in.AgentID, &out.AgentID
+		*out = new(string)
+		**out = **in
+	}
+	if in.ToUser != nil {
+		in, out := &in.ToUser, &out.ToUser
+		*out = new(string)
+		**out = **in
+	}
+	if in.ToParty != nil {
+		in, out := &in.ToParty, &out.ToParty
+		*out = new(string)
+		**out = **in
+	}
+	if in.ToTag != nil {
+		in, out := &in.ToTag, &out.ToTag
+		*out = new(string)
+		**out = **in
+	}
+	if in.Message != nil {
+		in, out := &in.Message, &out.Message
+		*out = new(string)
+		**out = **in
+	}
+	if in.MessageType != nil {
+		in, out := &in.MessageType, &out.MessageType
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

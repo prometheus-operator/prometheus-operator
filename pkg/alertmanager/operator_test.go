@@ -542,7 +542,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 							},
 						},
 					}},
@@ -564,7 +564,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
@@ -587,7 +587,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
@@ -613,7 +613,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
