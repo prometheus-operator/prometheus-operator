@@ -1146,9 +1146,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					Smarthost: "example.com:25",
-					From:      "admin@example.com",
-					To:        "test@example.com",
+					Smarthost: ptr.To("example.com:25"),
+					From:      ptr.To("admin@example.com"),
+					To:        ptr.To("test@example.com"),
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
