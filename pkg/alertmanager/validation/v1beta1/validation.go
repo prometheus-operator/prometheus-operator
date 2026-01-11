@@ -244,7 +244,7 @@ func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
 		if ptr.Deref(config.Smarthost, "") != "" {
 			_, _, err := net.SplitHostPort(*config.Smarthost)
 			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", config.Smarthost, err)
+				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
 			}
 		}
 
