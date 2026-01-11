@@ -897,7 +897,6 @@
                           },
                           html: {
                             description: 'html defines the HTML body of the email notification.\nThis allows for rich formatting in the email content.',
-                            minLength: 1,
                             type: 'string',
                           },
                           requireTLS: {

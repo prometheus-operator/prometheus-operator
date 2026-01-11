@@ -963,7 +963,6 @@ type EmailConfig struct {
 	Headers []KeyValue `json:"headers,omitempty"`
 	// html defines the HTML body of the email notification.
 	// This allows for rich formatting in the email content.
-	// +kubebuilder:validation:MinLength=1
 	// +optional
 	HTML *string `json:"html,omitempty"`
 	// text defines the plain text body of the email notification.
