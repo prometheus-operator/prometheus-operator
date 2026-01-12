@@ -15,11 +15,12 @@ Starting with prometheus-operator v0.65.x, one can use the `ScrapeConfig` CRD to
 Kubernetes cluster or create scrape configurations that are not possible with the higher level
 `ServiceMonitor`/`Probe`/`PodMonitor` resources.
 
-# Prerequisites
+## Prerequisites
+
 * `prometheus-operator` `>v0.65.1`
 * `ScrapeConfig` CRD installed in the cluster. Make sure to (re)start the operator after the CRD has been created/updated.
 
-# Configure Prometheus or PrometheusAgent to select ScrapeConfigs
+## Configure Prometheus or PrometheusAgent to select ScrapeConfigs
 
 Both the Prometheus and PrometheusAgent CRD have a `scrapeConfigSelector` field. This field needs to be set to a list of
 labels to match `ScrapeConfigs`:
@@ -34,7 +35,7 @@ spec:
 With this example, all `ScrapeConfig` having the `prometheus` label set to `system-monitoring-prometheus` will be used
 to generate scrape configurations.
 
-# Use ScrapeConfig to scrape an external target
+## Use ScrapeConfig to scrape an external target
 
 `ScrapeConfig` currently supports a limited set of service discoveries:
 * `static_config`
