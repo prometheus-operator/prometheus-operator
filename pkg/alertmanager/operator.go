@@ -710,7 +710,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
-		return nil
+		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
@@ -720,7 +720,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
 			return fmt.Errorf("failed to create statefulset: %w", err)
 		}
-		return nil
+		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
 	}
 
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
@@ -740,11 +740,9 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 		return nil
 	}
 
-	fmt.Println("update status ke andar")
 	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
 
 	for key, configResource := range amConfigs {
-		fmt.Println("observed generation: ", configResource.Resource().GetGeneration())
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
 		}
