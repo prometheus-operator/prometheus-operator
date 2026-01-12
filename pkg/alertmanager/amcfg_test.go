@@ -3959,12 +3959,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
-	versionTelegramBotTokenFileAllowed := semver.Version{Major: 0, Minor: 26}
-	versionTelegramBotTokenFileNotAllowed := semver.Version{Major: 0, Minor: 25}
-
-	versionTelegramMessageThreadIDAllowed := semver.Version{Major: 0, Minor: 26}
-	versionTelegramMessageThreadIDNotAllowed := semver.Version{Major: 0, Minor: 25}
-
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
@@ -4497,134 +4491,6 @@ func TestSanitizeConfig(t *testing.T) {
 						WebexConfigs: []*webexConfig{
 							{
 								APIURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "bot_token_file field for Telegram config",
-			againstVersion: versionTelegramBotTokenFileAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:       12345,
-								BotTokenFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			golden: "bot_token_file_field_for_Telegram_config.golden",
-		},
-		{
-			name:           "bot_token_file and bot_token fields for Telegram config",
-			againstVersion: versionTelegramBotTokenFileAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:       12345,
-								BotToken:     "test",
-								BotTokenFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			golden: "bot_token_file_and_bot_token_fields_for_Telegram_config.golden",
-		},
-		{
-			name:           "bot_token not specified and bot_token_file is dropped for unsupported versions",
-			againstVersion: versionTelegramBotTokenFileNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:       12345,
-								BotTokenFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "bot_token specified and bot_token_file is dropped for unsupported versions",
-			againstVersion: versionTelegramBotTokenFileNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:       12345,
-								BotToken:     "test",
-								BotTokenFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			golden: "bot_token specified and bot_token_file_is_dropped_for_unsupported_versions.golden",
-		},
-		{
-			name:           "bot_token and bot_token_file empty",
-			againstVersion: versionTelegramBotTokenFileAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID: 12345,
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "message_thread_id field for Telegram config",
-			againstVersion: versionTelegramMessageThreadIDAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:          12345,
-								MessageThreadID: 123,
-								BotToken:        "test",
-							},
-						},
-					},
-				},
-			},
-			golden: "message_thread_id_field_for_Telegram_config.golden",
-		},
-		{
-			name:           "message_thread_id is dropped for unsupported versions",
-			againstVersion: versionTelegramMessageThreadIDNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						Name: "telegram",
-						TelegramConfigs: []*telegramConfig{
-							{
-								ChatID:          12345,
-								MessageThreadID: 123,
 							},
 						},
 					},
@@ -6970,7 +6836,8 @@ func TestConvertHTTPConfig(t *testing.T) {
 
 func TestSanitizeTelegramConfig(t *testing.T) {
 	logger := newNopLogger(t)
-	versionTelegramExampleAllowed := semver.Version{Major: 0, Minor: 26}
+	versionTelegramAllowed := semver.Version{Major: 0, Minor: 26}
+	versionTelegramNotAllowed := semver.Version{Major: 0, Minor: 25}
 
 	for _, tc := range []struct {
 		name           string
@@ -6981,7 +6848,7 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 	}{
 		{
 			name:           "telegram invalid api_url returns error",
-			againstVersion: versionTelegramExampleAllowed,
+			againstVersion: versionTelegramAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -6999,7 +6866,7 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 		},
 		{
 			name:           "telegram valid api_url passes validation",
-			againstVersion: versionTelegramExampleAllowed,
+			againstVersion: versionTelegramAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -7014,6 +6881,134 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 				},
 			},
 			golden: "telegram_valid_url_passes.golden",
+		},
+		{
+			name:           "bot_token_file field for Telegram config",
+			againstVersion: versionTelegramAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "bot_token_file_field_for_Telegram_config.golden",
+		},
+		{
+			name:           "bot_token_file and bot_token fields for Telegram config",
+			againstVersion: versionTelegramAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotToken:     "test",
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "bot_token_file_and_bot_token_fields_for_Telegram_config.golden",
+		},
+		{
+			name:           "bot_token not specified and bot_token_file is dropped for unsupported versions",
+			againstVersion: versionTelegramNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "bot_token specified and bot_token_file is dropped for unsupported versions",
+			againstVersion: versionTelegramNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:       12345,
+								BotToken:     "test",
+								BotTokenFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "bot_token specified and bot_token_file_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "bot_token and bot_token_file empty",
+			againstVersion: versionTelegramAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "message_thread_id field for Telegram config",
+			againstVersion: versionTelegramAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:          12345,
+								MessageThreadID: 123,
+								BotToken:        "test",
+							},
+						},
+					},
+				},
+			},
+			golden: "message_thread_id_field_for_Telegram_config.golden",
+		},
+		{
+			name:           "message_thread_id is dropped for unsupported versions",
+			againstVersion: versionTelegramNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID:          12345,
+								MessageThreadID: 123,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
