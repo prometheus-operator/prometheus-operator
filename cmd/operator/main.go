@@ -44,7 +44,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
-	crd "github.com/prometheus-operator/prometheus-operator/example/prometheus-operator-crd"
+	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
@@ -247,11 +247,27 @@ func run(fs *flag.FlagSet) int {
 		return 0
 	}
 
-	// Handle CLI commands (crds, start, etc.)
-	if exitCode, handled := handleCommand(fs); handled {
-		return exitCode
+	// Determine command (default to "start")
+	cmd := "start"
+	if fs.NArg() > 0 {
+		cmd = fs.Arg(0)
 	}
 
+	// Route to appropriate command handler
+	switch cmd {
+	case "start":
+		return start()
+	case "crds":
+		return crds()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", cmd)
+		fmt.Fprintln(os.Stderr, "Available commands: crds, start")
+		return 1
+	}
+}
+
+// start runs the Prometheus Operator.
+func start() int {
 	logger, err := logging.NewLoggerSlog(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
@@ -772,29 +788,25 @@ func run(fs *flag.FlagSet) int {
 }
 
 func main() {
-	os.Exit(run(flag.CommandLine))
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s [arguments] [<command>]\n\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "Commands:")
+		fmt.Fprintln(os.Stderr, "  start  Run the operator (default)")
+		fmt.Fprintln(os.Stderr, "  crds   Print the Custom Resource Definitions (CRDs) in YAML format to standard output")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Arguments:")
+		fs.PrintDefaults()
+	}
+	os.Exit(run(fs))
 }
 
-// handleCommand checks for CLI commands after flag parsing.
-func handleCommand(fs *flag.FlagSet) (int, bool) {
-	if fs.NArg() == 0 {
-		return 0, false
+// crds prints all embedded CRDs to stdout.
+func crds() int {
+	if err := crd.PrintAll(os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "Error printing CRDs: %v\n", err)
+		return 1
 	}
-
-	switch fs.Arg(0) {
-	case "crds":
-		if err := crd.PrintAll(os.Stdout); err != nil {
-			fmt.Fprintf(os.Stderr, "Error printing CRDs: %v\n", err)
-			return 1, true
-		}
-		return 0, true
-
-	case "start":
-		return 0, false
-
-	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", fs.Arg(0))
-		fmt.Fprintln(os.Stderr, "Available commands: crds, start")
-		return 1, true
-	}
+	return 0
 }

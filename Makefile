@@ -115,9 +115,8 @@ clean:
 build: operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
-operator: generate-crds
+operator:
 	$(GO_BUILD_RECIPE) -o $@ ./cmd/operator/
-
 
 
 .PHONY: prometheus-config-reloader
