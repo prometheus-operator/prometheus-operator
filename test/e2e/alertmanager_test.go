@@ -1076,6 +1076,30 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	msteamsWebhookURL := "https://msteams.webhook.url"
+	msteamsWebhookURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "msteams-webhook-url",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(msteamsWebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsWebhookURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	msteamsv2WebhookURL := "https://msteamsv2.webhook.url"
+	msteamsv2WebhookURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "msteamsv2-webhook-url",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(msteamsv2WebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2WebhookURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1244,6 +1268,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 							},
 						},
 					},
+				}},
+				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+					WebhookURL: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "msteams-webhook-url",
+						},
+						Key: "webhook-url",
+					},
+					Title: ptr.To("Alert"),
+				}},
+				MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
+					WebhookURL: &v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "msteamsv2-webhook-url",
+						},
+						Key: "webhookv2-url",
+					},
+					Title: ptr.To("Alert"),
 				}},
 			}},
 		},
@@ -1590,6 +1632,12 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
+  msteams_configs:
+  - webhook_url: https://msteams.webhook.url
+    title: Alert
+  msteamsv2_configs:
+  - webhook_url: https://msteamsv2.webhook.url
+    title: Alert
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
