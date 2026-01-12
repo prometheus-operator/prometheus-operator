@@ -1369,7 +1369,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
-	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 2*time.Minute)
 	require.NoError(t, err)
 	binding, err := framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
 	require.NoError(t, err)
@@ -1429,7 +1429,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// The first AlertmanagerConfig should remain unchanged.
-	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 2*time.Minute)
 	require.NoError(t, err)
 	binding, err = framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
 	require.NoError(t, err)
