@@ -648,6 +648,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
 	}
 
+	if err := c.updateConfigResourcesStatus(ctx, am, amConfigs); err != nil {
+		logger.Warn("failed to update AlertmanagerConfig status", "err", err)
+	}
+
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore, amVersion, amConfigs.ValidResources()); err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
@@ -710,7 +714,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
-		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+		return nil
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
@@ -720,7 +724,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
 			return fmt.Errorf("failed to create statefulset: %w", err)
 		}
-		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+		return nil
 	}
 
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
@@ -729,8 +733,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}); err != nil {
 		return err
 	}
-	err = c.updateConfigResourcesStatus(ctx, am, amConfigs)
-	return err
+	return nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
