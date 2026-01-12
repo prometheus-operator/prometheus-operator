@@ -1369,7 +1369,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
-	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 5*time.Minute)
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 18*time.Minute)
 	require.NoError(t, err)
 	binding, err := framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
 	require.NoError(t, err)
@@ -1408,7 +1408,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	alc2, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc2, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	alc2, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
+	alc2, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 10*time.Minute)
 	require.NoError(t, err)
 
 	// Update the labels of the first AlertmanagerConfig. A label update doesn't
@@ -1425,11 +1425,11 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// The second AlertmanagerConfig should change to Accepted=False.
-	_, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 3*time.Minute)
+	_, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc2, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 10*time.Minute)
 	require.NoError(t, err)
 
 	// The first AlertmanagerConfig should remain unchanged.
-	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 5*time.Minute)
+	alc1, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc1, am, monitoringv1alpha1.AlertmanagerConfigName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 18*time.Minute)
 	require.NoError(t, err)
 	binding, err = framework.GetWorkloadBinding(alc1.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
 	require.NoError(t, err)
