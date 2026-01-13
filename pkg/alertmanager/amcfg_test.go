@@ -5592,6 +5592,7 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test victorops_api_key takes precedence in global config",
@@ -5647,9 +5648,47 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 			},
 			golden: "test_api_key_file_is_dropped_in_victorops_config_for_unsupported_versions.golden",
 		},
+		{
+			name:           "victorops invalid api_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIURL:     "not-a-valid-url",
+								RoutingKey: "test-key",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "victorops valid api_url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIURL:     "https://alert.victorops.com/integrations/generic/20131114/alert",
+								RoutingKey: "test-key",
+							},
+						},
+					},
+				},
+			},
+			golden: "victorops_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)

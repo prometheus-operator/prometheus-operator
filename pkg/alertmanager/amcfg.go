@@ -2699,6 +2699,12 @@ func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		voc.APIKeyFile = ""
 	}
 
+	if voc.APIURL != "" {
+		if _, err := validation.ValidateURL(voc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return nil
 }
 
