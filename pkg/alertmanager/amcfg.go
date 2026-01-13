@@ -2897,6 +2897,11 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 			}
 		}
 	}
+	if jc.APIURL != "" {
+		if _, err := validation.ValidateURL(jc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
 
 	return jc.HTTPConfig.sanitize(amVersion, logger)
 }
