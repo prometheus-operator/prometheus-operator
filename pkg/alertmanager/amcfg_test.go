@@ -7092,6 +7092,68 @@ func TestSanitizeMSTeamsConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeWeChatConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionWeChatAllowed := semver.Version{Major: 0, Minor: 26}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "wechat invalid api_url returns error",
+			againstVersion: versionWeChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL: "not-a-valid-url",
+								CorpID: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "wechat valid api_url passes validation",
+			againstVersion: versionWeChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL: "https://api.weixin.qq.com/cgi-bin/message/send",
+								CorpID: "foo",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.DiscardHandler)

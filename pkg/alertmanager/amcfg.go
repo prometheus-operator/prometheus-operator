@@ -2774,6 +2774,12 @@ func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if wcc.APIURL != "" {
+		if _, err := validation.ValidateURL(wcc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return wcc.HTTPConfig.sanitize(amVersion, logger)
 }
 
