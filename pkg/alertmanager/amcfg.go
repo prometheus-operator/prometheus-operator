@@ -1438,13 +1438,31 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
 	out := &snsConfig{
 		VSendResolved: in.SendResolved,
-		APIUrl:        in.ApiURL,
-		TopicARN:      in.TopicARN,
-		PhoneNumber:   in.PhoneNumber,
-		TargetARN:     in.TargetARN,
-		Subject:       in.Subject,
-		Message:       in.Message,
 		Attributes:    in.Attributes,
+	}
+
+	if in.ApiURL != nil {
+		out.APIUrl = string(*in.ApiURL)
+	}
+
+	if in.TopicARN != nil {
+		out.TopicARN = *in.TopicARN
+	}
+
+	if in.PhoneNumber != nil {
+		out.PhoneNumber = *in.PhoneNumber
+	}
+
+	if in.TargetARN != nil {
+		out.TargetARN = *in.TargetARN
+	}
+
+	if in.Subject != nil {
+		out.Subject = *in.Subject
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

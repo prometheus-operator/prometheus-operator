@@ -1168,10 +1168,40 @@ func (in *SNSConfig) DeepCopyInto(out *SNSConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ApiURL != nil {
+		in, out := &in.ApiURL, &out.ApiURL
+		*out = new(URL)
+		**out = **in
+	}
 	if in.Sigv4 != nil {
 		in, out := &in.Sigv4, &out.Sigv4
 		*out = new(monitoringv1.Sigv4)
 		(*in).DeepCopyInto(*out)
+	}
+	if in.TopicARN != nil {
+		in, out := &in.TopicARN, &out.TopicARN
+		*out = new(string)
+		**out = **in
+	}
+	if in.Subject != nil {
+		in, out := &in.Subject, &out.Subject
+		*out = new(string)
+		**out = **in
+	}
+	if in.PhoneNumber != nil {
+		in, out := &in.PhoneNumber, &out.PhoneNumber
+		*out = new(string)
+		**out = **in
+	}
+	if in.TargetARN != nil {
+		in, out := &in.TargetARN, &out.TargetARN
+		*out = new(string)
+		**out = **in
+	}
+	if in.Message != nil {
+		in, out := &in.Message, &out.Message
+		*out = new(string)
+		**out = **in
 	}
 	if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes

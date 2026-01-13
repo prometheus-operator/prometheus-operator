@@ -6507,6 +6507,7 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.\nIf not specified, the SNS API URL from the SNS SDK will be used.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           attributes: {
@@ -7156,10 +7157,12 @@
                           },
                           message: {
                             description: 'message defines the message content of the SNS notification.\nThis is the actual notification text that will be sent to subscribers.',
+                            minLength: 1,
                             type: 'string',
                           },
                           phoneNumber: {
                             description: "phoneNumber defines the phone number if message is delivered via SMS in E.164 format.\nIf you don't specify this value, you must specify a value for the TopicARN or TargetARN.",
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -7236,14 +7239,17 @@
                           },
                           subject: {
                             description: 'subject defines the subject line when the message is delivered to email endpoints.\nThis field is only used when sending to email subscribers of an SNS topic.',
+                            minLength: 1,
                             type: 'string',
                           },
                           targetARN: {
                             description: "targetARN defines the mobile platform endpoint ARN if message is delivered via mobile notifications.\nIf you don't specify this value, you must specify a value for the TopicARN or PhoneNumber.",
+                            minLength: 1,
                             type: 'string',
                           },
                           topicARN: {
                             description: "topicARN defines the SNS topic ARN, e.g. arn:aws:sns:us-east-2:698519295917:My-Topic.\nIf you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.",
+                            minLength: 1,
                             type: 'string',
                           },
                         },
