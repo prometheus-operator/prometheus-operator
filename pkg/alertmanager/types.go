@@ -220,7 +220,6 @@ type slackConfig struct {
 	Actions       []slackAction     `yaml:"actions,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
 }
-
 type httpClientConfig struct {
 	Authorization   *authorization     `yaml:"authorization,omitempty"`
 	BasicAuth       *basicAuth         `yaml:"basic_auth,omitempty"`

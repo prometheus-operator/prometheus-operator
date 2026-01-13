@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  incidentio_configs:
+  - send_resolved: true
+    url: https://api.incident.io/v2/alert_events/http/test
+    alert_source_token: alert-source-token-123
+templates: []

@@ -220,6 +220,10 @@ type Receiver struct {
 	// It requires Alertmanager >= 0.28.0.
 	// +optional
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
+	// incidentioConfigs defines the list of Incident.io configurations.
+	// It requires Alertmanager >= 0.29.0.
+	// +optional
+	IncidentioConfigs []IncidentioConfig `json:"incidentioConfigs,omitempty"`
 }
 
 // PagerDutyConfig configures notifications via PagerDuty.
@@ -1283,6 +1287,36 @@ type RocketChatActionConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Msg *string `json:"msg,omitempty"`
+}
+
+// IncidentioConfig configures notifications via Incident.io.
+// It requires Alertmanager >= 0.29.0.
+// +kubebuilder:validation:XValidation:rule="!(has(self.alertSourceToken) && has(self.httpConfig) && has(self.httpConfig.authorization))",message="cannot use both alertSourceToken and httpConfig.authorization"
+// +kubebuilder:validation:XValidation:rule="has(self.alertSourceToken) || (has(self.httpConfig) && has(self.httpConfig.authorization))",message="must configure either alertSourceToken or httpConfig.authorization"
+type IncidentioConfig struct {
+	// sendResolved defines whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// httpConfig defines the HTTP client configuration for incident.io API requests.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// url to send the incident.io alert.
+	// This would typically be provided by incident.io team when setting up an alert source.
+	// +required
+	URL URL `json:"url"`
+	// alertSourceToken references a secret containing the incident.io alert source token.
+	// Cannot be set at the same time as httpConfig.authorization.
+	// +optional
+	AlertSourceToken *v1.SecretKeySelector `json:"alertSourceToken,omitempty"`
+	// maxAlerts defines the maximum number of alerts to be sent per webhook message.
+	// When 0, all alerts are included in the webhook payload.
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	MaxAlerts *int32 `json:"maxAlerts,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // InhibitRule defines an inhibition rule that allows to mute alerts when other

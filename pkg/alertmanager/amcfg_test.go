@@ -2079,6 +2079,9 @@ func TestGenerateConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -3933,6 +3936,311 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_WebhookConfig_with_Timeout_Setup_Older_Version.golden",
+		},
+		{
+			name:      "CR with Incidentio Receiver using alertSourceToken",
+			amVersion: &version29,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-token",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("alert-source-token-123"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										URL: "https://api.incident.io/v2/alert_events/http/test",
+										AlertSourceToken: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "incidentio-token",
+											},
+											Key: "token",
+										},
+										SendResolved: ptr.To(true),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Incidentio_Receiver_alertSourceToken.golden",
+		},
+		{
+			name:      "CR with Incidentio Receiver using httpConfig.authorization",
+			amVersion: &version29,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-auth",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("bearer-token-456"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										URL: "https://api.incident.io/v2/alert_events/http/test",
+										HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+											Authorization: &monitoringv1.SafeAuthorization{
+												Credentials: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "incidentio-auth",
+													},
+													Key: "token",
+												},
+											},
+										},
+										MaxAlerts: ptr.To(int32(10)),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Incidentio_Receiver_httpConfig_authorization.golden",
+		},
+		{
+			name:      "CR with Incidentio Receiver - both auth methods set",
+			amVersion: &version29,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-token",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("token-123"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										URL: "https://api.incident.io/v2/alert_events/http/test",
+										AlertSourceToken: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "incidentio-token",
+											},
+											Key: "token",
+										},
+										HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+											Authorization: &monitoringv1.SafeAuthorization{
+												Credentials: &corev1.SecretKeySelector{
+													LocalObjectReference: corev1.LocalObjectReference{
+														Name: "incidentio-token",
+													},
+													Key: "token",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Incidentio Receiver - missing authentication",
+			amVersion: &version29,
+			kclient:   fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										URL: "https://api.incident.io/v2/alert_events/http/test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Incidentio Receiver - missing URL",
+			amVersion: &version29,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-token",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("token-123"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										AlertSourceToken: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "incidentio-token",
+											},
+											Key: "token",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Incidentio Receiver - invalid URL",
+			amVersion: &version29,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "incidentio-token",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"token": []byte("token-123"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								IncidentioConfigs: []monitoringv1alpha1.IncidentioConfig{
+									{
+										URL: "://invalid-url",
+										AlertSourceToken: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "incidentio-token",
+											},
+											Key: "token",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
 		},
 	}
 
