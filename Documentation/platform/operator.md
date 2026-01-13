@@ -19,8 +19,9 @@ Usage of ./operator:
   ./operator [arguments] [<command>]
 
 Commands:
-  start  Run the operator (default)
-  crds   Print the Custom Resource Definitions (CRDs) in YAML format to standard output
+  start      Run the operator (default)
+  crds       Print the CRDs in YAML format to standard output
+  full-crds  Print the full CRDs (with all fields) in YAML format to standard output
 
 Arguments:
   -alertmanager-config-namespaces value

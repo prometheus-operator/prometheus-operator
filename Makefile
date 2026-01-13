@@ -118,7 +118,6 @@ build: operator prometheus-config-reloader admission-webhook k8s-gen
 operator:
 	$(GO_BUILD_RECIPE) -o $@ ./cmd/operator/
 
-
 .PHONY: prometheus-config-reloader
 prometheus-config-reloader:
 	$(GO_BUILD_RECIPE) -o $@ ./cmd/$@/

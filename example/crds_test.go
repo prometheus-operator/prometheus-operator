@@ -16,40 +16,60 @@ package crd
 
 import (
 	"bytes"
-	"strings"
+	"io"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 func TestPrintAll(t *testing.T) {
 	var buf bytes.Buffer
 	err := PrintAll(&buf)
-	if err != nil {
-		t.Fatalf("PrintAll() error = %v", err)
+	require.NoError(t, err)
+
+	crds := parseCRDs(t, buf.Bytes())
+	require.GreaterOrEqual(t, len(crds), 10, "expected at least 10 CRDs")
+
+	// Verify all are valid CRDs
+	for _, crd := range crds {
+		require.Equal(t, "CustomResourceDefinition", crd.Kind)
+		require.Contains(t, crd.Name, "monitoring.coreos.com")
 	}
+}
 
-	output := buf.String()
+func TestPrintAllFull(t *testing.T) {
+	var buf bytes.Buffer
+	err := PrintAllFull(&buf)
+	require.NoError(t, err)
 
-	// Check that output is not empty
-	if len(output) == 0 {
-		t.Error("PrintAll() returned empty output")
+	crds := parseCRDs(t, buf.Bytes())
+	require.GreaterOrEqual(t, len(crds), 10, "expected at least 10 full CRDs")
+
+	// Verify all are valid CRDs
+	for _, crd := range crds {
+		require.Equal(t, "CustomResourceDefinition", crd.Kind)
+		require.Contains(t, crd.Name, "monitoring.coreos.com")
 	}
+}
 
-	// Check for expected CRD content markers
-	expectedMarkers := []string{
-		"apiVersion: apiextensions.k8s.io/v1",
-		"kind: CustomResourceDefinition",
-		"monitoring.coreos.com",
-	}
+// parseCRDs parses multi-document YAML into CRD objects.
+func parseCRDs(t *testing.T, data []byte) []apiextensionsv1.CustomResourceDefinition {
+	t.Helper()
 
-	for _, marker := range expectedMarkers {
-		if !strings.Contains(output, marker) {
-			t.Errorf("PrintAll() output missing expected marker: %q", marker)
+	var crds []apiextensionsv1.CustomResourceDefinition
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
+
+	for {
+		var crd apiextensionsv1.CustomResourceDefinition
+		err := decoder.Decode(&crd)
+		if err == io.EOF {
+			break
 		}
+		require.NoError(t, err)
+		crds = append(crds, crd)
 	}
 
-	// Check that we have multiple CRDs (separated by ---)
-	crdCount := strings.Count(output, "kind: CustomResourceDefinition")
-	if crdCount < 10 {
-		t.Errorf("PrintAll() expected at least 10 CRDs, got %d", crdCount)
-	}
+	return crds
 }
