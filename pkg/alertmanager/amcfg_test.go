@@ -875,10 +875,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							EmailConfigs: []monitoringv1alpha1.EmailConfig{
 								{
 									SendResolved: ptr.To(true),
-									Smarthost:    "abc:1234",
-									From:         "a",
-									To:           "b",
-									AuthUsername: "foo",
+									Smarthost:    ptr.To("abc:1234"),
+									From:         ptr.To("a"),
+									To:           ptr.To("b"),
+									AuthUsername: ptr.To("foo"),
 								},
 							},
 						},
@@ -3698,9 +3698,9 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										Smarthost: "example.com:25",
-										From:      "admin@example.com",
-										To:        "customers@example.com",
+										Smarthost: ptr.To("example.com:25"),
+										From:      ptr.To("admin@example.com"),
+										To:        ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3735,8 +3735,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										From: "admin@example.com",
-										To:   "customers@example.com",
+										From: ptr.To("admin@example.com"),
+										To:   ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3771,8 +3771,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										From: "admin@example.com",
-										To:   "customers@example.com",
+										From: ptr.To("admin@example.com"),
+										To:   ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3814,7 +3814,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										To: "customers@example.com",
+										To: ptr.To("customers@example.com"),
 									},
 								},
 							},

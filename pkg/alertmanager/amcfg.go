@@ -1216,30 +1216,30 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
 		VSendResolved: in.SendResolved,
-		To:            in.To,
-		From:          in.From,
-		Hello:         in.Hello,
-		AuthUsername:  in.AuthUsername,
-		AuthIdentity:  in.AuthIdentity,
+		To:            ptr.Deref(in.To, ""),
+		From:          ptr.Deref(in.From, ""),
+		Hello:         ptr.Deref(in.Hello, ""),
+		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.Smarthost == "" {
+	if ptr.Deref(in.Smarthost, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
 			return nil, fmt.Errorf("SMTP smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.From == "" {
+	if ptr.Deref(in.From, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
 			return nil, fmt.Errorf("SMTP from is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.Smarthost != "" {
-		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
+	if ptr.Deref(in.Smarthost, "") != "" {
+		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(*in.Smarthost)
 	}
 
 	if in.AuthPassword != nil {

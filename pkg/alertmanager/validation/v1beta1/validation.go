@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
@@ -235,14 +237,14 @@ func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 
 func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
 	for _, config := range configs {
-		if config.To == "" {
+		if ptr.Deref(config.To, "") == "" {
 			return errors.New("missing 'to' address")
 		}
 
-		if config.Smarthost != "" {
-			_, _, err := net.SplitHostPort(config.Smarthost)
+		if ptr.Deref(config.Smarthost, "") != "" {
+			_, _, err := net.SplitHostPort(*config.Smarthost)
 			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", config.Smarthost, err)
+				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
 			}
 		}
 

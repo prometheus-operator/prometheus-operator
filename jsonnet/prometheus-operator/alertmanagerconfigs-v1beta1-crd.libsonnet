@@ -814,6 +814,7 @@
                         properties: {
                           authIdentity: {
                             description: 'authIdentity defines the identity to use for SMTP authentication.\nThis is typically used with PLAIN authentication mechanism.',
+                            minLength: 1,
                             type: 'string',
                           },
                           authPassword: {
@@ -858,10 +859,12 @@
                           },
                           authUsername: {
                             description: 'authUsername defines the username to use for SMTP authentication.\nThis is used for SMTP AUTH when the server requires authentication.',
+                            minLength: 1,
                             type: 'string',
                           },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
+                            minLength: 1,
                             type: 'string',
                           },
                           headers: {
@@ -889,6 +892,7 @@
                           },
                           hello: {
                             description: 'hello defines the hostname to identify to the SMTP server.\nThis is used in the SMTP HELO/EHLO command during the connection handshake.',
+                            minLength: 1,
                             type: 'string',
                           },
                           html: {
@@ -905,10 +909,12 @@
                           },
                           smarthost: {
                             description: 'smarthost defines the SMTP host and port through which emails are sent.\nFormat should be "hostname:port", e.g. "smtp.example.com:587".',
+                            minLength: 1,
                             type: 'string',
                           },
                           text: {
                             description: "text defines the plain text body of the email notification.\nThis provides a fallback for email clients that don't support HTML.",
+                            minLength: 1,
                             type: 'string',
                           },
                           tlsConfig: {
@@ -1074,6 +1080,7 @@
                           },
                           to: {
                             description: 'to defines the email address to send notifications to.\nThis is the recipient address for alert notifications.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
