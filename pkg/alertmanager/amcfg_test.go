@@ -2934,7 +2934,7 @@ func TestGenerateConfig(t *testing.T) {
 									},
 									Key: "apiSecret",
 								},
-								CorpID: "wechatcorpid",
+								CorpID: ptr.To("wechatcorpid"),
 							}},
 						}},
 					},

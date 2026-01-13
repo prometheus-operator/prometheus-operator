@@ -1160,13 +1160,13 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
-		CorpID:        in.CorpID,
-		AgentID:       in.AgentID,
-		ToUser:        in.ToUser,
-		ToParty:       in.ToParty,
-		ToTag:         in.ToTag,
-		Message:       in.Message,
-		MessageType:   in.MessageType,
+		CorpID:        ptr.Deref(in.CorpID, ""),
+		AgentID:       ptr.Deref(in.AgentID, ""),
+		ToUser:        ptr.Deref(in.ToUser, ""),
+		ToParty:       ptr.Deref(in.ToParty, ""),
+		ToTag:         ptr.Deref(in.ToTag, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		MessageType:   ptr.Deref(in.MessageType, ""),
 	}
 
 	if in.APIURL != nil {

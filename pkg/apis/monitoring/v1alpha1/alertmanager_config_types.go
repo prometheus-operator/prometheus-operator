@@ -890,32 +890,39 @@ type WeChatConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	CorpID string `json:"corpID,omitempty"`
+	CorpID *string `json:"corpID,omitempty"`
 	// agentID defines the application agent ID within WeChat Work.
 	// This identifies which WeChat Work application will send the notifications.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AgentID string `json:"agentID,omitempty"`
+	AgentID *string `json:"agentID,omitempty"`
 	// toUser defines the target user(s) to receive the notification.
 	// Can be a single user ID or multiple user IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToUser string `json:"toUser,omitempty"`
+	ToUser *string `json:"toUser,omitempty"`
 	// toParty defines the target department(s) to receive the notification.
 	// Can be a single department ID or multiple department IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToParty string `json:"toParty,omitempty"`
+	ToParty *string `json:"toParty,omitempty"`
 	// toTag defines the target tag(s) to receive the notification.
 	// Can be a single tag ID or multiple tag IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToTag string `json:"toTag,omitempty"`
+	ToTag *string `json:"toTag,omitempty"`
 	// message defines the API request data as defined by the WeChat API.
 	// This contains the actual notification content to be sent.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// messageType defines the type of message to send.
 	// Valid values include "text", "markdown", and other WeChat Work supported message types.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MessageType string `json:"messageType,omitempty"`
+	MessageType *string `json:"messageType,omitempty"`
 	// httpConfig defines the HTTP client configuration for WeChat API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
