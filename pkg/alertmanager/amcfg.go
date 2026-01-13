@@ -1962,10 +1962,6 @@ func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitor
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -3165,6 +3161,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -3181,6 +3181,18 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 		if _, err := cb.store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`'webex' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
 	}
 
 	return nil
