@@ -46,10 +46,6 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
-	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
-		return fmt.Errorf("wechatConfig: %w", err)
-	}
-
 	return nil
 }
 
