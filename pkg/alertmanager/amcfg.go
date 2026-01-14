@@ -2136,21 +2136,15 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 	}
 
 	if gc.SlackAppToken != "" && amVersion.LT(semver.MustParse("0.30.0")) {
-		msg := "'slack_app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		gc.SlackAppToken = ""
+		return fmt.Errorf("'slack_app_token' set in 'global' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if gc.SlackAppTokenFile != "" && amVersion.LT(semver.MustParse("0.30.0")) {
-		msg := "'slack_app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		gc.SlackAppTokenFile = ""
+		return fmt.Errorf("'slack_app_token_file' set in 'global' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if gc.SlackAppURL != nil && amVersion.LT(semver.MustParse("0.30.0")) {
-		msg := "'slack_app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		gc.SlackAppURL = nil
+		return fmt.Errorf("'slack_app_url' set in 'global' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if gc.SlackAppToken != "" && gc.SlackAppTokenFile != "" {
@@ -2654,21 +2648,15 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	}
 
 	if sc.AppToken != "" && lessThanV0_30 {
-		msg := "'app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		sc.AppToken = ""
+		return fmt.Errorf("'app_token' set in 'slackConfig' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if sc.AppTokenFile != "" && lessThanV0_30 {
-		msg := "'app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		sc.AppTokenFile = ""
+		return fmt.Errorf("'app_token_file' set in 'slackConfig' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if sc.AppURL != "" && lessThanV0_30 {
-		msg := "'app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
-		sc.AppURL = ""
+		return fmt.Errorf("'app_url' set in 'slackConfig' but supported in Alertmanager >= 0.30.0 only")
 	}
 
 	if sc.AppToken != "" && sc.AppTokenFile != "" {

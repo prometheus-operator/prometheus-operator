@@ -373,9 +373,11 @@ type SlackConfig struct {
 	// appToken defines the secret's key that contains the Slack app token.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
+	// It requires Alertmanager >= v0.30.0.
 	// +optional
 	AppToken *SecretKeySelector `json:"appToken,omitempty"`
 	// appURL defines the URL used for Slack App message posting API.
+	// It requires Alertmanager >= v0.30.0.
 	// +optional
 	AppURL *URL `json:"appURL,omitempty"`
 	// channel defines the channel or user to send notifications to.

@@ -2013,7 +2013,9 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       slackAppToken:
-                        description: slackAppToken defines the default Slack App Token.
+                        description: |-
+                          slackAppToken defines the default Slack App Token.
+                          It requires Alertmanager >= v0.30.0.
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -2037,8 +2039,9 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       slackAppUrl:
-                        description: slackAppUrl defines the default URL for Slack
-                          App message posting API.
+                        description: |-
+                          slackAppUrl defines the default URL for Slack App message posting API.
+                          It requires Alertmanager >= v0.30.0.
                         pattern: ^(http|https)://.+$
                         type: string
                       smtp:

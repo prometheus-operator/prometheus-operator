@@ -6430,7 +6430,8 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <em>(Optional)</em>
-<p>slackAppToken defines the default Slack App Token.</p>
+<p>slackAppToken defines the default Slack App Token.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -6444,7 +6445,8 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<p>slackAppUrl defines the default URL for Slack App message posting API.</p>
+<p>slackAppUrl defines the default URL for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -35712,7 +35714,8 @@ Kubernetes core/v1.SecretKeySelector
 <em>(Optional)</em>
 <p>appToken defines the secret&rsquo;s key that contains the Slack app token.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -35726,7 +35729,8 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<p>appURL defines the URL used for Slack App message posting API.</p>
+<p>appURL defines the URL used for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -40353,7 +40357,8 @@ SecretKeySelector
 <em>(Optional)</em>
 <p>appToken defines the secret&rsquo;s key that contains the Slack app token.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.</p>
+object and accessible by the Prometheus Operator.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -40367,7 +40372,8 @@ URL
 </td>
 <td>
 <em>(Optional)</em>
-<p>appURL defines the URL used for Slack App message posting API.</p>
+<p>appURL defines the URL used for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>

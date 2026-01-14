@@ -1767,7 +1767,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "slackAppToken": {
-                            "description": "slackAppToken defines the default Slack App Token.",
+                            "description": "slackAppToken defines the default Slack App Token.\nIt requires Alertmanager >= v0.30.0.",
                             "properties": {
                               "key": {
                                 "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -1790,7 +1790,7 @@
                             "x-kubernetes-map-type": "atomic"
                           },
                           "slackAppUrl": {
-                            "description": "slackAppUrl defines the default URL for Slack App message posting API.",
+                            "description": "slackAppUrl defines the default URL for Slack App message posting API.\nIt requires Alertmanager >= v0.30.0.",
                             "pattern": "^(http|https)://.+$",
                             "type": "string"
                           },

@@ -6499,6 +6499,7 @@ spec:
                               appToken defines the secret's key that contains the Slack app token.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
+                              It requires Alertmanager >= v0.30.0.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6522,8 +6523,9 @@ spec:
                             type: object
                             x-kubernetes-map-type: atomic
                           appURL:
-                            description: appURL defines the URL used for Slack App
-                              message posting API.
+                            description: |-
+                              appURL defines the URL used for Slack App message posting API.
+                              It requires Alertmanager >= v0.30.0.
                             pattern: ^https?://.+$
                             type: string
                           callbackId:
