@@ -653,6 +653,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EurekaSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
 	})
+	t.Run("AWSSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, AWSSDTestCases)
+	})
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -5003,6 +5006,175 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 				{
 					Server:          "http://localhost:8761/eureka",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var AWSSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To("us-west"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Valid Absent AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role: monitoringv1alpha1.AWSRoleEC2,
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AWS Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid AWS RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:    monitoringv1alpha1.AWSRoleEC2,
+					RoleARN: ptr.To("valid-role"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid AWS RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:    monitoringv1alpha1.AWSRoleEC2,
+					RoleARN: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role: monitoringv1alpha1.AWSRoleEC2,
+					Port: ptr.To(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port Number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role: monitoringv1alpha1.AWSRoleEC2,
+					Port: ptr.To(int32(80809)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Filters",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Filters with repeat value items",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{"bar", "bar"},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Filters with empty string values",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role:   monitoringv1alpha1.AWSRoleEC2,
+					Region: ptr.To("us-west"),
+					Filters: []monitoringv1alpha1.Filter{
+						{
+							Name:   "foo",
+							Values: []string{""},
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+				{
+					Role: "None",
 				},
 			},
 		},
