@@ -813,10 +813,14 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				HostAliases:                   operator.MakeHostAliases(a.Spec.HostAliases),
 				EnableServiceLinks:            a.Spec.EnableServiceLinks,
 				HostUsers:                     a.Spec.HostUsers,
+				HostNetwork:                   a.Spec.HostNetwork,
 			},
 		},
 	}
 
+	if a.Spec.HostNetwork {
+		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+	}
 	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, a.Spec.DNSPolicy)
 	k8sutil.UpdateDNSConfig(&spec.Template.Spec, a.Spec.DNSConfig)
 	return &spec, nil
