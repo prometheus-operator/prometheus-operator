@@ -1,10 +1,28 @@
-## Unreleased
+## 0.88.0 / 2026-01-09
 
-* [CHANGE] Use narrower selectors for statefulset informers in Alertmanager and ThanosRuler controllers. It is recommended to upgrade from v0.85.0 (at least). #8246
-* [FEATURE] Add `podManagementPolicy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8119
-* [FEATURE] Add `updateStrategy` field for `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8202
-* [ENHANCEMENT] Use `.spec.minReadySeconds` to delay the first flush of aggregation groups in Alertmanager. #8201
-* [ENHANCEMENT] Update operator instrumentation to expose native histograms. #8194
+* [CHANGE] Use narrower selectors for StatefulSet informers in `Alertmanager` and `ThanosRuler` controllers. It is recommended to upgrade from `v0.85.0` (at least). #8246
+* [CHANGE] Reject `EC2/Lightsail` SD for Prometheus >= 3.8.0 in `ScrapeConfig` CRD. #8175
+* [FEATURE] Add `podManagementPolicy` field to `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8119
+* [FEATURE] Add `updateStrategy` field to `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8202
+* [FEATURE] Add `scrapeNativeHistograms` field to `Prometheus`, `PrometheusAgent`, `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` CRDs. #8102
+* [FEATURE] Add `scope` field to `AzureAD` remote write configuration. #8240
+* [FEATURE] Add `workloadIdentity` field to `AzureAD` remote write configuration. #7998
+* [FEATURE] Add support for PrometheusRule fields `groupLabels` and `queryOffset` in `ThanosRuler`. #8137
+* [FEATURE] Add `slackAppToken` and `slackAppUrl` fields to Alertmanager global config for Slack App support. #8238
+* [FEATURE] Add `incident.io` receiver support to `Alertmanager` config secret. #8190 #8245 #8228
+* [FEATURE] Add `Mattermost` receiver support to `Alertmanager` config secret. #8188
+* [FEATURE] Add `apiType` field to `Jira` receiver in `Alertmanager` config secret. #8218
+* [FEATURE] Add `timeout` field to `PagerDuty` receiver in `AlertmanagerConfig` CRD. #8162
+* [FEATURE] Add `timeout` field to `Slack` receiver in `AlertmanagerConfig` CRD. #8161
+* [ENHANCEMENT] Use `minReadySeconds` to set `--dispatch.start-delay` in `Alertmanager`. #8177 #8201
+* [ENHANCEMENT] Expose native histograms in operator metrics. #8194
+* [ENHANCEMENT] Add `NoSelectedResources` reason to status conditions. #8124
+* [ENHANCEMENT] Add `enableHttp2` and `followRedirects` fields to HTTP configuration for `Probe` CRD. #8112
+* [ENHANCEMENT] Add CEL validations for `DaemonSet` mode in `PrometheusAgent` CRD (requires the `PrometheusAgentDaemonSetFeature` featuregate). #7881
+* [ENHANCEMENT] Improve validation for `Pushover`, `PagerDuty` and `VictorOps` receivers in `AlertmanagerConfig` CRD. #8239 #8113 #8220
+* [ENHANCEMENT] Add `apiURL` validation for `WeChat`, `OpsGenie` and `Telegram` receivers in `AlertmanagerConfig` CRD. #8196 #8206 #8199
+* [ENHANCEMENT] Validate URL fields in `AlertmanagerConfig` receivers (`MSTeams`, `Webhook`). #8231 #8125
+* [ENHANCEMENT] Validate URL fields in `Alertmanager` configuration secret (`WeChat`, `Telegram`, `Pushover` receivers). #7977 #8233 #8232
 
 ## 0.87.1 / 2025-12-10
 

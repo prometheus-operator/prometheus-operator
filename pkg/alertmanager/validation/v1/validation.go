@@ -30,24 +30,16 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("httpConfig: %w", err)
 	}
 
-	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
-		return fmt.Errorf("wechatConfig: %w", err)
-	}
-
 	if err := validateGlobalJiraConfig(gc.JiraConfig); err != nil {
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
-	return nil
-}
-
-func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
-	if wc == nil {
-		return nil
+	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return fmt.Errorf("webex: %w", err)
 	}
 
-	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
+		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
 	return nil
@@ -59,6 +51,30 @@ func validateGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(jc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 
