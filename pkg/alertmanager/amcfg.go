@@ -3171,11 +3171,11 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
-<<<<<<< HEAD
-	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
-=======
 	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
->>>>>>> main
+		return err
+	}
+
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
 		return err
 	}
 
@@ -3190,7 +3190,18 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 	return nil
 }
 
-<<<<<<< HEAD
+func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+	if tc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
 func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
 	ctx context.Context,
 	vc *monitoringv1.GlobalVictorOpsConfig,
@@ -3204,15 +3215,6 @@ func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
 		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
 			return err
 		}
-=======
-func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
-	if tc == nil {
-		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
->>>>>>> main
 	}
 
 	return nil
