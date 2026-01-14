@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  victorops_configs:
+  - api_url: https://alert.victorops.com/integrations/generic/20131114/alert
+    routing_key: test-key
+templates: []
