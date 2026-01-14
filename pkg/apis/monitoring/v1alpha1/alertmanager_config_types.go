@@ -29,6 +29,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -401,67 +402,81 @@ type SlackConfig struct {
 	// +optional
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
 	// channel defines the channel or user to send notifications to.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Channel string `json:"channel,omitempty"`
+	Channel *string `json:"channel,omitempty"`
 	// username defines the slack bot user name.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Username string `json:"username,omitempty"`
+	Username *string `json:"username,omitempty"`
 	// color defines the color of the left border of the Slack message attachment.
 	// Can be a hex color code (e.g., "#ff0000") or a predefined color name.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Color string `json:"color,omitempty"`
+	Color *string `json:"color,omitempty"`
 	// title defines the title text displayed in the Slack message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	TitleLink string `json:"titleLink,omitempty"`
+	TitleLink *URL `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Pretext string `json:"pretext,omitempty"`
+	Pretext *string `json:"pretext,omitempty"`
 	// text defines the main text content of the Slack message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Text string `json:"text,omitempty"`
+	Text *string `json:"text,omitempty"`
 	// fields defines a list of Slack fields that are sent with each notification.
+	// +kubebuilder:validation:MinItems=1
 	// +listType=atomic
 	// +optional
 	Fields []SlackField `json:"fields,omitempty"`
 	// shortFields determines whether fields are displayed in a compact format.
 	// When true, fields are shown side by side when possible.
 	// +optional
-	ShortFields bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
+	ShortFields *bool `json:"shortFields,omitempty"` // nolint:kubeapilinter
 	// footer defines small text displayed at the bottom of the message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Footer string `json:"footer,omitempty"`
+	Footer *string `json:"footer,omitempty"`
 	// fallback defines a plain-text summary of the attachment for clients that don't support attachments.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Fallback string `json:"fallback,omitempty"`
+	Fallback *string `json:"fallback,omitempty"`
 	// callbackId defines an identifier for the message used in interactive components.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	CallbackID string `json:"callbackId,omitempty"`
+	CallbackID *string `json:"callbackId,omitempty"`
 	// iconEmoji defines the emoji to use as the bot's avatar (e.g., ":ghost:").
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	IconEmoji string `json:"iconEmoji,omitempty"`
+	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	IconURL string `json:"iconURL,omitempty"`
+	IconURL *URL `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	ImageURL string `json:"imageURL,omitempty"`
+	ImageURL *URL `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	ThumbURL string `json:"thumbURL,omitempty"`
+	ThumbURL *URL `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
-	LinkNames bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
+	LinkNames *bool `json:"linkNames,omitempty"` // nolint:kubeapilinter
 	// mrkdwnIn defines which fields should be parsed as Slack markdown.
 	// Valid values include "pretext", "text", and "fields".
 	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	MrkdwnIn []string `json:"mrkdwnIn,omitempty"`
 	// actions defines a list of Slack actions that are sent with each notification.
+	// +kubebuilder:validation:MinItems=1
 	// +listType=atomic
 	// +optional
 	Actions []SlackAction `json:"actions,omitempty"`
@@ -510,19 +525,22 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	URL string `json:"url,omitempty"`
+	URL *URL `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Style string `json:"style,omitempty"`
+	Style *string `json:"style,omitempty"`
 	// name defines a unique identifier for the action within the message.
 	// This value is sent back to your application when the action is triggered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// value defines the payload sent when the action is triggered.
 	// This data is included in the callback sent to your application.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Value string `json:"value,omitempty"`
+	Value *string `json:"value,omitempty"`
 	// confirm defines an optional confirmation dialog that appears before the action is executed.
 	// When set, users must confirm their intent before the action proceeds.
 	// +optional
@@ -539,7 +557,7 @@ func (sa *SlackAction) Validate() error {
 		return errors.New("missing text in Slack action configuration")
 	}
 
-	if sa.URL == "" && sa.Name == "" {
+	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
 		return errors.New("missing name or url in Slack action configuration")
 	}
 
@@ -565,16 +583,19 @@ type SlackConfirmationField struct {
 	Text string `json:"text"`
 	// title defines the title text displayed at the top of the confirmation dialog.
 	// When not specified, a default title will be used.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Title string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
 	// okText defines the label for the confirmation button in the dialog.
 	// When not specified, defaults to "Okay". This button proceeds with the action.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	OkText string `json:"okText,omitempty"`
+	OkText *string `json:"okText,omitempty"`
 	// dismissText defines the label for the cancel button in the dialog.
 	// When not specified, defaults to "Cancel". This button cancels the action.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	DismissText string `json:"dismissText,omitempty"`
+	DismissText *string `json:"dismissText,omitempty"`
 }
 
 // Validate ensures SlackConfirmationField is valid.
@@ -668,28 +689,34 @@ type OpsGenieConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 	// message defines the alert text limited to 130 characters.
 	// This appears as the main alert title in OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// description defines the detailed description of the incident.
 	// This provides additional context beyond the message field.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 	// source defines the backlink to the sender of the notification.
 	// This helps identify where the alert originated from.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Source string `json:"source,omitempty"`
+	Source *string `json:"source,omitempty"`
 	// tags defines a comma separated list of tags attached to the notifications.
 	// These help categorize and filter alerts within OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Tags string `json:"tags,omitempty"`
+	Tags *string `json:"tags,omitempty"`
 	// note defines an additional alert note.
 	// This provides supplementary information about the alert.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Note string `json:"note,omitempty"`
+	Note *string `json:"note,omitempty"`
 	// priority defines the priority level of alert.
 	// Possible values are P1, P2, P3, P4, and P5, where P1 is highest priority.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Priority string `json:"priority,omitempty"`
+	Priority *string `json:"priority,omitempty"`
 	// updateAlerts defines Whether to update message and description of the alert in OpsGenie if it already exists
 	// By default, the alert is never updated in OpsGenie, the new message only appears in activity log.
 	// +optional
@@ -709,12 +736,14 @@ type OpsGenieConfig struct {
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
 	// entity defines an optional field that can be used to specify which domain alert is related to.
 	// This helps group related alerts together in OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Entity string `json:"entity,omitempty"`
+	Entity *string `json:"entity,omitempty"`
 	// actions defines a comma separated list of actions that will be available for the alert.
 	// These appear as action buttons in the OpsGenie interface.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Actions string `json:"actions,omitempty"`
+	Actions *string `json:"actions,omitempty"`
 }
 
 // Validate ensures OpsGenieConfig is valid
@@ -732,16 +761,19 @@ func (o *OpsGenieConfig) Validate() error {
 type OpsGenieConfigResponder struct {
 	// id defines the unique identifier of the responder.
 	// This corresponds to the responder's ID within OpsGenie.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ID string `json:"id,omitempty"`
+	ID *string `json:"id,omitempty"`
 	// name defines the display name of the responder.
 	// This is used when the responder is identified by name rather than ID.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 	// username defines the username of the responder.
 	// This is typically used for user-type responders when identifying by username.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Username string `json:"username,omitempty"`
+	Username *string `json:"username,omitempty"`
 	// type defines the type of responder.
 	// Valid values include "user", "team", "schedule", and "escalation".
 	// This determines how OpsGenie interprets the other identifier fields.
@@ -757,7 +789,7 @@ var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
 
 // Validate ensures OpsGenieConfigResponder is valid.
 func (r *OpsGenieConfigResponder) Validate() error {
-	if r.ID == "" && r.Name == "" && r.Username == "" {
+	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
 		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
@@ -862,32 +894,39 @@ type WeChatConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 	// corpID defines the corp id for authentication.
 	// This is the unique identifier for your WeChat Work organization.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	CorpID string `json:"corpID,omitempty"`
+	CorpID *string `json:"corpID,omitempty"`
 	// agentID defines the application agent ID within WeChat Work.
 	// This identifies which WeChat Work application will send the notifications.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AgentID string `json:"agentID,omitempty"`
+	AgentID *string `json:"agentID,omitempty"`
 	// toUser defines the target user(s) to receive the notification.
 	// Can be a single user ID or multiple user IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToUser string `json:"toUser,omitempty"`
+	ToUser *string `json:"toUser,omitempty"`
 	// toParty defines the target department(s) to receive the notification.
 	// Can be a single department ID or multiple department IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToParty string `json:"toParty,omitempty"`
+	ToParty *string `json:"toParty,omitempty"`
 	// toTag defines the target tag(s) to receive the notification.
 	// Can be a single tag ID or multiple tag IDs separated by '|'.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ToTag string `json:"toTag,omitempty"`
+	ToTag *string `json:"toTag,omitempty"`
 	// message defines the API request data as defined by the WeChat API.
 	// This contains the actual notification content to be sent.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// messageType defines the type of message to send.
 	// Valid values include "text", "markdown", and other WeChat Work supported message types.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	MessageType string `json:"messageType,omitempty"`
+	MessageType *string `json:"messageType,omitempty"`
 	// httpConfig defines the HTTP client configuration for WeChat API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
@@ -900,24 +939,29 @@ type EmailConfig struct {
 	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// to defines the email address to send notifications to.
 	// This is the recipient address for alert notifications.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	To string `json:"to,omitempty"`
+	To *string `json:"to,omitempty"`
 	// from defines the sender address for email notifications.
 	// This appears as the "From" field in the email header.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	From string `json:"from,omitempty"`
+	From *string `json:"from,omitempty"`
 	// hello defines the hostname to identify to the SMTP server.
 	// This is used in the SMTP HELO/EHLO command during the connection handshake.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Hello string `json:"hello,omitempty"`
+	Hello *string `json:"hello,omitempty"`
 	// smarthost defines the SMTP host and port through which emails are sent.
 	// Format should be "hostname:port", e.g. "smtp.example.com:587".
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Smarthost string `json:"smarthost,omitempty"`
+	Smarthost *string `json:"smarthost,omitempty"`
 	// authUsername defines the username to use for SMTP authentication.
 	// This is used for SMTP AUTH when the server requires authentication.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AuthUsername string `json:"authUsername,omitempty"`
+	AuthUsername *string `json:"authUsername,omitempty"`
 	// authPassword defines the secret's key that contains the password to use for authentication.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
@@ -931,8 +975,9 @@ type EmailConfig struct {
 	AuthSecret *v1.SecretKeySelector `json:"authSecret,omitempty"`
 	// authIdentity defines the identity to use for SMTP authentication.
 	// This is typically used with PLAIN authentication mechanism.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	AuthIdentity string `json:"authIdentity,omitempty"`
+	AuthIdentity *string `json:"authIdentity,omitempty"`
 	// headers defines additional email header key/value pairs.
 	// These override any headers previously set by the notification implementation.
 	// +listType=atomic
@@ -944,6 +989,7 @@ type EmailConfig struct {
 	HTML *string `json:"html,omitempty"`
 	// text defines the plain text body of the email notification.
 	// This provides a fallback for email clients that don't support HTML.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// requireTLS defines the SMTP TLS requirement.
@@ -1109,31 +1155,36 @@ type SNSConfig struct {
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
-	ApiURL string `json:"apiURL,omitempty"`
+	ApiURL *URL `json:"apiURL,omitempty"`
 	// sigv4 configures AWS's Signature Verification 4 signing process to sign requests.
 	// This includes AWS credentials and region configuration for authentication.
 	// +optional
 	Sigv4 *monitoringv1.Sigv4 `json:"sigv4,omitempty"`
 	// topicARN defines the SNS topic ARN, e.g. arn:aws:sns:us-east-2:698519295917:My-Topic.
 	// If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	TopicARN string `json:"topicARN,omitempty"`
+	TopicARN *string `json:"topicARN,omitempty"`
 	// subject defines the subject line when the message is delivered to email endpoints.
 	// This field is only used when sending to email subscribers of an SNS topic.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Subject string `json:"subject,omitempty"`
+	Subject *string `json:"subject,omitempty"`
 	// phoneNumber defines the phone number if message is delivered via SMS in E.164 format.
+	// +kubebuilder:validation:MinLength=1
 	// If you don't specify this value, you must specify a value for the TopicARN or TargetARN.
 	// +optional
-	PhoneNumber string `json:"phoneNumber,omitempty"`
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
 	// targetARN defines the mobile platform endpoint ARN if message is delivered via mobile notifications.
 	// If you don't specify this value, you must specify a value for the TopicARN or PhoneNumber.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	TargetARN string `json:"targetARN,omitempty"`
+	TargetARN *string `json:"targetARN,omitempty"`
 	// message defines the message content of the SNS notification.
 	// This is the actual notification text that will be sent to subscribers.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Message string `json:"message,omitempty"`
+	Message *string `json:"message,omitempty"`
 	// attributes defines SNS message attributes as key-value pairs.
 	// These provide additional metadata that can be used for message filtering and routing.
 	// +optional

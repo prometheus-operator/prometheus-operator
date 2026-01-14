@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.87.1"
+      "operator.prometheus.io/version": "0.88.0"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -2065,7 +2065,7 @@
                             "type": "object"
                           },
                           "webex": {
-                            "description": "webex defines the default configuration for Jira.",
+                            "description": "webex defines the default configuration for Webex.",
                             "properties": {
                               "apiURL": {
                                 "description": "apiURL defines the is the default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",

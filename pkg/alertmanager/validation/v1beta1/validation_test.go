@@ -83,8 +83,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "www.test.com",
-											Name: "c",
+											URL:  ptr.To(monitoringv1beta1.URL("www.test.com")),
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -172,8 +172,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "invalid",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("invalid"),
 								},
 							},
 						},
@@ -486,9 +486,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 								{
 									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
-											ID:       "a",
-											Name:     "b",
-											Username: "c",
+											ID:       ptr.To("a"),
+											Name:     ptr.To("b"),
+											Username: ptr.To("c"),
 											Type:     "user",
 										},
 									},
@@ -500,8 +500,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "https://www.test.com",
-											Name: "c",
+											URL:  ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -531,8 +531,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "b:8080",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("b:8080"),
 									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",

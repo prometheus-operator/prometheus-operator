@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
@@ -176,9 +178,27 @@ func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
 }
 
 func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if err := config.Validate(); err != nil {
 			return err
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.ImageURL)); err != nil {
+			return fmt.Errorf("[%d]: imageURL: %w", i, err)
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.ThumbURL)); err != nil {
+			return fmt.Errorf("[%d]: thumbURL: %w", i, err)
+		}
+
+		for j, sa := range config.Actions {
+			if err := validation.ValidateURLPtr((*string)(sa.URL)); err != nil {
+				return fmt.Errorf("[%d]: invalid 'action'[%d]: url: %w", i, j, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -222,14 +242,14 @@ func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 
 func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
 	for _, config := range configs {
-		if config.To == "" {
+		if ptr.Deref(config.To, "") == "" {
 			return errors.New("missing 'to' address")
 		}
 
-		if config.Smarthost != "" {
-			_, _, err := net.SplitHostPort(config.Smarthost)
+		if ptr.Deref(config.Smarthost, "") != "" {
+			_, _, err := net.SplitHostPort(*config.Smarthost)
 			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", config.Smarthost, err)
+				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
 			}
 		}
 
@@ -312,9 +332,13 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 }
 
 func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
-	for _, config := range configs {
-		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
-			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+	for i, config := range configs {
+		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
+			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
+		}
+
+		if err := validation.ValidateURLPtr((*string)(config.ApiURL)); err != nil {
+			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

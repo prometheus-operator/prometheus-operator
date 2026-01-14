@@ -17,6 +17,7 @@ package v1
 import (
 	"fmt"
 
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
@@ -27,6 +28,38 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 
 	if err := gc.HTTPConfigWithProxy.Validate(); err != nil {
 		return fmt.Errorf("httpConfig: %w", err)
+	}
+
+	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
+		return fmt.Errorf("wechatConfig: %w", err)
+	}
+
+	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return fmt.Errorf("webex: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 
 	return nil

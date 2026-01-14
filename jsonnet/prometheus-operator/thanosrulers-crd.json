@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.87.1"
+      "operator.prometheus.io/version": "0.88.0"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -4195,7 +4195,7 @@
                               "type": "string"
                             },
                             "managedIdentity": {
-                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth` or `sdk`.",
+                              "description": "managedIdentity defines the Azure User-assigned Managed identity.\nCannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.",
                               "properties": {
                                 "clientId": {
                                   "description": "clientId defines the Azure User-assigned Managed identity.\n\nFor Prometheus >= 3.5.0 and Thanos >= 0.40.0, this field is allowed to be empty to support system-assigned managed identities.",
@@ -4206,7 +4206,7 @@
                               "type": "object"
                             },
                             "oauth": {
-                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity` or `sdk`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
+                              "description": "oauth defines the oauth config that is being used to authenticate.\nCannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.\n\nIt requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.",
                               "properties": {
                                 "clientId": {
                                   "description": "clientId defines the clientId of the Azure Active Directory application that is being used to authenticate.",
@@ -4250,8 +4250,13 @@
                               ],
                               "type": "object"
                             },
+                            "scope": {
+                              "description": "scope is the custom OAuth 2.0 scope to request when acquiring tokens.\nIt requires Prometheus >= 3.9.0. Currently not supported by Thanos.",
+                              "pattern": "^[\\w\\s:/.\\\\-]+$",
+                              "type": "string"
+                            },
                             "sdk": {
-                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth` or `managedIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
+                              "description": "sdk defines the Azure SDK config that is being used to authenticate.\nSee https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication\nCannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.\n\nIt requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.",
                               "properties": {
                                 "tenantId": {
                                   "description": "tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.",
@@ -4259,6 +4264,26 @@
                                   "type": "string"
                                 }
                               },
+                              "type": "object"
+                            },
+                            "workloadIdentity": {
+                              "description": "workloadIdentity defines the Azure Workload Identity authentication.\nCannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.\n\nIt requires Prometheus >= 3.7.0. Currently not supported by Thanos.",
+                              "properties": {
+                                "clientId": {
+                                  "description": "clientId is the clientID of the Azure Active Directory application.",
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "tenantId": {
+                                  "description": "tenantId is the tenant ID of the Azure Active Directory application.",
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "clientId",
+                                "tenantId"
+                              ],
                               "type": "object"
                             }
                           },

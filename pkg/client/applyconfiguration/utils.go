@@ -70,6 +70,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureOAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureSDK"):
 		return &monitoringv1.AzureSDKApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AzureWorkloadIdentity"):
+		return &monitoringv1.AzureWorkloadIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
