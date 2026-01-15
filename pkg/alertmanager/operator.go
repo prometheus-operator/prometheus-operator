@@ -875,6 +875,10 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
+	if err := checkAlertmanagerResource(ctx, am, version, store); err != nil {
+		return fmt.Errorf("invalid Alertmanager resource: %w", err)
+	}
+
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
@@ -1413,6 +1417,30 @@ func checkSlackConfigs(
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
+
+		if config.AppToken != nil {
+			if amVersion.LT(semver.MustParse("0.30.0")) {
+				return fmt.Errorf(
+					"'app_token' config set in 'slackConfig' but supported in Alertmanager >= 0.30.0 only - current %s",
+					amVersion.String(),
+				)
+			}
+			if _, err := store.GetSecretKey(ctx, namespace, *config.AppToken); err != nil {
+				return fmt.Errorf("failed to retrieve Slack App Token: %w", err)
+			}
+		}
+
+		if config.AppURL != nil {
+			if amVersion.LT(semver.MustParse("0.30.0")) {
+				return fmt.Errorf(
+					"'app_url' config set in 'slackConfig' but supported in Alertmanager >= 0.30.0 only - current %s",
+					amVersion.String(),
+				)
+			}
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.AppURL))); err != nil {
+				return fmt.Errorf("failed to validate Slack App URL: %w", err)
+			}
+		}
 	}
 
 	return nil
@@ -1861,6 +1889,36 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 
 	if err = k8sutil.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
 		return fmt.Errorf("failed to reconcile secret: %w", err)
+	}
+
+	return nil
+}
+
+// checkAlertmanagerResource verifies that an Alertmanager resource is valid
+// for the given Alertmanager version.
+func checkAlertmanagerResource(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) error {
+	if am.Spec.AlertmanagerConfiguration == nil || am.Spec.AlertmanagerConfiguration.Global == nil {
+		return nil
+	}
+
+	global := am.Spec.AlertmanagerConfiguration.Global
+
+	if global.SlackAppToken != nil {
+		if amVersion.LT(semver.MustParse("0.30.0")) {
+			return fmt.Errorf("'slackAppToken' in global config is supported in Alertmanager >= 0.30.0 only - current version %s", amVersion.String())
+		}
+		if _, err := store.GetSecretKey(ctx, am.Namespace, *global.SlackAppToken); err != nil {
+			return fmt.Errorf("failed to get 'slackAppToken' secret: %w", err)
+		}
+	}
+
+	if global.SlackAppURL != nil {
+		if amVersion.LT(semver.MustParse("0.30.0")) {
+			return fmt.Errorf("'slackAppUrl' in global config is supported in Alertmanager >= 0.30.0 only - current version %s", amVersion.String())
+		}
+		if _, err := validation.ValidateURL(strings.TrimSpace(string(*global.SlackAppURL))); err != nil {
+			return fmt.Errorf("failed to validate 'slackAppUrl': %w", err)
+		}
 	}
 
 	return nil
