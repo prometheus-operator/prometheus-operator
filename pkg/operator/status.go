@@ -27,6 +27,10 @@ const (
 	// NoSelectedResourcesReason is used in status conditions to indicate that
 	// a workload resource selected no configuration resources.
 	NoSelectedResourcesReason = "NoSelectedResources"
+
+	// DeprecatedFieldsInUseReason is used in status conditions to indicate that
+	// the resource uses deprecated fields.
+	DeprecatedFieldsInUseReason = "DeprecatedFieldsInUse"
 )
 
 type StatusReconciler interface {

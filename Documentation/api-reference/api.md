@@ -877,6 +877,23 @@ possible to override this behavior passing a custom value via
 </tr>
 <tr>
 <td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>web</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">
@@ -7415,6 +7432,23 @@ possible to override this behavior passing a custom value via
 <td>
 <em>(Optional)</em>
 <p>hostAliases Pods configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -34313,7 +34347,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -36498,7 +36534,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -40027,7 +40063,9 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -41131,7 +41169,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

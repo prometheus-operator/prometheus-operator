@@ -878,10 +878,10 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 							EmailConfigs: []monitoringv1alpha1.EmailConfig{
 								{
 									SendResolved: ptr.To(true),
-									Smarthost:    "abc:1234",
-									From:         "a",
-									To:           "b",
-									AuthUsername: "foo",
+									Smarthost:    ptr.To("abc:1234"),
+									From:         ptr.To("a"),
+									To:           ptr.To("b"),
+									AuthUsername: ptr.To("foo"),
 								},
 							},
 						},
@@ -2887,7 +2887,7 @@ func TestGenerateConfig(t *testing.T) {
 									Key: "apiKey",
 								},
 								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
-									Name: "myname",
+									Name: ptr.To("myname"),
 									Type: "team",
 								}},
 							}},
@@ -2981,7 +2981,7 @@ func TestGenerateConfig(t *testing.T) {
 									},
 									Key: "apiSecret",
 								},
-								CorpID: "wechatcorpid",
+								CorpID: ptr.To("wechatcorpid"),
 							}},
 						}},
 					},
@@ -3279,7 +3279,7 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: "https://sns.us-east-2.amazonaws.com",
+									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
 									Sigv4: &monitoringv1.Sigv4{
 										Region: "us-east-2",
 										AccessKey: &corev1.SecretKeySelector{
@@ -3295,7 +3295,7 @@ func TestGenerateConfig(t *testing.T) {
 											Key: "secret",
 										},
 									},
-									TopicARN: "test-topicARN",
+									TopicARN: ptr.To("test-topicARN"),
 								},
 							},
 						}},
@@ -3337,12 +3337,12 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: "https://sns.us-east-2.amazonaws.com",
+									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
 									Sigv4: &monitoringv1.Sigv4{
 										Region:  "us-east-2",
 										RoleArn: "test-roleARN",
 									},
-									TopicARN: "test-topicARN",
+									TopicARN: ptr.To("test-topicARN"),
 								},
 							},
 						}},
@@ -3794,9 +3794,9 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										Smarthost: "example.com:25",
-										From:      "admin@example.com",
-										To:        "customers@example.com",
+										Smarthost: ptr.To("example.com:25"),
+										From:      ptr.To("admin@example.com"),
+										To:        ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3831,8 +3831,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										From: "admin@example.com",
-										To:   "customers@example.com",
+										From: ptr.To("admin@example.com"),
+										To:   ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3867,8 +3867,8 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										From: "admin@example.com",
-										To:   "customers@example.com",
+										From: ptr.To("admin@example.com"),
+										To:   ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -3910,7 +3910,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								EmailConfigs: []monitoringv1alpha1.EmailConfig{
 									{
-										To: "customers@example.com",
+										To: ptr.To("customers@example.com"),
 									},
 								},
 							},
@@ -5737,6 +5737,7 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test victorops_api_key takes precedence in global config",
@@ -5792,9 +5793,47 @@ func TestSanitizeVictorOpsConfig(t *testing.T) {
 			},
 			golden: "test_api_key_file_is_dropped_in_victorops_config_for_unsupported_versions.golden",
 		},
+		{
+			name:           "victorops invalid api_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIURL:     "not-a-valid-url",
+								RoutingKey: "test-key",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "victorops valid api_url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						VictorOpsConfigs: []*victorOpsConfig{
+							{
+								APIURL:     "https://alert.victorops.com/integrations/generic/20131114/alert",
+								RoutingKey: "test-key",
+							},
+						},
+					},
+				},
+			},
+			golden: "victorops_valid_url_passes.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
@@ -6207,6 +6246,24 @@ func TestSanitizeJiraConfig(t *testing.T) {
 						JiraConfigs: []*jiraConfig{
 							{
 								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_configs invalid api_url returns error",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "not-a-valid-url",
+								Project:   "Monitoring",
+								IssueType: "Bug",
 							},
 						},
 					},
@@ -7159,6 +7216,128 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 				},
 			},
 			golden: "telegram_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeMSTeamsConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMSTeamsExampleAllowed := semver.Version{Major: 0, Minor: 27}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "msteams invalid webhook_url returns error",
+			againstVersion: versionMSTeamsExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "msteams valid webhook_url passes validation",
+			againstVersion: versionMSTeamsExampleAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL: "http://example.com/webhook",
+							},
+						},
+					},
+				},
+			},
+			golden: "msteams_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeWebexConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "webex invalid api_url returns error",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "not-a-valid-url",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "webex valid api_url passes validation",
+			againstVersion: versionWebexAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebexConfigs: []*webexConfig{
+							{
+								APIURL: "https://webexapis.com/v1/messages",
+								RoomID: "foo",
+							},
+						},
+					},
+				},
+			},
+			golden: "webex_valid_url_passes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

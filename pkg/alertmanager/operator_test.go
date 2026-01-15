@@ -540,7 +540,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 							},
 						},
 					}},
@@ -562,7 +562,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
@@ -585,7 +585,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
@@ -611,7 +611,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: "testingCorpID",
+								CorpID: ptr.To("testingCorpID"),
 								APISecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
@@ -1108,6 +1108,30 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "invalid-url",
 								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "sns-with-invalid-api-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SNSConfigs: []monitoringv1alpha1.SNSConfig{
+							{
+								ApiURL: ptr.To(monitoringv1alpha1.URL("https:://sns.us-east-2.amazonaws.com")),
+								Sigv4: &monitoringv1.Sigv4{
+									Region:  "us-east-2",
+									RoleArn: "test-roleARN",
+								},
+								TopicARN: ptr.To("test-topicARN"),
 							},
 						},
 					}},

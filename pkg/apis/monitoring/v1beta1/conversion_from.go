@@ -493,7 +493,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 func convertSNSConfigFrom(in v1alpha1.SNSConfig) SNSConfig {
 	return SNSConfig{
 		SendResolved: in.SendResolved,
-		ApiURL:       in.ApiURL,
+		ApiURL:       (*URL)(in.ApiURL),
 		Sigv4:        in.Sigv4,
 		TopicARN:     in.TopicARN,
 		Subject:      in.Subject,

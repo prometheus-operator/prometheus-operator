@@ -358,6 +358,17 @@ type AlertmanagerSpec struct {
 	// +listMapKey=ip
 	// +optional
 	HostAliases []HostAlias `json:"hostAliases,omitempty"`
+	// hostNetwork controls whether the pod may use the node network namespace.
+	//
+	// Make sure to understand the security implications if you want to enable
+	// it (https://kubernetes.io/docs/concepts/configuration/overview/).
+	//
+	// When hostNetwork is enabled, this will set the DNS policy to
+	// `ClusterFirstWithHostNet` automatically (unless `.spec.dnsPolicy` is set
+	// to a different value).
+	//
+	// +optional
+	HostNetwork bool `json:"hostNetwork,omitempty"` // nolint:kubeapilinter
 	// web defines the web command line flags when starting Alertmanager.
 	// +optional
 	Web *AlertmanagerWebSpec `json:"web,omitempty"`
