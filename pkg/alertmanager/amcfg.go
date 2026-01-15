@@ -1940,10 +1940,6 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -3209,6 +3205,10 @@ func (cb *ConfigBuilder) CheckGlobalRocketChatConfig(
 ) error {
 	if rc == nil {
 		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return errors.New(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
 	}
 
 	if rc.Token != nil {
