@@ -66,6 +66,16 @@ There are contributions, e.g. adding a new required field to an existing configu
 make test-unit-update-golden
 ```
 
+### Validating Golden Files with promtool
+
+Golden files are validated against Prometheus's official schema using `promtool`. This helps catch configuration errors that might not be detected by simple string comparison. This runs automatically as part of `test-unit`:
+
+```bash
+make test-prometheus-goldenfiles
+```
+
+This command runs `promtool check config` on all golden files in `pkg/prometheus/testdata/`. Partial config fragments (files in `testdata/partial/`) are excluded from validation as they test specific config generation functions rather than complete Prometheus configurations.
+
 ## End-to-end tests
 
 Sometimes, running tests in isolation is not enough and we really want test the behavior of Prometheus-Operator when running in a working Kubernetes cluster. For those occasions, end-to-end tests are our choice.

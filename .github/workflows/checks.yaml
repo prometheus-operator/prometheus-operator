@@ -113,3 +113,4 @@ jobs:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - run: cd cmd/po-rule-migration && go install
+
