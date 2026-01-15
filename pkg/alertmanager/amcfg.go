@@ -3208,7 +3208,7 @@ func (cb *ConfigBuilder) CheckGlobalRocketChatConfig(
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+		return fmt.Errorf(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
 	}
 
 	if rc.Token != nil {
