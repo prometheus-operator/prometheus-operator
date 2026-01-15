@@ -79,7 +79,7 @@ spec:
 * DNS Service Discovery
 * HTTP Service Discovery
 
-**Tier-2** (maintainers review issues/PRs but don't actively maintain): includes cloud provider SDs like Azure, EC2, GCE, DigitalOcean and others. See the [ScrapeConfig graduation proposal]({{<ref "202405-scrapeconfig-graduation.md">}}) for the complete list.
+**Tier-2** (maintainers review issues/PRs but don't actively maintain): includes cloud provider SDs like Azure, EC2, GCE, DigitalOcean and others. See the [ScrapeConfig graduation proposal](https://prometheus-operator.dev/docs/proposals/accepted/scrapeconfig-graduation/) for the complete list.
 
 For the full list of supported fields and service discoveries, check the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig).
 
