@@ -34,6 +34,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("telegram: %w", err)
 	}
 
+	if err := validateGlobalRocketChatConfig(gc.RocketChatConfig); err != nil {
+		return fmt.Errorf("rocketChat: %w", err)
+	}
+
 	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return fmt.Errorf("webex: %w", err)
 	}
@@ -51,6 +55,18 @@ func validatingTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(tc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalRocketChatConfig(rc *monitoringv1.GlobalRocketChatConfig) error {
+	if rc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(rc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 

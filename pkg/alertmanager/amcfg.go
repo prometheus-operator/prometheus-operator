@@ -3175,6 +3175,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.CheckGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return err
 	}
@@ -3193,6 +3197,30 @@ func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegr
 
 	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
 		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) CheckGlobalRocketChatConfig(
+	ctx context.Context,
+	rc *monitoringv1.GlobalRocketChatConfig,
+	namespace string,
+) error {
+	if rc == nil {
+		return nil
+	}
+
+	if rc.Token != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.Token); err != nil {
+			return err
+		}
+	}
+
+	if rc.TokenID != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.TokenID); err != nil {
+			return err
+		}
 	}
 
 	return nil
