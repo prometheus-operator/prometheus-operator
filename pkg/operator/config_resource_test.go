@@ -15,11 +15,16 @@
 package operator
 
 import (
+	"context"
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/tools/cache"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -207,3 +212,114 @@ func TestConfigResStatusConditionsEqual(t *testing.T) {
 		})
 	}
 }
+
+
+
+type mockBindingRemover struct {
+	removeBindingFunc func(context.Context, ConfigurationObject) error
+}
+
+func (m *mockBindingRemover) RemoveBinding(ctx context.Context, co ConfigurationObject) error {
+	return m.removeBindingFunc(ctx, co)
+}
+
+func TestPruneOrphanedBindings(t *testing.T) {
+	gvr := schema.GroupVersionResource{
+		Group:    "monitoring.coreos.com",
+		Version:  "v1",
+		Resource: "prometheuses",
+	}
+
+	tests := []struct {
+		name            string
+		bindings        []monitoringv1.WorkloadBinding
+		workloads       []string
+		expectedRemoved []string
+	}{
+		{
+			name: "remove orphaned binding",
+			bindings: []monitoringv1.WorkloadBinding{
+				{
+					Group:     gvr.Group,
+					Resource:  gvr.Resource,
+					Namespace: "default",
+					Name:      "prom-1",
+				},
+			},
+			workloads:       []string{},
+			expectedRemoved: []string{"default/prom-1"},
+		},
+		{
+			name: "keep existing binding",
+			bindings: []monitoringv1.WorkloadBinding{
+				{
+					Group:     gvr.Group,
+					Resource:  gvr.Resource,
+					Namespace: "default",
+					Name:      "prom-1",
+				},
+			},
+			workloads:       []string{"default/prom-1"},
+			expectedRemoved: []string{},
+		},
+		{
+			name: "ignore other resources",
+			bindings: []monitoringv1.WorkloadBinding{
+				{
+					Group:     "other.group",
+					Resource:  "other",
+					Namespace: "default",
+					Name:      "other-1",
+				},
+			},
+			workloads:       []string{},
+			expectedRemoved: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cr := &monitoringv1.ServiceMonitor{}
+			cr.Status.Bindings = tt.bindings
+			cr.SetNamespace("default")
+			cr.SetName("test-config")
+			
+			// AddTypeInformationToObject called in PruneOrphanedBindings - if it fails, test fails.
+			// assuming it works
+			cr.SetGroupVersionKind(monitoringv1.SchemeGroupVersion.WithKind(monitoringv1.ServiceMonitorsKind))
+
+			listerFunc := func(selector labels.Selector, appendFunc cache.AppendFunc) error {
+				appendFunc(cr)
+				return nil
+			}
+
+			workloadChecker := func(ns, name string) (bool, error) {
+				return slices.Contains(tt.workloads, ns+"/"+name), nil
+			}
+
+			removedBindings := []string{}
+			factory := func(workload RuntimeObject) BindingRemover {
+				return &mockBindingRemover{
+					removeBindingFunc: func(ctx context.Context, co ConfigurationObject) error {
+						if co == cr {
+							removedBindings = append(removedBindings, workload.GetNamespace()+"/"+workload.GetName())
+						}
+						return nil
+					},
+				}
+			}
+
+			err := PruneOrphanedBindings[*monitoringv1.ServiceMonitor](
+				context.Background(),
+				listerFunc,
+				gvr,
+				workloadChecker,
+				factory,
+			)
+
+			require.NoError(t, err)
+			require.ElementsMatch(t, tt.expectedRemoved, removedBindings)
+		})
+	}
+}
+

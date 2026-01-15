@@ -28,6 +28,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -60,6 +61,7 @@ type Operator struct {
 	kclient  kubernetes.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
+	dclient  dynamic.Interface
 
 	logger *slog.Logger
 
@@ -152,6 +154,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	// All the metrics exposed by the controller get the controller="prometheus-agent" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "prometheus-agent"}, r)
 
@@ -159,6 +166,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		kclient:  client,
 		mdClient: mdClient,
 		mclient:  mclient,
+		dclient:  dclient,
 		logger:   logger,
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
@@ -439,6 +447,8 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// TODO(simonpasquier): watch for PrometheusAgent pods instead of polling.
 	go operator.StatusPoller(ctx, c)
+
+	go c.pruneOrphanedBindings(ctx)
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
@@ -1239,3 +1249,79 @@ func keyToDaemonSetKey(p monitoringv1.PrometheusInterface, key string) string {
 	keyParts := strings.Split(key, "/")
 	return fmt.Sprintf("%s/%s", keyParts[0], fmt.Sprintf("%s-%s", prompkg.Prefix(p), keyParts[1]))
 }
+
+func (c *Operator) pruneOrphanedBindings(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	workloadGVR := monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.PrometheusAgentName)
+	workloadChecker := c.workloadChecker
+	configResourceSyncerFactory := func(workload operator.RuntimeObject) operator.BindingRemover {
+		return operator.NewConfigResourceSyncer(workload, c.dclient, c.accessor)
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// Prune bindings from serviceMonitors.
+			if err := operator.PruneOrphanedBindings[*monitoringv1.ServiceMonitor](
+				ctx,
+				c.smonInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from ServiceMonitors", "err", err)
+			}
+
+			// Prune bindings from podMonitors.
+			if err := operator.PruneOrphanedBindings[*monitoringv1.PodMonitor](
+				ctx,
+				c.pmonInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from PodMonitors", "err", err)
+			}
+
+			// Prune bindings from probes.
+			if err := operator.PruneOrphanedBindings[*monitoringv1.Probe](
+				ctx,
+				c.probeInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				c.logger.Error("failed to prune orphaned bindings from Probes", "err", err)
+			}
+
+			// Prune bindings from scrapeConfigs.
+			if c.sconInfs != nil {
+				if err := operator.PruneOrphanedBindings[*monitoringv1alpha1.ScrapeConfig](
+					ctx,
+					c.sconInfs.ListAll,
+					workloadGVR,
+					workloadChecker,
+					configResourceSyncerFactory,
+				); err != nil {
+					c.logger.Error("failed to prune orphaned bindings from ScrapeConfigs", "err", err)
+				}
+			}
+		}
+	}
+}
+
+func (c *Operator) workloadChecker(ns, name string) (bool, error) {
+	_, err := c.promInfs.Get(ns + "/" + name)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
