@@ -4854,7 +4854,7 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_pagerduty_timeout_is_added_in_pagerduty_config_for_supported_versions.golden",
 		},
 		{
-			name:           "Test slack_app_token is rejected for unsupported versions",
+			name:           "Test slack_app_token is dropped for unsupported versions",
 			againstVersion: versionSlackAppConfigNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -4868,10 +4868,10 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			golden: "test_slack_app_token_is_dropped_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test slack_app_url is rejected for unsupported versions",
+			name:           "Test slack_app_url is dropped for unsupported versions",
 			againstVersion: versionSlackAppConfigNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
@@ -4884,7 +4884,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			golden: "test_slack_app_url_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test slack_app_token and slack_app_url preserved for supported versions",
@@ -4970,7 +4970,7 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_slack_app_token_and_slack_api_url_with_same_url_is_allowed.golden",
 		},
 		{
-			name:           "Test app_token is rejected in slack config for unsupported versions",
+			name:           "Test app_token is dropped in slack config for unsupported versions",
 			againstVersion: versionSlackAppConfigNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -4983,7 +4983,7 @@ func TestSanitizeConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			golden: "test_app_token_field_dropped_in_slack_config_for_unsupported_versions.golden",
 		},
 		{
 			name:           "Test app_token is added in slack config for supported versions",
