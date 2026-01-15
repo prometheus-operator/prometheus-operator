@@ -15,6 +15,15 @@ description: Command line arguments for the operator binary
 
 ```console mdox-exec="./operator --help"
 Usage of ./operator:
+
+  ./operator [arguments] [<command>]
+
+Commands:
+  start      Run the operator (default)
+  crds       Print the CRDs in YAML format to standard output
+  full-crds  Print the full CRDs (with all fields) in YAML format to standard output
+
+Arguments:
   -alertmanager-config-namespaces value
     	Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.
   -alertmanager-default-base-image string

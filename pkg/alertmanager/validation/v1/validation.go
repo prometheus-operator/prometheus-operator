@@ -30,8 +30,40 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("httpConfig: %w", err)
 	}
 
+	if err := validatingTelegramConfig(gc.TelegramConfig); err != nil {
+		return fmt.Errorf("telegram: %w", err)
+	}
+
+	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return fmt.Errorf("webex: %w", err)
+	}
+
 	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
 		return fmt.Errorf("wechatConfig: %w", err)
+	}
+
+	return nil
+}
+
+func validatingTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+	if tc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(tc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 
 	return nil
