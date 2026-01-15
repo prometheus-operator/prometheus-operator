@@ -642,7 +642,7 @@ type OpsGenieConfig struct {
 	// These appear as action buttons in the OpsGenie interface.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Actions string `json:"actions,omitempty"`
+	Actions *string `json:"actions,omitempty"`
 }
 
 // OpsGenieConfigResponder defines a responder to an incident.

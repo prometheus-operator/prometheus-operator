@@ -19,8 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
-	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -29,7 +27,6 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -678,7 +675,7 @@ type OpsGenieConfig struct {
 	// These appear as action buttons in the OpsGenie interface.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Actions string `json:"actions,omitempty"`
+	Actions *string `json:"actions,omitempty"`
 }
 
 // OpsGenieConfigResponder defines a responder to an incident.
@@ -706,30 +703,6 @@ type OpsGenieConfigResponder struct {
 	// +kubebuilder:validation:Enum=team;teams;user;escalation;schedule
 	// +required
 	Type string `json:"type"`
-}
-
-const opsgenieValidTypesRe = `^(team|teams|user|escalation|schedule)$`
-
-var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
-
-// Validate ensures OpsGenieConfigResponder is valid.
-func (r *OpsGenieConfigResponder) Validate() error {
-	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
-		return errors.New("responder must have at least an ID, a Name or an Username defined")
-	}
-
-	if strings.Contains(r.Type, "{{") {
-		_, err := template.New("").Parse(r.Type)
-		if err != nil {
-			return fmt.Errorf("responder %v type is not a valid template: %w", r, err)
-		}
-		return nil
-	}
-
-	if opsgenieTypeMatcher.MatchString(strings.ToLower(r.Type)) {
-		return nil
-	}
-	return fmt.Errorf("opsGenieConfig responder %v type does not match valid options %s", r, opsgenieValidTypesRe)
 }
 
 // HTTPConfig defines a client HTTP configuration.

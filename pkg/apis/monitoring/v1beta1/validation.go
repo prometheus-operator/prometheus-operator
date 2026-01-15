@@ -371,7 +371,7 @@ var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
 
 // Validate ensures OpsGenieConfigResponder is valid.
 func (r *OpsGenieConfigResponder) Validate() error {
-	if r.ID == "" && r.Name == "" && r.Username == "" {
+	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
 		return errors.New("responder must have at least an ID, a Name or an Username defined")
 	}
 
