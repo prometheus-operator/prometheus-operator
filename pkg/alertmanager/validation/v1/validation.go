@@ -42,6 +42,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("webex: %w", err)
 	}
 
+	if err := validateGlobalVictorOpsConfig(gc.VictorOpsConfig); err != nil {
+		return fmt.Errorf("victorops: %w", err)
+	}
+
 	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
@@ -67,6 +71,18 @@ func validateGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(jc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalVictorOpsConfig(vc *monitoringv1.GlobalVictorOpsConfig) error {
+	if vc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(vc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 

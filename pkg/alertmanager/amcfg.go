@@ -3175,6 +3175,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return err
 	}
@@ -3205,6 +3209,24 @@ func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig
 
 	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
 		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
+	ctx context.Context,
+	vc *monitoringv1.GlobalVictorOpsConfig,
+	namespace string,
+) error {
+	if vc == nil {
+		return nil
+	}
+
+	if vc.APIKey != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
+			return err
+		}
 	}
 
 	return nil
