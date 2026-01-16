@@ -1920,10 +1920,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("jira integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -3175,6 +3171,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.checkGlobalJiraConfig(gc.JiraConfig); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
 		return err
 	}
@@ -3197,6 +3197,18 @@ func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegr
 
 	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
 		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
+	if jc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
 	}
 
 	return nil
