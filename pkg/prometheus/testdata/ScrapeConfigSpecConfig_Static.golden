@@ -8,7 +8,7 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   static_configs:
   - targets:
-    - http://localhost:9100
+    - localhost:9100
     labels:
       label1: value1
   relabel_configs:
