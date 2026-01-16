@@ -7327,7 +7327,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -7449,7 +7450,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7473,7 +7475,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7491,7 +7494,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -7523,7 +7527,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -10227,7 +10232,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Server:          "127.0.0.1",
+						Server:          "http://127.0.0.1:5681",
 						ClientID:        ptr.To("client"),
 						FetchTimeout:    (*monitoringv1.Duration)(ptr.To("5s")),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
@@ -10263,6 +10268,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -10304,6 +10310,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								Key: "key",
 							},
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -10347,6 +10354,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							MaxVersion: ptr.To(monitoringv1.TLSVersion12),
 							MinVersion: ptr.To(monitoringv1.TLSVersion10),
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -11057,7 +11065,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Server:          "127.0.0.1",
+						Server:          "http://localhost:8761/eureka",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
 				},
@@ -11091,6 +11099,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:8761/eureka",
 					},
 				},
 			},
@@ -11132,6 +11141,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 								Key: "private-key",
 							},
 						},
+						Server: "http://localhost:8761/eureka",
 					},
 				},
 			},
@@ -11274,6 +11284,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:4646",
 					},
 				},
 			},
@@ -11315,6 +11326,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 								Key: "key",
 							},
 						},
+						Server: "http://localhost:4646",
 					},
 				},
 			},
@@ -12218,7 +12230,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						AccessKey: "AccessKey",
+						AccessKey: "SCWABCDEFGH123456789",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
@@ -12259,7 +12271,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						AccessKey: "AccessKey",
+						AccessKey: "SCWABCDEFGH123456789",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",

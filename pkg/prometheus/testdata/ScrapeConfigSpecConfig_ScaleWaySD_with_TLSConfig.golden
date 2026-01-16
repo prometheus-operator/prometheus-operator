@@ -7,7 +7,7 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   scaleway_sd_configs:
-  - access_key: AccessKey
+  - access_key: SCWABCDEFGH123456789
     secret_key: value
     project_id: "1"
     role: instance
