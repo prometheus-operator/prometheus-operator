@@ -16,7 +16,7 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
-    server: 127.0.0.1
+    server: http://127.0.0.1:5681
     follow_redirects: true
     enable_http2: true
     refresh_interval: 30s
