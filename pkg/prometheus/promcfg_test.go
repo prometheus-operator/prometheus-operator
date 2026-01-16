@@ -13459,9 +13459,11 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Alerting: tc.alerting,
+					Alerting:           tc.alerting,
+					EvaluationInterval: "30s",
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						ServiceDiscoveryRole: tc.sdRole,
+						ScrapeInterval:       "30s",
 					},
 				},
 			}
@@ -13677,9 +13679,11 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: tc.version,
+					Version:        tc.version,
+					ScrapeInterval: "30s",
 				},
-				Alerting: tc.alerting,
+				Alerting:           tc.alerting,
+				EvaluationInterval: "30s",
 			},
 		}
 
