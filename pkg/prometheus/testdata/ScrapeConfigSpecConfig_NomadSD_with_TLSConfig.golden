@@ -10,7 +10,7 @@ scrape_configs:
   - authorization:
       type: Bearer
       credentials: value
-    server: ""
+    server: http://localhost:4646
     tls_config:
       ca_file: /etc/prometheus/certs/0_default_tls_ca
       cert_file: /etc/prometheus/certs/0_default_tls_cert

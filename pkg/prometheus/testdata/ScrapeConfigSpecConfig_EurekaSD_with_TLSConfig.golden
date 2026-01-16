@@ -14,6 +14,7 @@ scrape_configs:
       ca_file: /etc/prometheus/certs/0_default_tls_ca
       cert_file: /etc/prometheus/certs/0_default_tls_cert
       key_file: /etc/prometheus/certs/0_default_tls_private-key
+    server: http://localhost:8761/eureka
   relabel_configs:
   - source_labels:
     - job
