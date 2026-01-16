@@ -575,9 +575,9 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
-		GroupWait:           in.GroupWait,
-		GroupInterval:       in.GroupInterval,
-		RepeatInterval:      in.RepeatInterval,
+		GroupWait:           durationToString((*monitoringv1.Duration)(in.GroupWait)),
+		GroupInterval:       durationToString((*monitoringv1.Duration)(in.GroupInterval)),
+		RepeatInterval:      durationToString((*monitoringv1.Duration)(in.RepeatInterval)),
 		Continue:            in.Continue,
 		Match:               match,
 		MatchRE:             matchRE,
@@ -3074,6 +3074,35 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		r.ActiveTimeIntervals = nil
 	}
 
+	if r.GroupWait != "" {
+		_, err := model.ParseDuration(r.GroupWait)
+		if err != nil {
+			return fmt.Errorf("group_wait: %w", err)
+		}
+	}
+
+	if r.GroupInterval != "" {
+		d, err := model.ParseDuration(r.GroupInterval)
+		if err != nil {
+			return fmt.Errorf("group_interval: %w", err)
+		}
+		if d == 0 {
+			// Reset the value if it's a zero duration because Alertmanager would reject it.
+			r.GroupInterval = ""
+		}
+
+	}
+	if r.RepeatInterval != "" {
+		d, err := model.ParseDuration(r.RepeatInterval)
+		if err != nil {
+			return fmt.Errorf("repeat_interval: %w", err)
+		}
+		if d == 0 {
+			// Reset the value if it's a zero duration because Alertmanager would reject it.
+			r.RepeatInterval = ""
+		}
+	}
+
 	for i, child := range r.Routes {
 		if err := child.sanitize(amVersion, logger); err != nil {
 			return fmt.Errorf("route[%d]: %w", i, err)
@@ -3116,6 +3145,13 @@ func convertSliceToNilIfEmpty(in []string) []string {
 		return in
 	}
 	return nil
+}
+
+func durationToString(d *monitoringv1.Duration) string {
+	if d == nil {
+		return ""
+	}
+	return string(*d)
 }
 
 // contains will return true if any slice value with all whitespace removed
