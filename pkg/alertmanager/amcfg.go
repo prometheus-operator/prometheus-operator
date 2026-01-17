@@ -795,6 +795,10 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		SendResolved: in.SendResolved,
 	}
 
+	if in.APIURL != nil && *in.APIURL != "" {
+		out.APIURL = (string)(*in.APIURL)
+	}
+
 	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
@@ -806,6 +810,92 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
 	}
 	out.TokenID = &tokenID
+
+	if in.Channel != nil && *in.Channel != "" {
+		out.Channel = *in.Channel
+	}
+
+	if in.Color != nil && *in.Color != "" {
+		out.Color = *in.Color
+	}
+
+	if in.Title != nil && *in.Title != "" {
+		out.Title = *in.Title
+	}
+
+	if in.TitleLink != nil && *in.TitleLink != "" {
+		out.TitleLink = *in.TitleLink
+	}
+
+	if in.Text != nil && *in.Text != "" {
+		out.Text = *in.Text
+	}
+
+	if in.ShortFields != nil {
+		out.ShortFields = *in.ShortFields
+	}
+
+	if in.Emoji != nil && *in.Emoji != "" {
+		out.Emoji = *in.Emoji
+	}
+
+	if in.IconURL != nil && *in.IconURL != "" {
+		out.IconURL = (string)(*in.IconURL)
+	}
+
+	if in.ImageURL != nil && *in.ImageURL != "" {
+		out.ImageURL = (string)(*in.ImageURL)
+	}
+
+	if in.ThumbURL != nil && *in.ThumbURL != "" {
+		out.ThumbURL = (string)(*in.ThumbURL)
+	}
+
+	if in.LinkNames != nil {
+		out.LinkNames = *in.LinkNames
+	}
+
+	if l := len(in.Fields); l > 0 {
+		fields := make([]*rocketchatAttachmentField, l)
+		for i, f := range in.Fields {
+			field := &rocketchatAttachmentField{
+				Short: f.Short,
+			}
+
+			if f.Title != nil {
+				field.Title = *f.Title
+			}
+
+			if f.Value != nil {
+				field.Value = *f.Value
+			}
+
+			fields[i] = field
+		}
+		out.Fields = fields
+	}
+
+	if l := len(in.Actions); l > 0 {
+		actions := make([]*rocketchatAttachmentAction, l)
+		for i, a := range in.Actions {
+			action := &rocketchatAttachmentAction{}
+
+			if a.Text != nil {
+				action.Text = *a.Text
+			}
+
+			if a.URL != nil {
+				action.URL = (string)(*a.URL)
+			}
+
+			if a.Msg != nil {
+				action.Msg = *a.Msg
+			}
+
+			actions[i] = action
+		}
+		out.Actions = actions
+	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
