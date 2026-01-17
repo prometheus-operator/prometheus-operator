@@ -3210,7 +3210,7 @@ func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig
 	return nil
 }
 
-func (cb *ConfigBuilder) CheckGlobalRocketChatConfig(
+func (cb *ConfigBuilder) checkGlobalRocketChatConfig(
 	ctx context.Context,
 	rc *monitoringv1.GlobalRocketChatConfig,
 	namespace string,
