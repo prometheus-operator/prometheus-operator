@@ -31,16 +31,16 @@ func (hc *HTTPConfig) Validate() error {
 	}
 
 	if (hc.BasicAuth != nil || hc.OAuth2 != nil) && (hc.BearerTokenSecret != nil) {
-		return fmt.Errorf("at most one of basicAuth, oauth2, bearerTokenSecret must be configured")
+		return fmt.Errorf("at most one of 'basicAuth', 'oauth2' and 'bearerTokenSecret' must be configured")
 	}
 
 	if hc.Authorization != nil {
 		if hc.BearerTokenSecret != nil {
-			return fmt.Errorf("authorization is not compatible with bearerTokenSecret")
+			return fmt.Errorf("'authorization' is not compatible with 'bearerTokenSecret'")
 		}
 
 		if hc.BasicAuth != nil || hc.OAuth2 != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+			return fmt.Errorf("at most one of 'basicAuth', 'oauth2' and 'authorization' must be configured")
 		}
 
 		if err := hc.Authorization.Validate(); err != nil {
@@ -50,7 +50,7 @@ func (hc *HTTPConfig) Validate() error {
 
 	if hc.OAuth2 != nil {
 		if hc.BasicAuth != nil {
-			return fmt.Errorf("at most one of basicAuth, oauth2 & authorization must be configured")
+			return fmt.Errorf("at most one of 'basicAuth', 'oauth2' and 'authorization' must be configured")
 		}
 
 		if err := hc.OAuth2.Validate(); err != nil {
@@ -395,15 +395,15 @@ func (r *OpsGenieConfigResponder) Validate() error {
 // Validate ensures SlackAction is valid.
 func (sa *SlackAction) Validate() error {
 	if sa.Type == "" {
-		return errors.New("missing type in Slack action configuration")
+		return errors.New("missing 'type' in Slack action configuration")
 	}
 
 	if sa.Text == "" {
-		return errors.New("missing text in Slack action configuration")
+		return errors.New("missing 'text' in Slack action configuration")
 	}
 
 	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
-		return errors.New("missing name or url in Slack action configuration")
+		return errors.New("missing 'name' or 'url' in Slack action configuration")
 	}
 
 	if sa.ConfirmField != nil {
@@ -435,7 +435,7 @@ func (sc *SlackConfig) Validate() error {
 // Validate ensures SlackConfirmationField is valid.
 func (scf *SlackConfirmationField) Validate() error {
 	if scf.Text == "" {
-		return errors.New("missing text in Slack confirmation configuration")
+		return errors.New("missing 'text' in Slack confirmation configuration")
 	}
 	return nil
 }
@@ -443,11 +443,11 @@ func (scf *SlackConfirmationField) Validate() error {
 // Validate ensures SlackField is valid
 func (sf *SlackField) Validate() error {
 	if sf.Title == "" {
-		return errors.New("missing title in Slack field configuration")
+		return errors.New("missing 'title' in Slack field configuration")
 	}
 
 	if sf.Value == "" {
-		return errors.New("missing value in Slack field configuration")
+		return errors.New("missing 'value' in Slack field configuration")
 	}
 
 	return nil
