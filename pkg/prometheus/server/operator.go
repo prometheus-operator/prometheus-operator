@@ -1116,8 +1116,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from scrapeConfigs which reference the
 	// workload but aren't selected anymore.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from probes which reference the
@@ -1153,8 +1156,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}
 
 	// Remove bindings from all scrapeConfigs which reference the workload.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from all probes which reference the workload.

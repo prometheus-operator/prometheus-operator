@@ -6275,7 +6275,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1",
 						},
@@ -6292,7 +6292,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1_sharded",
 						},
@@ -6319,7 +6319,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1",
 						},
@@ -7331,7 +7331,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -7650,7 +7650,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8074,7 +8074,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8272,7 +8272,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					},
 				},
 			},
@@ -8299,7 +8300,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -8311,7 +8313,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8335,7 +8337,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -8384,7 +8387,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -8714,7 +8718,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8898,7 +8902,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9273,7 +9277,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9457,7 +9461,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9488,7 +9492,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9520,7 +9524,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -10209,7 +10213,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11039,7 +11043,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11218,7 +11222,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11403,7 +11407,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11454,7 +11458,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11638,7 +11642,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11683,7 +11687,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11908,7 +11912,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11952,7 +11956,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -12231,7 +12235,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -12379,7 +12383,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -13455,9 +13459,11 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Alerting: tc.alerting,
+					Alerting:           tc.alerting,
+					EvaluationInterval: "30s",
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						ServiceDiscoveryRole: tc.sdRole,
+						ScrapeInterval:       "30s",
 					},
 				},
 			}
@@ -13673,9 +13679,11 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: tc.version,
+					Version:        tc.version,
+					ScrapeInterval: "30s",
 				},
-				Alerting: tc.alerting,
+				Alerting:           tc.alerting,
+				EvaluationInterval: "30s",
 			},
 		}
 
