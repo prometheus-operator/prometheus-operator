@@ -3181,7 +3181,7 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
-	if err := cb.CheckGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
+	if err := cb.checkGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
 		return err
 	}
 
