@@ -235,25 +235,15 @@ func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 }
 
 func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
-<<<<<<< HEAD
 	for i, config := range configs {
-		if config.To == "" {
-			return fmt.Errorf("[%d]: missing 'to' address", i)
-=======
-	for _, config := range configs {
 		if ptr.Deref(config.To, "") == "" {
-			return errors.New("missing 'to' address")
->>>>>>> main
+			return fmt.Errorf("[%d]: missing 'to' address", i)
 		}
 
 		if ptr.Deref(config.Smarthost, "") != "" {
 			_, _, err := net.SplitHostPort(*config.Smarthost)
 			if err != nil {
-<<<<<<< HEAD
-				return fmt.Errorf("[%d]: invalid 'smarthost' %s: %w", i, config.Smarthost, err)
-=======
-				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
->>>>>>> main
+				return fmt.Errorf("[%d]: invalid 'smarthost' %s: %w", i, *config.Smarthost, err)
 			}
 		}
 
@@ -337,17 +327,12 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 
 func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 	for i, config := range configs {
-<<<<<<< HEAD
-		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
-			return fmt.Errorf("[%d]: must provide one of 'targetARN', 'topicARN', or 'phoneNumber'", i)
-=======
 		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
-			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
+			return fmt.Errorf("[%d]: must provide one of 'targetARN', 'topicARN', or 'phoneNumber'", i)
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.ApiURL)); err != nil {
 			return fmt.Errorf("[%d]: apiURL: %w", i, err)
->>>>>>> main
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
