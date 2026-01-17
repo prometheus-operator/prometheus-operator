@@ -598,7 +598,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	logDeprecatedFields(logger, am)
+	c.recordDeprecatedFields(key, logger, am)
 
 	logger.Info("sync alertmanager")
 
@@ -1866,19 +1866,27 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	return nil
 }
 
-func logDeprecatedFields(logger *slog.Logger, a *monitoringv1.Alertmanager) {
+func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, a *monitoringv1.Alertmanager) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
 
 	if a.Spec.BaseImage != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	if a.Spec.Tag != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	if a.Spec.SHA != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+	}
+
+	if len(deprecations) > 0 {
+		for _, m := range deprecations {
+			logger.Warn(m)
+		}
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
 	}
 }
 

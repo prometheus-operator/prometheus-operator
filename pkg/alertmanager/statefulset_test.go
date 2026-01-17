@@ -1130,6 +1130,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	}
 	imagePullPolicy := v1.PullAlways
 	hostUsers := true
+	hostNetwork := false
 
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		ObjectMeta: metav1.ObjectMeta{},
@@ -1144,6 +1145,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			HostUsers:          ptr.To(true),
+			HostNetwork:        hostNetwork,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -1157,6 +1159,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	require.Equal(t, *sset.Spec.Template.Spec.HostUsers, hostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
+	require.Equal(t, sset.Spec.Template.Spec.HostNetwork, hostNetwork, "expected host network to match, want %v, got %v", hostNetwork, sset.Spec.Template.Spec.HostNetwork)
 
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, initContainer.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
@@ -1164,6 +1167,20 @@ func TestPodTemplateConfig(t *testing.T) {
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		require.Equal(t, container.ImagePullPolicy, imagePullPolicy, "expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 	}
+}
+
+func TestPodHostNetworkConfig(t *testing.T) {
+	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{},
+		Spec: monitoringv1.AlertmanagerSpec{
+			HostNetwork: true,
+		},
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.True(t, sset.Spec.Template.Spec.HostNetwork, "expected hostNetwork to be true")
+	require.Equal(t, v1.DNSClusterFirstWithHostNet, sset.Spec.Template.Spec.DNSPolicy,
+		"expected DNSPolicy to be ClusterFirstWithHostNet when hostNetwork is enabled")
 }
 
 func TestConfigReloader(t *testing.T) {

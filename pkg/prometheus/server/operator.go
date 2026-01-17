@@ -58,7 +58,7 @@ const (
 	noSelectedResourcesMessage = "No ServiceMonitor, PodMonitor, Probe, ScrapeConfig, and PrometheusRule have been selected."
 
 	unmanagedConfigurationReason  = "ConfigurationUnmanaged"
-	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead."
+	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead. Unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')."
 )
 
 // Operator manages the life cycle of Prometheus deployments and
@@ -833,7 +833,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	c.logDeprecatedFields(logger, p)
+	c.recordDeprecatedFields(key, logger, p)
 
 	statusCleanup := func() error {
 		return c.configResStatusCleanup(ctx, p)
@@ -1116,8 +1116,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from scrapeConfigs which reference the
 	// workload but aren't selected anymore.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from probes which reference the
@@ -1153,8 +1156,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}
 
 	// Remove bindings from all scrapeConfigs which reference the workload.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from all probes which reference the workload.
@@ -1225,45 +1231,53 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Operator) logDeprecatedFields(logger *slog.Logger, p *monitoringv1.Prometheus) {
+func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, p *monitoringv1.Prometheus) {
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.BaseImage != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.Tag != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.SHA != "" {
-		logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 
 	if p.Spec.Thanos != nil {
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.BaseImage != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
+		if p.Spec.Thanos.BaseImage != nil && *p.Spec.Thanos.BaseImage != "" {
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.Tag != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
+		if p.Spec.Thanos.Tag != nil && *p.Spec.Thanos.Tag != "" {
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
 
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if p.Spec.SHA != "" {
-			logger.Warn(fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
+		if p.Spec.Thanos.SHA != nil && *p.Spec.Thanos.SHA != "" {
+			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}
 	}
 
+	if len(deprecations) > 0 {
+		for _, m := range deprecations {
+			logger.Warn(m)
+		}
+		c.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+		return
+	}
+
 	if c.unmanagedPrometheusConfiguration(p) {
-		logger.Warn("the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector is specified")
-		logger.Warn("unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig instead")
-		logger.Warn("unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')")
+		logger.Warn(unmanagedConfigurationMessage)
+		c.reconciliations.SetReasonAndMessage(key, unmanagedConfigurationReason, unmanagedConfigurationMessage)
 	}
 }
 
@@ -1363,7 +1377,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
-		c.reconciliations.SetReasonAndMessage(operator.KeyForObject(p), unmanagedConfigurationReason, unmanagedConfigurationMessage)
 
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {

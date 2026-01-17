@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  webex_configs:
+  - api_url: https://webexapis.com/v1/messages
+    room_id: foo
+templates: []

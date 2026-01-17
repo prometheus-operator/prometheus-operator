@@ -78,6 +78,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	AlertmanagerConfigMatcherStrategy    *AlertmanagerConfigMatcherStrategyApplyConfiguration    `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 	MinReadySeconds                      *int32                                                  `json:"minReadySeconds,omitempty"`
 	HostAliases                          []HostAliasApplyConfiguration                           `json:"hostAliases,omitempty"`
+	HostNetwork                          *bool                                                   `json:"hostNetwork,omitempty"`
 	Web                                  *AlertmanagerWebSpecApplyConfiguration                  `json:"web,omitempty"`
 	Limits                               *AlertmanagerLimitsSpecApplyConfiguration               `json:"limits,omitempty"`
 	ClusterTLS                           *ClusterTLSConfigApplyConfiguration                     `json:"clusterTLS,omitempty"`
@@ -539,6 +540,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithHostAliases(values ...*HostAlia
 		}
 		b.HostAliases = append(b.HostAliases, *values[i])
 	}
+	return b
+}
+
+// WithHostNetwork sets the HostNetwork field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HostNetwork field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithHostNetwork(value bool) *AlertmanagerSpecApplyConfiguration {
+	b.HostNetwork = &value
 	return b
 }
 
