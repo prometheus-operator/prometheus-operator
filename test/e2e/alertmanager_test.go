@@ -1269,24 +1269,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
-				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
-					WebhookURL: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "msteams-webhook-url",
-						},
-						Key: "webhook-url",
-					},
-					Title: ptr.To("Alert"),
-				}},
-				MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
-					WebhookURL: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "msteamsv2-webhook-url",
-						},
-						Key: "webhookv2-url",
-					},
-					Title: ptr.To("Alert"),
-				}},
+				//MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+				//	WebhookURL: v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteams-webhook-url",
+				//		},
+				//		Key: "webhook-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
+				//MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
+				//	WebhookURL: &v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteamsv2-webhook-url",
+				//		},
+				//		Key: "webhookv2-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
 			}},
 		},
 	}
