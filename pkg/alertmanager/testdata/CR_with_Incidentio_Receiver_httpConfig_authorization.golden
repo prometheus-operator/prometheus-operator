@@ -1,0 +1,18 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  incidentio_configs:
+  - http_config:
+      authorization:
+        type: Bearer
+        credentials: bearer-token-456
+    url: https://api.incident.io/v2/alert_events/http/test
+    max_alerts: 10
+templates: []
