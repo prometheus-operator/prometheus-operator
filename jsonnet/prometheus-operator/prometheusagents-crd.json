@@ -4717,7 +4717,17 @@
                               "type": "object"
                             }
                           },
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity",
+                              "rule": "has(self.managedIdentity) || has(self.oauth) || has(self.sdk) || has(self.workloadIdentity)"
+                            },
+                            {
+                              "message": "only one of managedIdentity, oauth, sdk, or workloadIdentity can be set at a time",
+                              "rule": "[has(self.managedIdentity), has(self.oauth), has(self.sdk), has(self.workloadIdentity)].filter(x, x).size() <= 1"
+                            }
+                          ]
                         },
                         "basicAuth": {
                           "description": "basicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
