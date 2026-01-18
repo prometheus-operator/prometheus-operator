@@ -6487,6 +6487,154 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:           "rocketchat_configs invalid api_url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid title_link returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:    "http://example.com",
+								TitleLink: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid icon_url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:  "http://example.com",
+								IconURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid image_url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:   "http://example.com",
+								ImageURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid thumb_url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:   "http://example.com",
+								ThumbURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid action url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+								Actions: []*rocketchatAttachmentAction{
+									{URL: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs invalid action image_url returns error",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL: "http://example.com",
+								Actions: []*rocketchatAttachmentAction{
+									{ImageURL: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "rocketchat_configs valid urls pass validation",
+			againstVersion: versionRocketChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						RocketChatConfigs: []*rocketChatConfig{
+							{
+								APIURL:    "https://rocket.example.com/hooks/xxx",
+								TitleLink: "https://example.com/title",
+								IconURL:   "https://example.com/icon.png",
+								ImageURL:  "https://example.com/image.png",
+								ThumbURL:  "https://example.com/thumb.png",
+								Actions: []*rocketchatAttachmentAction{
+									{
+										URL:      "https://example.com/action",
+										ImageURL: "https://example.com/action-image.png",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "rocketchat_valid_urls_pass_validation.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
