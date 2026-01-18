@@ -17,14 +17,14 @@
 package v1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 // StatefulSetUpdateStrategyApplyConfiguration represents a declarative configuration of the StatefulSetUpdateStrategy type for use
 // with apply.
 type StatefulSetUpdateStrategyApplyConfiguration struct {
-	Type          *monitoringv1.StatefulSetUpdateStrategyType         `json:"type,omitempty"`
-	RollingUpdate *RollingUpdateStatefulSetStrategyApplyConfiguration `json:"rollingUpdate,omitempty"`
+	Type          *appsv1.StatefulSetUpdateStrategyType         `json:"type,omitempty"`
+	RollingUpdate *EmbeddedRollingUpdateStatefulSetStrategyApplyConfiguration `json:"rollingUpdate,omitempty"`
 }
 
 // StatefulSetUpdateStrategyApplyConfiguration constructs a declarative configuration of the StatefulSetUpdateStrategy type for use with
@@ -36,7 +36,7 @@ func StatefulSetUpdateStrategy() *StatefulSetUpdateStrategyApplyConfiguration {
 // WithType sets the Type field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Type field is set to the value of the last call.
-func (b *StatefulSetUpdateStrategyApplyConfiguration) WithType(value monitoringv1.StatefulSetUpdateStrategyType) *StatefulSetUpdateStrategyApplyConfiguration {
+func (b *StatefulSetUpdateStrategyApplyConfiguration) WithType(value appsv1.StatefulSetUpdateStrategyType) *StatefulSetUpdateStrategyApplyConfiguration {
 	b.Type = &value
 	return b
 }
@@ -44,7 +44,7 @@ func (b *StatefulSetUpdateStrategyApplyConfiguration) WithType(value monitoringv
 // WithRollingUpdate sets the RollingUpdate field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RollingUpdate field is set to the value of the last call.
-func (b *StatefulSetUpdateStrategyApplyConfiguration) WithRollingUpdate(value *RollingUpdateStatefulSetStrategyApplyConfiguration) *StatefulSetUpdateStrategyApplyConfiguration {
+func (b *StatefulSetUpdateStrategyApplyConfiguration) WithRollingUpdate(value *EmbeddedRollingUpdateStatefulSetStrategyApplyConfiguration) *StatefulSetUpdateStrategyApplyConfiguration {
 	b.RollingUpdate = value
 	return b
 }

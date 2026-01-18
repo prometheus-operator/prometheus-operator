@@ -484,6 +484,18 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	// https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#limitations
 	podManagementPolicy := ptr.Deref(tr.Spec.PodManagementPolicy, monitoringv1.ParallelPodManagement)
 
+	updateStrategy := appsv1.StatefulSetUpdateStrategy{
+		Type: appsv1.RollingUpdateStatefulSetStrategyType,
+	}
+	if tr.Spec.UpdateStrategy != nil {
+		if tr.Spec.UpdateStrategy.Type != "" {
+			updateStrategy.Type = tr.Spec.UpdateStrategy.Type
+		}
+		if tr.Spec.UpdateStrategy.RollingUpdate != nil {
+			updateStrategy.RollingUpdate = &tr.Spec.UpdateStrategy.RollingUpdate.RollingUpdateStatefulSetStrategy
+		}
+	}
+
 	spec := appsv1.StatefulSetSpec{
 		ServiceName:         ptr.Deref(tr.Spec.ServiceName, governingServiceName),
 		Replicas:            tr.Spec.Replicas,
