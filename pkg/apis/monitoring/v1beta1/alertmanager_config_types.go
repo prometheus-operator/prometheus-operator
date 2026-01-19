@@ -179,7 +179,7 @@ type Receiver struct {
 	// pagerdutyConfigs defines the List of PagerDuty configurations.
 	// +optional
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
-	// discordConfigs defines the list of Slack configurations.
+	// discordConfigs defines the list of Discord configurations.
 	// +optional
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// slackConfigs defines the list of Slack configurations.
