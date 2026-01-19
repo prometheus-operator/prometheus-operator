@@ -54,7 +54,7 @@ scrape_configs:
     regex: (.*)
     replacement: $1
     action: replace
-  - target_label: ns_key
+  - target_label: ns-key
     replacement: pod-monitor-ns
   - source_labels:
     - __address__
@@ -79,5 +79,5 @@ scrape_configs:
     target_label: my-ns
     regex: my-job-pod-.+
     action: drop
-  - target_label: ns_key
+  - target_label: ns-key
     replacement: pod-monitor-ns

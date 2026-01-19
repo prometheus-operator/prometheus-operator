@@ -14,11 +14,11 @@ alerting:
     - __meta_kubernetes_node_name
     regex: spot-(.+)
   - source_labels:
-    - label_a
-    - label_b
+    - label-a
+    - label-b
     separator: ""
     action: replace
-    target_label: custom_label
+    target_label: custom-label
   alertmanagers:
   - kubernetes_sd_configs:
     - role: endpoints

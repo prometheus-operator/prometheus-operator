@@ -1,7 +1,7 @@
 - action: drop
   source_labels: [__meta_kubernetes_node_name]
   regex: spot-(.+)
-- source_labels: [label_a, label_b]
+- source_labels: [label-a, label-b]
   separator: ""
   action: replace
-  target_label: custom_label
+  target_label: custom-label

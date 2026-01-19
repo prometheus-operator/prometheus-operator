@@ -182,7 +182,7 @@ func TestGlobalSettings(t *testing.T) {
 			ExternalLabels: map[string]string{
 				"prometheus_replica": "1",
 				"prometheus":         "prometheus-k8s-1",
-				"some_other_key":     "some-value",
+				"some-other-key":     "some-value",
 			},
 			PrometheusExternalLabelName: ptr.To("prometheus"),
 			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
@@ -1730,7 +1730,7 @@ func TestServiceMonitorWithServiceDiscoveryRole(t *testing.T) {
 
 func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	p := defaultPrometheus()
-	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns_key"
+	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
@@ -1855,7 +1855,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 
 func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	p := defaultPrometheus()
-	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns_key"
+	p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "ns-key"
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
@@ -1888,7 +1888,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
 									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns_key",
+									TargetLabel:  "ns-key",
 								},
 							},
 							RelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1960,7 +1960,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 									Action:       "drop",
 									Regex:        "my-job-pod-.+",
 									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns_key",
+									TargetLabel:  "ns-key",
 								},
 							},
 							RelabelConfigs: []monitoringv1.RelabelConfig{
