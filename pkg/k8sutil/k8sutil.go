@@ -409,6 +409,30 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	})
 }
 
+// CreateOrUpdateConfigMap merges metadata of existing ConfigMap with new one and updates it.
+func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInterface, desired *v1.ConfigMap) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingCM, err := cmClient.Get(ctx, desired.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = cmClient.Create(ctx, desired, metav1.CreateOptions{})
+			return err
+		}
+
+		mutated := existingCM.DeepCopyObject().(*v1.ConfigMap)
+		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
+		if apiequality.Semantic.DeepEqual(existingCM, desired) {
+			return nil
+		}
+		_, err = cmClient.Update(ctx, desired, metav1.UpdateOptions{})
+		return err
+	})
+}
+
 // IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
 func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupVersion schema.GroupVersion, resource string) (bool, error) {
 	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupVersion.String())
