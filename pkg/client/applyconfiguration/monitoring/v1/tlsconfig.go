@@ -66,6 +66,14 @@ func (b *TLSConfigApplyConfiguration) WithServerName(value string) *TLSConfigApp
 	return b
 }
 
+// WithServiceName sets the ServiceName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceName field is set to the value of the last call.
+func (b *TLSConfigApplyConfiguration) WithServiceName(value string) *TLSConfigApplyConfiguration {
+	b.SafeTLSConfigApplyConfiguration.ServiceName = &value
+	return b
+}
+
 // WithInsecureSkipVerify sets the InsecureSkipVerify field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the InsecureSkipVerify field is set to the value of the last call.

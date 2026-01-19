@@ -756,6 +756,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -987,6 +991,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -1313,6 +1321,10 @@ spec:
                               serverName:
                                 description: serverName is used to verify the hostname
                                   for the targets.
+                                type: string
+                              serviceName:
+                                description: serviceName is the service name of the
+                                  target.
                                 type: string
                             type: object
                           to:
@@ -1805,6 +1817,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -2036,6 +2052,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -2572,6 +2592,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -2803,6 +2827,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -3410,6 +3438,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -3641,6 +3673,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -4259,6 +4295,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -4490,6 +4530,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -5121,6 +5165,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -5352,6 +5400,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -6051,6 +6103,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -6282,6 +6338,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -7044,6 +7104,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -7275,6 +7339,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -7849,6 +7917,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -8080,6 +8152,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -8726,6 +8802,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -8957,6 +9037,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -9534,6 +9618,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -9765,6 +9853,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -10284,6 +10376,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -10515,6 +10611,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -11014,6 +11114,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -11245,6 +11349,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object
@@ -11827,6 +11935,10 @@ spec:
                                         description: serverName is used to verify
                                           the hostname for the targets.
                                         type: string
+                                      serviceName:
+                                        description: serviceName is the service name
+                                          of the target.
+                                        type: string
                                     type: object
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
@@ -12058,6 +12170,10 @@ spec:
                                   serverName:
                                     description: serverName is used to verify the
                                       hostname for the targets.
+                                    type: string
+                                  serviceName:
+                                    description: serviceName is the service name of
+                                      the target.
                                     type: string
                                 type: object
                             type: object

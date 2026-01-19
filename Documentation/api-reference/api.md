@@ -18684,6 +18684,18 @@ string
 </tr>
 <tr>
 <td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceName is the service name of the target.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>insecureSkipVerify</code><br/>
 <em>
 bool
@@ -19831,6 +19843,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>serverName is used to verify the hostname for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceName is the service name of the target.</p>
 </td>
 </tr>
 <tr>

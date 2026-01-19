@@ -2959,6 +2959,9 @@ spec:
                     description: serverName is used to verify the hostname for the
                       targets.
                     type: string
+                  serviceName:
+                    description: serviceName is the service name of the target.
+                    type: string
                 type: object
               hostAliases:
                 description: hostAliases defines pods' hostAliases configuration
@@ -5424,6 +5427,10 @@ spec:
                               description: serverName is used to verify the hostname
                                 for the targets.
                               type: string
+                            serviceName:
+                              description: serviceName is the service name of the
+                                target.
+                              type: string
                           type: object
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
@@ -5820,6 +5827,9 @@ spec:
                         serverName:
                           description: serverName is used to verify the hostname for
                             the targets.
+                          type: string
+                        serviceName:
+                          description: serviceName is the service name of the target.
                           type: string
                       type: object
                     url:

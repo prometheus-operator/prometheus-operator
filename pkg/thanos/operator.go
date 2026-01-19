@@ -1049,7 +1049,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 
 	rwConfig, err := yaml.Marshal(
 		yaml.MapSlice{
-			cg.GenerateRemoteWriteConfig(tr.Spec.RemoteWrite, store.ForNamespace(tr.Namespace)),
+			cg.GenerateRemoteWriteConfig(tr.Spec.RemoteWrite, tr.Namespace, store.ForNamespace(tr.Namespace)),
 		},
 	)
 	if err != nil {
