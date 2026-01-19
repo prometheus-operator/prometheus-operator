@@ -38,12 +38,16 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("jira: %w", err)
 	}
 
-	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
-		return fmt.Errorf("webex: %w", err)
-	}
-
 	if err := validateGlobalVictorOpsConfig(gc.VictorOpsConfig); err != nil {
 		return fmt.Errorf("victorops: %w", err)
+	}
+
+	if err := validateGlobalRocketChatConfig(gc.RocketChatConfig); err != nil {
+		return fmt.Errorf("rocketChat: %w", err)
+	}
+
+	if err := validateGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return fmt.Errorf("webex: %w", err)
 	}
 
 	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
@@ -83,6 +87,18 @@ func validateGlobalVictorOpsConfig(vc *monitoringv1.GlobalVictorOpsConfig) error
 	}
 
 	if err := validation.ValidateURLPtr((*string)(vc.APIURL)); err != nil {
+		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalRocketChatConfig(rc *monitoringv1.GlobalRocketChatConfig) error {
+	if rc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(rc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}
 
