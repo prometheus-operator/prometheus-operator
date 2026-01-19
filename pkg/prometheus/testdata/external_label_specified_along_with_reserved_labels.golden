@@ -3,6 +3,6 @@ global:
   external_labels:
     prometheus: test/example
     prometheus_replica: $(POD_NAME)
-    some-other-key: some-value
+    some_other_key: some-value
   evaluation_interval: 30s
 scrape_configs: []

@@ -50,10 +50,11 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_ready
+    target_label: pod_ready
     regex: (.*)
     replacement: $1
     action: replace
-  - target_label: ns-key
+  - target_label: ns_key
     replacement: pod-monitor-ns
   - source_labels:
     - __address__
@@ -78,5 +79,5 @@ scrape_configs:
     target_label: my-ns
     regex: my-job-pod-.+
     action: drop
-  - target_label: ns-key
+  - target_label: ns_key
     replacement: pod-monitor-ns
