@@ -4043,7 +4043,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("client-id"),
+						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
@@ -4122,7 +4122,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To(""),
+						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
