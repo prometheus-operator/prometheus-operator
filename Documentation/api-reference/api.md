@@ -37110,9 +37110,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -37210,9 +37210,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -39910,8 +39910,8 @@ Example: &ldquo;4h&rdquo;</p>
 <em>(Optional)</em>
 <p>matchers defines the list of matchers that the alert&rsquo;s labels should match. For the first
 level route, the operator removes any existing equality and regexp
-matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object
-namespace&gt;</code> matcher.</p>
+matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object namespace&gt;</code> matcher,
+unless configured otherwise in Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>

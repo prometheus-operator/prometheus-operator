@@ -79,9 +79,9 @@ type AlertmanagerConfigList struct {
 // By definition, the Alertmanager configuration only applies to alerts for which
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
-	// route defines the Alertmanager route definition for alerts matching the resource's
-	// namespace. If present, it will be added to the generated Alertmanager
-	// configuration as a first-level route.
+	// route defines the Alertmanager route definition for incoming alerts. It will be added to the
+	// generated Alertmanager configuration as a first-level route. The matching behavior of the
+	// route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
 	Route *Route `json:"route"`
 	// receivers defines the list of receivers.
@@ -124,8 +124,8 @@ type Route struct {
 	RepeatInterval string `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
-	// matcher on the `namespace` label and adds a `namespace: <object
-	// namespace>` matcher.
+	// matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+	// unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// continue defines the boolean indicating whether an alert should continue matching subsequent
