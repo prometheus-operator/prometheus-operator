@@ -11728,7 +11728,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
 					{
-						URL:   "ftp://www.example.com",
+						URL:   "https://www.example.com",
 						Query: "vhost", // This is not a valid PuppetDB query, just a mock.
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
@@ -11761,7 +11761,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
 					{
-						URL:   "acp://www.example.com",
+						URL:   "https://www.example.com",
 						Query: "vhost", // This is not a valid PuppetDB query, just a mock.
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
