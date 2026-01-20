@@ -456,6 +456,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusRuleStatusSubresourceForThanosRuler":        testPrometheusRuleStatusSubresourceForThanosRuler,
 		"GarbageCollectionOfPromRuleBindingForThanosRuler":     testGarbageCollectionOfPromRuleBindingForThanosRuler,
 		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler": testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"AlertmanagerConfigStatusSubresource":                  testAlertmanagerConfigStatusSubresource,
 	}
 
 	for name, f := range testFuncs {
