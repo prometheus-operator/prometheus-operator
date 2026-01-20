@@ -8443,7 +8443,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 						"clientSecret": []byte("my-secret"),
 					},
 				},
@@ -8833,7 +8833,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -9208,7 +9208,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -9402,7 +9402,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -10374,7 +10374,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11161,7 +11161,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11346,7 +11346,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11581,7 +11581,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11810,7 +11810,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -12082,7 +12082,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -12241,11 +12241,11 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 							},
 							Key: "credential",
 						},
-						ProjectID:  "1",
+						ProjectID:  "00000000-0000-0000-0000-000000000001",
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
-						Zone:       ptr.To("beijing-1"),
+						Zone:       ptr.To("fr-par-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						ApiURL:     ptr.To("https://api.scaleway.com"),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 						ProxyConfig: monitoringv1.ProxyConfig{
@@ -12282,7 +12282,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 							},
 							Key: "credential",
 						},
-						ProjectID: "1",
+						ProjectID: "00000000-0000-0000-0000-000000000001",
 						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
@@ -12323,7 +12323,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -12474,7 +12474,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
