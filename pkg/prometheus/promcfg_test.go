@@ -7420,7 +7420,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  monitoringv1alpha1.KubernetesRolePod,
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
 								Label: ptr.To("component=executor"),
 							},
 						},
@@ -10004,7 +10004,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config NoTranslation translation strategy",
 			version: "v3.4.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+				TranslationStrategy: nil,
 			},
 			golden: "OTLPConfig_Config_translation_strategy_with_notranslation.golden",
 		},
