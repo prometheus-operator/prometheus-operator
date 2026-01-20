@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"slices"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -46,7 +47,7 @@ const (
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule | *monitoringv1alpha1.AlertmanagerConfig
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.
@@ -321,6 +322,92 @@ func CleanupBindings[T ConfigurationResource](
 	if listErr != nil {
 		return fmt.Errorf("listing all items from cache failed: %w", listErr)
 	}
+	return err
+}
+
+// BindingRemover removes the workload binding from the configuration resource.
+type BindingRemover interface {
+	RemoveBinding(context.Context, ConfigurationObject) error
+}
+
+// PruneOrphanedBindings removes the workload bindings from the configuration
+// resources if the workload doesn't exist anymore.
+func PruneOrphanedBindings[T ConfigurationResource](
+	ctx context.Context,
+	listerFunc func(labels.Selector, cache.AppendFunc) error,
+	workloadGVR schema.GroupVersionResource,
+	workloadChecker func(ns, name string) (bool, error),
+	bindingRemoverFactory func(RuntimeObject) BindingRemover,
+) error {
+	var err error
+	listErr := listerFunc(labels.Everything(), func(o any) {
+		if err != nil {
+			return
+		}
+
+		obj, ok := o.(ConfigurationObject)
+		if !ok {
+			return
+		}
+		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+			err = fmt.Errorf("failed to add type information: %w", err)
+			return
+		}
+		_ = obj.(T)
+
+		bindings := obj.Bindings()
+		if len(bindings) == 0 {
+			return
+		}
+
+		var (
+			toPrune []monitoringv1.WorkloadBinding
+		)
+		for _, b := range bindings {
+			if b.Group != workloadGVR.Group || b.Resource != workloadGVR.Resource {
+				continue
+			}
+
+			exists, e := workloadChecker(b.Namespace, b.Name)
+			if e != nil {
+				if apierrors.IsNotFound(e) {
+					toPrune = append(toPrune, b)
+					continue
+				}
+				err = e
+				return
+			}
+
+			if !exists {
+				toPrune = append(toPrune, b)
+			}
+		}
+
+		if len(toPrune) == 0 {
+			return
+		}
+
+		for _, b := range toPrune {
+			dummyWorkload := &unstructured.Unstructured{}
+			dummyWorkload.SetGroupVersionKind(workloadGVR.GroupVersion().WithKind(monitoring.ResourceToKind(workloadGVR.Resource)))
+			dummyWorkload.SetNamespace(b.Namespace)
+			dummyWorkload.SetName(b.Name)
+
+			syncer := bindingRemoverFactory(dummyWorkload)
+			if e := syncer.RemoveBinding(ctx, obj); e != nil {
+				if apierrors.IsNotFound(e) {
+					continue
+				}
+				err = fmt.Errorf("failed to remove binding for %s/%s: %w", b.Namespace, b.Name, e)
+				return
+			}
+		}
+	})
+
+	if listErr != nil {
+		return fmt.Errorf("listing all items from cache failed: %w", listErr)
+	}
+
 	return err
 }
 

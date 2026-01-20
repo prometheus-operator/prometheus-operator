@@ -397,6 +397,8 @@ func (o *Operator) Run(ctx context.Context) error {
 	// TODO(simonpasquier): watch for ThanosRuler pods instead of polling.
 	go operator.StatusPoller(ctx, o)
 
+	go o.pruneOrphanedBindings(ctx)
+
 	o.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
@@ -790,7 +792,6 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 	ns := nsObject.(*v1.Namespace)
 
 	err = o.thanosRulerInfs.ListAll(labels.Everything(), func(obj any) {
-		// Check for ThanosRuler instances in the namespace.
 		tr := obj.(*monitoringv1.ThanosRuler)
 		if tr.Namespace == nsName {
 			o.rr.EnqueueForReconciliation(tr)
@@ -801,11 +802,9 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the namespace.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(tr.Spec.RuleNamespaceSelector)
 		if err != nil {
-			o.logger.Error("",
-				"err", fmt.Errorf("failed to convert RuleNamespaceSelector: %w", err),
-				"name", tr.Name,
-				"namespace", tr.Namespace,
-				"selector", tr.Spec.RuleNamespaceSelector,
+			o.logger.Error(
+				fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", tr.Name),
+				"err", err,
 			)
 			return
 		}
@@ -816,10 +815,51 @@ func (o *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 	})
 	if err != nil {
-		o.logger.Error("listing all ThanosRuler instances from cache failed",
+		o.logger.Error(
+			"listing all ThanosRuler instances from cache failed",
 			"err", err,
 		)
 	}
+}
+
+func (o *Operator) pruneOrphanedBindings(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	workloadGVR := monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.ThanosRulerName)
+	workloadChecker := o.workloadChecker
+	configResourceSyncerFactory := func(workload operator.RuntimeObject) operator.BindingRemover {
+		return operator.NewConfigResourceSyncer(workload, o.dclient, o.accessor)
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// prune bindings here
+			if err := operator.PruneOrphanedBindings[*monitoringv1.PrometheusRule](
+				ctx,
+				o.ruleInfs.ListAll,
+				workloadGVR,
+				workloadChecker,
+				configResourceSyncerFactory,
+			); err != nil {
+				o.logger.Error("failed to prune orphaned bindings from PrometheusRules", "err", err)
+			}
+		}
+	}
+}
+
+func (o *Operator) workloadChecker(ns, name string) (bool, error) {
+	_, err := o.thanosRulerInfs.Get(ns + "/" + name)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 func (o *Operator) createOrUpdateWebConfigSecret(ctx context.Context, tr *monitoringv1.ThanosRuler) error {
