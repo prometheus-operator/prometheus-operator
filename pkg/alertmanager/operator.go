@@ -708,6 +708,13 @@ func (c *Operator) getStatefulSetFromAlertmanagerKey(key string) (*appsv1.Statef
 		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
 	}
 
+	// Defensive nil check: if informer returns nil without error
+	// (e.g., during cache inconsistency), treat as not found.
+	if obj == nil {
+		c.logger.Info("StatefulSet not found (nil object)", "key", ssetName)
+		return nil, nil
+	}
+
 	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
 }
 

@@ -687,6 +687,13 @@ func (o *Operator) getStatefulSetFromThanosRulerKey(key string) (*appsv1.Statefu
 		return nil, fmt.Errorf("failed to retrieve StatefulSet from informer: %w", err)
 	}
 
+	// Defensive nil check: if informer returns nil without error
+	// (e.g., during cache inconsistency), treat as not found.
+	if obj == nil {
+		o.logger.Info("StatefulSet not found (nil object)", "key", ssetName)
+		return nil, nil
+	}
+
 	return obj.(*appsv1.StatefulSet).DeepCopy(), nil
 }
 

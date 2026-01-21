@@ -226,6 +226,20 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 			return nil, fmt.Errorf("failed to retrieve statefulset: %w", err)
 		}
 
+		// Defensive nil check: if informer returns nil without error
+		// (e.g., during cache inconsistency), treat as not found.
+		if obj == nil {
+			availableStatus = monitoringv1.ConditionFalse
+			availableReason = "StatefulSetNotFound"
+			messages = append(messages, fmt.Sprintf("shard %d: statefulset %s not found (nil object)", shard, ssetName))
+			pStatus.ShardStatuses = append(
+				pStatus.ShardStatuses,
+				monitoringv1.ShardStatus{
+					ShardID: strconv.Itoa(shard),
+				})
+			continue
+		}
+
 		sset := obj.(*appsv1.StatefulSet).DeepCopy()
 		if sr.Rr.DeletionInProgress(sset) {
 			continue

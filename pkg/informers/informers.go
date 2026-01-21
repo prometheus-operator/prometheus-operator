@@ -189,8 +189,16 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 }
 
 // Get invokes all wrapped informers and returns the first found runtime object.
-// It returns the first occurred error.
+// It returns a NotFound error if the object isn't found in any informer or if
+// there are no informers configured.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
+	// Return a proper NotFound error if no informers are configured.
+	// This prevents returning (nil, nil) which could cause nil pointer
+	// dereferences in callers.
+	if len(w.informers) == 0 {
+		return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
+	}
+
 	var err error
 
 	for _, inf := range w.informers {
@@ -204,6 +212,12 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 		}
 
 		return ret, nil
+	}
+
+	// Ensure we always return a NotFound error if the object wasn't found,
+	// even if err happens to be nil (which shouldn't happen, but be defensive).
+	if err == nil {
+		return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
 	}
 
 	return nil, err
