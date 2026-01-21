@@ -337,8 +337,9 @@ func updateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 // ForceUpdateStatefulSet updates a StatefulSet resource preserving custom
 // labels and annotations. But when the update operation tries to update
 // immutable fields for example, `.spec.selector`), the function will delete
-// the statefulset (relying on the higher-level controller to re-create the
-// resource during the next reconciliation).
+// the statefulset. After deletion, it immediately creates the new StatefulSet
+// to avoid race conditions with the informer cache where a stale object with
+// DeletionTimestamp might cause subsequent reconciliations to skip recreation.
 //
 // It calls onDeleteFunc when the deletion of the resource is required. The
 // function is given a string explaining the reason why the update was not
@@ -364,7 +365,27 @@ func ForceUpdateStatefulSet(ctx context.Context, ssetClient clientappsv1.Statefu
 		onDeleteFunc(strings.Join(failMsg, ", "))
 	}
 
-	return ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)})
+	// Use background deletion to allow immediate recreation.
+	// Foreground deletion would block until all pods are terminated,
+	// which could cause the recreation to fail with "already exists".
+	if err := ssetClient.Delete(ctx, sset.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationBackground)}); err != nil {
+		return fmt.Errorf("failed to delete StatefulSet for recreation: %w", err)
+	}
+
+	// Clear resource version to allow creation of a new resource.
+	sset.ResourceVersion = ""
+	// Clear UID to ensure this is treated as a new resource.
+	sset.UID = ""
+
+	// Immediately create the new StatefulSet to avoid race conditions
+	// with the informer cache. Without this, the next reconciliation
+	// might see a stale cached object with DeletionTimestamp set and
+	// skip the recreation, leaving the StatefulSet deleted.
+	if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+		return fmt.Errorf("failed to recreate StatefulSet: %w", err)
+	}
+
+	return nil
 }
 
 // UpdateDaemonSet merges metadata of existing DaemonSet with new one and updates it.
