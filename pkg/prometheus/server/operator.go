@@ -1182,6 +1182,10 @@ func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 		// Feature-gate is disabled, default behavior is always to delete.
 		return false, nil
 	}
+	if p.Spec.ShardRetentionPolicy == nil {
+		// ShardRetentionPolicy not configured, default behavior is to delete.
+		return false, nil
+	}
 	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,
 		monitoringv1.DeleteWhenScaledRetentionType) == monitoringv1.RetainWhenScaledRetentionType {
 		return true, nil
