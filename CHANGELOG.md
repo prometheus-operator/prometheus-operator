@@ -1,7 +1,12 @@
-## 0.88.1 / TBD
+## 0.88.1 / 2026-01-27
 
-* [BUGFIX] Relax validations on URL fields allowing Go templates in the Alertmanager configuration secret. #8307
-* [BUGFIX] Fix Alertmanager slack templating bug #8299
+* [BUGFIX] Validate `webhookURL` secret for `MSTeams` receiver in `AlertmanagerConfig` CRD. #8294
+* [BUGFIX] Revert maximum version check for `EC2/Lightsail` SD in `ScrapeConfig` CRD. #8308
+* [BUGFIX] Relax URL validation in `Slack` receiver in AlertmanagerConfig CRD to support Go templates. #8299 #8331
+* [BUGFIX] Relax URL validation in `PagerDuty` in AlertmanagerConfig CRD to support Go templates. #8319
+* [BUGFIX] Relax URL validation in `WebhookConfig` in AlertmanagerConfig CRD to support Go templates. #8307 #8317
+* [BUGFIX] Relax URL validation in `RocketChat` receiver in AlertmanagerConfig CRD to support Go templates. #8318
+* [BUGFIX] Relax URL validation in `Pushover` receiver in AlertmanagerConfig CRD to support Go templates. #8307 #8316
 
 ## 0.88.0 / 2026-01-09
 
@@ -535,6 +540,7 @@ documented in [#5279](https://github.com/prometheus-operator/prometheus-operator
 and provides a Kubernetes native API to create and manage additional scrape configurations.
 
 To try it, follow the following steps:
+
 1. Install the new CRD in the cluster (see
    `example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml`).
 2. Update the Prometheus operator's RBAC permissions to manage `ScrapeConfig` resources
@@ -564,6 +570,7 @@ with the new `PrometheusAgent` CRD. As the v1alpha1 version tells it, we don't
 recommend using it in production but we're eager to hear all possible feedback.
 
 To try it, follow the following steps:
+
 1. Install the new CRD in the cluster (see
    `example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml`).
 2. Update the Prometheus operator's RBAC permissions to manage PrometheusAgents resources
@@ -683,6 +690,7 @@ The main change introduced by this release is a new v1beta1 API version for the
 AlertmanagerConfig CRD.
 
 Changes compared to the v1alpha1 API:
+
 * Renamed `spec.muteTimeIntervals` field to `to spec.timeIntervals`.
 * Removed `regex` field from the `Matcher` type.
 * Replaced all `v1.SecretKeySelector` types by the `SecretKeySelector` type
@@ -1197,6 +1205,7 @@ We have also added a governance (#3398).
 * [FEATURE] Add support for InitContainers to Prometheus Custom Resource (#2522)
 
 ## 0.31.1 / 2019-06-25
+
 * [BUGFIX] Increase terminationGracePeriod for alertmanager statefulSet as it cannot be 0. (#2657)
 
 ## 0.31.0 / 2019-06-20
