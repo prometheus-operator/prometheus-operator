@@ -2669,10 +2669,6 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		return fmt.Errorf("at most one of app_token/app_token_file & api_url/api_url_file must be configured")
 	}
 
-	if sc.APIURLFile == "" {
-		return nil
-	}
-
 	// We need to sanitize the config for slack receivers
 	// As of v0.22.0 Alertmanager config supports passing URL via file name
 	if sc.APIURLFile != "" && amVersion.LT(semver.MustParse("0.22.0")) {
@@ -2685,6 +2681,50 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
 		logger.Warn(msg)
 		sc.APIURLFile = ""
+	}
+
+	if sc.APIURL != "" {
+		if _, err := validation.ValidateURL(sc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
+	if sc.AppURL != "" {
+		if _, err := validation.ValidateURL(sc.AppURL); err != nil {
+			return fmt.Errorf("invalid 'app_url': %w", err)
+		}
+	}
+
+	if sc.TitleLink != "" {
+		if _, err := validation.ValidateURL(sc.TitleLink); err != nil {
+			return fmt.Errorf("invalid 'title_link': %w", err)
+		}
+	}
+
+	if sc.IconURL != "" {
+		if _, err := validation.ValidateURL(sc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	if sc.ImageURL != "" {
+		if _, err := validation.ValidateURL(sc.ImageURL); err != nil {
+			return fmt.Errorf("invalid 'image_url': %w", err)
+		}
+	}
+
+	if sc.ThumbURL != "" {
+		if _, err := validation.ValidateURL(sc.ThumbURL); err != nil {
+			return fmt.Errorf("invalid 'thumb_url': %w", err)
+		}
+	}
+
+	for i, action := range sc.Actions {
+		if action.URL != "" {
+			if _, err := validation.ValidateURL(action.URL); err != nil {
+				return fmt.Errorf("invalid 'url' in actions[%d]: %w", i, err)
+			}
+		}
 	}
 
 	return nil

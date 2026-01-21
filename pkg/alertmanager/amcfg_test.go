@@ -4045,7 +4045,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						SlackConfigs: []*slackConfig{
 							{
-								APIURL:     "www.test.com",
+								APIURL:     "http://www.test.com",
 								APIURLFile: "/test",
 							},
 						},
@@ -5805,6 +5805,171 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 				},
 			},
 			golden: "test_webhook_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeSlackConfig(t *testing.T) {
+	logger := newNopLogger(t)
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "Test invalid api_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid app_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								AppURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid title_link returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:    "http://example.com",
+								TitleLink: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid icon_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								IconURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid image_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								ImageURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid thumb_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								ThumbURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid action url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								Actions: []slackAction{
+									{URL: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:    "https://hooks.slack.com/services/xxx",
+								TitleLink: "https://example.com/title",
+								IconURL:   "https://example.com/icon.png",
+								ImageURL:  "https://example.com/image.png",
+								ThumbURL:  "https://example.com/thumb.png",
+								Actions: []slackAction{
+									{URL: "https://example.com/action"},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "slack_valid_urls_pass_validation.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
