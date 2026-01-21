@@ -1,5 +1,0 @@
-receivers:
-- name: ""
-  webhook_configs:
-  - url: http://example.com/webhook
-templates: []
