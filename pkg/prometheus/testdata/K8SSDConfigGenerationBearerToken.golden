@@ -6,4 +6,6 @@ scrape_configs:
   - role: endpoints
     namespaces:
       names:
-      - default
+      - test
+    api_server: example.com
+    bearer_token: bearer_token

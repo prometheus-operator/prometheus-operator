@@ -474,7 +474,20 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		}
 
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "global", Value: yaml.MapSlice{
+				{Key: "scrape_interval", Value: "30s"},
+			}},
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
 	}
@@ -516,7 +529,20 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
-	s, err := yaml.Marshal(yaml.MapSlice{c})
+	// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+	fullConfig := yaml.MapSlice{
+		{Key: "global", Value: yaml.MapSlice{
+			{Key: "scrape_interval", Value: "30s"},
+		}},
+		{Key: "scrape_configs", Value: []yaml.MapSlice{
+			{
+				{Key: "job_name", Value: "k8s-sd-test"},
+				c,
+			},
+		}},
+	}
+
+	s, err := yaml.Marshal(fullConfig)
 	require.NoError(t, err)
 
 	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
@@ -891,8 +917,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 						Key: "password",
 					},
 				},
-				BearerToken:     "bearer_token",
-				BearerTokenFile: "bearer_token_file",
 			},
 			store: assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -908,6 +932,15 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			),
 			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
+		},
+		{
+			apiServerConfig: &monitoringv1.APIServerConfig{
+				Host:        "example.com",
+				BearerToken: "bearer_token",
+			},
+			store:  assets.NewTestStoreBuilder(),
+			role:   "endpoints",
+			golden: "K8SSDConfigGenerationBearerToken.golden",
 		},
 		{
 			apiServerConfig: nil,
@@ -978,7 +1011,20 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			tc.role,
 			attachMetaConfig,
 		)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "global", Value: yaml.MapSlice{
+				{Key: "scrape_interval", Value: "30s"},
+			}},
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.golden)
 	}
@@ -1510,7 +1556,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.StoreBuilder{},
-			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
+			golden.Get(t, "input/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -1570,7 +1616,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		&assets.StoreBuilder{},
 		nil,
-		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
+		golden.Get(t, "input/AdditionalAlertRelabelConfigs.golden"),
 		nil,
 		nil,
 	)
@@ -3946,7 +3992,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.22.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.22.0_1.golden",
 		},
 		{
 			version: "v2.23.0",
@@ -3967,7 +4013,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.23.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.23.0_1.golden",
 		},
 		{
 			version: "v2.23.0",
@@ -3987,7 +4033,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.23.0_2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.23.0_2.golden",
 		},
 		{
 			version: "v2.10.0",
@@ -4008,7 +4054,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.10.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.10.0_1.golden",
 		},
 		{
 			version: "v2.27.1",
@@ -4034,7 +4080,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					EndpointParams: map[string]string{"param": "value"},
 				},
 			},
-			golden: "RemoteWriteConfig_v2.27.1_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.27.1_1.golden",
 		},
 		{
 			version: "v2.45.0",
@@ -4047,7 +4093,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfig_v2.45.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.45.0_1.golden",
 		},
 		{
 			version: "v2.48.0",
@@ -4067,7 +4113,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
 		},
 		{
 			version: "v2.47.0",
@@ -4087,7 +4133,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
 		},
 		{
 			version: "v2.52.0",
@@ -4100,7 +4146,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADSDK_v2.52.0.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADSDK_v2.52.0.golden",
 		},
 		{
 			version: "v2.51.0",
@@ -4113,7 +4159,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADSDK_v2.51.0.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADSDK_v2.51.0.golden",
 		},
 		{
 			version: "v3.5.0",
@@ -4126,7 +4172,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
 		},
 		{
 			version: "v3.7.0",
@@ -4140,7 +4186,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
 		},
 		{
 			version: "v3.6.0",
@@ -4154,7 +4200,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
+			golden: "azure-versions/RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4171,7 +4217,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfig_v2.26.0_2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.26.0_2.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4209,7 +4255,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_3.golden",
+			golden: "azure-versions/RemoteWriteConfig_3.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4218,7 +4264,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				RemoteTimeout: ptr.To(monitoringv1.Duration("1s")),
 				Sigv4:         nil,
 			},
-			golden: "RemoteWriteConfig_v2.26.0_3.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.26.0_3.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4227,7 +4273,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				Sigv4:         &monitoringv1.Sigv4{},
 				RemoteTimeout: ptr.To(monitoringv1.Duration("1s")),
 			},
-			golden: "RemoteWriteConfig_v2.26.0_4.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.26.0_4.golden",
 		},
 		{
 			version: "v2.30.0",
@@ -4245,7 +4291,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					RetryOnRateLimit:  true,
 				},
 			},
-			golden: "RemoteWriteConfig_v2.30.0_2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.30.0_2.golden",
 		},
 		{
 			version: "v2.43.0",
@@ -4264,7 +4310,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					RetryOnRateLimit:  true,
 				},
 			},
-			golden: "RemoteWriteConfig_v2.43.0_2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.43.0_2.golden",
 		},
 		{
 			version: "v2.39.0",
@@ -4284,7 +4330,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					RetryOnRateLimit:  true,
 				},
 			},
-			golden: "RemoteWriteConfig_v2.39.0_1.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.39.0_1.golden",
 		},
 		{
 			version: "v2.49.0",
@@ -4305,7 +4351,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
 				},
 			},
-			golden: "RemoteWriteConfig_v2.49.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.49.0.golden",
 		},
 		{
 			version: "v2.50.0",
@@ -4326,7 +4372,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SampleAgeLimit:    ptr.To(monitoringv1.Duration("1s")),
 				},
 			},
-			golden: "RemoteWriteConfig_v2.50.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.50.0.golden",
 		},
 		{
 			version: "v2.43.0",
@@ -4349,7 +4395,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfig_v2.43.0_ProxyConfig.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.43.0_ProxyConfig.golden",
 		},
 		{
 			version: "v2.43.0",
@@ -4378,7 +4424,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "RemoteWriteConfig_v2.43.0_ProxyConfigWithMutiValues.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.43.0_ProxyConfigWithMutiValues.golden",
 		},
 		{
 			version: "v2.53.0",
@@ -4386,7 +4432,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL:            "http://example.com",
 				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
 			},
-			golden: "RemoteWriteConfig_v2.53.0_MessageVersion2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.53.0_MessageVersion2.golden",
 		},
 		{
 			version: "v2.54.0",
@@ -4394,7 +4440,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL:            "http://example.com",
 				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
 			},
-			golden: "RemoteWriteConfig_v2.54.0_MessageVersion2.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.54.0_MessageVersion2.golden",
 		},
 		{
 			version: "v3.1.0",
@@ -4403,7 +4449,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
 				RoundRobinDNS:  ptr.To(true),
 			},
-			golden: "RemoteWriteConfig_v3.1.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_v3.1.0.golden",
 		},
 		{
 			version: "v2.28.0",
@@ -4413,7 +4459,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					MaxSamplesPerSend: ptr.To(int32(10)),
 				},
 			},
-			golden: "RemoteWriteConfig_v2.28.0_MaxSamplesPerSendMetadataConfig.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.28.0_MaxSamplesPerSendMetadataConfig.golden",
 		},
 		{
 			version: "v2.29.0",
@@ -4423,7 +4469,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					MaxSamplesPerSend: ptr.To(int32(10)),
 				},
 			},
-			golden: "RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
 		},
 		{
 			version: "v2.53.0",
@@ -4462,7 +4508,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.53.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.53.0.golden",
 		},
 		{
 			version: "v2.54.0",
@@ -4501,7 +4547,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.54.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_v2.54.0.golden",
 		},
 		{
 			// Empty metadataConfig defaults to no metadata being sent.
@@ -4523,7 +4569,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
 				},
 			},
-			golden: "RemoteWriteConfig_AzureADScope_v3.8.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_AzureADScope_v3.8.0.golden",
 		},
 		{
 			version: "v3.9.0",
@@ -4537,7 +4583,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
 				},
 			},
-			golden: "RemoteWriteConfig_AzureADScope_v3.9.0.golden",
+			golden: "azure-versions/RemoteWriteConfig_AzureADScope_v3.9.0.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
@@ -5088,7 +5134,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfig.golden",
+			golden: "native-histograms/NativeHistogramConfig.golden",
 		},
 		{
 			version: "v2.54.0",
@@ -5098,7 +5144,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
+			golden: "native-histograms/NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -5108,7 +5154,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
+			golden: "native-histograms/NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
 		{
 			version: "v2.44.0",
@@ -5118,7 +5164,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigWithMissALL.golden",
+			golden: "native-histograms/NativeHistogramConfigWithMissALL.golden",
 		},
 		{
 			version: "3.0.0-rc.0",
@@ -5128,7 +5174,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
+			golden: "native-histograms/NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
 		{
 			version: "v3.8.0",
@@ -5139,7 +5185,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigWithScrapeNativeHistograms.golden",
+			golden: "native-histograms/NativeHistogramConfigWithScrapeNativeHistograms.golden",
 		},
 		{
 			version: "v3.7.0",
@@ -5150,14 +5196,14 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigMissScrapeNativeHistograms.golden",
+			golden: "native-histograms/NativeHistogramConfigMissScrapeNativeHistograms.golden",
 		},
 		{
 			version: "v3.8.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
 				ScrapeNativeHistograms: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
+			golden: "native-histograms/NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("version=%s", tc.version), func(t *testing.T) {
@@ -6966,7 +7012,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				NameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
 			},
-			golden: "NameEscapingScheme_AllowUTF8.golden",
+			golden: "name-escaping/NameEscapingScheme_AllowUTF8.golden",
 		},
 		{
 			name:    "config_NameEscapingScheme_Underscores",
@@ -6974,7 +7020,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				NameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
 			},
-			golden: "NameEscapingScheme_Underscores.golden",
+			golden: "name-escaping/NameEscapingScheme_Underscores.golden",
 		},
 		{
 			name:    "config_NameEscapingScheme_Dots",
@@ -6982,7 +7028,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				NameEscapingScheme: ptr.To(monitoringv1.DotsNameEscapingScheme),
 			},
-			golden: "NameEscapingScheme_Dots.golden",
+			golden: "name-escaping/NameEscapingScheme_Dots.golden",
 		},
 		{
 			name:    "config_NameEscapingScheme_Values",
@@ -6990,7 +7036,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
 			},
-			golden: "NameEscapingScheme_Values.golden",
+			golden: "name-escaping/NameEscapingScheme_Values.golden",
 		},
 		{
 			name:    "config_NameEscapingScheme_Unsupported",
@@ -6998,7 +7044,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				NameEscapingScheme: ptr.To(monitoringv1.ValuesNameEscapingScheme),
 			},
-			golden: "NameEscapingScheme_Unsupported.golden",
+			golden: "name-escaping/NameEscapingScheme_Unsupported.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -9489,7 +9535,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSD.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSD.golden",
 		},
 		{
 			name:    "hetzner_sd_config_label_selector",
@@ -9521,7 +9567,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSDLabelSelector.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSDLabelSelector.golden",
 		},
 		{
 			name:    "hetzner_sd_config_no_label_selector",
@@ -9553,7 +9599,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSDNoLabelSelector.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSDNoLabelSelector.golden",
 		},
 		{
 			name: "hetzner_sd_config_basic_auth",
@@ -9578,7 +9624,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSD_with_BasicAuth.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSD_with_BasicAuth.golden",
 		}, {
 			name: "hetzner_sd_config_authorization",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -9596,7 +9642,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSD_with_Authorization.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSD_with_Authorization.golden",
 		}, {
 			name: "hetzner_sd_config_oauth",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -9628,7 +9674,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSD_with_OAuth.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSD_with_OAuth.golden",
 		}, {
 			name: "hetzner_sd_config_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
@@ -9662,7 +9708,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_HetznerSD_with_TLSConfig.golden",
+			golden: "hetzner/ScrapeConfigSpecConfig_HetznerSD_with_TLSConfig.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -9806,19 +9852,19 @@ func TestAppendNameEscapingScheme(t *testing.T) {
 			name:               "AllowUTF8 nameEscapingScheme withPrometheus Version 3",
 			version:            "v3.4.0",
 			nameEscapingScheme: ptr.To(monitoringv1.AllowUTF8NameEscapingScheme),
-			expectedCfg:        "NameEscapingSchemeUTF8WithPrometheusV3.golden",
+			expectedCfg:        "name-escaping/NameEscapingSchemeUTF8WithPrometheusV3.golden",
 		},
 		{
 			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
 			version:            "v3.4.0",
 			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
-			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusV3.golden",
+			expectedCfg:        "name-escaping/NameEscapingSchemeUnderscoresWithPrometheusV3.golden",
 		},
 		{
 			name:               "Underscores nameEscapingScheme with Prometheus Version 3",
 			version:            "v2.55.0",
 			nameEscapingScheme: ptr.To(monitoringv1.UnderscoresNameEscapingScheme),
-			expectedCfg:        "NameEscapingSchemeUnderscoresWithPrometheusLowerThanV3.golden",
+			expectedCfg:        "name-escaping/NameEscapingSchemeUnderscoresWithPrometheusLowerThanV3.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -9860,22 +9906,22 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 		expectedCfg                    string
 	}{
 		{
-			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 3.4",
+			name:                           "native-histograms/ConvertClassicHistogramsToNHCB true with Prometheus Version 3.4",
 			version:                        "v3.4.0",
 			convertClassicHistogramsToNHCB: ptr.To(true),
-			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusV3.golden",
+			expectedCfg:                    "native-histograms/ConvertClassicHistogramsToNHCBTrueWithPrometheusV3.golden",
 		},
 		{
-			name:                           "ConvertClassicHistogramsToNHCB false with Prometheus Version 3.4",
+			name:                           "native-histograms/ConvertClassicHistogramsToNHCB false with Prometheus Version 3.4",
 			version:                        "v3.4.0",
 			convertClassicHistogramsToNHCB: ptr.To(false),
-			expectedCfg:                    "ConvertClassicHistogramsToNHCBFalseWithPrometheusV3.golden",
+			expectedCfg:                    "native-histograms/ConvertClassicHistogramsToNHCBFalseWithPrometheusV3.golden",
 		},
 		{
-			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 2",
+			name:                           "native-histograms/ConvertClassicHistogramsToNHCB true with Prometheus Version 2",
 			version:                        "v2.55.0",
 			convertClassicHistogramsToNHCB: ptr.To(true),
-			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusLowerThanV3.golden",
+			expectedCfg:                    "native-histograms/ConvertClassicHistogramsToNHCBTrueWithPrometheusLowerThanV3.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -9924,7 +9970,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden: "OTLPConfig_Config_promote_resource_attributes.golden",
+			golden: "otlp/OTLPConfig_Config_promote_resource_attributes.golden",
 		},
 		{
 			name:    "Config promote resource attributes with old version",
@@ -9940,7 +9986,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{},
 			},
-			golden: "OTLPConfig_Config_empty_attributes.golden",
+			golden: "otlp/OTLPConfig_Config_empty_attributes.golden",
 		},
 		{
 			name:    "Config otlp translation strategy",
@@ -9948,7 +9994,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
 			},
-			golden: "OTLPConfig_Config_translation_strategy.golden",
+			golden: "otlp/OTLPConfig_Config_translation_strategy.golden",
 		},
 		{
 			name:    "Config Empty translation strategy",
@@ -9956,7 +10002,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				TranslationStrategy: nil,
 			},
-			golden: "OTLPConfig_Config_empty_translation_strategy.golden",
+			golden: "otlp/OTLPConfig_Config_empty_translation_strategy.golden",
 		},
 		{
 			name:    "Config Empty translation strategy",
@@ -9964,7 +10010,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				TranslationStrategy: ptr.To(monitoringv1.UnderscoreEscapingWithSuffixes),
 			},
-			golden: "OTLPConfig_Config_translation_strategy_with_unsupported_version.golden",
+			golden: "otlp/OTLPConfig_Config_translation_strategy_with_unsupported_version.golden",
 		},
 		{
 			name:    "Config Legacy nameValidationScheme with OTLP translation strategy NoUTF8",
@@ -9990,7 +10036,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				KeepIdentifyingResourceAttributes: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
+			golden: "otlp/OTLPConfig_Config_keep_identifying_resource_attributes.golden",
 		},
 		{
 			name:    "Config ConvertHistogramsToNHCB old version",
@@ -9998,7 +10044,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				KeepIdentifyingResourceAttributes: ptr.To(false),
 			},
-			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
+			golden: "otlp/OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
 		},
 		{
 			name:    "Config NoTranslation translation strategy",
@@ -10006,7 +10052,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				TranslationStrategy: nil,
 			},
-			golden: "OTLPConfig_Config_translation_strategy_with_notranslation.golden",
+			golden: "otlp/OTLPConfig_Config_translation_strategy_with_notranslation.golden",
 		},
 		{
 			name:    "Config NoTranslation translation strategye unsupported version",
@@ -10022,7 +10068,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				ConvertHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_convert_histograms_to_nhcb.golden",
+			golden: "otlp/OTLPConfig_Config_convert_histograms_to_nhcb.golden",
 		},
 		{
 			name:    "Config ConvertHistogramsToNHCB with old version",
@@ -10030,7 +10076,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				ConvertHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
+			golden: "otlp/OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
 		},
 		{
 			name:    "Config IgnoreResourceAttributes and PromoteAllResourceAttributes true",
@@ -10039,7 +10085,7 @@ func TestOTLPConfig(t *testing.T) {
 				IgnoreResourceAttributes:     []string{"aa", "bb", "cc"},
 				PromoteAllResourceAttributes: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_ignore_resource_attributes_and_promote_all_resource_attributes.golden",
+			golden: "otlp/OTLPConfig_Config_ignore_resource_attributes_and_promote_all_resource_attributes.golden",
 		},
 		{
 			name:    "Config IgnoreResourceAttributes with old prometheus version",
@@ -10047,7 +10093,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				IgnoreResourceAttributes: []string{"aa", "bb", "cc"},
 			},
-			golden: "OTLPConfig_Config_ignore_resource_attributes_wrong_prom.golden",
+			golden: "otlp/OTLPConfig_Config_ignore_resource_attributes_wrong_prom.golden",
 		},
 		{
 			name:    "Config IgnoreResourceAttributes with correct prometheus version but missing PromoteAllResourceAttributes ",
@@ -10063,7 +10109,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteAllResourceAttributes: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_promote_all_resource_attributes.golden",
+			golden: "otlp/OTLPConfig_Config_promote_all_resource_attributes.golden",
 		},
 		{
 			name:    "Config PromoteAllResourceAttributes and PromoteResourceAttributes",
@@ -10080,7 +10126,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteAllResourceAttributes: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
+			golden: "otlp/OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
 		},
 		{
 			name:    "Config PromoteScopeMetadata with compatible versiopn",
@@ -10088,7 +10134,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteScopeMetadata: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_promote_scope_metadata.golden",
+			golden: "otlp/OTLPConfig_Config_promote_scope_metadata.golden",
 		},
 		{
 			name:    "Config PromoteScopeMetadata with wrong version",
@@ -10096,7 +10142,7 @@ func TestOTLPConfig(t *testing.T) {
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteScopeMetadata: ptr.To(true),
 			},
-			golden: "OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
+			golden: "otlp/OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -14035,22 +14081,22 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 		expectedCfg             string
 	}{
 		{
-			name:                    "ScrapeClassicHistograms true with Prometheus Version 3.5",
+			name:                    "native-histograms/ScrapeClassicHistograms true with Prometheus Version 3.5",
 			version:                 "v3.5.0",
 			ScrapeClassicHistograms: ptr.To(true),
-			expectedCfg:             "ScrapeClassicHistogramsTrueProperPromVersion.golden",
+			expectedCfg:             "native-histograms/ScrapeClassicHistogramsTrueProperPromVersion.golden",
 		},
 		{
-			name:                    "ScrapeClassicHistograms false with Prometheus Version 3.5",
+			name:                    "native-histograms/ScrapeClassicHistograms false with Prometheus Version 3.5",
 			version:                 "v3.5.0",
 			ScrapeClassicHistograms: ptr.To(false),
-			expectedCfg:             "ScrapeClassicHistogramsFalseProperPromVersion.golden",
+			expectedCfg:             "native-histograms/ScrapeClassicHistogramsFalseProperPromVersion.golden",
 		},
 		{
-			name:                    "ScrapeClassicHistograms true with Prometheus Version 2",
+			name:                    "native-histograms/ScrapeClassicHistograms true with Prometheus Version 2",
 			version:                 "v2.45.0",
 			ScrapeClassicHistograms: ptr.To(true),
-			expectedCfg:             "ScrapeClassicHistogramsTrueWrongPromVersion.golden",
+			expectedCfg:             "native-histograms/ScrapeClassicHistogramsTrueWrongPromVersion.golden",
 		},
 	}
 	for _, tc := range testCases {
@@ -14092,22 +14138,22 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 		expectedCfg            string
 	}{
 		{
-			name:                   "ScrapeNativeHistograms true with Prometheus Version 3.8",
+			name:                   "native-histograms/ScrapeNativeHistograms true with Prometheus Version 3.8",
 			version:                "v3.8.0",
 			ScrapeNativeHistograms: ptr.To(true),
-			expectedCfg:            "ScrapeNativeHistogramsTrueProperPromVersion.golden",
+			expectedCfg:            "native-histograms/ScrapeNativeHistogramsTrueProperPromVersion.golden",
 		},
 		{
-			name:                   "ScrapeNativeHistograms false with Prometheus Version 3.8",
+			name:                   "native-histograms/ScrapeNativeHistograms false with Prometheus Version 3.8",
 			version:                "v3.8.0",
 			ScrapeNativeHistograms: ptr.To(false),
-			expectedCfg:            "ScrapeNativeHistogramsFalseProperPromVersion.golden",
+			expectedCfg:            "native-histograms/ScrapeNativeHistogramsFalseProperPromVersion.golden",
 		},
 		{
-			name:                   "ScrapeNativeHistograms true with Lower Prometheus version",
+			name:                   "native-histograms/ScrapeNativeHistograms true with Lower Prometheus version",
 			version:                "v3.7.0",
 			ScrapeNativeHistograms: ptr.To(true),
-			expectedCfg:            "ScrapeNativeHistogramsTrueWrongPromVersion.golden",
+			expectedCfg:            "native-histograms/ScrapeNativeHistogramsTrueWrongPromVersion.golden",
 		},
 	}
 	for _, tc := range testCases {
