@@ -1,0 +1,16 @@
+receivers:
+- name: ""
+  rocketchat_configs:
+  - api_url: https://rocket.example.com/hooks/xxx
+    title_link: https://example.com/title
+    short_fields: false
+    icon_url: https://example.com/icon.png
+    image_url: https://example.com/image.png
+    thumb_url: https://example.com/thumb.png
+    link_names: false
+    actions:
+    - url: https://example.com/action
+      image_url: https://example.com/action-image.png
+      is_webview: false
+      msg_in_chat_window: false
+templates: []
