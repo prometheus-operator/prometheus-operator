@@ -464,6 +464,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
 
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
+	o.reconciliations.ResetStatus(key)
 	err := o.sync(ctx, key)
 	o.reconciliations.SetStatus(key, err)
 
