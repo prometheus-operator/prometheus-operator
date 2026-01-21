@@ -289,6 +289,13 @@ func CleanupBindings[T ConfigurationResource](
 ) error {
 	var err error
 	listErr := listerFunc(labels.Everything(), func(o any) {
+		// Stop processing if the context has been cancelled (e.g., during
+		// operator shutdown) to ensure graceful termination.
+		if ctx.Err() != nil {
+			err = ctx.Err()
+			return
+		}
+
 		if err != nil {
 			// Stop processing on the first error.
 			return
