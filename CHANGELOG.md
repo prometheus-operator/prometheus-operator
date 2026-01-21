@@ -1,3 +1,7 @@
+## 0.88.1 / TBD
+
+* [BUGFIX] Relax validations on URL fields allowing Go templates in the Alertmanager configuration secret. #8307
+
 ## 0.88.0 / 2026-01-09
 
 * [CHANGE] Use narrower selectors for StatefulSet informers in `Alertmanager` and `ThanosRuler` controllers. It is recommended to upgrade from `v0.85.0` (at least). #8246

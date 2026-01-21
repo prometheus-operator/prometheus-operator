@@ -5791,6 +5791,22 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "Test invalid template url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "{{ not-a-valid-template",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "Test valid url passes validation",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
@@ -5805,6 +5821,22 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 				},
 			},
 			golden: "test_webhook_valid_url_passes.golden",
+		},
+		{
+			name:           "Test valid template url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "{{ .labels.url }}",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_valid_template_url_passes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -5922,6 +5954,42 @@ func TestSanitizePushoverConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "Test invalid template url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "{{ not-a-valid-template",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid template url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "{{ .labels.url }}",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_valid_template_url_passes.golden",
 		},
 		{
 			name:           "Test valid url passes validation",
