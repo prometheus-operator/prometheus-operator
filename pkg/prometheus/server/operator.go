@@ -62,6 +62,16 @@ const (
 	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead. Unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')."
 )
 
+// resourceLister lists resources from the informer cache.
+type resourceLister interface {
+	ListAll(selector labels.Selector, appendFn cache.AppendFunc) error
+}
+
+// reconciler enqueues objects for reconciliation.
+type reconciler interface {
+	EnqueueForReconciliation(obj metav1.Object)
+}
+
 // Operator manages the life cycle of Prometheus deployments and
 // monitoring configurations.
 type Operator struct {
@@ -648,27 +658,31 @@ func (c *Operator) enqueueForMonitorNamespace(nsName string) {
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
 func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
+	enqueueForNamespaceInternal(c.logger, store, nsName, c.promInfs, c.rr)
+}
+
+// enqueueForNamespaceInternal contains the core logic for enqueueForNamespace,
+// extracted to enable unit testing with mock dependencies.
+func enqueueForNamespaceInternal(logger *slog.Logger, store cache.Store, nsName string, lister resourceLister, rr reconciler) {
 	nsObject, found, err := store.GetByKey(nsName)
-	if err != nil {
-		c.logger.Error(
-			"get namespace to enqueue Prometheus instances failed",
+	if err != nil || !found {
+		logger.Warn(
+			"namespace lookup failed, enqueueing all Prometheus instances as fallback",
+			"namespace", nsName,
 			"err", err,
 		)
-		return
-	}
-	if !found {
-		c.logger.Error(
-			fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
-		)
+		_ = lister.ListAll(labels.Everything(), func(obj any) {
+			rr.EnqueueForReconciliation(obj.(*monitoringv1.Prometheus))
+		})
 		return
 	}
 	ns := nsObject.(*v1.Namespace)
 
-	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
+	err = lister.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus instances in the namespace.
 		p := obj.(*monitoringv1.Prometheus)
 		if p.Namespace == nsName {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -676,7 +690,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the namespace.
 		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
 		if err != nil {
-			c.logger.Error(
+			logger.Error(
 				fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
@@ -684,14 +698,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if smNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 
 		// Check for Prometheus instances selecting PodMonitors in the NS.
 		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
 		if err != nil {
-			c.logger.Error(
+			logger.Error(
 				fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
@@ -699,14 +713,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if pmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 
 		// Check for Prometheus instances selecting Probes in the NS.
 		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
 		if err != nil {
-			c.logger.Error(
+			logger.Error(
 				fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
@@ -714,7 +728,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if bmNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 
@@ -722,7 +736,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		// the NS.
 		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
 		if err != nil {
-			c.logger.Error(
+			logger.Error(
 				fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
@@ -730,14 +744,14 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if ruleNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 		// Check for Prometheus instances selecting ScrapeConfigs in
 		// the NS.
 		scrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
 		if err != nil {
-			c.logger.Error(
+			logger.Error(
 				fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
 				"err", err,
 			)
@@ -745,17 +759,16 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		if scrapeConfigNSSelector.Matches(labels.Set(ns.Labels)) {
-			c.rr.EnqueueForReconciliation(p)
+			rr.EnqueueForReconciliation(p)
 			return
 		}
 	})
 	if err != nil {
-		c.logger.Error(
+		logger.Error(
 			"listing all Prometheus instances from cache failed",
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
