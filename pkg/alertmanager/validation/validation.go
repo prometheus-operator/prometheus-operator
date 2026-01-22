@@ -17,6 +17,8 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+	"text/template"
 
 	"github.com/prometheus/alertmanager/config"
 	"k8s.io/utils/ptr"
@@ -47,6 +49,26 @@ func ValidateURL(url string) (*config.URL, error) {
 		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
 	}
 	return &u, nil
+}
+
+// ValidateTemplateURL validates a URL string against the config.URL.
+// If the value is a Go template then the function ensures that the template
+// definition is valid.
+func ValidateTemplateURL(url string) error {
+	if strings.Contains(url, "{{") {
+		_, err := template.New("").Parse(url)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	var u config.URL
+	err := json.Unmarshal(fmt.Appendf(nil, `"%s"`, url), &u)
+	if err != nil {
+		return fmt.Errorf("failed to validate url %q: %w", url, err)
+	}
+	return nil
 }
 
 // ValidateSecretURL against config.URL
