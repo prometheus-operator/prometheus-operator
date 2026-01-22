@@ -386,7 +386,7 @@ type SlackConfig struct {
 	Title *string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	TitleLink *URL `json:"titleLink,omitempty"`
+	TitleLink string `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -422,14 +422,14 @@ type SlackConfig struct {
 	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL string `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL string `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL string `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
@@ -474,7 +474,7 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
 	// +kubebuilder:validation:MinLength=1

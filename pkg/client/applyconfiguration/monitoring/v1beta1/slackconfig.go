@@ -18,7 +18,6 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // SlackConfigApplyConfiguration represents a declarative configuration of the SlackConfig type for use
@@ -30,7 +29,7 @@ type SlackConfigApplyConfiguration struct {
 	Username     *string                              `json:"username,omitempty"`
 	Color        *string                              `json:"color,omitempty"`
 	Title        *string                              `json:"title,omitempty"`
-	TitleLink    *monitoringv1beta1.URL               `json:"titleLink,omitempty"`
+	TitleLink    *string                              `json:"titleLink,omitempty"`
 	Pretext      *string                              `json:"pretext,omitempty"`
 	Text         *string                              `json:"text,omitempty"`
 	Fields       []SlackFieldApplyConfiguration       `json:"fields,omitempty"`
@@ -39,9 +38,9 @@ type SlackConfigApplyConfiguration struct {
 	Fallback     *string                              `json:"fallback,omitempty"`
 	CallbackID   *string                              `json:"callbackId,omitempty"`
 	IconEmoji    *string                              `json:"iconEmoji,omitempty"`
-	IconURL      *monitoringv1beta1.URL               `json:"iconURL,omitempty"`
-	ImageURL     *monitoringv1beta1.URL               `json:"imageURL,omitempty"`
-	ThumbURL     *monitoringv1beta1.URL               `json:"thumbURL,omitempty"`
+	IconURL      *string                              `json:"iconURL,omitempty"`
+	ImageURL     *string                              `json:"imageURL,omitempty"`
+	ThumbURL     *string                              `json:"thumbURL,omitempty"`
 	LinkNames    *bool                                `json:"linkNames,omitempty"`
 	MrkdwnIn     []string                             `json:"mrkdwnIn,omitempty"`
 	Actions      []SlackActionApplyConfiguration      `json:"actions,omitempty"`
@@ -106,7 +105,7 @@ func (b *SlackConfigApplyConfiguration) WithTitle(value string) *SlackConfigAppl
 // WithTitleLink sets the TitleLink field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TitleLink field is set to the value of the last call.
-func (b *SlackConfigApplyConfiguration) WithTitleLink(value monitoringv1beta1.URL) *SlackConfigApplyConfiguration {
+func (b *SlackConfigApplyConfiguration) WithTitleLink(value string) *SlackConfigApplyConfiguration {
 	b.TitleLink = &value
 	return b
 }
@@ -183,7 +182,7 @@ func (b *SlackConfigApplyConfiguration) WithIconEmoji(value string) *SlackConfig
 // WithIconURL sets the IconURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IconURL field is set to the value of the last call.
-func (b *SlackConfigApplyConfiguration) WithIconURL(value monitoringv1beta1.URL) *SlackConfigApplyConfiguration {
+func (b *SlackConfigApplyConfiguration) WithIconURL(value string) *SlackConfigApplyConfiguration {
 	b.IconURL = &value
 	return b
 }
@@ -191,7 +190,7 @@ func (b *SlackConfigApplyConfiguration) WithIconURL(value monitoringv1beta1.URL)
 // WithImageURL sets the ImageURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ImageURL field is set to the value of the last call.
-func (b *SlackConfigApplyConfiguration) WithImageURL(value monitoringv1beta1.URL) *SlackConfigApplyConfiguration {
+func (b *SlackConfigApplyConfiguration) WithImageURL(value string) *SlackConfigApplyConfiguration {
 	b.ImageURL = &value
 	return b
 }
@@ -199,7 +198,7 @@ func (b *SlackConfigApplyConfiguration) WithImageURL(value monitoringv1beta1.URL
 // WithThumbURL sets the ThumbURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ThumbURL field is set to the value of the last call.
-func (b *SlackConfigApplyConfiguration) WithThumbURL(value monitoringv1beta1.URL) *SlackConfigApplyConfiguration {
+func (b *SlackConfigApplyConfiguration) WithThumbURL(value string) *SlackConfigApplyConfiguration {
 	b.ThumbURL = &value
 	return b
 }

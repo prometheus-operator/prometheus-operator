@@ -1,6 +1,7 @@
 ## 0.88.1 / TBD
 
 * [BUGFIX] Relax validations on URL fields allowing Go templates in the Alertmanager configuration secret. #8307
+* [BUGFIX] Fix Alertmanager slack templating bug #8299
 
 ## 0.88.0 / 2026-01-09
 

@@ -399,7 +399,7 @@ func (sa *SlackAction) Validate() error {
 		return errors.New("missing text in Slack action configuration")
 	}
 
-	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
+	if sa.URL == "" && ptr.Deref(sa.Name, "") == "" {
 		return errors.New("missing name or url in Slack action configuration")
 	}
 
