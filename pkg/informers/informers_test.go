@@ -110,34 +110,26 @@ func TestInformers(t *testing.T) {
 	})
 
 	t.Run("TestGetWithEmptyInformers", func(t *testing.T) {
-		// Test that Get returns NotFound error when no informers are configured.
-		// This prevents returning (nil, nil) which could cause nil pointer dereferences.
+		// Test that Get panics when no informers are configured.
+		// This is a programming error and should fail fast.
 		ifs := &ForResource{
 			informers: []InformLister{}, // Empty informers slice
 		}
 
-		obj, err := ifs.Get("nonexistent")
-		if obj != nil {
-			t.Errorf("expected nil object, got %v", obj)
-		}
-		if !apierrors.IsNotFound(err) {
-			t.Errorf("expected IsNotFound error, got %v", err)
-		}
+		require.Panics(t, func() {
+			_, _ = ifs.Get("nonexistent")
+		}, "Get should panic when no informers are configured")
 	})
 
 	t.Run("TestGetNeverReturnsNilNil", func(t *testing.T) {
-		// Test that Get never returns (nil, nil) for any case.
+		// Test that Get never returns (nil, nil) for any case with configured informers.
 		// This is a regression test for nil pointer panic bugs.
+		// Note: empty informers case is tested separately as it panics (programming error).
 		testCases := []struct {
 			name       string
 			informers  []InformLister
 			objectName string
 		}{
-			{
-				name:       "empty informers",
-				informers:  []InformLister{},
-				objectName: "test",
-			},
 			{
 				name: "object not found in single informer",
 				informers: []InformLister{
