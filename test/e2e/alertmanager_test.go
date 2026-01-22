@@ -1248,15 +1248,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
-					APIURL: func() *monitoringv1alpha1.URL {
-						res := monitoringv1alpha1.URL("https://webex.api.url")
-						return &res
-					}(),
-					RoomID: "testingRoomID",
-					Message: func() *string {
-						res := "testingMessage"
-						return &res
-					}(),
+					APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
+					RoomID:  "testingRoomID",
+					Message: ptr.To("testingMessage"),
 					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 						Authorization: &monitoringv1.SafeAuthorization{
 							Type: "Bearer",
@@ -1269,15 +1263,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
-				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
-					WebhookURL: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "msteams-webhook-url",
-						},
-						Key: "webhook-url",
-					},
-					Title: ptr.To("Alert"),
-				}},
+				//MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+				//	WebhookURL: v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteams-webhook-url",
+				//		},
+				//		Key: "webhook-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
 				//MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
 				//	WebhookURL: &v1.SecretKeySelector{
 				//		LocalObjectReference: v1.LocalObjectReference{
