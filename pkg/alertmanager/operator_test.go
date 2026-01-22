@@ -743,7 +743,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										URL:  ptr.To(monitoringv1alpha1.URL("http://localhost")),
+										URL:  "http://localhost",
 									},
 								},
 							},

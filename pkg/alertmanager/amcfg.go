@@ -935,17 +935,17 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.APIURL = url
 	}
 
-	if ptr.Deref(in.TitleLink, "") != "" {
-		out.TitleLink = string(*in.TitleLink)
+	if in.TitleLink != "" {
+		out.TitleLink = in.TitleLink
 	}
-	if ptr.Deref(in.IconURL, "") != "" {
-		out.TitleLink = string(*in.IconURL)
+	if in.IconURL != "" {
+		out.TitleLink = in.IconURL
 	}
-	if ptr.Deref(in.ImageURL, "") != "" {
-		out.TitleLink = string(*in.ImageURL)
+	if in.ImageURL != "" {
+		out.TitleLink = in.ImageURL
 	}
-	if ptr.Deref(in.ThumbURL, "") != "" {
-		out.TitleLink = string(*in.ThumbURL)
+	if in.ThumbURL != "" {
+		out.TitleLink = in.ThumbURL
 	}
 
 	var actions []slackAction
@@ -960,8 +960,8 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 				Value: ptr.Deref(a.Value, ""),
 			}
 
-			if ptr.Deref(a.URL, "") != "" {
-				action.URL = string(*a.URL)
+			if a.URL != "" {
+				action.URL = a.URL
 			}
 
 			if a.ConfirmField != nil {

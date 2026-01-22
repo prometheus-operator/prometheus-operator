@@ -6451,7 +6451,6 @@ spec:
                                   description: |-
                                     url defines the URL to open when the action is triggered.
                                     Only applicable for button-type actions. When set, clicking the button opens this URL.
-                                  pattern: ^https?://.+$
                                   type: string
                                 value:
                                   description: |-
@@ -7267,12 +7266,10 @@ spec:
                           iconURL:
                             description: iconURL defines the URL to an image to use
                               as the bot's avatar.
-                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: imageURL defines the URL to an image file
                               that will be displayed inside the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: |-
@@ -7312,7 +7309,6 @@ spec:
                             description: |-
                               thumbURL defines the URL to an image file that will be displayed as a thumbnail
                               on the right side of the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           timeout:
                             description: |-
@@ -7329,7 +7325,6 @@ spec:
                           titleLink:
                             description: titleLink defines the URL that the title
                               will link to when clicked.
-                            pattern: ^https?://.+$
                             type: string
                           username:
                             description: username defines the slack bot user name.
@@ -18503,7 +18498,6 @@ spec:
                                   description: |-
                                     url defines the URL to open when the action is triggered.
                                     Only applicable for button-type actions. When set, clicking the button opens this URL.
-                                  pattern: ^https?://.+$
                                   type: string
                                 value:
                                   description: |-
@@ -19305,12 +19299,10 @@ spec:
                           iconURL:
                             description: iconURL defines the URL to an image to use
                               as the bot's avatar.
-                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: imageURL defines the URL to an image file
                               that will be displayed inside the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: |-
@@ -19350,7 +19342,6 @@ spec:
                             description: |-
                               thumbURL defines the URL to an image file that will be displayed as a thumbnail
                               on the right side of the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           timeout:
                             description: |-
@@ -19367,7 +19358,6 @@ spec:
                           titleLink:
                             description: titleLink defines the URL that the title
                               will link to when clicked.
-                            pattern: ^https?://.+$
                             type: string
                           username:
                             description: username defines the slack bot user name.
