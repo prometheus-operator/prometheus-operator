@@ -1034,7 +1034,7 @@ type PushoverConfig struct {
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
 	// +kubebuilder:validation:MinLength=1

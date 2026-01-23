@@ -294,8 +294,10 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+		if config.URL != "" {
+			if err := validation.ValidateTemplateURL(config.URL); err != nil {
+				return fmt.Errorf("[%d]: url: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
