@@ -34,6 +34,10 @@ func (c *FakeMonitoringV1alpha1) PrometheusAgents(namespace string) v1alpha1.Pro
 	return newFakePrometheusAgents(c, namespace)
 }
 
+func (c *FakeMonitoringV1alpha1) RemoteWrites(namespace string) v1alpha1.RemoteWriteInterface {
+	return newFakeRemoteWrites(c, namespace)
+}
+
 func (c *FakeMonitoringV1alpha1) ScrapeConfigs(namespace string) v1alpha1.ScrapeConfigInterface {
 	return newFakeScrapeConfigs(c, namespace)
 }

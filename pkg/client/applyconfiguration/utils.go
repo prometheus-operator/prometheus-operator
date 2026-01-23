@@ -346,6 +346,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.PushoverConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Receiver"):
 		return &monitoringv1alpha1.ReceiverApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RemoteWrite"):
+		return &monitoringv1alpha1.RemoteWriteApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatActionConfig"):
 		return &monitoringv1alpha1.RocketChatActionConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RocketChatConfig"):
