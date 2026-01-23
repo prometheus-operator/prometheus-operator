@@ -298,7 +298,7 @@ func convertRocketChatActionConfigsFrom(in []v1alpha1.RocketChatActionConfig) []
 	for i, action := range in {
 		out[i] = RocketChatActionConfig{
 			Text: action.Text,
-			URL:  (*URL)(action.URL),
+			URL:  action.URL,
 			Msg:  action.Msg,
 		}
 	}
@@ -314,14 +314,14 @@ func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig 
 		TokenID:      in.TokenID,
 		Color:        in.Color,
 		Emoji:        in.Emoji,
-		IconURL:      (*URL)(in.IconURL),
+		IconURL:      in.IconURL,
 		Text:         in.Text,
 		Title:        in.Title,
 		TitleLink:    in.TitleLink,
 		Fields:       convertRocketChatFieldConfigsFrom(in.Fields),
 		ShortFields:  in.ShortFields,
-		ImageURL:     (*URL)(in.ImageURL),
-		ThumbURL:     (*URL)(in.ThumbURL),
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
