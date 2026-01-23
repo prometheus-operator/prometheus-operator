@@ -396,7 +396,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Key:  "token",
 									},
 									HTML: ptr.To(true),
-									URL:  ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									URL:  "http://%><invalid.com",
 								},
 							},
 						},

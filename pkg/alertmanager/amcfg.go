@@ -1348,8 +1348,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Monospace:     in.Monospace,
 	}
 
-	if ptr.Deref(in.URL, "") != "" {
-		out.URL = string(*in.URL)
+	if in.URL != "" {
+		out.URL = in.URL
 	}
 
 	if in.TTL != nil {

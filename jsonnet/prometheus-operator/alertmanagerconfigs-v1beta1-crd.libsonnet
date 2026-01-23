@@ -4782,7 +4782,6 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
