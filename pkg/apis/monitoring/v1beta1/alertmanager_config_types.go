@@ -1199,7 +1199,7 @@ type RocketChatConfig struct {
 	// iconURL defines the icon URL for the message avatar.
 	// This displays a custom image as the message sender's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL *string `json:"iconURL,omitempty"`
 	// text defines the message text to send.
 	// This is optional because attachments can be used instead of or alongside text.
 	// +kubebuilder:validation:MinLength=1
@@ -1227,11 +1227,11 @@ type RocketChatConfig struct {
 	// imageURL defines the image URL to display within the message.
 	// This embeds an image directly in the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL *string `json:"imageURL,omitempty"`
 	// thumbURL defines the thumbnail URL for the message.
 	// This displays a small thumbnail image alongside the message content.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL *string `json:"thumbURL,omitempty"`
 	// linkNames defines whether to enable automatic linking of usernames and channels.
 	// When true, @username and #channel references become clickable links.
 	// +optional
@@ -1274,7 +1274,7 @@ type RocketChatActionConfig struct {
 	// url defines the URL the button links to when clicked.
 	// This creates a clickable button that opens the specified URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// msg defines the message to send when the button is clicked.
 	// This allows the button to post a predefined message to the channel.
 	// +kubebuilder:validation:MinLength=1

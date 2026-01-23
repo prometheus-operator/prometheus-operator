@@ -5518,7 +5518,6 @@ spec:
                                   description: |-
                                     url defines the URL the button links to when clicked.
                                     This creates a clickable button that opens the specified URL.
-                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             minItems: 1
@@ -6287,13 +6286,11 @@ spec:
                             description: |-
                               iconURL defines the icon URL for the message avatar.
                               This displays a custom image as the message sender's avatar.
-                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: |-
                               imageURL defines the image URL to display within the message.
                               This embeds an image directly in the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: |-
@@ -6319,7 +6316,6 @@ spec:
                             description: |-
                               thumbURL defines the thumbnail URL for the message.
                               This displays a small thumbnail image alongside the message content.
-                            pattern: ^https?://.+$
                             type: string
                           title:
                             description: |-
@@ -17605,7 +17601,6 @@ spec:
                                   description: |-
                                     url defines the URL the button links to when clicked.
                                     This creates a clickable button that opens the specified URL.
-                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             minItems: 1
@@ -18365,13 +18360,11 @@ spec:
                             description: |-
                               iconURL defines the icon URL for the message avatar.
                               This displays a custom image as the message sender's avatar.
-                            pattern: ^https?://.+$
                             type: string
                           imageURL:
                             description: |-
                               imageURL defines the image URL to display within the message.
                               This embeds an image directly in the message attachment.
-                            pattern: ^https?://.+$
                             type: string
                           linkNames:
                             description: |-
@@ -18397,7 +18390,6 @@ spec:
                             description: |-
                               thumbURL defines the thumbnail URL for the message.
                               This displays a small thumbnail image alongside the message content.
-                            pattern: ^https?://.+$
                             type: string
                           title:
                             description: |-
