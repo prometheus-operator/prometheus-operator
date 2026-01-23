@@ -3731,7 +3731,6 @@ spec:
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
-                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
@@ -4490,7 +4489,6 @@ spec:
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
-                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
@@ -4517,7 +4515,6 @@ spec:
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
-                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
@@ -15829,7 +15826,6 @@ spec:
                           clientURL:
                             description: clientURL defines the backlink to the sender
                               of notification.
-                            pattern: ^https?://.+$
                             type: string
                           component:
                             description: component defines the part or component of
@@ -16581,7 +16577,6 @@ spec:
                                 href:
                                   description: href defines the optional URL; makes
                                     the image a clickable link.
-                                  pattern: ^https?://.+$
                                   type: string
                                 src:
                                   description: src of the image being attached to
@@ -16608,7 +16603,6 @@ spec:
                                 href:
                                   description: href defines the URL of the link to
                                     be attached
-                                  pattern: ^https?://.+$
                                   type: string
                               type: object
                             type: array
