@@ -1563,25 +1563,15 @@ type MattermostPropsConfig struct {
 	Card *string `json:"card,omitempty"`
 }
 
-// MattermostPriority defines the priority label of the message.
-// Supported values are: `Urgent`, `Important` and `Standard`.
-// +kubebuilder:validation:Enum=Urgent;Important;Standard
-type MattermostPriority string
-
-const (
-	MattermostPriorityUrgent    MattermostPriority = "Urgent"
-	MattermostPriorityImportant MattermostPriority = "Important"
-	MattermostPriorityStandard  MattermostPriority = "Standard"
-)
-
 // MattermostPriorityConfig configures the parameters related to the priority of the message.
 // +kubebuilder:validation:XValidation:rule="!((self.priority != 'Important' && self.priority != 'Urgent') && self.requestedAck == true)",message="requestedAck can only be set to true when priority is Urgent or Important"
 // +kubebuilder:validation:XValidation:rule="!(self.priority != 'Urgent' && self.persistentNotifications == true)",message="persistentNotifications can only be set to true when priority is Urgent"
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
 	// Possible values are `Urgent`, `Important` and `Standard`.
+	// +kubebuilder:validation:MinLength=1
 	// +required
-	Priority MattermostPriority `json:"priority"`
+	Priority string `json:"priority"`
 	// requestedAck defines whether the message requires an acknowledgement from users.
 	//
 	// If set to true, the message will be marked as requiring an acknowledgment

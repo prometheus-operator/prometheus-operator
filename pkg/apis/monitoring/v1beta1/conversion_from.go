@@ -392,7 +392,7 @@ func convertMattermostPropsConfigFrom(in *v1alpha1.MattermostPropsConfig) *Matte
 
 func convertMattermostPriorityConfigFrom(in *v1alpha1.MattermostPriorityConfig) *MattermostPriorityConfig {
 	return &MattermostPriorityConfig{
-		Priority:                (MattermostPriority)(in.Priority),
+		Priority:                in.Priority,
 		RequestedAck:            in.RequestedAck,
 		PersistentNotifications: in.PersistentNotifications,
 	}

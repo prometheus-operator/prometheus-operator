@@ -30213,30 +30213,6 @@ When false or not specified, the field takes the full width of the message.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.MattermostPriority">MattermostPriority
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostPriorityConfig">MattermostPriorityConfig</a>)
-</p>
-<div>
-<p>MattermostPriority defines the priority label of the message.
-Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Standard</code>.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Important&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Standard&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Urgent&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1alpha1.MattermostPriorityConfig">MattermostPriorityConfig
 </h3>
 <p>
@@ -30257,9 +30233,7 @@ Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Stan
 <td>
 <code>priority</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.MattermostPriority">
-MattermostPriority
-</a>
+string
 </em>
 </td>
 <td>
@@ -39174,30 +39148,6 @@ When false or not specified, the field takes the full width of the message.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1beta1.MattermostPriority">MattermostPriority
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostPriorityConfig">MattermostPriorityConfig</a>)
-</p>
-<div>
-<p>MattermostPriority defines the priority label of the message.
-Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Standard</code>.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr><td><p>&#34;Important&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Standard&#34;</p></td>
-<td></td>
-</tr><tr><td><p>&#34;Urgent&#34;</p></td>
-<td></td>
-</tr></tbody>
-</table>
 <h3 id="monitoring.coreos.com/v1beta1.MattermostPriorityConfig">MattermostPriorityConfig
 </h3>
 <p>
@@ -39218,9 +39168,7 @@ Supported values are: <code>Urgent</code>, <code>Important</code> and <code>Stan
 <td>
 <code>priority</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.MattermostPriority">
-MattermostPriority
-</a>
+string
 </em>
 </td>
 <td>

@@ -1661,7 +1661,7 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 		}
 
 		if p.Priority != "" {
-			out.Priority.Priority = string(p.Priority)
+			out.Priority.Priority = p.Priority
 		}
 	}
 

@@ -1861,11 +1861,6 @@
                               },
                               priority: {
                                 description: 'priority adds the priority label to the message.\nPossible values are `Urgent`, `Important` and `Standard`.',
-                                enum: [
-                                  'Urgent',
-                                  'Important',
-                                  'Standard',
-                                ],
                                 type: 'string',
                               },
                               requestedAck: {
