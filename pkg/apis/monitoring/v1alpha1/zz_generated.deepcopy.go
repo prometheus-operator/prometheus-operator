@@ -2169,11 +2169,6 @@ func (in *PushoverConfig) DeepCopyInto(out *PushoverConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.URL != nil {
-		in, out := &in.URL, &out.URL
-		*out = new(URL)
-		**out = **in
-	}
 	if in.URLTitle != nil {
 		in, out := &in.URLTitle, &out.URLTitle
 		*out = new(string)
