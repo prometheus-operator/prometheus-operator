@@ -4822,7 +4822,6 @@
                                 },
                                 url: {
                                   description: 'url defines the URL the button links to when clicked.\nThis creates a clickable button that opens the specified URL.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -5516,12 +5515,10 @@
                           },
                           iconURL: {
                             description: "iconURL defines the icon URL for the message avatar.\nThis displays a custom image as the message sender's avatar.",
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the image URL to display within the message.\nThis embeds an image directly in the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -5543,7 +5540,6 @@
                           },
                           thumbURL: {
                             description: 'thumbURL defines the thumbnail URL for the message.\nThis displays a small thumbnail image alongside the message content.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           title: {

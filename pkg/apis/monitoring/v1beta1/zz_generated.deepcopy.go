@@ -875,7 +875,7 @@ func (in *RocketChatActionConfig) DeepCopyInto(out *RocketChatActionConfig) {
 	}
 	if in.URL != nil {
 		in, out := &in.URL, &out.URL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Msg != nil {
@@ -927,7 +927,7 @@ func (in *RocketChatConfig) DeepCopyInto(out *RocketChatConfig) {
 	}
 	if in.IconURL != nil {
 		in, out := &in.IconURL, &out.IconURL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Text != nil {
@@ -959,12 +959,12 @@ func (in *RocketChatConfig) DeepCopyInto(out *RocketChatConfig) {
 	}
 	if in.ImageURL != nil {
 		in, out := &in.ImageURL, &out.ImageURL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.ThumbURL != nil {
 		in, out := &in.ThumbURL, &out.ThumbURL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.LinkNames != nil {
