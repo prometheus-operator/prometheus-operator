@@ -3265,7 +3265,6 @@
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
@@ -3957,7 +3956,6 @@
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
@@ -3983,7 +3981,6 @@
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },

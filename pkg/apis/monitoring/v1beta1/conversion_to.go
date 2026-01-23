@@ -215,7 +215,7 @@ func convertPagerDutyImageConfigsTo(in []PagerDutyImageConfig) []v1alpha1.PagerD
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: (*v1alpha1.URL)(in[i].Href),
+			Href: in[i].Href,
 			Alt:  in[i].Alt,
 		}
 	}
@@ -228,7 +228,7 @@ func convertPagerDutyLinkConfigsTo(in []PagerDutyLinkConfig) []v1alpha1.PagerDut
 
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyLinkConfig{
-			Href: (*v1alpha1.URL)(in[i].Href),
+			Href: in[i].Href,
 			Text: in[i].Text,
 		}
 	}
@@ -243,7 +243,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		ServiceKey:            convertSecretKeySelectorTo(in.ServiceKey),
 		URL:                   (*v1alpha1.URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             (*v1alpha1.URL)(in.ClientURL),
+		ClientURL:             in.ClientURL,
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,

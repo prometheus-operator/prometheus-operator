@@ -127,8 +127,10 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(conf.ClientURL)); err != nil {
-			return fmt.Errorf("[%d]: clientURL: %w", i, err)
+		if conf.ClientURL != nil && *conf.ClientURL != "" {
+			if err := validation.ValidateTemplateURL(*conf.ClientURL); err != nil {
+				return fmt.Errorf("[%d]: clientURL: %w", i, err)
+			}
 		}
 
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
@@ -136,14 +138,18 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 		}
 
 		for j, lc := range conf.PagerDutyLinkConfigs {
-			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			if lc.Href != nil && *lc.Href != "" {
+				if err := validation.ValidateTemplateURL(*lc.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 
 		for j, ic := range conf.PagerDutyImageConfigs {
-			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			if ic.Href != nil && *ic.Href != "" {
+				if err := validation.ValidateTemplateURL(*ic.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 

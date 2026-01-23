@@ -278,7 +278,7 @@ type PagerDutyConfig struct {
 	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL *URL `json:"clientURL,omitempty"`
+	ClientURL *string `json:"clientURL,omitempty"`
 	// description of the incident.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -332,7 +332,7 @@ type PagerDutyImageConfig struct {
 	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -343,7 +343,7 @@ type PagerDutyImageConfig struct {
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

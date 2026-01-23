@@ -1028,9 +1028,7 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.URL = string(*in.URL)
 	}
 
-	if in.ClientURL != nil {
-		out.ClientURL = string(*in.ClientURL)
-	}
+	out.ClientURL = ptr.Deref(in.ClientURL, "")
 
 	if in.RoutingKey != nil {
 		routingKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
@@ -1062,10 +1060,8 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		linkConfigs = make([]pagerdutyLink, l)
 		for i, lc := range in.PagerDutyLinkConfigs {
 			linkConfigs[i] = pagerdutyLink{
+				Href: ptr.Deref(lc.Href, ""),
 				Text: ptr.Deref(lc.Text, ""),
-			}
-			if lc.Href != nil {
-				linkConfigs[i].Href = string(*lc.Href)
 			}
 		}
 	}
@@ -1076,11 +1072,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		imageConfig = make([]pagerdutyImage, l)
 		for i, ic := range in.PagerDutyImageConfigs {
 			imageConfig[i] = pagerdutyImage{
-				Src: ptr.Deref(ic.Src, ""),
-				Alt: ptr.Deref(ic.Alt, ""),
-			}
-			if ic.Href != nil {
-				imageConfig[i].Href = string(*ic.Href)
+				Src:  ptr.Deref(ic.Src, ""),
+				Alt:  ptr.Deref(ic.Alt, ""),
+				Href: ptr.Deref(ic.Href, ""),
 			}
 		}
 	}
