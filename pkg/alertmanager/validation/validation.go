@@ -27,15 +27,12 @@ import (
 // ValidateURLPtr validates a URL string pointer.
 // If the pointer is nil, it will return no error.
 func ValidateURLPtr(url *string) error {
-	if ptr.Deref(url, "") == "" {
+	return validateStringPtr(url, func(url string) error {
+		if _, err := ValidateURL(url); err != nil {
+			return err
+		}
 		return nil
-	}
-
-	if _, err := ValidateURL(*url); err != nil {
-		return err
-	}
-
-	return nil
+	})
 }
 
 // ValidateURL validates a URL string against the config.URL.
@@ -48,7 +45,15 @@ func ValidateURL(url string) (*config.URL, error) {
 	if err != nil {
 		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
 	}
+
 	return &u, nil
+}
+
+// ValidateTemplateURLPtr validates a URL string pointer which can be a Go
+// template.
+// If the pointer is nil, it will return no error.
+func ValidateTemplateURLPtr(url *string) error {
+	return validateStringPtr(url, ValidateTemplateURL)
 }
 
 // ValidateTemplateURL validates a URL string against the config.URL.
@@ -63,12 +68,16 @@ func ValidateTemplateURL(url string) error {
 		return nil
 	}
 
-	var u config.URL
-	err := json.Unmarshal(fmt.Appendf(nil, `"%s"`, url), &u)
-	if err != nil {
-		return fmt.Errorf("failed to validate url %q: %w", url, err)
+	// Assume that the URL is a secret for safety.
+	return ValidateSecretURL(url)
+}
+
+func validateStringPtr(s *string, validFn func(string) error) error {
+	if ptr.Deref(s, "") == "" {
+		return nil
 	}
-	return nil
+
+	return validFn(*s)
 }
 
 // ValidateSecretURL against config.URL

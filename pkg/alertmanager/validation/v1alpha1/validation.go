@@ -218,7 +218,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
