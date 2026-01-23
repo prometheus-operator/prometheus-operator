@@ -1436,7 +1436,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}

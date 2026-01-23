@@ -555,7 +555,7 @@ type WebhookConfig struct {
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig

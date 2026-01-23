@@ -10013,7 +10013,6 @@
                           },
                           url: {
                             description: 'url defines the URL to send HTTP POST requests to.\nurlSecret takes precedence over url. One of urlSecret and url should be defined.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlSecret: {

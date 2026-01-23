@@ -1738,7 +1738,7 @@ func (in *WebhookConfig) DeepCopyInto(out *WebhookConfig) {
 	}
 	if in.URL != nil {
 		in, out := &in.URL, &out.URL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.URLSecret != nil {
