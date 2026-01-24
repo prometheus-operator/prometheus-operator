@@ -42,7 +42,7 @@
                 "type": "object"
               },
               "spec": {
-                "description": "Spec defines the desired remote write configuration.",
+                "description": "spec defines the desired remote write configuration.",
                 "properties": {
                   "authorization": {
                     "description": "authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",

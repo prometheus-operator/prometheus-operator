@@ -36,12 +36,12 @@ const (
 // destinations without modifying the central Prometheus resource.
 type RemoteWrite struct {
 	metav1.TypeMeta `json:",inline"`
-	// Standard object's metadata. More info:
+	// metadata is the standard object's metadata. More info:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Spec defines the desired remote write configuration.
+	// spec defines the desired remote write configuration.
 	// +required
 	Spec monitoringv1.RemoteWriteSpec `json:"spec"`
 }
