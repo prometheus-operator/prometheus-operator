@@ -7,10 +7,11 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   kubernetes_sd_configs:
-  - role: node
+  - api_server: https://kubernetes.default.svc
+    role: node
     proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
-    proxy_from_environment: true
+    proxy_from_environment: false
     proxy_connect_header:
       header:
       - value

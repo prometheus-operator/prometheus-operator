@@ -877,6 +877,23 @@ possible to override this behavior passing a custom value via
 </tr>
 <tr>
 <td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>web</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">
@@ -7385,6 +7402,23 @@ possible to override this behavior passing a custom value via
 <td>
 <em>(Optional)</em>
 <p>hostAliases Pods configuration</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
 </td>
 </tr>
 <tr>
@@ -40294,7 +40328,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>discordConfigs defines the list of Slack configurations.</p>
+<p>discordConfigs defines the list of Discord configurations.</p>
 </td>
 </tr>
 <tr>

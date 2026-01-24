@@ -9,8 +9,8 @@ scrape_configs:
   puppetdb_sd_configs:
   - authorization:
       type: Bearer
-      credentials: value
-    url: acp://www.example.com
+      credentials: 00000000-0000-0000-0000-000000000000
+    url: https://www.example.com
     query: vhost
     tls_config:
       ca_file: /etc/prometheus/certs/0_default_tls_ca

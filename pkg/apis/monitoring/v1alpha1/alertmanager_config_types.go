@@ -19,8 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
-	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -29,7 +27,6 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -490,23 +487,6 @@ type SlackConfig struct {
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
-// Validate ensures SlackConfig is valid.
-func (sc *SlackConfig) Validate() error {
-	for _, action := range sc.Actions {
-		if err := action.Validate(); err != nil {
-			return err
-		}
-	}
-
-	for _, field := range sc.Fields {
-		if err := field.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // SlackAction configures a single Slack action that is sent with each
 // notification.
 // See https://api.slack.com/docs/message-attachments#action_fields and
@@ -547,29 +527,6 @@ type SlackAction struct {
 	ConfirmField *SlackConfirmationField `json:"confirm,omitempty"`
 }
 
-// Validate ensures SlackAction is valid.
-func (sa *SlackAction) Validate() error {
-	if sa.Type == "" {
-		return errors.New("missing type in Slack action configuration")
-	}
-
-	if sa.Text == "" {
-		return errors.New("missing text in Slack action configuration")
-	}
-
-	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
-		return errors.New("missing name or url in Slack action configuration")
-	}
-
-	if sa.ConfirmField != nil {
-		if err := sa.ConfirmField.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // SlackConfirmationField protect users from destructive actions or
 // particularly distinguished decisions by asking them to confirm their button
 // click one more time.
@@ -598,14 +555,6 @@ type SlackConfirmationField struct {
 	DismissText *string `json:"dismissText,omitempty"`
 }
 
-// Validate ensures SlackConfirmationField is valid.
-func (scf *SlackConfirmationField) Validate() error {
-	if scf.Text == "" {
-		return errors.New("missing text in Slack confirmation configuration")
-	}
-	return nil
-}
-
 // SlackField configures a single Slack field that is sent with each notification.
 // Each field must contain a title, value, and optionally, a boolean value to indicate if the field
 // is short enough to be displayed next to other fields designated as short.
@@ -626,19 +575,6 @@ type SlackField struct {
 	// When false or not specified, the field takes the full width of the message.
 	// +optional
 	Short *bool `json:"short,omitempty"` // nolint:kubeapilinter
-}
-
-// Validate ensures SlackField is valid
-func (sf *SlackField) Validate() error {
-	if sf.Title == "" {
-		return errors.New("missing title in Slack field configuration")
-	}
-
-	if sf.Value == "" {
-		return errors.New("missing value in Slack field configuration")
-	}
-
-	return nil
 }
 
 // WebhookConfig configures notifications via a generic receiver supporting the webhook payload.
@@ -746,16 +682,6 @@ type OpsGenieConfig struct {
 	Actions *string `json:"actions,omitempty"`
 }
 
-// Validate ensures OpsGenieConfig is valid
-func (o *OpsGenieConfig) Validate() error {
-	for _, responder := range o.Responders {
-		if err := responder.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // OpsGenieConfigResponder defines a responder to an incident.
 // One of `id`, `name` or `username` has to be defined.
 type OpsGenieConfigResponder struct {
@@ -781,30 +707,6 @@ type OpsGenieConfigResponder struct {
 	// +kubebuilder:validation:Enum=team;teams;user;escalation;schedule
 	// +required
 	Type string `json:"type"`
-}
-
-const opsgenieValidTypesRe = `^(team|teams|user|escalation|schedule)$`
-
-var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
-
-// Validate ensures OpsGenieConfigResponder is valid.
-func (r *OpsGenieConfigResponder) Validate() error {
-	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
-		return errors.New("responder must have at least an ID, a Name or an Username defined")
-	}
-
-	if strings.Contains(r.Type, "{{") {
-		_, err := template.New("").Parse(r.Type)
-		if err != nil {
-			return fmt.Errorf("responder %v type is not a valid template: %w", r, err)
-		}
-		return nil
-	}
-
-	if opsgenieTypeMatcher.MatchString(strings.ToLower(r.Type)) {
-		return nil
-	}
-	return fmt.Errorf("opsGenieConfig responder %v type does not match valid options %s", r, opsgenieValidTypesRe)
 }
 
 // HTTPConfig defines a client HTTP configuration.

@@ -9,7 +9,7 @@ scrape_configs:
   ec2_sd_configs:
   - proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
-    proxy_from_environment: true
+    proxy_from_environment: false
     proxy_connect_header:
       header:
       - ""

@@ -107,7 +107,7 @@
                   description: 'Receiver defines one or more notification integrations.',
                   properties: {
                     discordConfigs: {
-                      description: 'discordConfigs defines the list of Slack configurations.',
+                      description: 'discordConfigs defines the list of Discord configurations.',
                       items: {
                         description: 'DiscordConfig configures notifications via Discord.\nSee https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
                         properties: {

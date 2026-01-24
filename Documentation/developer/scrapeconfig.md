@@ -69,15 +69,19 @@ spec:
 
 ## Use ScrapeConfig to scrape an external target
 
-`ScrapeConfig` currently supports a limited set of service discoveries:
+`ScrapeConfig` supports multiple service discovery mechanisms, categorized into two tiers based on the level of support from the project maintainers:
 
-- `static_config`
-- `file_sd`
-- `http_sd`
-- `kubernetes_sd`
-- `consul_sd`
+**Tier-1** (fully supported):
 
-The following examples are basic and don't cover all the supported service discovery mechanisms. The CRD is constantly evolving, adding new features and support for new Service Discoveries. Check the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig) to see all supported fields.
+* Kubernetes Service Discovery
+* File Service Discovery
+* Static Service Discovery
+* DNS Service Discovery
+* HTTP Service Discovery
+
+**Tier-2** (maintainers review issues/PRs but don't actively maintain): includes cloud provider SDs like Azure, EC2, GCE, DigitalOcean and others. See the [ScrapeConfig graduation proposal](https://prometheus-operator.dev/docs/proposals/accepted/scrapeconfig-graduation/) for the complete list.
+
+For the full list of supported fields and service discoveries, check the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.ScrapeConfig).
 
 If you have an interest in another service discovery mechanism or you see something missing in the implementation, please
 [open an issue](https://github.com/prometheus-operator/prometheus-operator/issues).

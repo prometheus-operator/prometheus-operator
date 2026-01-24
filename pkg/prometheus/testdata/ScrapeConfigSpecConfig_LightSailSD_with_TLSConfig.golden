@@ -9,7 +9,7 @@ scrape_configs:
   lightsail_sd_configs:
   - authorization:
       type: Bearer
-      credentials: value
+      credentials: 00000000-0000-0000-0000-000000000000
     region: us-east-1
     endpoint: https://lightsail.us-east-1.amazonaws.com/
     tls_config:

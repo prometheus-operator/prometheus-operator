@@ -2013,10 +2013,6 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf("telegram integration requires Alertmanager >= 0.24.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -2033,10 +2029,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("jira integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -2051,10 +2043,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalRocketChatConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
 	}
 
 	if in.APIURL != nil {
@@ -2604,6 +2592,12 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 	for _, responder := range ogc.Responders {
 		if err := responder.sanitize(amVersion); err != nil {
 			return err
+		}
+	}
+
+	if ogc.APIURL != "" {
+		if _, err := validation.ValidateURL(ogc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
 		}
 	}
 
@@ -3284,12 +3278,110 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
-	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
+	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalJiraConfig(gc.JiraConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
 		return err
 	}
 
 	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return err
+	}
+
+	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+	if tc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
+	if jc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
+	ctx context.Context,
+	vc *monitoringv1.GlobalVictorOpsConfig,
+	namespace string,
+) error {
+	if vc == nil {
+		return nil
+	}
+
+	if vc.APIKey != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalRocketChatConfig(
+	ctx context.Context,
+	rc *monitoringv1.GlobalRocketChatConfig,
+	namespace string,
+) error {
+	if rc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	if rc.Token != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.Token); err != nil {
+			return err
+		}
+	}
+
+	if rc.TokenID != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.TokenID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`'webex' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
 	}
 
 	return nil
@@ -3308,18 +3400,6 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 		if _, err := cb.store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
-	if wc == nil {
-		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`'webex' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
 	}
 
 	return nil

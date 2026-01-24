@@ -464,6 +464,7 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
 
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
+	o.reconciliations.ResetStatus(key)
 	err := o.sync(ctx, key)
 	o.reconciliations.SetStatus(key, err)
 
@@ -511,6 +512,8 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger.Info("sync thanos-ruler")
+
+	o.recordDeprecatedFields(key, logger, tr)
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
 		return err
@@ -615,6 +618,23 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *monitoringv1.ThanosRuler) {
+	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
+	var deprecations []string
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if len(tr.Spec.PrometheusRulesExcludedFromEnforce) > 0 {
+		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement"))
+	}
+
+	if len(deprecations) > 0 {
+		for _, m := range deprecations {
+			logger.Warn(m)
+		}
+		o.reconciliations.SetReasonAndMessage(key, operator.DeprecatedFieldsInUseReason, strings.Join(deprecations, "; "))
+	}
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
