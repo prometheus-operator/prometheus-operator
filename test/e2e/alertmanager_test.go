@@ -1247,22 +1247,40 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						TopicARN: "test-topicARN",
 					},
 				},
-				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
-					APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
-					RoomID:  "testingRoomID",
-					Message: ptr.To("testingMessage"),
-					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-						Authorization: &monitoringv1.SafeAuthorization{
-							Type: "Bearer",
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
-									Name: "webex-api-token",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{
+					{
+						APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
+						RoomID:  "testingRoomID",
+						Message: ptr.To("testingMessage"),
+						HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+							Authorization: &monitoringv1.SafeAuthorization{
+								Type: "Bearer",
+								Credentials: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "webex-api-token",
+									},
+									Key: "api-token",
 								},
-								Key: "api-token",
 							},
 						},
 					},
-				}},
+					{
+						APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
+						RoomID:  "testingRoomID",
+						Message: ptr.To("testingMessage"),
+						HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+							Authorization: &monitoringv1.SafeAuthorization{
+								Type: "Bearer",
+								Credentials: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "webex-api-token",
+									},
+									Key: "api-token",
+								},
+							},
+						},
+					},
+				},
 				//MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
 				//	WebhookURL: v1.SecretKeySelector{
 				//		LocalObjectReference: v1.LocalObjectReference{
