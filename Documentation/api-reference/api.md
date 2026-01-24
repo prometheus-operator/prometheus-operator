@@ -30238,7 +30238,7 @@ string
 </td>
 <td>
 <p>priority adds the priority label to the message.
-Possible values are <code>Urgent</code>, <code>Important</code> and <code>Standard</code>.</p>
+Possible values are <code>urgent</code>, <code>important</code> and <code>standard</code>.</p>
 </td>
 </tr>
 <tr>
@@ -30253,7 +30253,7 @@ bool
 <p>requestedAck defines whether the message requires an acknowledgement from users.</p>
 <p>If set to true, the message will be marked as requiring an acknowledgment
 from the users by displaying a checkmark icon next to the message.</p>
-<p>Keep in mind that this requires the message priority to be set to <code>Important</code> or <code>Urgent</code>.</p>
+<p>Keep in mind that this requires the message priority to be set to <code>important</code> or <code>urgent</code>.</p>
 <p>Only for enterprise version of Mattermost.</p>
 </td>
 </tr>
@@ -30267,7 +30267,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>persistentNotifications defines whether the message notification will be persisted.</p>
-<p>This can be used only with the <code>Urgent</code> messages.
+<p>This can be used only with the <code>urgent</code> messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
 <p>Only for enterprise version of Mattermost.</p>
@@ -39173,7 +39173,7 @@ string
 </td>
 <td>
 <p>priority adds the priority label to the message.
-Possible values are <code>Urgent</code>, <code>Important</code> and <code>Standard</code>.</p>
+Possible values are <code>urgent</code>, <code>important</code> and <code>standard</code>.</p>
 </td>
 </tr>
 <tr>
@@ -39188,7 +39188,7 @@ bool
 <p>requestedAck defines whether the message requires an acknowledgement from users.</p>
 <p>If set to true, the message will be marked as requiring an acknowledgment
 from the users by displaying a checkmark icon next to the message.</p>
-<p>Keep in mind that this requires the message priority to be set to <code>Important</code> or <code>Urgent</code>.</p>
+<p>Keep in mind that this requires the message priority to be set to <code>important</code> or <code>urgent</code>.</p>
 <p>Only for enterprise version of Mattermost.</p>
 </td>
 </tr>
@@ -39202,7 +39202,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>persistentNotifications defines whether the message notification will be persisted.</p>
-<p>This can be used only with the <code>Urgent</code> messages.
+<p>This can be used only with the <code>urgent</code> messages.
 If set to true recipients will receive a persistent notification
 every five minutes until they acknowledge the message.</p>
 <p>Only for enterprise version of Mattermost.</p>

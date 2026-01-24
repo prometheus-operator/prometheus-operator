@@ -1856,15 +1856,20 @@
                             description: 'priority defines the priority parameters of the message.',
                             properties: {
                               persistentNotifications: {
-                                description: 'persistentNotifications defines whether the message notification will be persisted.\n\nThis can be used only with the `Urgent` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
+                                description: 'persistentNotifications defines whether the message notification will be persisted.\n\nThis can be used only with the `urgent` messages.\nIf set to true recipients will receive a persistent notification\nevery five minutes until they acknowledge the message.\n\nOnly for enterprise version of Mattermost.',
                                 type: 'boolean',
                               },
                               priority: {
-                                description: 'priority adds the priority label to the message.\nPossible values are `Urgent`, `Important` and `Standard`.',
+                                description: 'priority adds the priority label to the message.\nPossible values are `urgent`, `important` and `standard`.',
+                                enum: [
+                                  'urgent',
+                                  'important',
+                                  'standard',
+                                ],
                                 type: 'string',
                               },
                               requestedAck: {
-                                description: 'requestedAck defines whether the message requires an acknowledgement from users.\n\nIf set to true, the message will be marked as requiring an acknowledgment\nfrom the users by displaying a checkmark icon next to the message.\n\nKeep in mind that this requires the message priority to be set to `Important` or `Urgent`.\n\nOnly for enterprise version of Mattermost.',
+                                description: 'requestedAck defines whether the message requires an acknowledgement from users.\n\nIf set to true, the message will be marked as requiring an acknowledgment\nfrom the users by displaying a checkmark icon next to the message.\n\nKeep in mind that this requires the message priority to be set to `important` or `urgent`.\n\nOnly for enterprise version of Mattermost.',
                                 type: 'boolean',
                               },
                             },
@@ -1872,16 +1877,6 @@
                               'priority',
                             ],
                             type: 'object',
-                            'x-kubernetes-validations': [
-                              {
-                                message: 'requestedAck can only be set to true when priority is Urgent or Important',
-                                rule: "!((self.priority != 'Important' && self.priority != 'Urgent') && self.requestedAck == true)",
-                              },
-                              {
-                                message: 'persistentNotifications can only be set to true when priority is Urgent',
-                                rule: "!(self.priority != 'Urgent' && self.persistentNotifications == true)",
-                              },
-                            ],
                           },
                           props: {
                             description: 'props defines the extra information to be sent to Mattermost.',

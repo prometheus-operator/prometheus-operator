@@ -2187,7 +2187,7 @@ spec:
                                 description: |-
                                   persistentNotifications defines whether the message notification will be persisted.
 
-                                  This can be used only with the `Urgent` messages.
+                                  This can be used only with the `urgent` messages.
                                   If set to true recipients will receive a persistent notification
                                   every five minutes until they acknowledge the message.
 
@@ -2196,8 +2196,11 @@ spec:
                               priority:
                                 description: |-
                                   priority adds the priority label to the message.
-                                  Possible values are `Urgent`, `Important` and `Standard`.
-                                minLength: 1
+                                  Possible values are `urgent`, `important` and `standard`.
+                                enum:
+                                - urgent
+                                - important
+                                - standard
                                 type: string
                               requestedAck:
                                 description: |-
@@ -2206,22 +2209,13 @@ spec:
                                   If set to true, the message will be marked as requiring an acknowledgment
                                   from the users by displaying a checkmark icon next to the message.
 
-                                  Keep in mind that this requires the message priority to be set to `Important` or `Urgent`.
+                                  Keep in mind that this requires the message priority to be set to `important` or `urgent`.
 
                                   Only for enterprise version of Mattermost.
                                 type: boolean
                             required:
                             - priority
                             type: object
-                            x-kubernetes-validations:
-                            - message: requestedAck can only be set to true when priority
-                                is Urgent or Important
-                              rule: '!((self.priority != ''Important'' && self.priority
-                                != ''Urgent'') && self.requestedAck == true)'
-                            - message: persistentNotifications can only be set to
-                                true when priority is Urgent
-                              rule: '!(self.priority != ''Urgent'' && self.persistentNotifications
-                                == true)'
                           props:
                             description: props defines the extra information to be
                               sent to Mattermost.
@@ -15313,7 +15307,7 @@ spec:
                                 description: |-
                                   persistentNotifications defines whether the message notification will be persisted.
 
-                                  This can be used only with the `Urgent` messages.
+                                  This can be used only with the `urgent` messages.
                                   If set to true recipients will receive a persistent notification
                                   every five minutes until they acknowledge the message.
 
@@ -15322,7 +15316,11 @@ spec:
                               priority:
                                 description: |-
                                   priority adds the priority label to the message.
-                                  Possible values are `Urgent`, `Important` and `Standard`.
+                                  Possible values are `urgent`, `important` and `standard`.
+                                enum:
+                                - urgent
+                                - important
+                                - standard
                                 type: string
                               requestedAck:
                                 description: |-
@@ -15331,22 +15329,13 @@ spec:
                                   If set to true, the message will be marked as requiring an acknowledgment
                                   from the users by displaying a checkmark icon next to the message.
 
-                                  Keep in mind that this requires the message priority to be set to `Important` or `Urgent`.
+                                  Keep in mind that this requires the message priority to be set to `important` or `urgent`.
 
                                   Only for enterprise version of Mattermost.
                                 type: boolean
                             required:
                             - priority
                             type: object
-                            x-kubernetes-validations:
-                            - message: requestedAck can only be set to true when priority
-                                is Urgent or Important
-                              rule: '!((self.priority != ''Important'' && self.priority
-                                != ''Urgent'') && self.requestedAck == true)'
-                            - message: persistentNotifications can only be set to
-                                true when priority is Urgent
-                              rule: '!(self.priority != ''Urgent'' && self.persistentNotifications
-                                == true)'
                           props:
                             description: props defines the extra information to be
                               sent to Mattermost.
