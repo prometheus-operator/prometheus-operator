@@ -1101,14 +1101,14 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		Message:       in.Message,
-		Description:   in.Description,
-		Source:        in.Source,
-		Tags:          in.Tags,
-		Note:          in.Note,
-		Priority:      in.Priority,
-		Actions:       in.Actions,
-		Entity:        in.Entity,
+		Message:       ptr.Deref(in.Message, ""),
+		Description:   ptr.Deref(in.Description, ""),
+		Source:        ptr.Deref(in.Source, ""),
+		Tags:          ptr.Deref(in.Tags, ""),
+		Note:          ptr.Deref(in.Note, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
+		Actions:       ptr.Deref(in.Actions, ""),
+		Entity:        ptr.Deref(in.Entity, ""),
 		UpdateAlerts:  in.UpdateAlerts,
 	}
 
@@ -1138,9 +1138,9 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		responders = make([]opsgenieResponder, 0, l)
 		for _, r := range in.Responders {
 			responder := opsgenieResponder{
-				ID:       r.ID,
-				Name:     r.Name,
-				Username: r.Username,
+				ID:       ptr.Deref(r.ID, ""),
+				Name:     ptr.Deref(r.Name, ""),
+				Username: ptr.Deref(r.Username, ""),
 				Type:     r.Type,
 			}
 			responders = append(responders, responder)
@@ -1160,13 +1160,13 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
-		CorpID:        in.CorpID,
-		AgentID:       in.AgentID,
-		ToUser:        in.ToUser,
-		ToParty:       in.ToParty,
-		ToTag:         in.ToTag,
-		Message:       in.Message,
-		MessageType:   in.MessageType,
+		CorpID:        ptr.Deref(in.CorpID, ""),
+		AgentID:       ptr.Deref(in.AgentID, ""),
+		ToUser:        ptr.Deref(in.ToUser, ""),
+		ToParty:       ptr.Deref(in.ToParty, ""),
+		ToTag:         ptr.Deref(in.ToTag, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		MessageType:   ptr.Deref(in.MessageType, ""),
 	}
 
 	if in.APIURL != nil {
@@ -1216,30 +1216,30 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
 		VSendResolved: in.SendResolved,
-		To:            in.To,
-		From:          in.From,
-		Hello:         in.Hello,
-		AuthUsername:  in.AuthUsername,
-		AuthIdentity:  in.AuthIdentity,
+		To:            ptr.Deref(in.To, ""),
+		From:          ptr.Deref(in.From, ""),
+		Hello:         ptr.Deref(in.Hello, ""),
+		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.Smarthost == "" {
+	if ptr.Deref(in.Smarthost, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
 			return nil, fmt.Errorf("SMTP smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.From == "" {
+	if ptr.Deref(in.From, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
 			return nil, fmt.Errorf("SMTP from is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.Smarthost != "" {
-		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
+	if ptr.Deref(in.Smarthost, "") != "" {
+		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(*in.Smarthost)
 	}
 
 	if in.AuthPassword != nil {
@@ -1438,13 +1438,31 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
 	out := &snsConfig{
 		VSendResolved: in.SendResolved,
-		APIUrl:        in.ApiURL,
-		TopicARN:      in.TopicARN,
-		PhoneNumber:   in.PhoneNumber,
-		TargetARN:     in.TargetARN,
-		Subject:       in.Subject,
-		Message:       in.Message,
 		Attributes:    in.Attributes,
+	}
+
+	if in.ApiURL != nil {
+		out.APIUrl = string(*in.ApiURL)
+	}
+
+	if in.TopicARN != nil {
+		out.TopicARN = *in.TopicARN
+	}
+
+	if in.PhoneNumber != nil {
+		out.PhoneNumber = *in.PhoneNumber
+	}
+
+	if in.TargetARN != nil {
+		out.TargetARN = *in.TargetARN
+	}
+
+	if in.Subject != nil {
+		out.Subject = *in.Subject
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -1886,10 +1904,6 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf("telegram integration requires Alertmanager >= 0.24.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -1906,10 +1920,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("jira integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -1924,10 +1934,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalRocketChatConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
 	}
 
 	if in.APIURL != nil {
@@ -1960,10 +1966,6 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitoringv1.GlobalWebexConfig) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
 	}
 
 	if in.APIURL != nil {
@@ -2484,6 +2486,12 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		}
 	}
 
+	if ogc.APIURL != "" {
+		if _, err := validation.ValidateURL(ogc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		logger.Warn("'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
 		ogc.APIKeyFile = ""
@@ -2699,6 +2707,12 @@ func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		voc.APIKeyFile = ""
 	}
 
+	if voc.APIURL != "" {
+		if _, err := validation.ValidateURL(voc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -2863,6 +2877,12 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		return fmt.Errorf("mandatory field %q is empty", "room_id")
 	}
 
+	if tc.APIURL != "" {
+		if _, err := validation.ValidateURL(tc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -2889,6 +2909,11 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 			if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
 				return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
 			}
+		}
+	}
+	if jc.APIURL != "" {
+		if _, err := validation.ValidateURL(jc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
 		}
 	}
 
@@ -3144,8 +3169,110 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
+	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalJiraConfig(gc.JiraConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+	if tc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
+	if jc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
+	ctx context.Context,
+	vc *monitoringv1.GlobalVictorOpsConfig,
+	namespace string,
+) error {
+	if vc == nil {
+		return nil
+	}
+
+	if vc.APIKey != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalRocketChatConfig(
+	ctx context.Context,
+	rc *monitoringv1.GlobalRocketChatConfig,
+	namespace string,
+) error {
+	if rc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	if rc.Token != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.Token); err != nil {
+			return err
+		}
+	}
+
+	if rc.TokenID != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.TokenID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`'webex' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
 	}
 
 	return nil

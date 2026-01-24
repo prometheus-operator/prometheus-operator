@@ -107,7 +107,7 @@
                   description: 'Receiver defines one or more notification integrations.',
                   properties: {
                     discordConfigs: {
-                      description: 'discordConfigs defines the list of Slack configurations.',
+                      description: 'discordConfigs defines the list of Discord configurations.',
                       items: {
                         description: 'DiscordConfig configures notifications via Discord.\nSee https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
                         properties: {
@@ -814,6 +814,7 @@
                         properties: {
                           authIdentity: {
                             description: 'authIdentity defines the identity to use for SMTP authentication.\nThis is typically used with PLAIN authentication mechanism.',
+                            minLength: 1,
                             type: 'string',
                           },
                           authPassword: {
@@ -858,10 +859,12 @@
                           },
                           authUsername: {
                             description: 'authUsername defines the username to use for SMTP authentication.\nThis is used for SMTP AUTH when the server requires authentication.',
+                            minLength: 1,
                             type: 'string',
                           },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
+                            minLength: 1,
                             type: 'string',
                           },
                           headers: {
@@ -889,6 +892,7 @@
                           },
                           hello: {
                             description: 'hello defines the hostname to identify to the SMTP server.\nThis is used in the SMTP HELO/EHLO command during the connection handshake.',
+                            minLength: 1,
                             type: 'string',
                           },
                           html: {
@@ -905,10 +909,12 @@
                           },
                           smarthost: {
                             description: 'smarthost defines the SMTP host and port through which emails are sent.\nFormat should be "hostname:port", e.g. "smtp.example.com:587".',
+                            minLength: 1,
                             type: 'string',
                           },
                           text: {
                             description: "text defines the plain text body of the email notification.\nThis provides a fallback for email clients that don't support HTML.",
+                            minLength: 1,
                             type: 'string',
                           },
                           tlsConfig: {
@@ -1074,6 +1080,7 @@
                           },
                           to: {
                             description: 'to defines the email address to send notifications to.\nThis is the recipient address for alert notifications.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
@@ -2468,6 +2475,7 @@
                         properties: {
                           actions: {
                             description: 'actions defines a comma separated list of actions that will be available for the alert.\nThese appear as action buttons in the OpsGenie interface.',
+                            minLength: 1,
                             type: 'string',
                           },
                           apiKey: {
@@ -2497,6 +2505,7 @@
                           },
                           description: {
                             description: 'description defines the detailed description of the incident.\nThis provides additional context beyond the message field.',
+                            minLength: 1,
                             type: 'string',
                           },
                           details: {
@@ -2524,6 +2533,7 @@
                           },
                           entity: {
                             description: 'entity defines an optional field that can be used to specify which domain alert is related to.\nThis helps group related alerts together in OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -3166,14 +3176,17 @@
                           },
                           message: {
                             description: 'message defines the alert text limited to 130 characters.\nThis appears as the main alert title in OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                           note: {
                             description: 'note defines an additional alert note.\nThis provides supplementary information about the alert.',
+                            minLength: 1,
                             type: 'string',
                           },
                           priority: {
                             description: 'priority defines the priority level of alert.\nPossible values are P1, P2, P3, P4, and P5, where P1 is highest priority.',
+                            minLength: 1,
                             type: 'string',
                           },
                           responders: {
@@ -3183,10 +3196,12 @@
                               properties: {
                                 id: {
                                   description: "id defines the unique identifier of the responder.\nThis corresponds to the responder's ID within OpsGenie.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 name: {
                                   description: 'name defines the display name of the responder.\nThis is used when the responder is identified by name rather than ID.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 type: {
@@ -3203,6 +3218,7 @@
                                 },
                                 username: {
                                   description: 'username defines the username of the responder.\nThis is typically used for user-type responders when identifying by username.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
@@ -3219,10 +3235,12 @@
                           },
                           source: {
                             description: 'source defines the backlink to the sender of the notification.\nThis helps identify where the alert originated from.',
+                            minLength: 1,
                             type: 'string',
                           },
                           tags: {
                             description: 'tags defines a comma separated list of tags attached to the notifications.\nThese help categorize and filter alerts within OpsGenie.',
+                            minLength: 1,
                             type: 'string',
                           },
                         },
@@ -6489,6 +6507,7 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.\nIf not specified, the SNS API URL from the SNS SDK will be used.',
+                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           attributes: {
@@ -7138,10 +7157,12 @@
                           },
                           message: {
                             description: 'message defines the message content of the SNS notification.\nThis is the actual notification text that will be sent to subscribers.',
+                            minLength: 1,
                             type: 'string',
                           },
                           phoneNumber: {
                             description: "phoneNumber defines the phone number if message is delivered via SMS in E.164 format.\nIf you don't specify this value, you must specify a value for the TopicARN or TargetARN.",
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -7218,14 +7239,17 @@
                           },
                           subject: {
                             description: 'subject defines the subject line when the message is delivered to email endpoints.\nThis field is only used when sending to email subscribers of an SNS topic.',
+                            minLength: 1,
                             type: 'string',
                           },
                           targetARN: {
                             description: "targetARN defines the mobile platform endpoint ARN if message is delivered via mobile notifications.\nIf you don't specify this value, you must specify a value for the TopicARN or PhoneNumber.",
+                            minLength: 1,
                             type: 'string',
                           },
                           topicARN: {
                             description: "topicARN defines the SNS topic ARN, e.g. arn:aws:sns:us-east-2:698519295917:My-Topic.\nIf you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.",
+                            minLength: 1,
                             type: 'string',
                           },
                         },
@@ -10037,6 +10061,7 @@
                         properties: {
                           agentID: {
                             description: 'agentID defines the application agent ID within WeChat Work.\nThis identifies which WeChat Work application will send the notifications.',
+                            minLength: 1,
                             type: 'string',
                           },
                           apiSecret: {
@@ -10066,6 +10091,7 @@
                           },
                           corpID: {
                             description: 'corpID defines the corp id for authentication.\nThis is the unique identifier for your WeChat Work organization.',
+                            minLength: 1,
                             type: 'string',
                           },
                           httpConfig: {
@@ -10708,10 +10734,12 @@
                           },
                           message: {
                             description: 'message defines the API request data as defined by the WeChat API.\nThis contains the actual notification content to be sent.',
+                            minLength: 1,
                             type: 'string',
                           },
                           messageType: {
                             description: 'messageType defines the type of message to send.\nValid values include "text", "markdown", and other WeChat Work supported message types.',
+                            minLength: 1,
                             type: 'string',
                           },
                           sendResolved: {
@@ -10720,14 +10748,17 @@
                           },
                           toParty: {
                             description: "toParty defines the target department(s) to receive the notification.\nCan be a single department ID or multiple department IDs separated by '|'.",
+                            minLength: 1,
                             type: 'string',
                           },
                           toTag: {
                             description: "toTag defines the target tag(s) to receive the notification.\nCan be a single tag ID or multiple tag IDs separated by '|'.",
+                            minLength: 1,
                             type: 'string',
                           },
                           toUser: {
                             description: "toUser defines the target user(s) to receive the notification.\nCan be a single user ID or multiple user IDs separated by '|'.",
+                            minLength: 1,
                             type: 'string',
                           },
                         },

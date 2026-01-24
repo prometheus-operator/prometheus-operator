@@ -7,9 +7,9 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   scaleway_sd_configs:
-  - access_key: AccessKey
-    secret_key: value
-    project_id: "1"
+  - access_key: SCWABCDEFGH123456789
+    secret_key: 00000000-0000-0000-0000-000000000000
+    project_id: 00000000-0000-0000-0000-000000000001
     role: instance
     tls_config:
       ca_file: /etc/prometheus/certs/0_default_tls_ca

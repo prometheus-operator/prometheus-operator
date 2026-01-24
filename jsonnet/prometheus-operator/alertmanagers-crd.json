@@ -4015,6 +4015,10 @@
                     ],
                     "x-kubernetes-list-type": "map"
                   },
+                  "hostNetwork": {
+                    "description": "hostNetwork controls whether the pod may use the node network namespace.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically (unless `.spec.dnsPolicy` is set\nto a different value).",
+                    "type": "boolean"
+                  },
                   "hostUsers": {
                     "description": "hostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",
                     "type": "boolean"
