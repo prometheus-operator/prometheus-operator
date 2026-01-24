@@ -1529,11 +1529,10 @@ type MattermostPropsConfig struct {
 }
 
 // MattermostPriorityConfig configures the parameters related to the priority of the message.
-// +kubebuilder:validation:XValidation:rule="!((self.priority != 'Important' && self.priority != 'Urgent') && self.requestedAck == true)",message="requestedAck can only be set to true when priority is Urgent or Important"
-// +kubebuilder:validation:XValidation:rule="!(self.priority != 'Urgent' && self.persistentNotifications == true)",message="persistentNotifications can only be set to true when priority is Urgent"
 type MattermostPriorityConfig struct {
 	// priority adds the priority label to the message.
-	// Possible values are `Urgent`, `Important` and `Standard`.
+	// Possible values are `urgent`, `important` and `standard`.
+	// +kubebuilder:validation:Enum=urgent;important;standard
 	// +required
 	Priority string `json:"priority"`
 	// requestedAck defines whether the message requires an acknowledgement from users.
@@ -1541,14 +1540,14 @@ type MattermostPriorityConfig struct {
 	// If set to true, the message will be marked as requiring an acknowledgment
 	// from the users by displaying a checkmark icon next to the message.
 	//
-	// Keep in mind that this requires the message priority to be set to `Important` or `Urgent`.
+	// Keep in mind that this requires the message priority to be set to `important` or `urgent`.
 	//
 	// Only for enterprise version of Mattermost.
 	// +optional
 	RequestedAck *bool `json:"requestedAck,omitempty"` // nolint:kubeapilinter
 	// persistentNotifications defines whether the message notification will be persisted.
 	//
-	// This can be used only with the `Urgent` messages.
+	// This can be used only with the `urgent` messages.
 	// If set to true recipients will receive a persistent notification
 	// every five minutes until they acknowledge the message.
 	//

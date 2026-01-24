@@ -3876,7 +3876,7 @@ func TestGenerateConfig(t *testing.T) {
 											},
 										},
 										Priority: &monitoringv1alpha1.MattermostPriorityConfig{
-											Priority:                "Urgent",
+											Priority:                "urgent",
 											RequestedAck:            ptr.To(true),
 											PersistentNotifications: ptr.To(true),
 										},
