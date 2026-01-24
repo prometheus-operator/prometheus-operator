@@ -24483,7 +24483,7 @@ Kubernetes meta/v1.ObjectMeta
 </td>
 <td>
 <em>(Optional)</em>
-<p>Standard object&rsquo;s metadata. More info:
+<p>metadata is the standard object&rsquo;s metadata. More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
@@ -24499,7 +24499,7 @@ RemoteWriteSpec
 </em>
 </td>
 <td>
-<p>Spec defines the desired remote write configuration.</p>
+<p>spec defines the desired remote write configuration.</p>
 <br/>
 <br/>
 <table>
