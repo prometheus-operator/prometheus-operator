@@ -1849,6 +1849,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
 			},
+			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
+			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
@@ -1950,8 +1953,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
-  telegram_api_url: https://telegram.api.url
+  victorops_api_url: https://victorops.api.url
   wechat_api_url: https://wechat.api.url
+  telegram_api_url: https://telegram.api.url
 route:
   receiver: %[1]s
   routes:
