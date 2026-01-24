@@ -45,7 +45,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: Spec defines the desired remote write configuration.
+            description: spec defines the desired remote write configuration.
             properties:
               authorization:
                 description: |-
