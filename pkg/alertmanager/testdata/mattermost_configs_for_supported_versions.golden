@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  mattermost_configs:
+  - webhook_url: http://mattermost.example.com/hooks/xxx
+    text: test
+templates: []
