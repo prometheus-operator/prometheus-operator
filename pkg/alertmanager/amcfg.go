@@ -2864,6 +2864,18 @@ func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		dc.AvatarURL = ""
 	}
 
+	if dc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(dc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
+	if dc.AvatarURL != "" {
+		if _, err := validation.ValidateURL(dc.AvatarURL); err != nil {
+			return fmt.Errorf("invalid 'avatar_url': %w", err)
+		}
+	}
+
 	return dc.HTTPConfig.sanitize(amVersion, logger)
 }
 
