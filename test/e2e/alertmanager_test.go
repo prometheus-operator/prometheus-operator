@@ -1956,6 +1956,10 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
+  wechat_api_url: https://wechat.api.url
+  victorops_api_url: https://victorops.api.url
+  telegram_api_url: https://telegram.api.url
+  jira_api_url: https://jira.api.url
 route:
   receiver: %[1]s
   routes:
