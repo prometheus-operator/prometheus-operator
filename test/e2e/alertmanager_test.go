@@ -1852,9 +1852,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
 			},
-			//JiraConfig: &monitoringv1.GlobalJiraConfig{
-			//	APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
-			//},
+			JiraConfig: &monitoringv1.GlobalJiraConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
+			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
@@ -1956,10 +1956,6 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
-  victorops_api_url: https://victorops.api.url
-  jira_api_url: https://jira.api.url
-  wechat_api_url: https://wechat.api.url
-  telegram_api_url: https://telegram.api.url
 route:
   receiver: %[1]s
   routes:
