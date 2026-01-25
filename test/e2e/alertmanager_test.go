@@ -1855,6 +1855,12 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			JiraConfig: &monitoringv1.GlobalJiraConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
 			},
+			RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://rocketchat.api.url")),
+			},
+			WebexConfig: &monitoringv1.GlobalWebexConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://webex.api.url")),
+			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
