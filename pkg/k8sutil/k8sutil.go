@@ -690,10 +690,21 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 
 // FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
 // If the finalizer is not present, it returns nil.
+//
+// The patch includes a "test" operation before the "remove" to ensure the finalizer
+// at the computed index matches the expected value. This prevents race conditions
+// where concurrent modifications to the finalizers array could cause the wrong
+// finalizer to be removed. If the array has been modified, the test fails, the
+// patch is rejected, and the controller retries with fresh data.
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {
 			patch := []map[string]any{
+				{
+					"op":    "test",
+					"path":  fmt.Sprintf("/metadata/finalizers/%d", i),
+					"value": finalizerName,
+				},
 				{
 					"op":   "remove",
 					"path": fmt.Sprintf("/metadata/finalizers/%d", i),
