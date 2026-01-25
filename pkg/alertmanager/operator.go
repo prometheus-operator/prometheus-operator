@@ -623,6 +623,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
+	c.recordDeprecatedFields(key, logger, am)
+
 	statusCleanup := func() error {
 		return c.configResStatusCleanup(ctx, am)
 	}
@@ -633,6 +636,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if finalizerAdded {
+		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(am)
 		return nil
 	}
@@ -642,7 +646,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger := c.logger.With("key", key)
 	logger.Info("sync alertmanager")
 
 	if am.Spec.Paused {
@@ -666,10 +669,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, assetStore, amVersion)
 	if err != nil {
 		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
-	}
-
-	if err := c.updateConfigResourcesStatus(ctx, am, amConfigs); err != nil {
-		logger.Warn("failed to update AlertmanagerConfig status", "err", err)
 	}
 
 	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore, amVersion, amConfigs.ValidResources()); err != nil {
@@ -744,7 +743,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
 			return fmt.Errorf("failed to create statefulset: %w", err)
 		}
-		return nil
+		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
 	}
 
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
@@ -753,7 +752,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}); err != nil {
 		return err
 	}
-	return nil
+
+	return c.updateConfigResourcesStatus(ctx, am, amConfigs)
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
