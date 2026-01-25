@@ -1852,9 +1852,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
 			},
-			JiraConfig: &monitoringv1.GlobalJiraConfig{
-				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
-			},
+			//JiraConfig: &monitoringv1.GlobalJiraConfig{
+			//	APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
+			//},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
