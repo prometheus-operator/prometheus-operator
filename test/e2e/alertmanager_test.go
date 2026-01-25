@@ -1851,12 +1851,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
-				APIKey: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
-						Name: "victorops-secret",
-					},
-					Key: "api-key",
-				},
+			},
+			JiraConfig: &monitoringv1.GlobalJiraConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
@@ -1923,14 +1920,6 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"template2.tmpl": "template2",
 		},
 	}
-	victoropsAPIKey := v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "victorops-secret",
-		},
-		Data: map[string]string{
-			"api-key": "abcdef123456",
-		},
-	}
 
 	ctx := context.Background()
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
@@ -1942,8 +1931,6 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{})
-	require.NoError(t, err)
-	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &victoropsAPIKey, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -1970,7 +1957,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
   victorops_api_url: https://victorops.api.url
-  victorops_api_key: abcdef123456
+  jira_api_url: https://jira.api.url
   wechat_api_url: https://wechat.api.url
   telegram_api_url: https://telegram.api.url
 route:
