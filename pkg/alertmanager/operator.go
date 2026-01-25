@@ -101,7 +101,8 @@ type Operator struct {
 	secrInfs    *informers.ForResource
 	ssetInfs    *informers.ForResource
 
-	rr *operator.ResourceReconciler
+	rr              *operator.ResourceReconciler
+	finalizerSyncer *operator.FinalizerSyncer
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -184,9 +185,15 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
 		},
+
+		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName))
 	}
 
 	if err := o.bootstrap(ctx, c); err != nil {
@@ -597,7 +604,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Alertmanager instance is marked for deletion.
+	statusCleanup := func() error {
+		return c.configResStatusCleanup(ctx, am)
+	}
+
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, am, c.rr.DeletionInProgress(am), statusCleanup)
+	if err != nil {
+		return err
+	}
+
+	if finalizerAdded {
+		c.rr.EnqueueForReconciliation(am)
+		return nil
+	}
+
 	if c.rr.DeletionInProgress(am) {
 		c.reconciliations.ForgetObject(key)
 		return nil
@@ -730,6 +750,24 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitori
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
 		}
+	}
+
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, amConfigs, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) configResStatusCleanup(ctx context.Context, am *monitoringv1.Alertmanager) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
 	}
 
 	return nil
