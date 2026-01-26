@@ -1076,6 +1076,30 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	msteamsWebhookURL := "https://msteams.webhook.url"
+	msteamsWebhookURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "msteams-webhook-url",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(msteamsWebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsWebhookURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	msteamsv2WebhookURL := "https://msteamsv2.webhook.url"
+	msteamsv2WebhookURLSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "msteamsv2-webhook-url",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(msteamsv2WebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2WebhookURLSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1224,15 +1248,9 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
-					APIURL: func() *monitoringv1alpha1.URL {
-						res := monitoringv1alpha1.URL("https://webex.api.url")
-						return &res
-					}(),
-					RoomID: "testingRoomID",
-					Message: func() *string {
-						res := "testingMessage"
-						return &res
-					}(),
+					APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
+					RoomID:  "testingRoomID",
+					Message: ptr.To("testingMessage"),
 					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 						Authorization: &monitoringv1.SafeAuthorization{
 							Type: "Bearer",
@@ -1245,6 +1263,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
+				//MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+				//	WebhookURL: v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteams-webhook-url",
+				//		},
+				//		Key: "webhook-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
+				//MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
+				//	WebhookURL: &v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteamsv2-webhook-url",
+				//		},
+				//		Key: "webhookv2-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
 			}},
 		},
 	}
@@ -1807,6 +1843,24 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 					},
 				},
 			},
+			TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://telegram.api.url")),
+			},
+			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
+			},
+			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
+			},
+			JiraConfig: &monitoringv1.GlobalJiraConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
+			},
+			RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://rocketchat.api.url")),
+			},
+			WebexConfig: &monitoringv1.GlobalWebexConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://webex.api.url")),
+			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
@@ -1908,6 +1962,12 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
+  wechat_api_url: https://wechat.api.url
+  victorops_api_url: https://victorops.api.url
+  telegram_api_url: https://telegram.api.url
+  webex_api_url: https://webex.api.url
+  jira_api_url: https://jira.api.url
+  rocketchat_api_url: https://rocketchat.api.url
 route:
   receiver: %[1]s
   routes:
