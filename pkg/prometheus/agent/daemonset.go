@@ -17,6 +17,7 @@ package prometheusagent
 import (
 	"fmt"
 	"maps"
+	"slices"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -108,7 +109,7 @@ func makeDaemonSetSpec(
 	}
 
 	promArgs = append(promArgs, confArg)
-	volumes = append(volumes, configVol...)
+	volumes = slices.Concat(volumes, configVol, cpf.Volumes)
 	promVolumeMounts = append(promVolumeMounts, configMount...)
 
 	configReloaderWebConfigFile = confArg.Value
