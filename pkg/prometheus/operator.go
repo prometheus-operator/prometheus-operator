@@ -144,13 +144,25 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		}
 
 		if spec.AzureAD.OAuth != nil {
+			if !cg.WithMinimumVersion("2.48.0").IsCompatible() {
+				return fmt.Errorf("azureAD.oauth requires Prometheus >= v2.48.0")
+			}
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
 			}
 		}
 
+		if spec.AzureAD.SDK != nil {
+			if !cg.WithMinimumVersion("2.52.0").IsCompatible() {
+				return fmt.Errorf("azureAD.sdk requires Prometheus >= v2.52.0")
+			}
+		}
+
 		if spec.AzureAD.WorkloadIdentity != nil {
+			if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
+				return fmt.Errorf("azureAD.workloadIdentity requires Prometheus >= v3.7.0")
+			}
 			_, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
@@ -159,31 +171,6 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 			if err != nil {
 				return fmt.Errorf("the provided Azure Workload Identity tenantId is invalid")
 			}
-		}
-
-		// Ensure that at least one Azure AD authentication method will remain
-		// valid after version-based filtering during config generation.
-		hasValidAuth := false
-
-		if spec.AzureAD.ManagedIdentity != nil {
-			// ManagedIdentity is always supported (no minimum version requirement).
-			hasValidAuth = true
-		}
-
-		if spec.AzureAD.OAuth != nil && cg.WithMinimumVersion("2.48.0").IsCompatible() {
-			hasValidAuth = true
-		}
-
-		if spec.AzureAD.SDK != nil && cg.WithMinimumVersion("2.52.0").IsCompatible() {
-			hasValidAuth = true
-		}
-
-		if spec.AzureAD.WorkloadIdentity != nil && cg.WithMinimumVersion("3.7.0").IsCompatible() {
-			hasValidAuth = true
-		}
-
-		if !hasValidAuth {
-			return fmt.Errorf("azure AD configuration requires at least one authentication method compatible with Prometheus %s (managedIdentity always works, oauth requires v2.48.0+, sdk requires v2.52.0+, workloadIdentity requires v3.7.0+)", cg.version)
 		}
 	}
 
