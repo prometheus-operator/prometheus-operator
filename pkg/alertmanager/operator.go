@@ -590,6 +590,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Check if the Alertmanager instance is marked for deletion.
 	if c.rr.DeletionInProgress(am) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
