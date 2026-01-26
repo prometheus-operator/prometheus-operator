@@ -2820,9 +2820,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
 			}
 
-			if len(azureAd) > 0 {
-				cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
-			}
+			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
 		}
 
 		if spec.FollowRedirects != nil {

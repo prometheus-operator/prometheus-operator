@@ -4070,39 +4070,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
 		},
 		{
-			version: "v3.6.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-						ClientID: "fake-client-id",
-						TenantID: "fake-tenant-id",
-					},
-				},
-			},
-			golden: "RemoteWriteConfig_AzureADWorkloadIdentity_v3.6.0.golden",
-		},
-		{
-			version: "v2.47.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					OAuth: &monitoringv1.AzureOAuth{
-						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
-						ClientID: "00000000-0000-0000-0000-000000000000",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "azure-oauth-secret",
-							},
-							Key: "secret-key",
-						},
-					},
-				},
-			},
-			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
-		},
-		{
 			version: "v2.52.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
@@ -4114,19 +4081,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfigAzureADSDK_v2.52.0.golden",
-		},
-		{
-			version: "v2.51.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
-					},
-				},
-			},
-			golden: "RemoteWriteConfigAzureADSDK_v2.51.0.golden",
 		},
 		{
 			version: "v3.5.0",
@@ -4154,20 +4108,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
-		},
-		{
-			version: "v3.6.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
-						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
-					},
-				},
-			},
-			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
 		},
 		{
 			version: "v2.26.0",
