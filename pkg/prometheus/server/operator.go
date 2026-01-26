@@ -16,7 +16,6 @@ package prometheus
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -1024,7 +1023,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
-	var deleteErrs []error
 	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
 		s := obj.(*appsv1.StatefulSet)
 
@@ -1038,26 +1036,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		shouldRetain, retainErr := c.shouldRetain(p)
-		if retainErr != nil {
-			deleteErrs = append(deleteErrs, fmt.Errorf("failed to determine if StatefulSet %s should be retained: %w", s.GetName(), retainErr))
+		shouldRetain, err := c.shouldRetain(p)
+		if err != nil {
+			c.logger.Error("failed to determine if StatefulSet should be retained", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 			return
 		}
 		if shouldRetain {
 			return
 		}
 
-		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
-			if !apierrors.IsNotFound(delErr) {
-				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
-			}
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
+			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
 		}
 	})
 	if err != nil {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
-	}
-	if len(deleteErrs) > 0 {
-		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
 
 	err = c.updateConfigResourcesStatus(ctx, p, *resources)
