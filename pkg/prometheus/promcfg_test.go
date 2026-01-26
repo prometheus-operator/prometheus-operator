@@ -14140,3 +14140,47 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 		})
 	}
 }
+func TestGenerateRemoteWriteConfig_AzureAD_UnsupportedVersion(t *testing.T) {
+	// Scenario: Usage of WorkloadIdentity (requires v3.7.0) with Prometheus v3.6.0.
+	// The generator should filter out the WorkloadIdentity field because it's unsupported,
+	// and subsequently omit the "azuread" block entirely because it would be empty.
+	p := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v3.6.0", // Unsupported version for WorkloadIdentity
+				RemoteWrite: []monitoringv1.RemoteWriteSpec{
+					{
+						URL: "http://example.com",
+						AzureAD: &monitoringv1.AzureAD{
+							WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+								ClientID: "fake-client-id",
+								TenantID: "fake-tenant-id",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		p,
+		nil, nil, nil, nil,
+		&assets.StoreBuilder{},
+		nil, nil, nil, nil,
+	)
+	require.NoError(t, err)
+
+	cfgStr := string(cfg)
+
+	// Sanity check: ensure the remote write URL is present
+	require.Contains(t, cfgStr, "http://example.com")
+
+	// Critical check: ensure "azuread" is NOT present
+	require.NotContains(t, cfgStr, "azuread", "The configuration should not contain an empty 'azuread' block when all fields are filtered out by version")
+}
