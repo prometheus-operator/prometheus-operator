@@ -1965,7 +1965,9 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   wechat_api_url: https://wechat.api.url
   victorops_api_url: https://victorops.api.url
   telegram_api_url: https://telegram.api.url
+  webex_api_url: https://webex.api.url
   jira_api_url: https://jira.api.url
+  rocketchat_api_url: https://rocketchat.api.url
 route:
   receiver: %[1]s
   routes:
