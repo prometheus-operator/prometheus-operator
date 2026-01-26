@@ -973,7 +973,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			}
 		}
 
-		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, tlsAssets, existingStatefulSet.Spec)
+		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, tlsAssets)
 		if err != nil {
 			return err
 		}
@@ -1300,16 +1300,11 @@ func (c *Operator) unmanagedPrometheusConfiguration(p *monitoringv1.Prometheus) 
 		p.Spec.ScrapeConfigSelector == nil
 }
 
-func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfigMapNames []string, tlsAssets *operator.ShardedSecret) (string, error) {
 	var http2 *bool
 	if p.Spec.Web != nil && p.Spec.Web.HTTPConfig != nil {
 		http2 = p.Spec.Web.HTTPConfig.HTTP2
 	}
-
-	// The controller should ignore any changes to RevisionHistoryLimit field because
-	// it may be modified by external actors.
-	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
-	ssSpec.RevisionHistoryLimit = nil
 
 	hash, err := hashstructure.Hash(struct {
 		PrometheusLabels      map[string]string
@@ -1317,7 +1312,6 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 		PrometheusGeneration  int64
 		PrometheusWebHTTP2    *bool
 		Config                prompkg.Config
-		StatefulSetSpec       appsv1.StatefulSetSpec
 		RuleConfigMaps        []string `hash:"set"`
 		ShardedSecret         *operator.ShardedSecret
 	}{
@@ -1326,7 +1320,6 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 		PrometheusGeneration:  p.Generation,
 		PrometheusWebHTTP2:    http2,
 		Config:                c,
-		StatefulSetSpec:       ssSpec,
 		RuleConfigMaps:        ruleConfigMapNames,
 		ShardedSecret:         tlsAssets,
 	},

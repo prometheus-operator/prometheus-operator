@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -202,10 +201,10 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			c := prompkg.Config{}
 
-			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
+			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{})
 			require.NoError(t, err)
 
-			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
+			p2Hash, err := createSSetInputHash(tc.b, c, []string{}, &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			if !tc.equal {
@@ -214,13 +213,31 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 			}
 
 			require.Equal(t, p1Hash, p2Hash, "expected two Prometheus CRDs to produce the same hash but got different hash")
-
-			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
-			require.NoError(t, err)
-
-			require.NotEqual(t, p1Hash, p2Hash, "expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
 		})
 	}
+}
+
+func TestCreateStatefulSetInputHashStability(t *testing.T) {
+	p := monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:       "test",
+			Generation: 1,
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "v2.0.0",
+			},
+		},
+	}
+	c := prompkg.Config{}
+
+	hash1, err := createSSetInputHash(p, c, []string{"rule-cm"}, &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	hash2, err := createSSetInputHash(p, c, []string{"rule-cm"}, &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	require.Equal(t, hash1, hash2, "expected hash to be stable across multiple calls with same inputs")
 }
 
 func TestCreateThanosConfigSecret(t *testing.T) {
