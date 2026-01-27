@@ -29,7 +29,7 @@ type PagerDutyConfigApplyConfiguration struct {
 	ServiceKey            *SecretKeySelectorApplyConfiguration     `json:"serviceKey,omitempty"`
 	URL                   *monitoringv1beta1.URL                   `json:"url,omitempty"`
 	Client                *string                                  `json:"client,omitempty"`
-	ClientURL             *monitoringv1beta1.URL                   `json:"clientURL,omitempty"`
+	ClientURL             *string                                  `json:"clientURL,omitempty"`
 	Description           *string                                  `json:"description,omitempty"`
 	Severity              *string                                  `json:"severity,omitempty"`
 	Class                 *string                                  `json:"class,omitempty"`
@@ -92,7 +92,7 @@ func (b *PagerDutyConfigApplyConfiguration) WithClient(value string) *PagerDutyC
 // WithClientURL sets the ClientURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientURL field is set to the value of the last call.
-func (b *PagerDutyConfigApplyConfiguration) WithClientURL(value monitoringv1beta1.URL) *PagerDutyConfigApplyConfiguration {
+func (b *PagerDutyConfigApplyConfiguration) WithClientURL(value string) *PagerDutyConfigApplyConfiguration {
 	b.ClientURL = &value
 	return b
 }

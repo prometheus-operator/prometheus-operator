@@ -16,15 +16,11 @@
 
 package v1beta1
 
-import (
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-)
-
 // PagerDutyLinkConfigApplyConfiguration represents a declarative configuration of the PagerDutyLinkConfig type for use
 // with apply.
 type PagerDutyLinkConfigApplyConfiguration struct {
-	Href *monitoringv1beta1.URL `json:"href,omitempty"`
-	Text *string                `json:"alt,omitempty"`
+	Href *string `json:"href,omitempty"`
+	Text *string `json:"alt,omitempty"`
 }
 
 // PagerDutyLinkConfigApplyConfiguration constructs a declarative configuration of the PagerDutyLinkConfig type for use with
@@ -36,7 +32,7 @@ func PagerDutyLinkConfig() *PagerDutyLinkConfigApplyConfiguration {
 // WithHref sets the Href field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Href field is set to the value of the last call.
-func (b *PagerDutyLinkConfigApplyConfiguration) WithHref(value monitoringv1beta1.URL) *PagerDutyLinkConfigApplyConfiguration {
+func (b *PagerDutyLinkConfigApplyConfiguration) WithHref(value string) *PagerDutyLinkConfigApplyConfiguration {
 	b.Href = &value
 	return b
 }

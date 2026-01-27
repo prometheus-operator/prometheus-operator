@@ -516,7 +516,7 @@ func (in *PagerDutyConfig) DeepCopyInto(out *PagerDutyConfig) {
 	}
 	if in.ClientURL != nil {
 		in, out := &in.ClientURL, &out.ClientURL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Description != nil {
@@ -600,7 +600,7 @@ func (in *PagerDutyImageConfig) DeepCopyInto(out *PagerDutyImageConfig) {
 	}
 	if in.Href != nil {
 		in, out := &in.Href, &out.Href
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Alt != nil {
@@ -625,7 +625,7 @@ func (in *PagerDutyLinkConfig) DeepCopyInto(out *PagerDutyLinkConfig) {
 	*out = *in
 	if in.Href != nil {
 		in, out := &in.Href, &out.Href
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Text != nil {
