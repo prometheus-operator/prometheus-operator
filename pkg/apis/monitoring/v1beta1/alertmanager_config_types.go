@@ -85,13 +85,17 @@ type AlertmanagerConfigSpec struct {
 	// +optional
 	Route *Route `json:"route"`
 	// receivers defines the list of receivers.
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	Receivers []Receiver `json:"receivers"`
 	// inhibitRules defines the list of inhibition rules. The rules will only apply to alerts matching
 	// the resource's namespace.
+	// +listType=atomic
 	// +optional
 	InhibitRules []InhibitRule `json:"inhibitRules,omitempty"`
 	// timeIntervals defines the list of timeIntervals specifying when the routes should be muted.
+	// +listType=atomic
 	// +optional
 	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
 }
@@ -105,6 +109,7 @@ type Route struct {
 	// groupBy defines the list of labels to group by.
 	// Labels must not be repeated (unique list).
 	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
+	// +listType=set
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
@@ -126,6 +131,7 @@ type Route struct {
 	// level route, the operator removes any existing equality and regexp
 	// matcher on the `namespace` label and adds a `namespace: <object
 	// namespace>` matcher.
+	// +listType=atomic
 	// +optional
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// continue defines the boolean indicating whether an alert should continue matching subsequent
@@ -134,6 +140,7 @@ type Route struct {
 	// +optional
 	Continue bool `json:"continue,omitempty"` // nolint:kubeapilinter
 	// routes defines the child routes.
+	// +listType=atomic
 	// +optional
 	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
 	// Note: this comment applies to the field definition above but appears
@@ -145,9 +152,11 @@ type Route struct {
 	// JSON representation.
 
 	// muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	// +listType=set
 	// +optional
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// activeTimeIntervals is a list of TimeInterval names when this route should be active.
+	// +listType=set
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
@@ -174,51 +183,66 @@ type Receiver struct {
 	// +required
 	Name string `json:"name"`
 	// opsgenieConfigs defines the list of OpsGenie configurations.
+	// +listType=atomic
 	// +optional
 	OpsGenieConfigs []OpsGenieConfig `json:"opsgenieConfigs,omitempty"`
 	// pagerdutyConfigs defines the List of PagerDuty configurations.
+	// +listType=atomic
 	// +optional
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
 	// discordConfigs defines the list of Discord configurations.
+	// +listType=atomic
 	// +optional
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// slackConfigs defines the list of Slack configurations.
+	// +listType=atomic
 	// +optional
 	SlackConfigs []SlackConfig `json:"slackConfigs,omitempty"`
 	// webhookConfigs defines the List of webhook configurations.
+	// +listType=atomic
 	// +optional
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
 	// wechatConfigs defines the list of WeChat configurations.
+	// +listType=atomic
 	// +optional
 	WeChatConfigs []WeChatConfig `json:"wechatConfigs,omitempty"`
 	// emailConfigs defines the list of Email configurations.
+	// +listType=atomic
 	// +optional
 	EmailConfigs []EmailConfig `json:"emailConfigs,omitempty"`
 	// victoropsConfigs defines the list of VictorOps configurations.
+	// +listType=atomic
 	// +optional
 	VictorOpsConfigs []VictorOpsConfig `json:"victoropsConfigs,omitempty"`
 	// pushoverConfigs defines the list of Pushover configurations.
+	// +listType=atomic
 	// +optional
 	PushoverConfigs []PushoverConfig `json:"pushoverConfigs,omitempty"`
 	// snsConfigs defines the list of SNS configurations
+	// +listType=atomic
 	// +optional
 	SNSConfigs []SNSConfig `json:"snsConfigs,omitempty"`
 	// telegramConfigs defines the list of Telegram configurations.
+	// +listType=atomic
 	// +optional
 	TelegramConfigs []TelegramConfig `json:"telegramConfigs,omitempty"`
 	// webexConfigs defines the list of Webex configurations.
+	// +listType=atomic
 	// +optional
 	WebexConfigs []WebexConfig `json:"webexConfigs,omitempty"`
 	// msteamsConfigs defines the list of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
+	// +listType=atomic
 	// +optional
 	MSTeamsConfigs []MSTeamsConfig `json:"msteamsConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +listType=atomic
 	// +optional
 	MSTeamsV2Configs []MSTeamsV2Config `json:"msteamsv2Configs,omitempty"`
 	// rocketchatConfigs defines the list of RocketChat configurations.
 	// It requires Alertmanager >= 0.28.0.
+	// +listType=atomic
 	// +optional
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 }
@@ -624,10 +648,12 @@ type OpsGenieConfig struct {
 	Priority *string `json:"priority,omitempty"`
 	// details defines a set of arbitrary key/value pairs that provide further detail about the incident.
 	// These appear as additional fields in the OpsGenie alert.
+	// +listType=atomic
 	// +optional
 	Details []KeyValue `json:"details,omitempty"`
 	// responders defines the list of responders responsible for notifications.
 	// These determine who gets notified when the alert is created.
+	// +listType=atomic
 	// +optional
 	Responders []OpsGenieConfigResponder `json:"responders,omitempty"`
 	// httpConfig defines the HTTP client configuration for OpsGenie API requests.
@@ -847,6 +873,7 @@ type EmailConfig struct {
 	AuthIdentity *string `json:"authIdentity,omitempty"`
 	// headers defines additional email header key/value pairs.
 	// These override any headers previously set by the notification implementation.
+	// +listType=atomic
 	// +optional
 	Headers []KeyValue `json:"headers,omitempty"`
 	// html defines the HTML body of the email notification.
@@ -1218,6 +1245,7 @@ type RocketChatConfig struct {
 	// fields defines additional fields for the message attachment.
 	// These appear as structured key-value pairs within the message.
 	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
 	// +optional
 	Fields []RocketChatFieldConfig `json:"fields,omitempty"`
 	// shortFields defines whether to use short fields in the message layout.
@@ -1239,6 +1267,7 @@ type RocketChatConfig struct {
 	// actions defines interactive actions to include in the message.
 	// These appear as buttons that users can click to trigger responses.
 	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
 	// httpConfig defines the HTTP client configuration for RocketChat API requests.
@@ -1289,15 +1318,18 @@ type InhibitRule struct {
 	// targetMatch defines matchers that have to be fulfilled in the alerts to be muted.
 	// The operator enforces that the alert matches the resource's namespace.
 	// When these conditions are met, matching alerts will be inhibited (silenced).
+	// +listType=atomic
 	// +optional
 	TargetMatch []Matcher `json:"targetMatch,omitempty"`
 	// sourceMatch defines matchers for which one or more alerts have to exist for the inhibition
 	// to take effect. The operator enforces that the alert matches the resource's namespace.
 	// These are the "trigger" alerts that cause other alerts to be inhibited.
+	// +listType=atomic
 	// +optional
 	SourceMatch []Matcher `json:"sourceMatch,omitempty"`
 	// equal defines labels that must have an equal value in the source and target alert
 	// for the inhibition to take effect. This ensures related alerts are properly grouped.
+	// +listType=set
 	// +optional
 	Equal []string `json:"equal,omitempty"`
 }
@@ -1424,6 +1456,7 @@ type TimeInterval struct {
 	// +required
 	Name string `json:"name,omitempty"`
 	// timeIntervals defines a list of TimePeriod.
+	// +listType=atomic
 	// +optional
 	TimeIntervals []TimePeriod `json:"timeIntervals,omitempty"`
 }
@@ -1431,18 +1464,23 @@ type TimeInterval struct {
 // TimePeriod describes periods of time.
 type TimePeriod struct {
 	// times defines a list of TimeRange
+	// +listType=atomic
 	// +optional
 	Times []TimeRange `json:"times,omitempty"`
 	// weekdays defines a list of WeekdayRange
+	// +listType=atomic
 	// +optional
 	Weekdays []WeekdayRange `json:"weekdays,omitempty"`
 	// daysOfMonth defines a list of DayOfMonthRange
+	// +listType=atomic
 	// +optional
 	DaysOfMonth []DayOfMonthRange `json:"daysOfMonth,omitempty"`
 	// months defines a list of MonthRange
+	// +listType=atomic
 	// +optional
 	Months []MonthRange `json:"months,omitempty"`
 	// years defines a list of YearRange
+	// +listType=atomic
 	// +optional
 	Years []YearRange `json:"years,omitempty"`
 }
