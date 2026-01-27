@@ -3103,6 +3103,43 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL.golden",
 		},
 		{
+			name:    "CR with Slack Receiver with URL fields",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Channel:   ptr.To("#alerts"),
+								TitleLink: "https://example.com/title",
+								IconURL:   "https://example.com/icon.png",
+								ImageURL:  "https://example.com/image.png",
+								ThumbURL:  "https://example.com/thumb.png",
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_URL_fields.golden",
+		},
+		{
 			name:    "CR with Slack Receiver and global Slack URL File",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
