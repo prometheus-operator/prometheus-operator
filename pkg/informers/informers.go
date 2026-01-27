@@ -195,11 +195,8 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 		return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
 	}
 
-	var err error
-
 	for _, inf := range w.informers {
-		var ret runtime.Object
-		ret, err = inf.Lister().Get(name)
+		ret, err := inf.Lister().Get(name)
 		if apierrors.IsNotFound(err) {
 			continue
 		}
@@ -210,13 +207,7 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 		return ret, nil
 	}
 
-	// Ensure we always return a NotFound error if the object wasn't found,
-	// even if err happens to be nil (which shouldn't happen, but be defensive).
-	if err == nil {
-		return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
-	}
-
-	return nil, err
+	return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
 }
 
 // newInformerOptions returns a list option tweak function and a list of namespaces
