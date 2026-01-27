@@ -933,13 +933,13 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.TitleLink = in.TitleLink
 	}
 	if in.IconURL != "" {
-		out.TitleLink = in.IconURL
+		out.IconURL = in.IconURL
 	}
 	if in.ImageURL != "" {
-		out.TitleLink = in.ImageURL
+		out.ImageURL = in.ImageURL
 	}
 	if in.ThumbURL != "" {
-		out.TitleLink = in.ThumbURL
+		out.ThumbURL = in.ThumbURL
 	}
 
 	var actions []slackAction
