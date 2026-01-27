@@ -29,10 +29,11 @@ func UpdateStrategyForStatefulSet(updateStrategy *monitoringv1.StatefulSetUpdate
 	}
 
 	converted := appsv1.StatefulSetUpdateStrategy{
-		Type: appsv1.StatefulSetUpdateStrategyType(updateStrategy.Type),
+		Type: updateStrategy.Type,
 	}
 	if updateStrategy.RollingUpdate != nil {
 		converted.RollingUpdate = &appsv1.RollingUpdateStatefulSetStrategy{
+			Partition:      updateStrategy.RollingUpdate.Partition,
 			MaxUnavailable: updateStrategy.RollingUpdate.MaxUnavailable,
 		}
 	}
