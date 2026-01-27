@@ -822,7 +822,6 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 func (c *Operator) sync(ctx context.Context, key string) error {
 	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
-
 	if err != nil {
 		return err
 	}
@@ -834,19 +833,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	c.recordDeprecatedFields(key, logger, p)
+	logger.Info("sync prometheus")
 
-	statusCleanup := func() error {
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error {
 		return c.configResStatusCleanup(ctx, p)
-	}
-
-	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), statusCleanup)
+	})
 	if err != nil {
 		return err
 	}
 
 	if finalizerAdded {
-		// Since the object has been updated, let's trigger another sync.
+		// Since the finalizer has been added to the object, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
 		return nil
 	}
@@ -856,28 +853,20 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	if p.Spec.Paused {
+		logger.Info("no action taken (the resource is paused)")
+		return nil
+	}
+
+	c.recordDeprecatedFields(key, logger, p)
+
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return err
 	}
 
-	if p.Spec.Paused {
-		logger.Info("the resource is paused, not reconciling")
-		return nil
-	}
-
-	logger.Info("sync prometheus")
-
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	opts := []prompkg.ConfigGeneratorOption{}
-	if c.endpointSliceSupported {
-		opts = append(opts, prompkg.WithEndpointSliceSupport())
-	}
-	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
-	if err != nil {
-		return err
-	}
-
+	// Select configuration resources.
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
 		return err
@@ -888,6 +877,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
+	if err != nil {
+		return err
+	}
+
+	opts := []prompkg.ConfigGeneratorOption{}
+	if c.endpointSliceSupported {
+		opts = append(opts, prompkg.WithEndpointSliceSupport())
+	}
+	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return err
 	}

@@ -473,7 +473,6 @@ func (o *Operator) Sync(ctx context.Context, key string) error {
 
 func (o *Operator) sync(ctx context.Context, key string) error {
 	tr, err := operator.GetObjectFromKey[*monitoringv1.ThanosRuler](o.thanosRulerInfs, key)
-
 	if err != nil {
 		return err
 	}
@@ -484,23 +483,18 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	if tr.Spec.Paused {
-		return nil
-	}
-
 	logger := o.logger.With("key", key)
+	logger.Info("sync thanos-ruler")
 
-	statusCleanup := func() error {
+	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), func() error {
 		return o.configResStatusCleanup(ctx, tr)
-	}
-
-	finalizerAdded, err := o.finalizerSyncer.Sync(ctx, tr, o.rr.DeletionInProgress(tr), statusCleanup)
+	})
 	if err != nil {
 		return err
 	}
 
 	if finalizerAdded {
-		// Since the object has been updated, let's trigger another sync.
+		// Since the finalizer has been added to the object, let's trigger another sync.
 		o.rr.EnqueueForReconciliation(tr)
 		return nil
 	}
@@ -511,7 +505,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	logger.Info("sync thanos-ruler")
+	if tr.Spec.Paused {
+		logger.Info("no action taken (the resource is paused)")
+		return nil
+	}
 
 	o.recordDeprecatedFields(key, logger, tr)
 
