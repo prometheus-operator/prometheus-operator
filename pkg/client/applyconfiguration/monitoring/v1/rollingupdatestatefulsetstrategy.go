@@ -1,4 +1,4 @@
-// Copyright The prometheus-operator Authors
+// Copyright 2025 The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 // RollingUpdateStatefulSetStrategyApplyConfiguration represents a declarative configuration of the RollingUpdateStatefulSetStrategy type for use
 // with apply.
 type RollingUpdateStatefulSetStrategyApplyConfiguration struct {
+	Partition      *int32              `json:"partition,omitempty"`
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 }
 
@@ -30,6 +31,14 @@ type RollingUpdateStatefulSetStrategyApplyConfiguration struct {
 // apply.
 func RollingUpdateStatefulSetStrategy() *RollingUpdateStatefulSetStrategyApplyConfiguration {
 	return &RollingUpdateStatefulSetStrategyApplyConfiguration{}
+}
+
+// WithPartition sets the Partition field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Partition field is set to the value of the last call.
+func (b *RollingUpdateStatefulSetStrategyApplyConfiguration) WithPartition(value int32) *RollingUpdateStatefulSetStrategyApplyConfiguration {
+	b.Partition = &value
+	return b
 }
 
 // WithMaxUnavailable sets the MaxUnavailable field in the declarative configuration to the given value
