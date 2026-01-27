@@ -325,6 +325,8 @@
     "prometheusrules",
     "prometheusrulevalidate",
     "prometheuses",
+    "remotewrite",
+    "remotewrites",
     "promql",
     "promrule",
     "promtool",
