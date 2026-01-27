@@ -408,10 +408,6 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
-func (cb *ConfigBuilder) getValidTemplateURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
-	return cb.getFromSecretWithValidation(ctx, namespace, selector, validation.ValidateTemplateURL)
-}
-
 func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
 	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
 		_, err := validation.ValidateURL(url)
@@ -832,18 +828,16 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		VSendResolved: in.SendResolved,
 	}
 
+	// No need to validate again the URL because it's been done when selecting the AlertmanagerConfig resource.
 	if in.URLSecret != nil {
-		url, err := cb.getValidTemplateURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
 			return nil, err
 		}
+
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(string(*in.URL))
-		if err != nil {
-			return nil, err
-		}
-		out.URL = url.String()
+		out.URL = *in.URL
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
