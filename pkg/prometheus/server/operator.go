@@ -202,6 +202,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		config: prompkg.Config{
 			LocalHost:                  c.LocalHost,
 			ReloaderConfig:             c.ReloaderConfig,
+			RepairPolicy:               c.RepairPolicy,
 			PrometheusDefaultBaseImage: c.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     c.ThanosDefaultBaseImage,
 			Annotations:                c.Annotations,
@@ -997,6 +998,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 				return fmt.Errorf("failed to create statefulset: %w", err)
 			}
 			continue
+		}
+
+		if err := c.resolveStuckStatefulSet(ctx, logger, p, existingStatefulSet); err != nil {
+			logger.Error("failed to resolve stuck statefulset", "err", err)
 		}
 
 		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
