@@ -46,6 +46,7 @@ type FactoriesForNamespaces interface {
 // ForResource contains a slice of InformLister for a concrete resource type,
 // one per namespace.
 type ForResource struct {
+	gr        schema.GroupResource
 	informers []InformLister
 }
 
@@ -79,6 +80,7 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 	}
 
 	return &ForResource{
+		gr:        resource.GroupResource(),
 		informers: informers,
 	}, nil
 }
@@ -192,7 +194,7 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 // It returns a NotFound error if the object isn't found in any informer.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
 	if len(w.informers) == 0 {
-		return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
+		return nil, apierrors.NewNotFound(w.gr, name)
 	}
 
 	for _, inf := range w.informers {
@@ -207,7 +209,7 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 		return ret, nil
 	}
 
-	return nil, apierrors.NewNotFound(schema.GroupResource{}, name)
+	return nil, apierrors.NewNotFound(w.gr, name)
 }
 
 // newInformerOptions returns a list option tweak function and a list of namespaces
