@@ -917,6 +917,8 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 						Key: "password",
 					},
 				},
+				BearerToken:     "bearer_token",
+				BearerTokenFile: "bearer_token_file",
 			},
 			store: assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -932,15 +934,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			),
 			role:   "endpoints",
 			golden: "K8SSDConfigGenerationTwo.golden",
-		},
-		{
-			apiServerConfig: &monitoringv1.APIServerConfig{
-				Host:        "example.com",
-				BearerToken: "bearer_token",
-			},
-			store:  assets.NewTestStoreBuilder(),
-			role:   "endpoints",
-			golden: "K8SSDConfigGenerationBearerToken.golden",
 		},
 		{
 			apiServerConfig: nil,
@@ -1556,7 +1549,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.StoreBuilder{},
-			golden.Get(t, "input/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
+			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -4054,7 +4047,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "azure-versions/RemoteWriteConfig_v2.10.0_1.golden",
+			golden: "RemoteWriteConfig_v2.10.0_1.golden",
 		},
 		{
 			version: "v2.27.1",
@@ -4116,26 +4109,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
 		},
 		{
-			version: "v2.47.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					OAuth: &monitoringv1.AzureOAuth{
-						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
-						ClientID: "00000000-0000-0000-0000-000000000000",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "azure-oauth-secret",
-							},
-							Key: "secret-key",
-						},
-					},
-				},
-			},
-			golden: "azure-versions/RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
-		},
-		{
 			version: "v2.52.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
@@ -4147,19 +4120,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfigAzureADSDK_v2.52.0.golden",
-		},
-		{
-			version: "v2.51.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
-					},
-				},
-			},
-			golden: "azure-versions/RemoteWriteConfigAzureADSDK_v2.51.0.golden",
 		},
 		{
 			version: "v3.5.0",
@@ -4187,20 +4147,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
-		},
-		{
-			version: "v3.6.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
-						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
-						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
-					},
-				},
-			},
-			golden: "azure-versions/RemoteWriteConfigAzureADWorkloadIdentity_v3.6.0.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -5144,7 +5090,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "native-histograms/NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
+			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -5154,7 +5100,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "native-histograms/NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
+			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
 		{
 			version: "v2.44.0",

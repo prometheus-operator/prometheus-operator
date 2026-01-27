@@ -774,7 +774,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
-	// Probes and PrometheusRules in the namespace.
+	// Probes, PrometheusRules and ScrapeConfigs in the namespace.
 	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1.Prometheus)
 
@@ -782,6 +782,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
 			"Probes":          p.Spec.ProbeNamespaceSelector,
 			"PrometheusRules": p.Spec.RuleNamespaceSelector,
+			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
 

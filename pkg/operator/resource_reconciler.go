@@ -454,11 +454,13 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 	mOld, err := meta.Accessor(old)
 	if err != nil {
 		rr.logger.Error("failed to get old object meta", "err", err, "key", key)
+		return
 	}
 
 	mCur, err := meta.Accessor(cur)
 	if err != nil {
 		rr.logger.Error("failed to get current object meta", "err", err, "key", key)
+		return
 	}
 
 	if !rr.isManagedByController(mCur) {

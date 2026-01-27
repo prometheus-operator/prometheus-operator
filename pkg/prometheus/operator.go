@@ -144,13 +144,25 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		}
 
 		if spec.AzureAD.OAuth != nil {
+			if !cg.WithMinimumVersion("2.48.0").IsCompatible() {
+				return fmt.Errorf("azureAD.oauth requires Prometheus >= v2.48.0")
+			}
 			_, err := uuid.Parse(spec.AzureAD.OAuth.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure OAuth clientId is invalid")
 			}
 		}
 
+		if spec.AzureAD.SDK != nil {
+			if !cg.WithMinimumVersion("2.52.0").IsCompatible() {
+				return fmt.Errorf("azureAD.sdk requires Prometheus >= v2.52.0")
+			}
+		}
+
 		if spec.AzureAD.WorkloadIdentity != nil {
+			if !cg.WithMinimumVersion("3.7.0").IsCompatible() {
+				return fmt.Errorf("azureAD.workloadIdentity requires Prometheus >= v3.7.0")
+			}
 			_, err := uuid.Parse(spec.AzureAD.WorkloadIdentity.ClientID)
 			if err != nil {
 				return fmt.Errorf("the provided Azure Workload Identity clientId is invalid")
