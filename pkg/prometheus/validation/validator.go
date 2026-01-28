@@ -16,14 +16,19 @@ package validation
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+// from https://github.com/prometheus/prometheus/blob/main/model/relabel/relabel.go#L33
+var relabelTargetLegacy = regexp.MustCompile(`^(?:(?:[a-zA-Z_]|\$(?:\{\w+\}|\w+))+\w*)+$`)
 
 // LabelConfigValidator validates relabel configurations.
 type LabelConfigValidator struct {
@@ -67,6 +72,18 @@ func varInRegexTemplate(template string) bool {
 func (lcv *LabelConfigValidator) isValidLabelName(labelName string) bool {
 	validationScheme := operator.ValidationSchemeForPrometheus(lcv.v)
 	return validationScheme.IsValidLabelName(labelName)
+}
+
+// same logic from prometheus for legacy validation, to use the legacy regex that allows $variables.
+// from https://github.com/prometheus/prometheus/blob/main/model/relabel/relabel.go#L144
+func (lcv *LabelConfigValidator) isValidLabelNameWithRegexVar(labelName string) bool {
+	validationScheme := operator.ValidationSchemeForPrometheus(lcv.v)
+	switch validationScheme {
+	case model.UTF8Validation:
+		return validationScheme.IsValidLabelName(labelName)
+	default:
+		return relabelTargetLegacy.MatchString(labelName)
+	}
 }
 
 // ValidateRelabelConfig validates a single relabel configuration.
@@ -114,7 +131,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 		return fmt.Errorf("'replacement' can not be set for %s action", rc.Action)
 	}
 
-	if action == string(relabel.LabelMap) && (rc.Replacement != nil) && !lcv.isValidLabelName(*rc.Replacement) {
+	if action == string(relabel.LabelMap) && (rc.Replacement != nil) && !lcv.isValidLabelNameWithRegexVar(*rc.Replacement) {
 		return fmt.Errorf("%q is invalid 'replacement' for %s action", *rc.Replacement, rc.Action)
 	}
 
