@@ -1131,7 +1131,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &v1.SecretKeySelector{
@@ -1303,7 +1303,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1358,7 +1358,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{

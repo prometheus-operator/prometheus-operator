@@ -18,7 +18,6 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // PushoverConfigApplyConfiguration represents a declarative configuration of the PushoverConfig type for use
@@ -31,7 +30,7 @@ type PushoverConfigApplyConfiguration struct {
 	TokenFile    *string                              `json:"tokenFile,omitempty"`
 	Title        *string                              `json:"title,omitempty"`
 	Message      *string                              `json:"message,omitempty"`
-	URL          *monitoringv1beta1.URL               `json:"url,omitempty"`
+	URL          *string                              `json:"url,omitempty"`
 	URLTitle     *string                              `json:"urlTitle,omitempty"`
 	TTL          *v1.Duration                         `json:"ttl,omitempty"`
 	Device       *string                              `json:"device,omitempty"`
@@ -109,7 +108,7 @@ func (b *PushoverConfigApplyConfiguration) WithMessage(value string) *PushoverCo
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *PushoverConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL) *PushoverConfigApplyConfiguration {
+func (b *PushoverConfigApplyConfiguration) WithURL(value string) *PushoverConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }

@@ -1436,7 +1436,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
@@ -1679,6 +1680,10 @@ func checkMSTeamsConfigs(
 
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
 			return err
 		}
 
