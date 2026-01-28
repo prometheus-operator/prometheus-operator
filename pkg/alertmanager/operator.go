@@ -594,14 +594,15 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
+	logger := c.logger.With("key", key)
+	logger.Info("sync alertmanager")
+
 	if am.Spec.Paused {
+		logger.Info("no action taken (the resource is paused)")
 		return nil
 	}
 
-	logger := c.logger.With("key", key)
 	c.recordDeprecatedFields(key, logger, am)
-
-	logger.Info("sync alertmanager")
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err

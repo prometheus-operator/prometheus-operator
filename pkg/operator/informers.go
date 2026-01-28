@@ -81,16 +81,21 @@ func HasReferenceFunc(
 	}
 }
 
-// GetObjectFromKey retrieves an object from the informer cache using the provided key. It returns a nil value and no error if the object is not found.
-// The function will panic if the caller provides an informer which doesn't reference objects of type T.
+// GetObjectFromKey retrieves an object from the informer cache using the
+// provided key. It returns a nil value and no error if the object is not
+// found.
+//
+// The function will panic if the caller provides an informer which doesn't
+// reference objects of type T.
 func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string) (T, error) {
-	obj, err := infs.Get(key)
 	var zero T
 
+	obj, err := infs.Get(key)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return zero, nil
 		}
+
 		return zero, fmt.Errorf("failed to retrieve object from informer: %w", err)
 	}
 
@@ -98,5 +103,6 @@ func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string)
 	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
 		return zero, err
 	}
+
 	return obj.(T), nil
 }
