@@ -484,10 +484,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	if tr.Spec.Paused {
-		return nil
-	}
-
 	logger := o.logger.With("key", key)
 
 	statusCleanup := func() error {
@@ -508,6 +504,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	// Check if the Thanos instance is marked for deletion.
 	if o.rr.DeletionInProgress(tr) {
 		o.reconciliations.ForgetObject(key)
+		return nil
+	}
+
+	if tr.Spec.Paused {
 		return nil
 	}
 
