@@ -658,7 +658,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret)
 	if err != nil {
 		return err
 	}
@@ -786,16 +786,11 @@ func labelSelectorForStatefulSets() string {
 	)
 }
 
-func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret) (string, error) {
 	var http2 *bool
 	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
 		http2 = a.Spec.Web.HTTPConfig.HTTP2
 	}
-
-	// The controller should ignore any changes to RevisionHistoryLimit field because
-	// it may be modified by external actors.
-	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
-	s.RevisionHistoryLimit = nil
 
 	hash, err := hashstructure.Hash(struct {
 		AlertmanagerLabels      map[string]string
@@ -803,7 +798,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerGeneration  int64
 		AlertmanagerWebHTTP2    *bool
 		Config                  Config
-		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
 	}{
 		AlertmanagerLabels:      a.Labels,
@@ -811,7 +805,6 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		AlertmanagerGeneration:  a.Generation,
 		AlertmanagerWebHTTP2:    http2,
 		Config:                  c,
-		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
 	},
 		nil,
