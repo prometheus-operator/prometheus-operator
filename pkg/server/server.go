@@ -155,15 +155,15 @@ func (tc *TLSConfig) Convert(logger *slog.Logger) (*tls.Config, error) {
 	info, err := os.Stat(tc.ClientCAFile)
 	switch {
 	case err != nil:
-		logger.Warn("server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "err", err)
+		logger.Warn("server TLS client verification disabled", "clientCAFile", tc.ClientCAFile, "err", err)
 
 	case !info.Mode().IsRegular():
-		logger.Warn("server TLS client verification disabled", "client_ca_file", tc.ClientCAFile, "file_mode", info.Mode().String())
+		logger.Warn("server TLS client verification disabled", "clientCAFile", tc.ClientCAFile, "fileMode", info.Mode().String())
 
 	default:
 		// The client CA content will be checked by the cert controller.
 		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
-		logger.Info("server TLS client verification enabled", "client_ca_file", tc.ClientCAFile)
+		logger.Info("server TLS client verification enabled", "clientCAFile", tc.ClientCAFile)
 	}
 
 	return tlsCfg, nil
