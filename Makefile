@@ -18,6 +18,7 @@ IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
+PROMETHEUS_VERSION?=$(shell awk '/PrometheusCompatibilityMatrix = \[\]string{/,/}/' pkg/operator/defaults.go | grep '"v' | tail -1 | sed 's/.*"v\([0-9.]*\)".*/\1/')
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -364,16 +365,28 @@ check-docs: $(MDOX_BINARY)
 test: test-unit test-long test-e2e
 
 .PHONY: test-unit
-test-unit:
+test-unit: test-prometheus-goldenfiles
 	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1 -v
 
 .PHONY: test-long
-test-long:
+test-long: test-prometheus-goldenfiles
 	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
 
 .PHONY: test-unit-update-golden
 test-unit-update-golden:
 	./scripts/update-golden-files.sh
+
+.PHONY: test-prometheus-goldenfiles
+test-prometheus-goldenfiles: $(TOOLS_BIN_DIR)/promtool
+	$(TOOLS_BIN_DIR)/promtool check config --syntax-only pkg/prometheus/testdata/*.golden
+
+$(TOOLS_BIN_DIR)/promtool: $(TOOLS_BIN_DIR)
+	@echo Downloading promtool
+	@OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+	ARCH=$$(uname -m); \
+	[ "$$ARCH" = "x86_64" ] && ARCH="amd64" || true; \
+	[ "$$ARCH" = "aarch64" ] && ARCH="arm64" || true; \
+	cd $(TOOLS_BIN_DIR) && curl -sL "https://github.com/prometheus/prometheus/releases/download/v$(PROMETHEUS_VERSION)/prometheus-$(PROMETHEUS_VERSION).$${OS}-$${ARCH}.tar.gz" | tar -xz --strip-components=1 "prometheus-$(PROMETHEUS_VERSION).$${OS}-$${ARCH}/promtool"
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
