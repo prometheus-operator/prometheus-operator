@@ -73,6 +73,9 @@ type Config struct {
 	Gates *FeatureGates
 
 	WatchObjectRefsInAllNamespaces bool
+
+	// Repair policy for stuck statefulsets.
+	RepairPolicy RepairPolicy
 }
 
 // DefaultConfig returns a default operator configuration.
@@ -110,6 +113,7 @@ func DefaultConfig(cpu, memory string) Config {
 				enabled:     false,
 			},
 		},
+		RepairPolicy: NoneRepairPolicy,
 	}
 }
 
@@ -421,4 +425,34 @@ func (s StringSet) Slice() []string {
 
 	slices.Sort(ss)
 	return ss
+}
+
+type RepairPolicy string
+
+const (
+	NoneRepairPolicy   RepairPolicy = "none"
+	EvictRepairPolicy  RepairPolicy = "evict"
+	DeleteRepairPolicy RepairPolicy = "delete"
+)
+
+// String implements the flag.Value interface.
+func (p *RepairPolicy) String() string {
+	if p == nil || *p == "" {
+		return string(NoneRepairPolicy)
+	}
+	return string(*p)
+}
+
+// Set implements the flag.Value interface.
+func (p *RepairPolicy) Set(value string) error {
+	switch value {
+	case string(NoneRepairPolicy), string(EvictRepairPolicy), string(DeleteRepairPolicy):
+		*p = RepairPolicy(value)
+		return nil
+	case "":
+		*p = NoneRepairPolicy
+		return nil
+	default:
+		return fmt.Errorf("invalid value for repair policy, expected 'none', 'evict' or 'delete' but got: %q", value)
+	}
 }

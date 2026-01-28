@@ -41,6 +41,7 @@ import (
 type Config struct {
 	LocalHost                  string
 	ReloaderConfig             operator.ContainerConfig
+	RepairPolicy               operator.RepairPolicy
 	PrometheusDefaultBaseImage string
 	ThanosDefaultBaseImage     string
 	Annotations                operator.Map
