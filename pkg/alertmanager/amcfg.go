@@ -1440,8 +1440,8 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 		Attributes:    in.Attributes,
 	}
 
-	if in.ApiURL != "" {
-		out.APIUrl = in.ApiURL
+	if in.ApiURL != nil {
+		out.APIUrl = *in.ApiURL
 	}
 
 	if in.TopicARN != nil {

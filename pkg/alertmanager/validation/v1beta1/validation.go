@@ -322,8 +322,8 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
 		}
 
-		if config.ApiURL != "" {
-			if err := validation.ValidateTemplateURL(config.ApiURL); err != nil {
+		if config.ApiURL != nil {
+			if err := validation.ValidateTemplateURL(*config.ApiURL); err != nil {
 				return fmt.Errorf("[%d]: apiURL: %w", i, err)
 			}
 		}

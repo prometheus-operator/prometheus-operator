@@ -1163,6 +1163,11 @@ func (in *SNSConfig) DeepCopyInto(out *SNSConfig) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ApiURL != nil {
+		in, out := &in.ApiURL, &out.ApiURL
+		*out = new(string)
+		**out = **in
+	}
 	if in.Sigv4 != nil {
 		in, out := &in.Sigv4, &out.Sigv4
 		*out = new(monitoringv1.Sigv4)
