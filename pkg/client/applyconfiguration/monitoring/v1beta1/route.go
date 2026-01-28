@@ -17,7 +17,8 @@
 package v1beta1
 
 import (
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 // RouteApplyConfiguration represents a declarative configuration of the Route type for use
@@ -25,12 +26,12 @@ import (
 type RouteApplyConfiguration struct {
 	Receiver            *string                     `json:"receiver,omitempty"`
 	GroupBy             []string                    `json:"groupBy,omitempty"`
-	GroupWait           *string                     `json:"groupWait,omitempty"`
-	GroupInterval       *string                     `json:"groupInterval,omitempty"`
-	RepeatInterval      *string                     `json:"repeatInterval,omitempty"`
+	GroupWait           *v1.NonEmptyDuration        `json:"groupWait,omitempty"`
+	GroupInterval       *v1.NonEmptyDuration        `json:"groupInterval,omitempty"`
+	RepeatInterval      *v1.NonEmptyDuration        `json:"repeatInterval,omitempty"`
 	Matchers            []MatcherApplyConfiguration `json:"matchers,omitempty"`
 	Continue            *bool                       `json:"continue,omitempty"`
-	Routes              []v1.JSON                   `json:"routes,omitempty"`
+	Routes              []apiextensionsv1.JSON      `json:"routes,omitempty"`
 	MuteTimeIntervals   []string                    `json:"muteTimeIntervals,omitempty"`
 	ActiveTimeIntervals []string                    `json:"activeTimeIntervals,omitempty"`
 }
@@ -62,7 +63,7 @@ func (b *RouteApplyConfiguration) WithGroupBy(values ...string) *RouteApplyConfi
 // WithGroupWait sets the GroupWait field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GroupWait field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithGroupWait(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithGroupWait(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.GroupWait = &value
 	return b
 }
@@ -70,7 +71,7 @@ func (b *RouteApplyConfiguration) WithGroupWait(value string) *RouteApplyConfigu
 // WithGroupInterval sets the GroupInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GroupInterval field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithGroupInterval(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithGroupInterval(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.GroupInterval = &value
 	return b
 }
@@ -78,7 +79,7 @@ func (b *RouteApplyConfiguration) WithGroupInterval(value string) *RouteApplyCon
 // WithRepeatInterval sets the RepeatInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RepeatInterval field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithRepeatInterval(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithRepeatInterval(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.RepeatInterval = &value
 	return b
 }
@@ -107,7 +108,7 @@ func (b *RouteApplyConfiguration) WithContinue(value bool) *RouteApplyConfigurat
 // WithRoutes adds the given value to the Routes field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Routes field.
-func (b *RouteApplyConfiguration) WithRoutes(values ...v1.JSON) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithRoutes(values ...apiextensionsv1.JSON) *RouteApplyConfiguration {
 	for i := range values {
 		b.Routes = append(b.Routes, values[i])
 	}
