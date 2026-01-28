@@ -474,7 +474,17 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		}
 
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
 	}
@@ -516,7 +526,17 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
-	s, err := yaml.Marshal(yaml.MapSlice{c})
+	// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+	fullConfig := yaml.MapSlice{
+		{Key: "scrape_configs", Value: []yaml.MapSlice{
+			{
+				{Key: "job_name", Value: "k8s-sd-test"},
+				c,
+			},
+		}},
+	}
+
+	s, err := yaml.Marshal(fullConfig)
 	require.NoError(t, err)
 
 	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
@@ -891,8 +911,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 						Key: "password",
 					},
 				},
-				BearerToken:     "bearer_token",
-				BearerTokenFile: "bearer_token_file",
 			},
 			store: assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -978,7 +996,17 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			tc.role,
 			attachMetaConfig,
 		)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.golden)
 	}
@@ -1510,7 +1538,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.StoreBuilder{},
-			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
+			golden.Get(t, "input/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -1570,7 +1598,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		&assets.StoreBuilder{},
 		nil,
-		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
+		golden.Get(t, "input/AdditionalAlertRelabelConfigs.golden"),
 		nil,
 		nil,
 	)
@@ -4008,7 +4036,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.10.0_1.golden",
+			golden: "legacy-versions/RemoteWriteConfig_v2.10.0_1.golden",
 		},
 		{
 			version: "v2.27.1",
@@ -5051,7 +5079,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
+			golden: "native-histograms/NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -5061,7 +5089,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
+			golden: "native-histograms/NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
 		{
 			version: "v2.44.0",

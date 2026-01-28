@@ -1,2 +1,4 @@
-kubernetes_sd_configs:
-- role: endpoints
+scrape_configs:
+- job_name: k8s-sd-test
+  kubernetes_sd_configs:
+  - role: endpoints
