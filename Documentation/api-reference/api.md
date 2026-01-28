@@ -31002,9 +31002,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31189,9 +31187,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31233,9 +31229,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33378,9 +33372,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33800,9 +33792,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33941,9 +33931,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34023,9 +34011,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34038,9 +34024,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35625,9 +35609,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35822,9 +35804,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35935,9 +35915,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35949,9 +35927,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35963,9 +35939,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -36534,7 +36508,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -36976,9 +36950,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38685,9 +38657,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38872,9 +38842,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38916,9 +38884,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39102,9 +39068,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39315,7 +39279,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>discordConfigs defines the list of Slack configurations.</p>
+<p>discordConfigs defines the list of Discord configurations.</p>
 </td>
 </tr>
 <tr>
@@ -39524,9 +39488,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39665,9 +39627,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39747,9 +39707,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39762,9 +39720,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40270,9 +40226,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40467,9 +40421,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40580,9 +40532,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40594,9 +40544,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40608,9 +40556,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -41169,7 +41115,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -41612,9 +41558,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>

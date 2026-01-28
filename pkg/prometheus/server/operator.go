@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -773,7 +774,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus instances selecting ServiceMonitors, PodMonitors,
-	// Probes and PrometheusRules in the namespace.
+	// Probes, PrometheusRules and ScrapeConfigs in the namespace.
 	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1.Prometheus)
 
@@ -781,6 +782,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
 			"Probes":          p.Spec.ProbeNamespaceSelector,
 			"PrometheusRules": p.Spec.RuleNamespaceSelector,
+			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
 
@@ -1023,6 +1025,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		ssets[ssetName] = struct{}{}
 	}
 
+	var deleteErrs []error
 	err = c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
 		s := obj.(*appsv1.StatefulSet)
 
@@ -1036,21 +1039,26 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		shouldRetain, err := c.shouldRetain(p)
-		if err != nil {
-			c.logger.Error("failed to determine if StatefulSet should be retained", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		shouldRetain, retainErr := c.shouldRetain(p)
+		if retainErr != nil {
+			deleteErrs = append(deleteErrs, fmt.Errorf("failed to determine if StatefulSet %s should be retained: %w", s.GetName(), retainErr))
 			return
 		}
 		if shouldRetain {
 			return
 		}
 
-		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
-			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
+			if !apierrors.IsNotFound(delErr) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
+			}
 		}
 	})
 	if err != nil {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
+	}
+	if len(deleteErrs) > 0 {
+		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
 
 	err = c.updateConfigResourcesStatus(ctx, p, *resources)
@@ -1116,8 +1124,11 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from scrapeConfigs which reference the
 	// workload but aren't selected anymore.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from probes which reference the
@@ -1153,8 +1164,11 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	}
 
 	// Remove bindings from all scrapeConfigs which reference the workload.
-	if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
-		return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+	// Only cleanup if ScrapeConfig support is enabled (sconInfs is initialized).
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	// Remove bindings from all probes which reference the workload.
@@ -1174,6 +1188,10 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
 	if !c.retentionPoliciesEnabled {
 		// Feature-gate is disabled, default behavior is always to delete.
+		return false, nil
+	}
+	if p.Spec.ShardRetentionPolicy == nil {
+		// ShardRetentionPolicy not configured, default behavior is to delete.
 		return false, nil
 	}
 	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,

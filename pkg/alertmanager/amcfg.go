@@ -409,14 +409,21 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 }
 
 func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
+		_, err := validation.ValidateURL(url)
+		return err
+	})
+}
+
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
 	}
 
 	url = strings.TrimSpace(url)
-	if _, err := validation.ValidateURL(url); err != nil {
-		return url, fmt.Errorf("invalid URL %q in key %q from secret %q: %w", url, selector.Key, selector.Name, err)
+	if err := validFn(url); err != nil {
+		return url, fmt.Errorf("failed to validate key %q from secret %q: %w", selector.Key, selector.Name, err)
 	}
 	return url, nil
 }
@@ -829,18 +836,16 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		VSendResolved: in.SendResolved,
 	}
 
+	// No need to validate again the URL because it's been done when selecting the AlertmanagerConfig resource.
 	if in.URLSecret != nil {
-		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
 			return nil, err
 		}
+
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(string(*in.URL))
-		if err != nil {
-			return nil, err
-		}
-		out.URL = url.String()
+		out.URL = *in.URL
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -944,17 +949,17 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.AppURL = string(*in.AppURL)
 	}
 
-	if ptr.Deref(in.TitleLink, "") != "" {
-		out.TitleLink = string(*in.TitleLink)
+	if in.TitleLink != "" {
+		out.TitleLink = in.TitleLink
 	}
-	if ptr.Deref(in.IconURL, "") != "" {
-		out.TitleLink = string(*in.IconURL)
+	if in.IconURL != "" {
+		out.IconURL = in.IconURL
 	}
-	if ptr.Deref(in.ImageURL, "") != "" {
-		out.TitleLink = string(*in.ImageURL)
+	if in.ImageURL != "" {
+		out.ImageURL = in.ImageURL
 	}
-	if ptr.Deref(in.ThumbURL, "") != "" {
-		out.TitleLink = string(*in.ThumbURL)
+	if in.ThumbURL != "" {
+		out.ThumbURL = in.ThumbURL
 	}
 
 	var actions []slackAction
@@ -969,8 +974,8 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 				Value: ptr.Deref(a.Value, ""),
 			}
 
-			if ptr.Deref(a.URL, "") != "" {
-				action.URL = string(*a.URL)
+			if a.URL != "" {
+				action.URL = a.URL
 			}
 
 			if a.ConfirmField != nil {
@@ -1037,9 +1042,7 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.URL = string(*in.URL)
 	}
 
-	if in.ClientURL != nil {
-		out.ClientURL = string(*in.ClientURL)
-	}
+	out.ClientURL = ptr.Deref(in.ClientURL, "")
 
 	if in.RoutingKey != nil {
 		routingKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
@@ -1071,10 +1074,8 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		linkConfigs = make([]pagerdutyLink, l)
 		for i, lc := range in.PagerDutyLinkConfigs {
 			linkConfigs[i] = pagerdutyLink{
+				Href: ptr.Deref(lc.Href, ""),
 				Text: ptr.Deref(lc.Text, ""),
-			}
-			if lc.Href != nil {
-				linkConfigs[i].Href = string(*lc.Href)
 			}
 		}
 	}
@@ -1085,11 +1086,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		imageConfig = make([]pagerdutyImage, l)
 		for i, ic := range in.PagerDutyImageConfigs {
 			imageConfig[i] = pagerdutyImage{
-				Src: ptr.Deref(ic.Src, ""),
-				Alt: ptr.Deref(ic.Alt, ""),
-			}
-			if ic.Href != nil {
-				imageConfig[i].Href = string(*ic.Href)
+				Src:  ptr.Deref(ic.Src, ""),
+				Alt:  ptr.Deref(ic.Alt, ""),
+				Href: ptr.Deref(ic.Href, ""),
 			}
 		}
 	}
@@ -1357,8 +1356,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Monospace:     in.Monospace,
 	}
 
-	if ptr.Deref(in.URL, "") != "" {
-		out.URL = string(*in.URL)
+	if in.URL != "" {
+		out.URL = in.URL
 	}
 
 	if in.TTL != nil {
@@ -1956,10 +1955,6 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -2510,6 +2505,12 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		}
 	}
 
+	if ogc.APIURL != "" {
+		if _, err := validation.ValidateURL(ogc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		logger.Warn("'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
 		ogc.APIKeyFile = ""
@@ -2638,7 +2639,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 	}
 
 	if poc.URL != "" {
-		if _, err := validation.ValidateURL(poc.URL); err != nil {
+		if err := validation.ValidateTemplateURL(poc.URL); err != nil {
 			return fmt.Errorf("invalid 'url': %w", err)
 		}
 	}
@@ -2758,7 +2759,7 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	}
 
 	if whc.URL != "" {
-		if _, err := validation.ValidateURL(whc.URL); err != nil {
+		if err := validation.ValidateTemplateURL(whc.URL); err != nil {
 			return fmt.Errorf("invalid 'url': %w", err)
 		}
 	}
@@ -3195,6 +3196,14 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
 		return err
 	}
@@ -3225,6 +3234,52 @@ func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig
 
 	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
 		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
+	ctx context.Context,
+	vc *monitoringv1.GlobalVictorOpsConfig,
+	namespace string,
+) error {
+	if vc == nil {
+		return nil
+	}
+
+	if vc.APIKey != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalRocketChatConfig(
+	ctx context.Context,
+	rc *monitoringv1.GlobalRocketChatConfig,
+	namespace string,
+) error {
+	if rc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	if rc.Token != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.Token); err != nil {
+			return err
+		}
+	}
+
+	if rc.TokenID != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.TokenID); err != nil {
+			return err
+		}
 	}
 
 	return nil

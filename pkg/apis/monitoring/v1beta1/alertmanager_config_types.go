@@ -19,8 +19,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
-	"regexp"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -29,7 +27,6 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -182,7 +179,7 @@ type Receiver struct {
 	// pagerdutyConfigs defines the List of PagerDuty configurations.
 	// +optional
 	PagerDutyConfigs []PagerDutyConfig `json:"pagerdutyConfigs,omitempty"`
-	// discordConfigs defines the list of Slack configurations.
+	// discordConfigs defines the list of Discord configurations.
 	// +optional
 	DiscordConfigs []DiscordConfig `json:"discordConfigs,omitempty"`
 	// slackConfigs defines the list of Slack configurations.
@@ -254,7 +251,7 @@ type PagerDutyConfig struct {
 	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL *URL `json:"clientURL,omitempty"`
+	ClientURL *string `json:"clientURL,omitempty"`
 	// description of the incident.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -308,7 +305,7 @@ type PagerDutyImageConfig struct {
 	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -319,7 +316,7 @@ type PagerDutyImageConfig struct {
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -399,7 +396,7 @@ type SlackConfig struct {
 	Title *string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	TitleLink *URL `json:"titleLink,omitempty"`
+	TitleLink string `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -435,14 +432,14 @@ type SlackConfig struct {
 	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL string `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL string `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL string `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
@@ -469,23 +466,6 @@ type SlackConfig struct {
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
-// Validate ensures SlackConfig is valid.
-func (sc *SlackConfig) Validate() error {
-	for _, action := range sc.Actions {
-		if err := action.Validate(); err != nil {
-			return err
-		}
-	}
-
-	for _, field := range sc.Fields {
-		if err := field.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // SlackAction configures a single Slack action that is sent with each
 // notification.
 // See https://api.slack.com/docs/message-attachments#action_fields and
@@ -504,7 +484,7 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
 	// +kubebuilder:validation:MinLength=1
@@ -524,29 +504,6 @@ type SlackAction struct {
 	// When set, users must confirm their intent before the action proceeds.
 	// +optional
 	ConfirmField *SlackConfirmationField `json:"confirm,omitempty"`
-}
-
-// Validate ensures SlackAction is valid.
-func (sa *SlackAction) Validate() error {
-	if sa.Type == "" {
-		return errors.New("missing type in Slack action configuration")
-	}
-
-	if sa.Text == "" {
-		return errors.New("missing text in Slack action configuration")
-	}
-
-	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
-		return errors.New("missing name or url in Slack action configuration")
-	}
-
-	if sa.ConfirmField != nil {
-		if err := sa.ConfirmField.Validate(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // SlackConfirmationField protect users from destructive actions or
@@ -577,14 +534,6 @@ type SlackConfirmationField struct {
 	DismissText *string `json:"dismissText,omitempty"`
 }
 
-// Validate ensures SlackConfirmationField is valid.
-func (scf *SlackConfirmationField) Validate() error {
-	if scf.Text == "" {
-		return errors.New("missing text in Slack confirmation configuration")
-	}
-	return nil
-}
-
 // SlackField configures a single Slack field that is sent with each notification.
 // Each field must contain a title, value, and optionally, a boolean value to indicate if the field
 // is short enough to be displayed next to other fields designated as short.
@@ -607,19 +556,6 @@ type SlackField struct {
 	Short *bool `json:"short,omitempty"` // nolint:kubeapilinter
 }
 
-// Validate ensures SlackField is valid
-func (sf *SlackField) Validate() error {
-	if sf.Title == "" {
-		return errors.New("missing title in Slack field configuration")
-	}
-
-	if sf.Value == "" {
-		return errors.New("missing value in Slack field configuration")
-	}
-
-	return nil
-}
-
 // WebhookConfig configures notifications via a generic receiver supporting the webhook payload.
 // See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
 type WebhookConfig struct {
@@ -629,7 +565,7 @@ type WebhookConfig struct {
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -719,16 +655,6 @@ type OpsGenieConfig struct {
 	Actions *string `json:"actions,omitempty"`
 }
 
-// Validate ensures OpsGenieConfig is valid
-func (o *OpsGenieConfig) Validate() error {
-	for _, responder := range o.Responders {
-		if err := responder.Validate(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // OpsGenieConfigResponder defines a responder to an incident.
 // One of `id`, `name` or `username` has to be defined.
 // +kubebuilder:validation:OneOf=ID,Name,Username
@@ -755,30 +681,6 @@ type OpsGenieConfigResponder struct {
 	// +kubebuilder:validation:Enum=team;teams;user;escalation;schedule
 	// +required
 	Type string `json:"type"`
-}
-
-const opsgenieValidTypesRe = `^(team|teams|user|escalation|schedule)$`
-
-var opsgenieTypeMatcher = regexp.MustCompile(opsgenieValidTypesRe)
-
-// Validate ensures OpsGenieConfigResponder is valid.
-func (r *OpsGenieConfigResponder) Validate() error {
-	if ptr.Deref(r.ID, "") == "" && ptr.Deref(r.Name, "") == "" && ptr.Deref(r.Username, "") == "" {
-		return errors.New("responder must have at least an ID, a Name or an Username defined")
-	}
-
-	if strings.Contains(r.Type, "{{") {
-		_, err := template.New("").Parse(r.Type)
-		if err != nil {
-			return fmt.Errorf("responder %v type is not a valid template: %w", r, err)
-		}
-		return nil
-	}
-
-	if opsgenieTypeMatcher.MatchString(strings.ToLower(r.Type)) {
-		return nil
-	}
-	return fmt.Errorf("opsGenieConfig responder %v type does not match valid options %s", r, opsgenieValidTypesRe)
 }
 
 // HTTPConfig defines a client HTTP configuration.
@@ -1069,7 +971,7 @@ type PushoverConfig struct {
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
 	// +kubebuilder:validation:MinLength=1
@@ -1307,7 +1209,7 @@ type RocketChatConfig struct {
 	// iconURL defines the icon URL for the message avatar.
 	// This displays a custom image as the message sender's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL *string `json:"iconURL,omitempty"`
 	// text defines the message text to send.
 	// This is optional because attachments can be used instead of or alongside text.
 	// +kubebuilder:validation:MinLength=1
@@ -1335,11 +1237,11 @@ type RocketChatConfig struct {
 	// imageURL defines the image URL to display within the message.
 	// This embeds an image directly in the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL *string `json:"imageURL,omitempty"`
 	// thumbURL defines the thumbnail URL for the message.
 	// This displays a small thumbnail image alongside the message content.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL *string `json:"thumbURL,omitempty"`
 	// linkNames defines whether to enable automatic linking of usernames and channels.
 	// When true, @username and #channel references become clickable links.
 	// +optional
@@ -1382,7 +1284,7 @@ type RocketChatActionConfig struct {
 	// url defines the URL the button links to when clicked.
 	// This creates a clickable button that opens the specified URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// msg defines the message to send when the button is clicked.
 	// This allows the button to post a predefined message to the channel.
 	// +kubebuilder:validation:MinLength=1

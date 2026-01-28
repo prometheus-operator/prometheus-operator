@@ -569,11 +569,11 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	c.reconciliations.ResetStatus(key)
 	err := c.sync(ctx, key)
 	c.reconciliations.SetStatus(key, err)
 
 	return err
-
 }
 
 func (c *Operator) sync(ctx context.Context, key string) error {
@@ -590,6 +590,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Check if the Alertmanager instance is marked for deletion.
 	if c.rr.DeletionInProgress(am) {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
@@ -1463,7 +1464,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
@@ -1706,6 +1708,10 @@ func checkMSTeamsConfigs(
 
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
 			return err
 		}
 

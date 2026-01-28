@@ -17,7 +17,7 @@ scrape_configs:
       endpoint_params:
         param1: value1
         param2: value2
-    url: ftp://www.example.com
+    url: https://www.example.com
     query: vhost
   relabel_configs:
   - source_labels:

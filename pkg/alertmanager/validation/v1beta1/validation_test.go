@@ -83,7 +83,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  ptr.To(monitoringv1beta1.URL("www.test.com")),
+											URL:  "www.test.com",
 											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
@@ -396,7 +396,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Key:  "token",
 									},
 									HTML: ptr.To(true),
-									URL:  ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									URL:  "http://%><invalid.com",
 								},
 							},
 						},
@@ -500,7 +500,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+											URL:  "https://www.test.com",
 											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
@@ -517,7 +517,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+									URL: ptr.To("https://www.test.com"),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",

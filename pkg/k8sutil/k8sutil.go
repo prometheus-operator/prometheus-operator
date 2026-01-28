@@ -409,6 +409,30 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 	})
 }
 
+// CreateOrUpdateConfigMap merges metadata of existing ConfigMap with new one and updates it.
+func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInterface, desired *v1.ConfigMap) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingCM, err := cmClient.Get(ctx, desired.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = cmClient.Create(ctx, desired, metav1.CreateOptions{})
+			return err
+		}
+
+		mutated := existingCM.DeepCopyObject().(*v1.ConfigMap)
+		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
+		if apiequality.Semantic.DeepEqual(existingCM, desired) {
+			return nil
+		}
+		_, err = cmClient.Update(ctx, desired, metav1.UpdateOptions{})
+		return err
+	})
+}
+
 // IsAPIGroupVersionResourceSupported checks if given groupVersion and resource is supported by the cluster.
 func IsAPIGroupVersionResourceSupported(discoveryCli discovery.DiscoveryInterface, groupVersion schema.GroupVersion, resource string) (bool, error) {
 	apiResourceList, err := discoveryCli.ServerResourcesForGroupVersion(groupVersion.String())
@@ -664,12 +688,23 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 	return json.Marshal(patch)
 }
 
-// FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
-// If the finalizer is not present, it returns nil.
+// FinalizerDeletePatch generates a JSON Patch payload to remove the specified
+// finalizer from an object's metadata.
+//
+// If the finalizer is not present, the function returns nil.
+//
+// The patch includes a "test" operation before "remove" to ensure the value at
+// the computed index matches the expected finalizer. This prevents race
+// conditions when finalizers are modified concurrently.
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {
 			patch := []map[string]any{
+				{
+					"op":    "test",
+					"path":  fmt.Sprintf("/metadata/finalizers/%d", i),
+					"value": finalizerName,
+				},
 				{
 					"op":   "remove",
 					"path": fmt.Sprintf("/metadata/finalizers/%d", i),

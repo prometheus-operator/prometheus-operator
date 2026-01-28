@@ -9,8 +9,8 @@ scrape_configs:
   kuma_sd_configs:
   - authorization:
       type: Bearer
-      credentials: value
-    server: ""
+      credentials: 00000000-0000-0000-0000-000000000000
+    server: http://localhost:5681
     tls_config:
       ca_file: /etc/prometheus/certs/0_default_tls_ca
       cert_file: /etc/prometheus/certs/0_default_tls_cert
