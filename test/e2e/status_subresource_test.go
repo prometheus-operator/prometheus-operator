@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -1304,4 +1305,88 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
 	require.NoError(t, err)
+}
+
+// testAlertmanagerConfigStatusSubresource validates AlertmanagerConfig status updates upon Alertmanager selection.
+func testAlertmanagerConfigStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-subresource-test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	// Create an AlertmanagerConfig with valid configuration
+	alc := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "amcfg1",
+			Namespace: ns,
+			Labels: map[string]string{
+				"group": name,
+			},
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "default",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "default",
+					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+						{
+							URL: func(s string) *monitoringv1alpha1.URL {
+								u := monitoringv1alpha1.URL(s)
+								return &u
+							}("http://test.url"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, v1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait briefly for operator to process the config
+	time.Sleep(5 * time.Second)
+
+	// Verify the status was updated with a binding
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Get(ctx, alc.Name, v1.GetOptions{})
+	require.NoError(t, err)
+
+	// Check that status bindings were created
+	require.NotEmpty(t, alc.Status.Bindings, "AlertmanagerConfig should have status bindings")
+
+	// Verify binding references the correct Alertmanager
+	binding, err := framework.GetWorkloadBinding(alc.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
+	require.NoError(t, err, "Binding for Alertmanager should exist")
+	require.Equal(t, am.Name, binding.Name)
+	require.Equal(t, am.Namespace, binding.Namespace)
+
+	// Verify Accepted condition is set
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err, "Accepted condition should exist")
+	require.Equal(t, monitoringv1.ConditionTrue, cond.Status)
 }
