@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  wechat_configs:
+  - api_url: https://api.weixin.qq.com/cgi-bin/message/send
+    corp_id: foo
+templates: []
