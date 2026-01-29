@@ -3220,7 +3220,7 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 									Sigv4: &monitoringv1.Sigv4{
 										Region: "us-east-2",
 										AccessKey: &corev1.SecretKeySelector{
@@ -3278,7 +3278,7 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 									Sigv4: &monitoringv1.Sigv4{
 										Region:  "us-east-2",
 										RoleArn: "test-roleARN",

@@ -1441,7 +1441,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	}
 
 	if in.ApiURL != nil {
-		out.APIUrl = string(*in.ApiURL)
+		out.APIUrl = *in.ApiURL
 	}
 
 	if in.TopicARN != nil {

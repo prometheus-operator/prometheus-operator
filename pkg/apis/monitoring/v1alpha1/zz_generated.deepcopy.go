@@ -2651,7 +2651,7 @@ func (in *SNSConfig) DeepCopyInto(out *SNSConfig) {
 	}
 	if in.ApiURL != nil {
 		in, out := &in.ApiURL, &out.ApiURL
-		*out = new(URL)
+		*out = new(string)
 		**out = **in
 	}
 	if in.Sigv4 != nil {
