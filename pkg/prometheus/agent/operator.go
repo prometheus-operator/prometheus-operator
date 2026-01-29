@@ -708,6 +708,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
 
+	// Clean up any existing StatefulSet when switching to DaemonSet mode.
+	// Both workload types use the same name prefix, but are different resource types.
+	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
+	for shard, ssetName := range prompkg.ExpectedStatefulSetShardNames(p) {
+		ssetKey := prompkg.KeyToStatefulSetKey(p, key, shard)
+		if _, err := c.ssetInfs.Get(ssetKey); err == nil {
+			logger.Info("deleting StatefulSet because mode switched to DaemonSet", "statefulset", ssetName)
+			if err := ssetClient.Delete(ctx, ssetName, metav1.DeleteOptions{
+				PropagationPolicy: ptr.To(metav1.DeletePropagationForeground),
+			}); err != nil && !apierrors.IsNotFound(err) {
+				return fmt.Errorf("failed to delete StatefulSet %q when switching to DaemonSet mode: %w", ssetName, err)
+			}
+		}
+	}
+
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
 
 	var notFound bool
@@ -765,6 +780,20 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
+
+	// Clean up any existing DaemonSet when switching to StatefulSet mode.
+	// Both workload types use the same name prefix, but are different resource types.
+	dsetKey := keyToDaemonSetKey(p, key)
+	if _, err := c.dsetInfs.Get(dsetKey); err == nil {
+		dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
+		dsetName := prompkg.PrefixedName(p)
+		logger.Info("deleting DaemonSet because mode switched to StatefulSet", "daemonset", dsetName)
+		if err := dsetClient.Delete(ctx, dsetName, metav1.DeleteOptions{
+			PropagationPolicy: ptr.To(metav1.DeletePropagationForeground),
+		}); err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete DaemonSet %q when switching to StatefulSet mode: %w", dsetName, err)
+		}
+	}
 
 	if p.Spec.ServiceName != nil {
 		svcClient := c.kclient.CoreV1().Services(p.Namespace)
