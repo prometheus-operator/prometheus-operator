@@ -6111,3 +6111,33 @@ type prometheusAlertmanagerAPIResponse struct {
 	Status string                 `json:"status"`
 	Data   *alertmanagerDiscovery `json:"data"`
 }
+
+func testPromScaleUpWithoutLabels(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create a Prometheus resource with 1 replica
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	require.NoError(t, err)
+
+	// Remove all labels on the StatefulSet using Patch
+	stsName := fmt.Sprintf("prometheus-%s", name)
+	err = framework.RemoveAllLabelsFromStatefulSet(ctx, stsName, ns)
+	require.NoError(t, err)
+
+	// Scale up the Prometheus resource to 2 replicas
+	_, err = framework.UpdatePrometheusReplicasAndWaitUntilReady(ctx, p.Name, ns, 2)
+	require.NoError(t, err)
+
+	// Verify the StatefulSet now has labels again (restored by the operator)
+	stsClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}

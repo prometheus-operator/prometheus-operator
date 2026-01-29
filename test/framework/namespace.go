@@ -16,7 +16,6 @@ package framework
 
 import (
 	"context"
-	"encoding/json"
 	"maps"
 	"testing"
 
@@ -81,25 +80,7 @@ func (f *Framework) AddLabelsToNamespace(ctx context.Context, name string, addit
 }
 
 func (f *Framework) RemoveLabelsFromNamespace(ctx context.Context, name string, labels ...string) error {
-	ns, err := f.KubeClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	if len(ns.Labels) == 0 {
-		return nil
-	}
-
-	type patch struct {
-		Op   string `json:"op"`
-		Path string `json:"path"`
-	}
-
-	var patches []patch
-	for _, l := range labels {
-		patches = append(patches, patch{Op: "remove", Path: "/metadata/labels/" + l})
-	}
-	b, err := json.Marshal(patches)
+	b, err := removeLabelsPatch(labels...)
 	if err != nil {
 		return err
 	}
