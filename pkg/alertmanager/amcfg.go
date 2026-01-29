@@ -1461,7 +1461,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	}
 
 	if in.ApiURL != nil {
-		out.APIUrl = string(*in.ApiURL)
+		out.APIUrl = *in.ApiURL
 	}
 
 	if in.TopicARN != nil {
@@ -2807,6 +2807,12 @@ func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if wcc.APIURL != "" {
+		if _, err := validation.ValidateURL(wcc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return wcc.HTTPConfig.sanitize(amVersion, logger)
 }
 

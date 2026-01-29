@@ -6519,7 +6519,6 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.\nIf not specified, the SNS API URL from the SNS SDK will be used.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           attributes: {

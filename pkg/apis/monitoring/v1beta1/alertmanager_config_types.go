@@ -1029,7 +1029,7 @@ type SNSConfig struct {
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
-	ApiURL *URL `json:"apiURL,omitempty"`
+	ApiURL *string `json:"apiURL,omitempty"`
 	// sigv4 configures AWS's Signature Verification 4 signing process to sign requests.
 	// This includes AWS credentials and region configuration for authentication.
 	// +optional
