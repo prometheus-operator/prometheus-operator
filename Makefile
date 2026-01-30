@@ -18,7 +18,6 @@ IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
 GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
-PROMETHEUS_VERSION?=$(shell awk '/PrometheusCompatibilityMatrix = \[\]string{/,/}/' pkg/operator/defaults.go | grep '"v' | tail -1 | sed 's/.*"v\([0-9.]*\)".*/\1/')
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
@@ -48,11 +47,12 @@ JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
 JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
 SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
+PROMTOOL_BINARY=$(TOOLS_BIN_DIR)/promtool
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
-TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -377,16 +377,8 @@ test-unit-update-golden:
 	./scripts/update-golden-files.sh
 
 .PHONY: test-prometheus-goldenfiles
-test-prometheus-goldenfiles: $(TOOLS_BIN_DIR)/promtool
-	$(TOOLS_BIN_DIR)/promtool check config --syntax-only pkg/prometheus/testdata/*.golden
-
-$(TOOLS_BIN_DIR)/promtool: $(TOOLS_BIN_DIR)
-	@echo Downloading promtool
-	@OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
-	ARCH=$$(uname -m); \
-	[ "$$ARCH" = "x86_64" ] && ARCH="amd64" || true; \
-	[ "$$ARCH" = "aarch64" ] && ARCH="arm64" || true; \
-	cd $(TOOLS_BIN_DIR) && curl -sL "https://github.com/prometheus/prometheus/releases/download/v$(PROMETHEUS_VERSION)/prometheus-$(PROMETHEUS_VERSION).$${OS}-$${ARCH}.tar.gz" | tar -xz --strip-components=1 "prometheus-$(PROMETHEUS_VERSION).$${OS}-$${ARCH}/promtool"
+test-prometheus-goldenfiles: $(PROMTOOL_BINARY)
+	$(PROMTOOL_BINARY) check config --syntax-only pkg/prometheus/testdata/*.golden
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs
