@@ -859,3 +859,18 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 
 	return service, certBytes, nil
 }
+
+func removeLabelsPatch(labels ...string) ([]byte, error) {
+	type patch struct {
+		Op   string `json:"op"`
+		Path string `json:"path"`
+	}
+
+	var patches []patch
+	encoder := strings.NewReplacer("/", "~1", "~", "~0")
+	for _, label := range labels {
+		patches = append(patches, patch{Op: "remove", Path: "/metadata/labels/" + encoder.Replace(label)})
+	}
+
+	return json.Marshal(patches)
+}
