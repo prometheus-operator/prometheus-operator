@@ -1048,8 +1048,32 @@ func testPrometheusAgentDaemonSetWithVolumes(t *testing.T) {
 		},
 	}
 
-	// Expect failure (pre-fix behavior): missing volume in generated DaemonSet
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "Not found: \"test-vol\"")
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	var foundVolume bool
+	for _, vol := range dms.Spec.Template.Spec.Volumes {
+		if vol.Name == "test-vol" {
+			foundVolume = true
+			break
+		}
+	}
+	require.True(t, foundVolume, "expected volume 'test-vol' to be present in DaemonSet")
+
+	var foundVolumeMount bool
+	for _, container := range dms.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == "test-vol" && vm.MountPath == "/var/run/po-test-mount-unique" {
+					foundVolumeMount = true
+					break
+				}
+			}
+		}
+	}
+	require.True(t, foundVolumeMount, "expected volume mount 'test-vol' at '/var/run/po-test-mount-unique' to be present in prometheus container")
 }
