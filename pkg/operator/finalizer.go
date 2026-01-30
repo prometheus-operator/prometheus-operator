@@ -105,7 +105,7 @@ func (s *FinalizerSyncer) updateObject(
 ) error {
 	_, err := s.mdClient.Resource(s.gvr).
 		Namespace(p.GetNamespace()).
-		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager})
+		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: k8sutil.PrometheusOperatorFieldManager})
 
 	return err
 }

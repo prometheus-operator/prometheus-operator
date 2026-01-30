@@ -38,8 +38,8 @@ import (
 )
 
 const (
-	PrometheusOperatorFieldManager = "PrometheusOperator"
-
+	// InvalidConfigurationEvent is the  type used for events reporting invalid
+	// configuration resources.
 	InvalidConfigurationEvent = "InvalidConfiguration"
 )
 
