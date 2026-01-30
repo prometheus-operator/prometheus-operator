@@ -385,6 +385,24 @@ func TestValidateRelabelConfig(t *testing.T) {
 				},
 			},
 		},
+		{
+			scenario: "valid labelmap config with replacement containing template variable",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "labelmap",
+				Regex:       "^(cluster)$",
+				Replacement: ptr.To("exported_${1}"),
+			},
+			prometheus: defaultPrometheusSpec,
+		},
+		{
+			scenario: "valid labelmap config with replacement",
+			relabelConfig: monitoringv1.RelabelConfig{
+				Action:      "labelmap",
+				Regex:       "__meta_kubernetes_(.*)",
+				Replacement: ptr.To("k8s_${1}"),
+			},
+			prometheus: defaultPrometheusSpec,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			lcv, err := NewLabelConfigValidator(&tc.prometheus)
