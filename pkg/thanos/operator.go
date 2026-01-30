@@ -564,19 +564,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return err
 	}
 
+	shouldCreate := false
 	if existingStatefulSet == nil {
-		ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
-		sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, "", tlsAssets)
-		if err != nil {
-			return fmt.Errorf("making thanos statefulset config failed: %w", err)
-		}
-
-		operator.SanitizeSTS(sset)
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return fmt.Errorf("creating thanos statefulset failed: %w", err)
-		}
-
-		return nil
+		shouldCreate = true
+		existingStatefulSet = &appsv1.StatefulSet{}
 	}
 
 	if o.rr.DeletionInProgress(existingStatefulSet) {
@@ -595,6 +586,16 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
+	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
+	if shouldCreate {
+		logger.Debug("creating statefulset")
+		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+			return fmt.Errorf("creating thanos statefulset failed: %w", err)
+		}
+
+		return nil
+	}
+
 	err = o.updateConfigResourcesStatus(ctx, tr, selectedRules)
 	if err != nil {
 		return err
@@ -606,7 +607,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
-	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	if err = k8sutil.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 		o.metrics.StsDeleteCreateCounter().Inc()
 		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
