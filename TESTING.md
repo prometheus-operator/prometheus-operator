@@ -80,7 +80,7 @@ All Prometheus golden files in `pkg/prometheus/testdata/` are automatically vali
 make test-prometheus-goldenfiles
 ```
 
-**Note:** Files in `pkg/prometheus/testdata/input/` and `pkg/prometheus/testdata/legacy-versions/` are excluded from validation as they contain configuration fragments or version-specific test data.
+**Note:** Files in `pkg/prometheus/testdata/` subdirectories are excluded from validation as they contain either configuration fragments or legacy configurations.
 
 ## End-to-end tests
 
