@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
@@ -55,10 +56,18 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
-// KubeConfigEnv (optionally) specify the location of kubeconfig file.
-const KubeConfigEnv = "KUBECONFIG"
+const (
+	// KubeConfigEnv (optionally) specify the location of kubeconfig file.
+	KubeConfigEnv = "KUBECONFIG"
 
-const StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
+	// StatusCleanupFinalizerName is the name of the finalizer used to garbage
+	// collect status bindings on configuration resources.
+	StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
+
+	// PrometheusOperatorFieldManager is the field manager name used by the
+	// operator.
+	PrometheusOperatorFieldManager = "PrometheusOperator"
+)
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -314,6 +323,37 @@ func CreateOrUpdateEndpointSlice(ctx context.Context, c clientdiscoveryv1.Endpoi
 		_, err = c.Update(ctx, eps, metav1.UpdateOptions{})
 		return err
 	})
+}
+
+// CreateStatefulSetOrPatchLabels creates a StatefulSet resource.
+// If the StatefulSet already exists, it patches the labels from the input StatefulSet.
+func CreateStatefulSetOrPatchLabels(ctx context.Context, ssetClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
+	created, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{})
+	if err == nil {
+		return created, nil
+	}
+
+	if !apierrors.IsAlreadyExists(err) {
+		return nil, err
+	}
+
+	// StatefulSet already exists, patch the labels
+	patchData, err := json.Marshal(map[string]any{
+		"metadata": map[string]any{
+			"labels": sset.Labels,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ssetClient.Patch(
+		ctx,
+		sset.Name,
+		types.StrategicMergePatchType,
+		patchData,
+		metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager},
+	)
 }
 
 // updateStatefulSet updates a StatefulSet resource preserving custom labels and annotations from the current resource.
