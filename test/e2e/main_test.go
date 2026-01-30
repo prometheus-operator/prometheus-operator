@@ -251,6 +251,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 		"AMStatusScale":                           testAlertmanagerStatusScale,
 		"AMServiceName":                           testAlertManagerServiceName,
+		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
 	}
 
 	for name, f := range testFuncs {
@@ -342,6 +343,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 		"ThanosRulerServiceName":                        testThanosRulerServiceName,
 		"ThanosRulerStateless":                          testThanosRulerStateless,
+		"ThanosRulerScaleUpWithoutLabels":               testThanosRulerScaleUpWithoutLabels,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
