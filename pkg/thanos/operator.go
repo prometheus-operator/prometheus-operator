@@ -589,7 +589,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	if shouldCreate {
 		logger.Debug("creating statefulset")
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
+		if _, err := k8sutil.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
 			return fmt.Errorf("creating thanos statefulset failed: %w", err)
 		}
 
