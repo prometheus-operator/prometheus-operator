@@ -35,6 +35,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 		version     string
 		remoteWrite []monitoringv1.RemoteWriteSpec
 		golden      string
+		expectErr   bool
 	}{
 		{
 			name:    "empty config",
@@ -81,6 +82,10 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			sb := &assets.StoreBuilder{}
 
 			err := o.createOrUpdateRulerConfigSecret(context.Background(), sb, tr)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			sec, err := cs.CoreV1().Secrets(tr.Namespace).Get(context.Background(), "thanos-ruler-foo-config", metav1.GetOptions{})

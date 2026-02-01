@@ -282,7 +282,7 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 
-	if err := validationv1.ValidateAlertmanagerGlobalConfig(globalConfig); err != nil {
+	if err := cb.checkAlertmanagerGlobalConfigResource(ctx, globalConfig, crKey.Namespace); err != nil {
 		return err
 	}
 
@@ -409,14 +409,21 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 }
 
 func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
+		_, err := validation.ValidateURL(url)
+		return err
+	})
+}
+
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
 	}
 
 	url = strings.TrimSpace(url)
-	if _, err := validation.ValidateURL(url); err != nil {
-		return url, fmt.Errorf("invalid URL %q in key %q from secret %q: %w", url, selector.Key, selector.Name, err)
+	if err := validFn(url); err != nil {
+		return url, fmt.Errorf("failed to validate key %q from secret %q: %w", selector.Key, selector.Name, err)
 	}
 	return url, nil
 }
@@ -834,18 +841,16 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		VSendResolved: in.SendResolved,
 	}
 
+	// No need to validate again the URL because it's been done when selecting the AlertmanagerConfig resource.
 	if in.URLSecret != nil {
-		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
 			return nil, err
 		}
+
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(string(*in.URL))
-		if err != nil {
-			return nil, err
-		}
-		out.URL = url.String()
+		out.URL = *in.URL
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -914,22 +919,18 @@ func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
 	out := &slackConfig{
 		VSendResolved: in.SendResolved,
-		Channel:       in.Channel,
-		Username:      in.Username,
-		Color:         in.Color,
-		Title:         in.Title,
-		TitleLink:     in.TitleLink,
-		Pretext:       in.Pretext,
-		Text:          in.Text,
-		ShortFields:   in.ShortFields,
-		Footer:        in.Footer,
-		Fallback:      in.Fallback,
-		CallbackID:    in.CallbackID,
-		IconEmoji:     in.IconEmoji,
-		IconURL:       in.IconURL,
-		ImageURL:      in.ImageURL,
-		ThumbURL:      in.ThumbURL,
-		LinkNames:     in.LinkNames,
+		Channel:       ptr.Deref(in.Channel, ""),
+		Username:      ptr.Deref(in.Username, ""),
+		Color:         ptr.Deref(in.Color, ""),
+		Title:         ptr.Deref(in.Title, ""),
+		Pretext:       ptr.Deref(in.Pretext, ""),
+		Text:          ptr.Deref(in.Text, ""),
+		ShortFields:   ptr.Deref(in.ShortFields, false),
+		Footer:        ptr.Deref(in.Footer, ""),
+		Fallback:      ptr.Deref(in.Fallback, ""),
+		CallbackID:    ptr.Deref(in.CallbackID, ""),
+		IconEmoji:     ptr.Deref(in.IconEmoji, ""),
+		LinkNames:     ptr.Deref(in.LinkNames, false),
 		MrkdwnIn:      in.MrkdwnIn,
 	}
 
@@ -941,6 +942,19 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.APIURL = url
 	}
 
+	if in.TitleLink != "" {
+		out.TitleLink = in.TitleLink
+	}
+	if in.IconURL != "" {
+		out.IconURL = in.IconURL
+	}
+	if in.ImageURL != "" {
+		out.ImageURL = in.ImageURL
+	}
+	if in.ThumbURL != "" {
+		out.ThumbURL = in.ThumbURL
+	}
+
 	var actions []slackAction
 	if l := len(in.Actions); l > 0 {
 		actions = make([]slackAction, l)
@@ -948,18 +962,21 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 			action := slackAction{
 				Type:  a.Type,
 				Text:  a.Text,
-				URL:   a.URL,
-				Style: a.Style,
-				Name:  a.Name,
-				Value: a.Value,
+				Style: ptr.Deref(a.Style, ""),
+				Name:  ptr.Deref(a.Name, ""),
+				Value: ptr.Deref(a.Value, ""),
+			}
+
+			if a.URL != "" {
+				action.URL = a.URL
 			}
 
 			if a.ConfirmField != nil {
 				action.ConfirmField = &slackConfirmationField{
 					Text:        a.ConfirmField.Text,
-					Title:       a.ConfirmField.Title,
-					OkText:      a.ConfirmField.OkText,
-					DismissText: a.ConfirmField.DismissText,
+					Title:       ptr.Deref(a.ConfirmField.Title, ""),
+					OkText:      ptr.Deref(a.ConfirmField.OkText, ""),
+					DismissText: ptr.Deref(a.ConfirmField.DismissText, ""),
 				}
 			}
 
@@ -1006,15 +1023,19 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitoringv1alpha1.PagerDutyConfig, crKey types.NamespacedName) (*pagerdutyConfig, error) {
 	out := &pagerdutyConfig{
 		VSendResolved: in.SendResolved,
-		Class:         in.Class,
-		Client:        in.Client,
-		ClientURL:     in.ClientURL,
-		Component:     in.Component,
-		Description:   in.Description,
-		Group:         in.Group,
-		Severity:      in.Severity,
-		URL:           in.URL,
+		Class:         ptr.Deref(in.Class, ""),
+		Client:        ptr.Deref(in.Client, ""),
+		Component:     ptr.Deref(in.Component, ""),
+		Description:   ptr.Deref(in.Description, ""),
+		Group:         ptr.Deref(in.Group, ""),
+		Severity:      ptr.Deref(in.Severity, ""),
 	}
+
+	if in.URL != nil {
+		out.URL = string(*in.URL)
+	}
+
+	out.ClientURL = ptr.Deref(in.ClientURL, "")
 
 	if in.RoutingKey != nil {
 		routingKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
@@ -1046,8 +1067,8 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		linkConfigs = make([]pagerdutyLink, l)
 		for i, lc := range in.PagerDutyLinkConfigs {
 			linkConfigs[i] = pagerdutyLink{
-				Href: lc.Href,
-				Text: lc.Text,
+				Href: ptr.Deref(lc.Href, ""),
+				Text: ptr.Deref(lc.Text, ""),
 			}
 		}
 	}
@@ -1058,9 +1079,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		imageConfig = make([]pagerdutyImage, l)
 		for i, ic := range in.PagerDutyImageConfigs {
 			imageConfig[i] = pagerdutyImage{
-				Src:  ic.Src,
-				Alt:  ic.Alt,
-				Href: ic.Href,
+				Src:  ptr.Deref(ic.Src, ""),
+				Alt:  ptr.Deref(ic.Alt, ""),
+				Href: ptr.Deref(ic.Href, ""),
 			}
 		}
 	}
@@ -1092,14 +1113,14 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitoringv1alpha1.OpsGenieConfig, crKey types.NamespacedName) (*opsgenieConfig, error) {
 	out := &opsgenieConfig{
 		VSendResolved: in.SendResolved,
-		Message:       in.Message,
-		Description:   in.Description,
-		Source:        in.Source,
-		Tags:          in.Tags,
-		Note:          in.Note,
-		Priority:      in.Priority,
-		Actions:       in.Actions,
-		Entity:        in.Entity,
+		Message:       ptr.Deref(in.Message, ""),
+		Description:   ptr.Deref(in.Description, ""),
+		Source:        ptr.Deref(in.Source, ""),
+		Tags:          ptr.Deref(in.Tags, ""),
+		Note:          ptr.Deref(in.Note, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
+		Actions:       ptr.Deref(in.Actions, ""),
+		Entity:        ptr.Deref(in.Entity, ""),
 		UpdateAlerts:  in.UpdateAlerts,
 	}
 
@@ -1129,9 +1150,9 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		responders = make([]opsgenieResponder, 0, l)
 		for _, r := range in.Responders {
 			responder := opsgenieResponder{
-				ID:       r.ID,
-				Name:     r.Name,
-				Username: r.Username,
+				ID:       ptr.Deref(r.ID, ""),
+				Name:     ptr.Deref(r.Name, ""),
+				Username: ptr.Deref(r.Username, ""),
 				Type:     r.Type,
 			}
 			responders = append(responders, responder)
@@ -1151,13 +1172,13 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertWeChatConfig(ctx context.Context, in monitoringv1alpha1.WeChatConfig, crKey types.NamespacedName) (*weChatConfig, error) {
 	out := &weChatConfig{
 		VSendResolved: in.SendResolved,
-		CorpID:        in.CorpID,
-		AgentID:       in.AgentID,
-		ToUser:        in.ToUser,
-		ToParty:       in.ToParty,
-		ToTag:         in.ToTag,
-		Message:       in.Message,
-		MessageType:   in.MessageType,
+		CorpID:        ptr.Deref(in.CorpID, ""),
+		AgentID:       ptr.Deref(in.AgentID, ""),
+		ToUser:        ptr.Deref(in.ToUser, ""),
+		ToParty:       ptr.Deref(in.ToParty, ""),
+		ToTag:         ptr.Deref(in.ToTag, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		MessageType:   ptr.Deref(in.MessageType, ""),
 	}
 
 	if in.APIURL != nil {
@@ -1207,30 +1228,30 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
 		VSendResolved: in.SendResolved,
-		To:            in.To,
-		From:          in.From,
-		Hello:         in.Hello,
-		AuthUsername:  in.AuthUsername,
-		AuthIdentity:  in.AuthIdentity,
+		To:            ptr.Deref(in.To, ""),
+		From:          ptr.Deref(in.From, ""),
+		Hello:         ptr.Deref(in.Hello, ""),
+		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
 		HTML:          in.HTML,
 		Text:          in.Text,
 		RequireTLS:    in.RequireTLS,
 	}
 
-	if in.Smarthost == "" {
+	if ptr.Deref(in.Smarthost, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
 			return nil, fmt.Errorf("SMTP smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.From == "" {
+	if ptr.Deref(in.From, "") == "" {
 		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
 			return nil, fmt.Errorf("SMTP from is a mandatory field, it is neither specified at global config nor at receiver level")
 		}
 	}
 
-	if in.Smarthost != "" {
-		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(in.Smarthost)
+	if ptr.Deref(in.Smarthost, "") != "" {
+		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(*in.Smarthost)
 	}
 
 	if in.AuthPassword != nil {
@@ -1320,13 +1341,16 @@ func (cb *ConfigBuilder) convertVictorOpsConfig(ctx context.Context, in monitori
 func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitoringv1alpha1.PushoverConfig, crKey types.NamespacedName) (*pushoverConfig, error) {
 	out := &pushoverConfig{
 		VSendResolved: in.SendResolved,
-		Title:         in.Title,
-		Message:       in.Message,
-		URL:           in.URL,
-		URLTitle:      in.URLTitle,
-		Priority:      in.Priority,
+		Title:         ptr.Deref(in.Title, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		URLTitle:      ptr.Deref(in.URLTitle, ""),
+		Priority:      ptr.Deref(in.Priority, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
+	}
+
+	if in.URL != "" {
+		out.URL = in.URL
 	}
 
 	if in.TTL != nil {
@@ -1360,16 +1384,16 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		if in.Retry != "" {
-			retry, err := model.ParseDuration(in.Retry)
+		if ptr.Deref(in.Retry, "") != "" {
+			retry, err := model.ParseDuration(*in.Retry)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve retry: %w", err)
 			}
 			out.Retry = &retry
 		}
 
-		if in.Expire != "" {
-			expire, err := model.ParseDuration(in.Expire)
+		if ptr.Deref(in.Expire, "") != "" {
+			expire, err := model.ParseDuration(*in.Expire)
 			if err != nil {
 				return nil, fmt.Errorf("parse resolve expire: %w", err)
 			}
@@ -1426,13 +1450,31 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1alpha1.SNSConfig, crKey types.NamespacedName) (*snsConfig, error) {
 	out := &snsConfig{
 		VSendResolved: in.SendResolved,
-		APIUrl:        in.ApiURL,
-		TopicARN:      in.TopicARN,
-		PhoneNumber:   in.PhoneNumber,
-		TargetARN:     in.TargetARN,
-		Subject:       in.Subject,
-		Message:       in.Message,
 		Attributes:    in.Attributes,
+	}
+
+	if in.ApiURL != nil {
+		out.APIUrl = *in.ApiURL
+	}
+
+	if in.TopicARN != nil {
+		out.TopicARN = *in.TopicARN
+	}
+
+	if in.PhoneNumber != nil {
+		out.PhoneNumber = *in.PhoneNumber
+	}
+
+	if in.TargetARN != nil {
+		out.TargetARN = *in.TargetARN
+	}
+
+	if in.Subject != nil {
+		out.Subject = *in.Subject
+	}
+
+	if in.Message != nil {
+		out.Message = *in.Message
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -1938,10 +1980,6 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf("telegram integration requires Alertmanager >= 0.24.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -1958,10 +1996,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 		return nil
 	}
 
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("jira integration requires Alertmanager >= 0.28.0")
-	}
-
 	if in.APIURL != nil {
 		u, err := url.Parse(string(*in.APIURL))
 		if err != nil {
@@ -1976,10 +2010,6 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalRocketChatConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
-		return errors.New("rocket chat integration requires Alertmanager >= 0.28.0")
 	}
 
 	if in.APIURL != nil {
@@ -2012,10 +2042,6 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitoringv1.GlobalWebexConfig) error {
 	if in == nil {
 		return nil
-	}
-
-	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webex integration requires Alertmanager >= 0.25.0`)
 	}
 
 	if in.APIURL != nil {
@@ -2164,6 +2190,36 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 			msg := "'slack_api_url_file' supported in Alertmanager >= 0.22.0 only - dropping field from provided config"
 			logger.Warn(msg, "current_version", amVersion.String())
 			gc.SlackAPIURLFile = ""
+		}
+	}
+
+	if gc.SlackAppToken != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppToken = ""
+	}
+
+	if gc.SlackAppTokenFile != "" && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppTokenFile = ""
+	}
+
+	if gc.SlackAppURL != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'slack_app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SlackAppURL = nil
+	}
+
+	if gc.SlackAppToken != "" && gc.SlackAppTokenFile != "" {
+		msg := "'slack_app_token' and 'slack_app_token_file' are mutually exclusive - 'slack_app_token' has taken precedence"
+		logger.Warn(msg)
+		gc.SlackAppTokenFile = ""
+	}
+
+	if (gc.SlackAppToken != "" || gc.SlackAppTokenFile != "") && (gc.SlackAPIURL != nil || gc.SlackAPIURLFile != "") {
+		if gc.SlackAPIURL != nil && gc.SlackAppURL != nil && gc.SlackAPIURL.String() != gc.SlackAppURL.String() {
+			return fmt.Errorf("at most one of slack_app_token/slack_app_token_file & slack_api_url/slack_api_url_file must be configured (unless slack_api_url matches slack_app_url)")
 		}
 	}
 
@@ -2506,6 +2562,12 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		}
 	}
 
+	if ogc.APIURL != "" {
+		if _, err := validation.ValidateURL(ogc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	if ogc.APIKey != "" && ogc.APIKeyFile != "" {
 		logger.Warn("'api_key' and 'api_key_file' are mutually exclusive for OpsGenie receiver config - 'api_key' has taken precedence")
 		ogc.APIKeyFile = ""
@@ -2633,18 +2695,54 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		return errors.New("either monospace or html must be configured")
 	}
 
+	if poc.URL != "" {
+		if err := validation.ValidateTemplateURL(poc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
 	return poc.HTTPConfig.sanitize(amVersion, logger)
 }
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
 	}
 
-	if sc.Timeout != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+	if sc.Timeout != nil && lessThanV0_30 {
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.Timeout = nil
+	}
+
+	if sc.AppToken != "" && lessThanV0_30 {
+		msg := "'app_token' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppToken = ""
+	}
+
+	if sc.AppTokenFile != "" && lessThanV0_30 {
+		msg := "'app_token_file' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppTokenFile = ""
+	}
+
+	if sc.AppURL != "" && lessThanV0_30 {
+		msg := "'app_url' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.AppURL = ""
+	}
+
+	if sc.AppToken != "" && sc.AppTokenFile != "" {
+		msg := "'app_token' and 'app_token_file' are mutually exclusive for slack receiver config - 'app_token' has taken precedence"
+		logger.Warn(msg)
+		sc.AppTokenFile = ""
+	}
+
+	if (sc.AppToken != "" || sc.AppTokenFile != "") && (sc.APIURL != "" || sc.APIURLFile != "") {
+		return fmt.Errorf("at most one of app_token/app_token_file & api_url/api_url_file must be configured")
 	}
 
 	if sc.APIURLFile == "" {
@@ -2685,6 +2783,12 @@ func (voc *victorOpsConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		voc.APIKeyFile = ""
 	}
 
+	if voc.APIURL != "" {
+		if _, err := validation.ValidateURL(voc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -2711,6 +2815,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.Timeout = nil
 	}
 
+	if whc.URL != "" {
+		if err := validation.ValidateTemplateURL(whc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -2721,6 +2831,10 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 
 	if tc.WebhookURL == "" {
 		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	}
+
+	if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
+		return fmt.Errorf("invalid 'webhook_url': %w", err)
 	}
 
 	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
@@ -2750,6 +2864,12 @@ func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if wcc.APIURL != "" {
+		if _, err := validation.ValidateURL(wcc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return wcc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -2789,6 +2909,12 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		msg := "'message_thread_id' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		tc.MessageThreadID = 0
+	}
+
+	if tc.APIUrl != "" {
+		if _, err := validation.ValidateURL(tc.APIUrl); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
 	}
 
 	return tc.HTTPConfig.sanitize(amVersion, logger)
@@ -2833,6 +2959,12 @@ func (tc *webexConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		return fmt.Errorf("mandatory field %q is empty", "room_id")
 	}
 
+	if tc.APIURL != "" {
+		if _, err := validation.ValidateURL(tc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -2859,6 +2991,11 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 			if jc.APIType != "auto" && jc.APIType != "cloud" && jc.APIType != "datacenter" {
 				return fmt.Errorf("invalid 'api_type': a value must be 'auto', 'cloud' or 'datacenter'")
 			}
+		}
+	}
+	if jc.APIURL != "" {
+		if _, err := validation.ValidateURL(jc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
 		}
 	}
 
@@ -3095,4 +3232,148 @@ func checkIsV2Matcher(in ...[]monitoringv1alpha1.Matcher) bool {
 		}
 	}
 	return false
+}
+
+func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
+	ctx context.Context,
+	gc *monitoringv1.AlertmanagerGlobalConfig,
+	namespace string,
+) error {
+	if gc == nil {
+		return nil
+	}
+
+	// Perform semantic validation irrespective of the Alertmanager version.
+	if err := validationv1.ValidateAlertmanagerGlobalConfig(gc); err != nil {
+		return err
+	}
+
+	// Perform more specific validations which depend on the Alertmanager
+	// version. It also retrieves data from referenced secrets and configmaps
+	// (and fails in case of missing/invalid references).
+	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalJiraConfig(gc.JiraConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalVictorOpsConfig(ctx, gc.VictorOpsConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalRocketChatConfig(ctx, gc.RocketChatConfig, namespace); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalWebexConfig(gc.WebexConfig); err != nil {
+		return err
+	}
+
+	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+	if tc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
+	if jc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'jira' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalVictorOpsConfig(
+	ctx context.Context,
+	vc *monitoringv1.GlobalVictorOpsConfig,
+	namespace string,
+) error {
+	if vc == nil {
+		return nil
+	}
+
+	if vc.APIKey != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *vc.APIKey); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalRocketChatConfig(
+	ctx context.Context,
+	rc *monitoringv1.GlobalRocketChatConfig,
+	namespace string,
+) error {
+	if rc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`'rocketChat' integration requires Alertmanager >= 0.28.0 - current %s`, cb.amVersion)
+	}
+
+	if rc.Token != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.Token); err != nil {
+			return err
+		}
+	}
+
+	if rc.TokenID != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *rc.TokenID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.25.0")) {
+		return fmt.Errorf(`'webex' integration requires Alertmanager >= 0.25.0 - current %s`, cb.amVersion)
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalWeChatConfig(
+	ctx context.Context,
+	wc *monitoringv1.GlobalWeChatConfig,
+	namespace string,
+) error {
+	if wc == nil {
+		return nil
+	}
+
+	if wc.APISecret != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

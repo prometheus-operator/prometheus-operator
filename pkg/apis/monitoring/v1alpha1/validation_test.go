@@ -471,7 +471,7 @@ func TestOpsGenieConfigResponder_Validate(t *testing.T) {
 		{
 			name: "Test invalid template string type",
 			in: &OpsGenieConfigResponder{
-				Name: "responder",
+				Name: ptr.To("responder"),
 				Type: "{{.GroupLabels",
 			},
 			expectedErr: true,
@@ -479,7 +479,7 @@ func TestOpsGenieConfigResponder_Validate(t *testing.T) {
 		{
 			name: "Test valid template string type",
 			in: &OpsGenieConfigResponder{
-				Name: "responder",
+				Name: ptr.To("responder"),
 				Type: "{{.GroupLabels}}",
 			},
 			expectedErr: false,
@@ -487,7 +487,7 @@ func TestOpsGenieConfigResponder_Validate(t *testing.T) {
 		{
 			name: "Test invalid type",
 			in: &OpsGenieConfigResponder{
-				Name: "responder",
+				Name: ptr.To("responder"),
 				Type: "username",
 			},
 			expectedErr: true,
@@ -495,7 +495,7 @@ func TestOpsGenieConfigResponder_Validate(t *testing.T) {
 		{
 			name: "Test valid type",
 			in: &OpsGenieConfigResponder{
-				Name: "responder",
+				Name: ptr.To("responder"),
 				Type: "user",
 			},
 			expectedErr: false,

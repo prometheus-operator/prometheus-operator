@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.87.1"
+      "operator.prometheus.io/version": "0.88.1"
     },
     "name": "alertmanagers.monitoring.coreos.com"
   },
@@ -2065,7 +2065,7 @@
                             "type": "object"
                           },
                           "webex": {
-                            "description": "webex defines the default configuration for Jira.",
+                            "description": "webex defines the default configuration for Webex.",
                             "properties": {
                               "apiURL": {
                                 "description": "apiURL defines the is the default Webex API URL.\n\nIt requires Alertmanager >= v0.25.0.",
@@ -4014,6 +4014,10 @@
                       "ip"
                     ],
                     "x-kubernetes-list-type": "map"
+                  },
+                  "hostNetwork": {
+                    "description": "hostNetwork controls whether the pod may use the node network namespace.\n\nMake sure to understand the security implications if you want to enable\nit (https://kubernetes.io/docs/concepts/configuration/overview/).\n\nWhen hostNetwork is enabled, this will set the DNS policy to\n`ClusterFirstWithHostNet` automatically (unless `.spec.dnsPolicy` is set\nto a different value).",
+                    "type": "boolean"
                   },
                   "hostUsers": {
                     "description": "hostUsers supports the user space in Kubernetes.\n\nMore info: https://kubernetes.io/docs/tasks/configure-pod-container/user-namespaces/\n\nThe feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.\nStarting Kubernetes 1.33, the feature is enabled by default.",

@@ -18,14 +18,13 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // WebhookConfigApplyConfiguration represents a declarative configuration of the WebhookConfig type for use
 // with apply.
 type WebhookConfigApplyConfiguration struct {
 	SendResolved *bool                                `json:"sendResolved,omitempty"`
-	URL          *monitoringv1beta1.URL               `json:"url,omitempty"`
+	URL          *string                              `json:"url,omitempty"`
 	URLSecret    *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
 	MaxAlerts    *int32                               `json:"maxAlerts,omitempty"`
@@ -49,7 +48,7 @@ func (b *WebhookConfigApplyConfiguration) WithSendResolved(value bool) *WebhookC
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *WebhookConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL) *WebhookConfigApplyConfiguration {
+func (b *WebhookConfigApplyConfiguration) WithURL(value string) *WebhookConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }

@@ -877,6 +877,23 @@ possible to override this behavior passing a custom value via
 </tr>
 <tr>
 <td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>web</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">
@@ -6528,7 +6545,7 @@ GlobalWebexConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>webex defines the default configuration for Jira.</p>
+<p>webex defines the default configuration for Webex.</p>
 </td>
 </tr>
 <tr>
@@ -7389,6 +7406,23 @@ possible to override this behavior passing a custom value via
 </tr>
 <tr>
 <td>
+<code>hostNetwork</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>hostNetwork controls whether the pod may use the node network namespace.</p>
+<p>Make sure to understand the security implications if you want to enable
+it (<a href="https://kubernetes.io/docs/concepts/configuration/overview/">https://kubernetes.io/docs/concepts/configuration/overview/</a>).</p>
+<p>When hostNetwork is enabled, this will set the DNS policy to
+<code>ClusterFirstWithHostNet</code> automatically (unless <code>.spec.dnsPolicy</code> is set
+to a different value).</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>web</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.AlertmanagerWebSpec">
@@ -7918,7 +7952,7 @@ ManagedIdentity
 <td>
 <em>(Optional)</em>
 <p>managedIdentity defines the Azure User-assigned Managed identity.
-Cannot be set at the same time as <code>oauth</code> or <code>sdk</code>.</p>
+Cannot be set at the same time as <code>oauth</code>, <code>sdk</code> or <code>workloadIdentity</code>.</p>
 </td>
 </tr>
 <tr>
@@ -7933,7 +7967,7 @@ AzureOAuth
 <td>
 <em>(Optional)</em>
 <p>oauth defines the oauth config that is being used to authenticate.
-Cannot be set at the same time as <code>managedIdentity</code> or <code>sdk</code>.</p>
+Cannot be set at the same time as <code>managedIdentity</code>, <code>sdk</code> or <code>workloadIdentity</code>.</p>
 <p>It requires Prometheus &gt;= v2.48.0 or Thanos &gt;= v0.31.0.</p>
 </td>
 </tr>
@@ -7950,8 +7984,37 @@ AzureSDK
 <em>(Optional)</em>
 <p>sdk defines the Azure SDK config that is being used to authenticate.
 See <a href="https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication">https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication</a>
-Cannot be set at the same time as <code>oauth</code> or <code>managedIdentity</code>.</p>
+Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</code> or <code>workloadIdentity</code>.</p>
 <p>It requires Prometheus &gt;= v2.52.0 or Thanos &gt;= v0.36.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workloadIdentity</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureWorkloadIdentity">
+AzureWorkloadIdentity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>workloadIdentity defines the Azure Workload Identity authentication.
+Cannot be set at the same time as <code>oauth</code>, <code>managedIdentity</code>, or <code>sdk</code>.</p>
+<p>It requires Prometheus &gt;= 3.7.0. Currently not supported by Thanos.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scope</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+It requires Prometheus &gt;= 3.9.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 </tbody>
@@ -8035,6 +8098,46 @@ string
 <td>
 <em>(Optional)</em>
 <p>tenantId defines the tenant ID of the azure active directory application that is being used to authenticate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AzureWorkloadIdentity">AzureWorkloadIdentity
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AzureAD">AzureAD</a>)
+</p>
+<div>
+<p>AzureWorkloadIdentity defines the Azure Workload Identity authentication configuration.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clientId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>clientId is the clientID of the Azure Active Directory application.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tenantId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>tenantId is the tenant ID of the Azure Active Directory application.</p>
 </td>
 </tr>
 </tbody>
@@ -31126,7 +31229,9 @@ object and accessible by the Prometheus Operator.</p>
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33955,9 +34060,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34096,9 +34199,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34178,9 +34279,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34193,9 +34292,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -36645,7 +36742,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -37087,9 +37184,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39052,7 +39147,9 @@ object and accessible by the Prometheus Operator.</p>
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -39698,7 +39795,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>discordConfigs defines the list of Slack configurations.</p>
+<p>discordConfigs defines the list of Discord configurations.</p>
 </td>
 </tr>
 <tr>
@@ -39922,9 +40019,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40063,9 +40158,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40145,9 +40238,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40160,9 +40251,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -41523,7 +41612,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -41966,9 +42055,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>

@@ -7,13 +7,13 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   scaleway_sd_configs:
-  - access_key: AccessKey
-    secret_key: value
-    project_id: "1"
+  - access_key: SCWABCDEFGH123456789
+    secret_key: 00000000-0000-0000-0000-000000000000
+    project_id: 00000000-0000-0000-0000-000000000001
     role: instance
     port: 23456
-    api_url: https://api.scaleway.com/
-    zone: beijing-1
+    api_url: https://api.scaleway.com
+    zone: fr-par-1
     name_filter: name
     tags_filter:
     - aa
@@ -21,7 +21,7 @@ scrape_configs:
     refresh_interval: 30s
     proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
-    proxy_from_environment: true
+    proxy_from_environment: false
     proxy_connect_header:
       header:
       - value

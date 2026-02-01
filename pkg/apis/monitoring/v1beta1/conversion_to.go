@@ -251,7 +251,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		SendResolved:          in.SendResolved,
 		RoutingKey:            convertSecretKeySelectorTo(in.RoutingKey),
 		ServiceKey:            convertSecretKeySelectorTo(in.ServiceKey),
-		URL:                   in.URL,
+		URL:                   (*v1alpha1.URL)(in.URL),
 		Client:                in.Client,
 		ClientURL:             in.ClientURL,
 		Description:           in.Description,
@@ -304,7 +304,7 @@ func convertRocketChatActionConfigsTo(in []RocketChatActionConfig) []v1alpha1.Ro
 	for i, action := range in {
 		out[i] = v1alpha1.RocketChatActionConfig{
 			Text: action.Text,
-			URL:  (*v1alpha1.URL)(action.URL),
+			URL:  action.URL,
 			Msg:  action.Msg,
 		}
 	}
@@ -320,14 +320,14 @@ func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
 		TokenID:      in.TokenID,
 		Color:        in.Color,
 		Emoji:        in.Emoji,
-		IconURL:      (*v1alpha1.URL)(in.IconURL),
+		IconURL:      in.IconURL,
 		Text:         in.Text,
 		Title:        in.Title,
 		TitleLink:    in.TitleLink,
 		Fields:       convertRocketChatFieldConfigsTo(in.Fields),
 		ShortFields:  in.ShortFields,
-		ImageURL:     (*v1alpha1.URL)(in.ImageURL),
-		ThumbURL:     (*v1alpha1.URL)(in.ThumbURL),
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsTo(in.Actions),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
@@ -414,7 +414,7 @@ func convertWebexConfigTo(in WebexConfig) v1alpha1.WebexConfig {
 func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 	return v1alpha1.WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          (*v1alpha1.URL)(in.URL),
+		URL:          in.URL,
 		URLSecret:    convertSecretKeySelectorTo(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
@@ -570,6 +570,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
 
 	dst.ObjectMeta = src.ObjectMeta
+	dst.Status = src.Status
 
 	for _, in := range src.Spec.Receivers {
 		out := v1alpha1.Receiver{

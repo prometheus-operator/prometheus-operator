@@ -658,6 +658,11 @@ func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
 	t.Run("DaemonSetInvalidPVCRetentionPolicy", testDaemonSetInvalidPVCRetentionPolicy)
 	t.Run("DaemonSetInvalidScrapeConfigSelector", testDaemonSetInvalidScrapeConfigSelector)
 	t.Run("DaemonSetInvalidProbeSelector", testDaemonSetInvalidProbeSelector)
+	t.Run("DaemonSetInvalidScrapeConfigNamespaceSelector", testDaemonSetInvalidScrapeConfigNamespaceSelector)
+	t.Run("DaemonSetInvalidProbeNamespaceSelector", testDaemonSetInvalidProbeNamespaceSelector)
+	t.Run("DaemonSetInvalidServiceMonitorSelector", testDaemonSetInvalidServiceMonitorSelector)
+	t.Run("DaemonSetInvalidServiceMonitorNamespaceSelector", testDaemonSetInvalidServiceMonitorNamespaceSelector)
+	t.Run("DaemonSetInvalidAdditionalScrapeConfigs", testDaemonSetInvalidAdditionalScrapeConfigs)
 }
 
 func testDaemonSetInvalidReplicas(t *testing.T) {
@@ -847,4 +852,160 @@ func testDaemonSetInvalidProbeSelector(t *testing.T) {
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "probeSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidScrapeConfigNamespaceSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-scrape-config-namespace-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidProbeNamespaceSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-probe-namespace-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ProbeNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "probeNamespaceSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidServiceMonitorSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-service-monitor-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "serviceMonitorSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidServiceMonitorNamespaceSelector(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-service-monitor-namespace-selector"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"app": "test",
+		},
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet")
+}
+
+func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-invalid-additional-scrape-configs"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
+		LocalObjectReference: v1.LocalObjectReference{
+			Name: "test-secret",
+		},
+		Key: "key",
+	}
+
+	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "additionalScrapeConfigs cannot be set when mode is DaemonSet")
 }

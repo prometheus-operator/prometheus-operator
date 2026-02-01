@@ -85,7 +85,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											Type: "a",
 											Text: "b",
 											URL:  "www.test.com",
-											Name: "c",
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -173,8 +173,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "invalid",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("invalid"),
 								},
 							},
 						},
@@ -377,6 +377,36 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "Test fail to validate PushoverConfigs - invalid URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "user",
+									},
+									Token: &monitoringv1beta1.SecretKeySelector{
+										Name: "creds",
+										Key:  "token",
+									},
+									HTML: ptr.To(true),
+									URL:  "http://%><invalid.com",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -457,9 +487,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 								{
 									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
-											ID:       "a",
-											Name:     "b",
-											Username: "c",
+											ID:       ptr.To("a"),
+											Name:     ptr.To("b"),
+											Username: ptr.To("c"),
 											Type:     "user",
 										},
 									},
@@ -472,7 +502,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											Type: "a",
 											Text: "b",
 											URL:  "https://www.test.com",
-											Name: "c",
+											Name: ptr.To("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -488,7 +518,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+									URL: ptr.To("https://www.test.com"),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -502,8 +532,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        "a",
-									Smarthost: "b:8080",
+									To:        ptr.To("a"),
+									Smarthost: ptr.To("b:8080"),
 									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",
@@ -533,8 +563,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									Retry:  "10m",
-									Expire: "5m",
+									Retry:  ptr.To("10m"),
+									Expire: ptr.To("5m"),
 								},
 							},
 							JiraConfigs: []monitoringv1beta1.JiraConfig{

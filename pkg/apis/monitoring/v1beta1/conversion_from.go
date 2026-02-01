@@ -245,7 +245,7 @@ func convertPagerDutyLinkConfigsFrom(in []v1alpha1.PagerDutyLinkConfig) []PagerD
 
 	for i := range in {
 		out[i] = PagerDutyLinkConfig{
-			Href: in[i].Href,
+			Href: (in[i].Href),
 			Text: in[i].Text,
 		}
 	}
@@ -258,9 +258,9 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 		SendResolved:          in.SendResolved,
 		RoutingKey:            convertSecretKeySelectorFrom(in.RoutingKey),
 		ServiceKey:            convertSecretKeySelectorFrom(in.ServiceKey),
-		URL:                   in.URL,
+		URL:                   (*URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             in.ClientURL,
+		ClientURL:             (in.ClientURL),
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,
@@ -311,7 +311,7 @@ func convertRocketChatActionConfigsFrom(in []v1alpha1.RocketChatActionConfig) []
 	for i, action := range in {
 		out[i] = RocketChatActionConfig{
 			Text: action.Text,
-			URL:  (*URL)(action.URL),
+			URL:  action.URL,
 			Msg:  action.Msg,
 		}
 	}
@@ -327,14 +327,14 @@ func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig 
 		TokenID:      in.TokenID,
 		Color:        in.Color,
 		Emoji:        in.Emoji,
-		IconURL:      (*URL)(in.IconURL),
+		IconURL:      in.IconURL,
 		Text:         in.Text,
 		Title:        in.Title,
 		TitleLink:    in.TitleLink,
 		Fields:       convertRocketChatFieldConfigsFrom(in.Fields),
 		ShortFields:  in.ShortFields,
-		ImageURL:     (*URL)(in.ImageURL),
-		ThumbURL:     (*URL)(in.ThumbURL),
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
@@ -421,7 +421,7 @@ func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
 func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 	return WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          (*URL)(in.URL),
+		URL:          in.URL,
 		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
@@ -577,6 +577,7 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha1.AlertmanagerConfig)
 
 	dst.ObjectMeta = src.ObjectMeta
+	dst.Status = src.Status
 
 	for _, in := range src.Spec.Receivers {
 		out := Receiver{

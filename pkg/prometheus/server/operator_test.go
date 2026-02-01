@@ -257,3 +257,64 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldRetain(t *testing.T) {
+	for _, tc := range []struct {
+		name                     string
+		retentionPoliciesEnabled bool
+		shardRetentionPolicy     *monitoringv1.ShardRetentionPolicy
+		expectedRetain           bool
+	}{
+		{
+			name:                     "feature gate disabled",
+			retentionPoliciesEnabled: false,
+			shardRetentionPolicy:     nil,
+			expectedRetain:           false,
+		},
+		{
+			// Regression test: should not panic when ShardRetentionPolicy is nil
+			name:                     "feature gate enabled but ShardRetentionPolicy is nil",
+			retentionPoliciesEnabled: true,
+			shardRetentionPolicy:     nil,
+			expectedRetain:           false,
+		},
+		{
+			name:                     "feature gate enabled with empty ShardRetentionPolicy",
+			retentionPoliciesEnabled: true,
+			shardRetentionPolicy:     &monitoringv1.ShardRetentionPolicy{},
+			expectedRetain:           false,
+		},
+		{
+			name:                     "feature gate enabled with WhenScaled set to Delete",
+			retentionPoliciesEnabled: true,
+			shardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+				WhenScaled: ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+			},
+			expectedRetain: false,
+		},
+		{
+			name:                     "feature gate enabled with WhenScaled set to Retain",
+			retentionPoliciesEnabled: true,
+			shardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+				WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+			},
+			expectedRetain: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			o := &Operator{
+				retentionPoliciesEnabled: tc.retentionPoliciesEnabled,
+			}
+
+			p := &monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					ShardRetentionPolicy: tc.shardRetentionPolicy,
+				},
+			}
+
+			retain, err := o.shouldRetain(p)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRetain, retain)
+		})
+	}
+}

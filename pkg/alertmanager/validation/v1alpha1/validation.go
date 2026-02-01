@@ -21,6 +21,8 @@ import (
 	"regexp"
 	"strings"
 
+	"k8s.io/utils/ptr"
+
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
@@ -124,14 +126,35 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 }
 
 func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) error {
-	for _, conf := range configs {
-		if conf.URL != "" {
-			if _, err := validation.ValidateURL(conf.URL); err != nil {
-				return fmt.Errorf("pagerduty validation failed for 'url': %w", err)
+	for i, conf := range configs {
+		if err := validation.ValidateURLPtr((*string)(conf.URL)); err != nil {
+			return fmt.Errorf("[%d]: url: %w", i, err)
+		}
+
+		if conf.ClientURL != nil && *conf.ClientURL != "" {
+			if err := validation.ValidateTemplateURL(*conf.ClientURL); err != nil {
+				return fmt.Errorf("[%d]: clientURL: %w", i, err)
 			}
 		}
+
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
 			return errors.New("one of 'routingKey' or 'serviceKey' is required")
+		}
+
+		for j, lc := range conf.PagerDutyLinkConfigs {
+			if lc.Href != nil && *lc.Href != "" {
+				if err := validation.ValidateTemplateURL(*lc.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+				}
+			}
+		}
+
+		for j, ic := range conf.PagerDutyImageConfigs {
+			if ic.Href != nil && *ic.Href != "" {
+				if err := validation.ValidateTemplateURL(*ic.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+				}
+			}
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
@@ -201,7 +224,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
@@ -229,14 +252,14 @@ func validateWechatConfigs(configs []monitoringv1alpha1.WeChatConfig) error {
 
 func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 	for _, config := range configs {
-		if config.To == "" {
+		if ptr.Deref(config.To, "") == "" {
 			return errors.New("missing 'to' address")
 		}
 
-		if config.Smarthost != "" {
-			_, _, err := net.SplitHostPort(config.Smarthost)
+		if ptr.Deref(config.Smarthost, "") != "" {
+			_, _, err := net.SplitHostPort(*config.Smarthost)
 			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", config.Smarthost, err)
+				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
 			}
 		}
 
@@ -293,7 +316,7 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 }
 
 func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error {
-	for _, config := range configs {
+	for i, config := range configs {
 		if config.UserKey == nil && config.UserKeyFile == nil {
 			return fmt.Errorf("one of userKey or userKeyFile must be configured")
 		}
@@ -306,6 +329,12 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
+		if config.URL != "" {
+			if err := validation.ValidateTemplateURL(config.URL); err != nil {
+				return fmt.Errorf("[%d]: url: %w", i, err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
@@ -315,9 +344,15 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 }
 
 func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
-	for _, config := range configs {
-		if (config.TargetARN == "") != (config.TopicARN == "") != (config.PhoneNumber == "") {
-			return fmt.Errorf("must provide either a Target ARN, Topic ARN, or Phone Number for SNS config")
+	for i, config := range configs {
+		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
+			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
+		}
+
+		if config.ApiURL != nil {
+			if err := validation.ValidateTemplateURL(*config.ApiURL); err != nil {
+				return fmt.Errorf("[%d]: apiURL: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

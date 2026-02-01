@@ -1104,6 +1104,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
 					APIURL: &v1.SecretKeySelector{
@@ -1116,7 +1117,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: "my-action",
+							Name: ptr.To("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1130,7 +1131,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &v1.SecretKeySelector{
@@ -1139,15 +1140,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
-					CorpID: "testingCorpID",
+					CorpID: ptr.To("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					Smarthost: "example.com:25",
-					From:      "admin@example.com",
-					To:        "test@example.com",
+					Smarthost: ptr.To("example.com:25"),
+					From:      ptr.To("admin@example.com"),
+					To:        ptr.To("test@example.com"),
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -1203,7 +1204,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
-						ApiURL: "https://sns.us-east-2.amazonaws.com",
+						ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
 							AccessKey: &v1.SecretKeySelector{
@@ -1219,7 +1220,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 								Key: testingSecretKey,
 							},
 						},
-						TopicARN: "test-topicARN",
+						TopicARN: ptr.To("test-topicARN"),
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
@@ -1318,7 +1319,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1373,7 +1374,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1552,6 +1553,7 @@ receivers:
   - api_key: 1234abc
   pagerduty_configs:
   - routing_key: 1234abc
+    url: https://pagerduty.example.com
   slack_configs:
   - api_url: http://slack.example.com
     fields:
