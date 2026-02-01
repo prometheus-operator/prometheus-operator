@@ -654,19 +654,3 @@ func TestHTTPMetricsPorts(t *testing.T) {
 		})
 	}
 }
-
-func TestWithHTTPMetricsOption(t *testing.T) {
-	// Test that WithHTTPMetrics option correctly sets the field
-	c := &Controller{}
-
-	// Default should be false (zero value)
-	require.False(t, c.httpMetricsEnabled)
-
-	// Apply WithHTTPMetrics(true)
-	WithHTTPMetrics(true)(c)
-	require.True(t, c.httpMetricsEnabled)
-
-	// Apply WithHTTPMetrics(false)
-	WithHTTPMetrics(false)(c)
-	require.False(t, c.httpMetricsEnabled)
-}

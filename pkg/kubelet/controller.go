@@ -673,6 +673,10 @@ func (c *Controller) servicePorts() []v1.ServicePort {
 			Name: httpsPortName,
 			Port: httpsPort,
 		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
 	}
 
 	if c.httpMetricsEnabled {
@@ -681,11 +685,6 @@ func (c *Controller) servicePorts() []v1.ServicePort {
 			Port: httpPort,
 		})
 	}
-
-	ports = append(ports, v1.ServicePort{
-		Name: cAdvisorPortName,
-		Port: cAdvisorPort,
-	})
 
 	return ports
 }
@@ -698,6 +697,10 @@ func (c *Controller) endpointPorts() []v1.EndpointPort {
 			Name: httpsPortName,
 			Port: httpsPort,
 		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
 	}
 
 	if c.httpMetricsEnabled {
@@ -706,11 +709,6 @@ func (c *Controller) endpointPorts() []v1.EndpointPort {
 			Port: httpPort,
 		})
 	}
-
-	ports = append(ports, v1.EndpointPort{
-		Name: cAdvisorPortName,
-		Port: cAdvisorPort,
-	})
 
 	return ports
 }
@@ -723,6 +721,10 @@ func (c *Controller) endpointSlicePorts() []discoveryv1.EndpointPort {
 			Name: ptr.To(httpsPortName),
 			Port: ptr.To(httpsPort),
 		},
+		{
+			Name: ptr.To(cAdvisorPortName),
+			Port: ptr.To(cAdvisorPort),
+		},
 	}
 
 	if c.httpMetricsEnabled {
@@ -731,11 +733,6 @@ func (c *Controller) endpointSlicePorts() []discoveryv1.EndpointPort {
 			Port: ptr.To(httpPort),
 		})
 	}
-
-	ports = append(ports, discoveryv1.EndpointPort{
-		Name: ptr.To(cAdvisorPortName),
-		Port: ptr.To(cAdvisorPort),
-	})
 
 	return ports
 }

@@ -75,6 +75,8 @@ Arguments:
     	Create Endpoints objects for kubelet targets. (default true)
   -kubelet-endpointslice
     	Create EndpointSlice objects for kubelet targets.
+  -kubelet-http-metrics
+    	Include HTTP metrics port (10255) in kubelet service. Set to false if your cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+). (default true)
   -kubelet-node-address-priority value
     	Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.
   -kubelet-selector value
