@@ -128,6 +128,7 @@ var (
 	kubeletEndpoints     bool
 	kubeletEndpointSlice bool
 	kubeletSyncPeriod    time.Duration
+	kubeletHTTPMetrics   bool
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -150,6 +151,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
 	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
 	fs.DurationVar(&kubeletSyncPeriod, "kubelet-sync-period", 3*time.Minute, "How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m).")
+	fs.BoolVar(&kubeletHTTPMetrics, "kubelet-http-metrics", true, "Include HTTP metrics port (10255) in kubelet service. Set to false if your cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+).")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -661,6 +663,7 @@ func start() int {
 		opts := []kubelet.ControllerOption{
 			kubelet.WithNodeAddressPriority(nodeAddressPriority.String()),
 			kubelet.WithSyncPeriod(kubeletSyncPeriod),
+			kubelet.WithHTTPMetrics(kubeletHTTPMetrics),
 		}
 
 		kubeletService := strings.Split(kubeletObject, "/")
