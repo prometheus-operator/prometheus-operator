@@ -103,6 +103,7 @@ type Operator struct {
 type Config struct {
 	LocalHost              string
 	ReloaderConfig         operator.ContainerConfig
+	RepairPolicy           operator.RepairPolicy
 	ThanosDefaultBaseImage string
 	Annotations            operator.Map
 	Labels                 operator.Map
@@ -166,6 +167,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:     c.ControllerID,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
+			RepairPolicy:           c.RepairPolicy,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
 			Annotations:            c.Annotations,
 			Labels:                 c.Labels,
@@ -598,6 +600,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	err = o.updateConfigResourcesStatus(ctx, tr, selectedRules)
 	if err != nil {
 		return err
+	}
+
+	if err := o.resolveStuckStatefulSet(ctx, logger, tr, existingStatefulSet); err != nil {
+		logger.Error("failed to resolve stuck statefulset", "err", err)
 	}
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
