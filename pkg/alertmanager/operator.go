@@ -605,7 +605,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
-	c.recordDeprecatedFields(key, logger, am)
+	logger.Info("sync alertmanager")
 
 	statusCleanup := func() error {
 		return c.configResStatusCleanup(ctx, am)
@@ -626,8 +626,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		c.reconciliations.ForgetObject(key)
 		return nil
 	}
-
-	logger.Info("sync alertmanager")
 
 	if am.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
