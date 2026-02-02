@@ -5271,6 +5271,45 @@ func TestBodySizeLimits(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigBodySizeLimit(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.CommonPrometheusFields.Version = "v2.28.0"
+
+	scrapeConfig := monitoringv1alpha1.ScrapeConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testscrapeconfig1",
+			Namespace: "default",
+		},
+		Spec: monitoringv1alpha1.ScrapeConfigSpec{
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+				},
+			},
+			BodySizeLimit: ptr.To[monitoringv1.ByteSize]("500MB"),
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		p,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"testscrapeconfig1": &scrapeConfig,
+		},
+		&assets.StoreBuilder{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "ScrapeConfigBodySizeLimit.golden")
+}
+
 func TestMatchExpressionsServiceMonitor(t *testing.T) {
 	p := defaultPrometheus()
 

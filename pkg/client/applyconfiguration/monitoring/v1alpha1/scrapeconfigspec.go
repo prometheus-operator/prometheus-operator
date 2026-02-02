@@ -72,6 +72,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	LabelLimit                                 *uint64                                  `json:"labelLimit,omitempty"`
 	LabelNameLengthLimit                       *uint64                                  `json:"labelNameLengthLimit,omitempty"`
 	LabelValueLengthLimit                      *uint64                                  `json:"labelValueLengthLimit,omitempty"`
+	BodySizeLimit                              *monitoringv1.ByteSize                   `json:"bodySizeLimit,omitempty"`
 	v1.NativeHistogramConfigApplyConfiguration `json:",inline"`
 	KeepDroppedTargets                         *uint64                              `json:"keepDroppedTargets,omitempty"`
 	MetricRelabelConfigs                       []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
@@ -580,6 +581,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
+	return b
+}
+
+// WithBodySizeLimit sets the BodySizeLimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BodySizeLimit field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithBodySizeLimit(value monitoringv1.ByteSize) *ScrapeConfigSpecApplyConfiguration {
+	b.BodySizeLimit = &value
 	return b
 }
 
