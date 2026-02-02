@@ -29,6 +29,7 @@ linters:
               - "duplicatemarkers"
               - "nofloats"
               - "optionalorrequired"
+              - "requiredfields"
               - "statussubresource"
               - "uniquemarkers"
               - "jsontags"
@@ -55,6 +56,13 @@ linters:
                 - identifier: "+kubebuilder:validation:EmbeddedResource"
                 - identifier: "+kubebuilder:validation:XEmbeddedResource"
                 - identifier: "+kubebuilder:validation:items:XEmbeddedResource"
+            requiredfields:
+              pointers:
+                policy: Warn
+              omitempty:
+                policy: Warn
+              omitzero:
+                policy: Forbid
   exclusions:
     generated: strict
     paths:
