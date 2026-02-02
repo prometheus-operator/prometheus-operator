@@ -25,6 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1355,10 +1356,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 					Name: "default",
 					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 						{
-							URL: func(s string) *monitoringv1alpha1.URL {
-								u := monitoringv1alpha1.URL(s)
-								return &u
-							}("http://test.url"),
+							URL: ptr.To("http://test.url"),
 						},
 					},
 				},
@@ -1369,24 +1367,13 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, v1.CreateOptions{})
 	require.NoError(t, err)
 
-	// Wait briefly for operator to process the config
-	time.Sleep(5 * time.Second)
-
-	// Verify the status was updated with a binding
-	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Get(ctx, alc.Name, v1.GetOptions{})
+	// Wait for the AlertmanagerConfig to be accepted by the Alertmanager
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
-	// Check that status bindings were created
-	require.NotEmpty(t, alc.Status.Bindings, "AlertmanagerConfig should have status bindings")
-
 	// Verify binding references the correct Alertmanager
-	binding, err := framework.GetWorkloadBinding(alc.Status.Bindings, am, monitoringv1alpha1.AlertmanagerConfigName)
+	binding, err := framework.GetWorkloadBinding(alc.Status.Bindings, am, monitoringv1.AlertmanagerName)
 	require.NoError(t, err, "Binding for Alertmanager should exist")
 	require.Equal(t, am.Name, binding.Name)
 	require.Equal(t, am.Namespace, binding.Namespace)
-
-	// Verify Accepted condition is set
-	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
-	require.NoError(t, err, "Accepted condition should exist")
-	require.Equal(t, monitoringv1.ConditionTrue, cond.Status)
 }
