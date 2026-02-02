@@ -173,6 +173,10 @@ See [TESTING](TESTING.md)
 
 See [CONTRIBUTING](CONTRIBUTING.md).
 
+## AI Usage Policy
+
+See [AI Usage Policy](CONTRIBUTING.md#ai-use-policy) in our Contributing guidelines for information on using AI tools when contributing to the project.
+
 ## Security
 
 If you find a security vulnerability related to the Prometheus Operator which

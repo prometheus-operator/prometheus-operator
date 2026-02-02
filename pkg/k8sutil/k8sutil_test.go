@@ -628,7 +628,11 @@ func TestFinalizerDeletePatch(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.expectPatch {
+				// The patch should include a "test" operation before "remove" to ensure
+				// the finalizer at the index matches the expected value, preventing
+				// race conditions from removing the wrong finalizer.
 				expected := []map[string]any{
+					{"op": "test", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex), "value": tt.finalizerName},
 					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
 				}
 				expectedBytes, err := json.Marshal(expected)

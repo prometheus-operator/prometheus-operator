@@ -205,8 +205,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				Namespace: "ns1",
 			},
 			Data: map[string][]byte{
-				"key1":        []byte("https://val1.com"),
-				"invalid-url": []byte("://foo"),
+				"key1":                 []byte("https://val1.com"),
+				"template-url":         []byte("{{ .labels.url }}"),
+				"invalid-url":          []byte("://foo"),
+				"invalid-template-url": []byte("{{ .labels.url"),
 			},
 		},
 	)
@@ -470,13 +472,79 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To(monitoringv1alpha1.URL("http://test.local")),
+								URL: ptr.To("http://test.example.com"),
 							},
 						},
 					}},
 				},
 			},
 			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-invalid-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URL: ptr.To("http:test.example.com"),
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-template-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URL: ptr.To("{{ .labels.url }}"),
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-invalid-template-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URL: ptr.To("{{ .labels.value "),
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -506,6 +574,31 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-template-url-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URLSecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "template-url",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "webhook-with-wrong-url-secret",
 					Namespace: "ns1",
 				},
@@ -520,6 +613,31 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 								URLSecret: &v1.SecretKeySelector{
 									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-invalid-template-url-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URLSecret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "invalid-template-url",
 								},
 							},
 						},
@@ -743,7 +861,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										URL:  ptr.To(monitoringv1alpha1.URL("http://localhost")),
+										URL:  "http://localhost",
 									},
 								},
 							},
@@ -1128,7 +1246,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SNSConfigs: []monitoringv1alpha1.SNSConfig{
 							{
-								ApiURL: ptr.To(monitoringv1alpha1.URL("https:://sns.us-east-2.amazonaws.com")),
+								ApiURL: ptr.To("https:://sns.us-east-2.amazonaws.com"),
 								Sigv4: &monitoringv1.Sigv4{
 									Region:  "us-east-2",
 									RoleArn: "test-roleARN",
@@ -1140,6 +1258,81 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "msteams-with-missing-webhook-url-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+							{
+								WebhookURL: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "not-existing-secret"},
+									Key:                  "url",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "msteams-with-missing-webhook-url-key",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+							{
+								WebhookURL: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "not-existing",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "msteams-with-valid-webhook-url-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+							{
+								WebhookURL: v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {

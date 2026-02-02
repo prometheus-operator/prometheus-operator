@@ -16,16 +16,12 @@
 
 package v1alpha1
 
-import (
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-)
-
 // PagerDutyImageConfigApplyConfiguration represents a declarative configuration of the PagerDutyImageConfig type for use
 // with apply.
 type PagerDutyImageConfigApplyConfiguration struct {
-	Src  *string                 `json:"src,omitempty"`
-	Href *monitoringv1alpha1.URL `json:"href,omitempty"`
-	Alt  *string                 `json:"alt,omitempty"`
+	Src  *string `json:"src,omitempty"`
+	Href *string `json:"href,omitempty"`
+	Alt  *string `json:"alt,omitempty"`
 }
 
 // PagerDutyImageConfigApplyConfiguration constructs a declarative configuration of the PagerDutyImageConfig type for use with
@@ -45,7 +41,7 @@ func (b *PagerDutyImageConfigApplyConfiguration) WithSrc(value string) *PagerDut
 // WithHref sets the Href field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Href field is set to the value of the last call.
-func (b *PagerDutyImageConfigApplyConfiguration) WithHref(value monitoringv1alpha1.URL) *PagerDutyImageConfigApplyConfiguration {
+func (b *PagerDutyImageConfigApplyConfiguration) WithHref(value string) *PagerDutyImageConfigApplyConfiguration {
 	b.Href = &value
 	return b
 }

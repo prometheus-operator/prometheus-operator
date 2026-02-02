@@ -2669,13 +2669,13 @@ func TestGenerateConfig(t *testing.T) {
 								PagerDutyImageConfigs: []monitoringv1alpha1.PagerDutyImageConfig{
 									{
 										Src:  ptr.To("https://some-image.com"),
-										Href: ptr.To(monitoringv1alpha1.URL("https://some-image.com")),
+										Href: ptr.To("https://some-image.com"),
 										Alt:  ptr.To("some-image"),
 									},
 								},
 								PagerDutyLinkConfigs: []monitoringv1alpha1.PagerDutyLinkConfig{
 									{
-										Href: ptr.To(monitoringv1alpha1.URL("https://some-link.com")),
+										Href: ptr.To("https://some-link.com"),
 										Text: ptr.To("some-link"),
 									},
 								},
@@ -2727,7 +2727,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+								URL: ptr.To("http://test.url"),
 								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 									OAuth2: &monitoringv1.OAuth2{
 										ClientID: monitoringv1.SecretOrConfigMap{
@@ -3106,6 +3106,43 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL.golden",
 		},
 		{
+			name:    "CR with Slack Receiver with URL fields",
+			kclient: fake.NewSimpleClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								Channel:   ptr.To("#alerts"),
+								TitleLink: "https://example.com/title",
+								IconURL:   "https://example.com/icon.png",
+								ImageURL:  "https://example.com/image.png",
+								ThumbURL:  "https://example.com/thumb.png",
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_URL_fields.golden",
+		},
+		{
 			name:    "CR with Slack Receiver and global Slack URL File",
 			kclient: fake.NewSimpleClientset(),
 			baseConfig: alertmanagerConfig{
@@ -3186,7 +3223,7 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 									Sigv4: &monitoringv1.Sigv4{
 										Region: "us-east-2",
 										AccessKey: &corev1.SecretKeySelector{
@@ -3244,7 +3281,7 @@ func TestGenerateConfig(t *testing.T) {
 							Name: "test",
 							SNSConfigs: []monitoringv1alpha1.SNSConfig{
 								{
-									ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 									Sigv4: &monitoringv1.Sigv4{
 										Region:  "us-east-2",
 										RoleArn: "test-roleARN",
@@ -4065,7 +4102,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										URL:     ptr.To("https://example.com/"),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},
@@ -4101,7 +4138,7 @@ func TestGenerateConfig(t *testing.T) {
 								Name: "test",
 								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 									{
-										URL:     ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+										URL:     ptr.To("https://example.com/"),
 										Timeout: ptr.To(monitoringv1.Duration("5s")),
 									},
 								},
@@ -6007,6 +6044,22 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name:           "Test invalid template url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "{{ not-a-valid-template",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "Test valid url passes validation",
 			againstVersion: semver.Version{Major: 0, Minor: 26},
 			in: &alertmanagerConfig{
@@ -6021,6 +6074,22 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 				},
 			},
 			golden: "test_webhook_valid_url_passes.golden",
+		},
+		{
+			name:           "Test valid template url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "{{ .labels.url }}",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_valid_template_url_passes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6138,6 +6207,42 @@ func TestSanitizePushoverConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "Test invalid template url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "{{ not-a-valid-template",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid template url passes validation",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "key",
+								Token:   "token",
+								URL:     "{{ .labels.url }}",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_valid_template_url_passes.golden",
 		},
 		{
 			name:           "Test valid url passes validation",
@@ -7409,6 +7514,68 @@ func TestSanitizeWebexConfig(t *testing.T) {
 				},
 			},
 			golden: "webex_valid_url_passes.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeWeChatConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionWeChatAllowed := semver.Version{Major: 0, Minor: 26}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "wechat invalid api_url returns error",
+			againstVersion: versionWeChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL: "not-a-valid-url",
+								CorpID: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "wechat valid api_url passes validation",
+			againstVersion: versionWeChatAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL: "https://api.weixin.qq.com/cgi-bin/message/send",
+								CorpID: "foo",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_valid_url_passes.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

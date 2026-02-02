@@ -409,14 +409,21 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 }
 
 func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
+		_, err := validation.ValidateURL(url)
+		return err
+	})
+}
+
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
 	}
 
 	url = strings.TrimSpace(url)
-	if _, err := validation.ValidateURL(url); err != nil {
-		return url, fmt.Errorf("invalid URL %q in key %q from secret %q: %w", url, selector.Key, selector.Name, err)
+	if err := validFn(url); err != nil {
+		return url, fmt.Errorf("failed to validate key %q from secret %q: %w", selector.Key, selector.Name, err)
 	}
 	return url, nil
 }
@@ -835,18 +842,16 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		VSendResolved: in.SendResolved,
 	}
 
+	// No need to validate again the URL because it's been done when selecting the AlertmanagerConfig resource.
 	if in.URLSecret != nil {
-		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.URLSecret)
+		url, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
 		if err != nil {
 			return nil, err
 		}
+
 		out.URL = url
 	} else if in.URL != nil {
-		url, err := validation.ValidateURL(string(*in.URL))
-		if err != nil {
-			return nil, err
-		}
-		out.URL = url.String()
+		out.URL = *in.URL
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
@@ -938,17 +943,17 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.APIURL = url
 	}
 
-	if ptr.Deref(in.TitleLink, "") != "" {
-		out.TitleLink = string(*in.TitleLink)
+	if in.TitleLink != "" {
+		out.TitleLink = in.TitleLink
 	}
-	if ptr.Deref(in.IconURL, "") != "" {
-		out.TitleLink = string(*in.IconURL)
+	if in.IconURL != "" {
+		out.IconURL = in.IconURL
 	}
-	if ptr.Deref(in.ImageURL, "") != "" {
-		out.TitleLink = string(*in.ImageURL)
+	if in.ImageURL != "" {
+		out.ImageURL = in.ImageURL
 	}
-	if ptr.Deref(in.ThumbURL, "") != "" {
-		out.TitleLink = string(*in.ThumbURL)
+	if in.ThumbURL != "" {
+		out.ThumbURL = in.ThumbURL
 	}
 
 	var actions []slackAction
@@ -963,8 +968,8 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 				Value: ptr.Deref(a.Value, ""),
 			}
 
-			if ptr.Deref(a.URL, "") != "" {
-				action.URL = string(*a.URL)
+			if a.URL != "" {
+				action.URL = a.URL
 			}
 
 			if a.ConfirmField != nil {
@@ -1031,9 +1036,7 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.URL = string(*in.URL)
 	}
 
-	if in.ClientURL != nil {
-		out.ClientURL = string(*in.ClientURL)
-	}
+	out.ClientURL = ptr.Deref(in.ClientURL, "")
 
 	if in.RoutingKey != nil {
 		routingKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.RoutingKey)
@@ -1065,10 +1068,8 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		linkConfigs = make([]pagerdutyLink, l)
 		for i, lc := range in.PagerDutyLinkConfigs {
 			linkConfigs[i] = pagerdutyLink{
+				Href: ptr.Deref(lc.Href, ""),
 				Text: ptr.Deref(lc.Text, ""),
-			}
-			if lc.Href != nil {
-				linkConfigs[i].Href = string(*lc.Href)
 			}
 		}
 	}
@@ -1079,11 +1080,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		imageConfig = make([]pagerdutyImage, l)
 		for i, ic := range in.PagerDutyImageConfigs {
 			imageConfig[i] = pagerdutyImage{
-				Src: ptr.Deref(ic.Src, ""),
-				Alt: ptr.Deref(ic.Alt, ""),
-			}
-			if ic.Href != nil {
-				imageConfig[i].Href = string(*ic.Href)
+				Src:  ptr.Deref(ic.Src, ""),
+				Alt:  ptr.Deref(ic.Alt, ""),
+				Href: ptr.Deref(ic.Href, ""),
 			}
 		}
 	}
@@ -1351,8 +1350,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Monospace:     in.Monospace,
 	}
 
-	if ptr.Deref(in.URL, "") != "" {
-		out.URL = string(*in.URL)
+	if in.URL != "" {
+		out.URL = in.URL
 	}
 
 	if in.TTL != nil {
@@ -1456,7 +1455,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	}
 
 	if in.ApiURL != nil {
-		out.APIUrl = string(*in.ApiURL)
+		out.APIUrl = *in.ApiURL
 	}
 
 	if in.TopicARN != nil {
@@ -2729,7 +2728,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 	}
 
 	if poc.URL != "" {
-		if _, err := validation.ValidateURL(poc.URL); err != nil {
+		if err := validation.ValidateTemplateURL(poc.URL); err != nil {
 			return fmt.Errorf("invalid 'url': %w", err)
 		}
 	}
@@ -2849,7 +2848,7 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	}
 
 	if whc.URL != "" {
-		if _, err := validation.ValidateURL(whc.URL); err != nil {
+		if err := validation.ValidateTemplateURL(whc.URL); err != nil {
 			return fmt.Errorf("invalid 'url': %w", err)
 		}
 	}
@@ -2897,6 +2896,12 @@ func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logge
 }
 
 func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if wcc.APIURL != "" {
+		if _, err := validation.ValidateURL(wcc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
 	return wcc.HTTPConfig.sanitize(amVersion, logger)
 }
 

@@ -4110,7 +4110,6 @@
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
@@ -4802,7 +4801,6 @@
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
@@ -4828,7 +4826,6 @@
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -5627,7 +5624,6 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
@@ -5686,7 +5682,6 @@
                                 },
                                 url: {
                                   description: 'url defines the URL the button links to when clicked.\nThis creates a clickable button that opens the specified URL.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -6380,12 +6375,10 @@
                           },
                           iconURL: {
                             description: "iconURL defines the icon URL for the message avatar.\nThis displays a custom image as the message sender's avatar.",
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the image URL to display within the message.\nThis embeds an image directly in the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -6407,7 +6400,6 @@
                           },
                           thumbURL: {
                             description: 'thumbURL defines the thumbnail URL for the message.\nThis displays a small thumbnail image alongside the message content.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           title: {
@@ -6536,7 +6528,6 @@
                                 },
                                 url: {
                                   description: 'url defines the URL to open when the action is triggered.\nOnly applicable for button-type actions. When set, clicking the button opens this URL.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 value: {
@@ -7275,12 +7266,10 @@
                           },
                           iconURL: {
                             description: "iconURL defines the URL to an image to use as the bot's avatar.",
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the URL to an image file that will be displayed inside the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -7317,7 +7306,6 @@
                           },
                           thumbURL: {
                             description: 'thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           timeout: {
@@ -7332,7 +7320,6 @@
                           },
                           titleLink: {
                             description: 'titleLink defines the URL that the title will link to when clicked.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           username: {
@@ -7352,7 +7339,6 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.\nIf not specified, the SNS API URL from the SNS SDK will be used.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           attributes: {
@@ -10871,7 +10857,6 @@
                           },
                           url: {
                             description: 'url defines the URL to send HTTP POST requests to.\nurlSecret takes precedence over url. One of urlSecret and url should be defined.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlSecret: {
