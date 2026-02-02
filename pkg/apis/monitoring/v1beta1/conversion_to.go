@@ -215,7 +215,7 @@ func convertPagerDutyImageConfigsTo(in []PagerDutyImageConfig) []v1alpha1.PagerD
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: (*v1alpha1.URL)(in[i].Href),
+			Href: in[i].Href,
 			Alt:  in[i].Alt,
 		}
 	}
@@ -228,7 +228,7 @@ func convertPagerDutyLinkConfigsTo(in []PagerDutyLinkConfig) []v1alpha1.PagerDut
 
 	for i := range in {
 		out[i] = v1alpha1.PagerDutyLinkConfig{
-			Href: (*v1alpha1.URL)(in[i].Href),
+			Href: in[i].Href,
 			Text: in[i].Text,
 		}
 	}
@@ -243,7 +243,7 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 		ServiceKey:            convertSecretKeySelectorTo(in.ServiceKey),
 		URL:                   (*v1alpha1.URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             (*v1alpha1.URL)(in.ClientURL),
+		ClientURL:             in.ClientURL,
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,
@@ -294,7 +294,7 @@ func convertRocketChatActionConfigsTo(in []RocketChatActionConfig) []v1alpha1.Ro
 	for i, action := range in {
 		out[i] = v1alpha1.RocketChatActionConfig{
 			Text: action.Text,
-			URL:  (*v1alpha1.URL)(action.URL),
+			URL:  action.URL,
 			Msg:  action.Msg,
 		}
 	}
@@ -310,14 +310,14 @@ func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
 		TokenID:      in.TokenID,
 		Color:        in.Color,
 		Emoji:        in.Emoji,
-		IconURL:      (*v1alpha1.URL)(in.IconURL),
+		IconURL:      in.IconURL,
 		Text:         in.Text,
 		Title:        in.Title,
 		TitleLink:    in.TitleLink,
 		Fields:       convertRocketChatFieldConfigsTo(in.Fields),
 		ShortFields:  in.ShortFields,
-		ImageURL:     (*v1alpha1.URL)(in.ImageURL),
-		ThumbURL:     (*v1alpha1.URL)(in.ThumbURL),
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsTo(in.Actions),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
@@ -345,7 +345,7 @@ func convertSlackActionsTo(in []SlackAction) []v1alpha1.SlackAction {
 		out[i] = v1alpha1.SlackAction{
 			Type:  in[i].Type,
 			Text:  in[i].Text,
-			URL:   (*v1alpha1.URL)(in[i].URL),
+			URL:   in[i].URL,
 			Style: in[i].Style,
 			Name:  in[i].Name,
 			Value: in[i].Value,
@@ -371,7 +371,7 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 		Username:     in.Username,
 		Color:        in.Color,
 		Title:        in.Title,
-		TitleLink:    (*v1alpha1.URL)(in.TitleLink),
+		TitleLink:    in.TitleLink,
 		Pretext:      in.Pretext,
 		Text:         in.Text,
 		Fields:       convertSlackFieldsTo(in.Fields),
@@ -380,9 +380,9 @@ func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 		Fallback:     in.Fallback,
 		CallbackID:   in.CallbackID,
 		IconEmoji:    in.IconEmoji,
-		IconURL:      (*v1alpha1.URL)(in.IconURL),
-		ImageURL:     (*v1alpha1.URL)(in.ImageURL),
-		ThumbURL:     (*v1alpha1.URL)(in.ThumbURL),
+		IconURL:      in.IconURL,
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsTo(in.Actions),
@@ -404,7 +404,7 @@ func convertWebexConfigTo(in WebexConfig) v1alpha1.WebexConfig {
 func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 	return v1alpha1.WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          (*v1alpha1.URL)(in.URL),
+		URL:          in.URL,
 		URLSecret:    convertSecretKeySelectorTo(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
@@ -471,7 +471,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 		TokenFile:    in.TokenFile,
 		Title:        in.Title,
 		Message:      in.Message,
-		URL:          (*v1alpha1.URL)(in.URL),
+		URL:          in.URL,
 		URLTitle:     in.URLTitle,
 		Device:       in.Device,
 		Sound:        in.Sound,
@@ -487,7 +487,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 	return v1alpha1.SNSConfig{
 		SendResolved: in.SendResolved,
-		ApiURL:       (*v1alpha1.URL)(in.ApiURL),
+		ApiURL:       in.ApiURL,
 		Sigv4:        in.Sigv4,
 		TopicARN:     in.TopicARN,
 		Subject:      in.Subject,
@@ -540,6 +540,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 	dst := dstRaw.(*v1alpha1.AlertmanagerConfig)
 
 	dst.ObjectMeta = src.ObjectMeta
+	dst.Status = src.Status
 
 	for _, in := range src.Spec.Receivers {
 		out := v1alpha1.Receiver{

@@ -219,7 +219,7 @@ func convertPagerDutyImageConfigsFrom(in []v1alpha1.PagerDutyImageConfig) []Page
 	for i := range in {
 		out[i] = PagerDutyImageConfig{
 			Src:  in[i].Src,
-			Href: (*URL)(in[i].Href),
+			Href: in[i].Href,
 			Alt:  in[i].Alt,
 		}
 	}
@@ -232,7 +232,7 @@ func convertPagerDutyLinkConfigsFrom(in []v1alpha1.PagerDutyLinkConfig) []PagerD
 
 	for i := range in {
 		out[i] = PagerDutyLinkConfig{
-			Href: (*URL)(in[i].Href),
+			Href: (in[i].Href),
 			Text: in[i].Text,
 		}
 	}
@@ -247,7 +247,7 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 		ServiceKey:            convertSecretKeySelectorFrom(in.ServiceKey),
 		URL:                   (*URL)(in.URL),
 		Client:                in.Client,
-		ClientURL:             (*URL)(in.ClientURL),
+		ClientURL:             (in.ClientURL),
 		Description:           in.Description,
 		Severity:              in.Severity,
 		Class:                 in.Class,
@@ -298,7 +298,7 @@ func convertRocketChatActionConfigsFrom(in []v1alpha1.RocketChatActionConfig) []
 	for i, action := range in {
 		out[i] = RocketChatActionConfig{
 			Text: action.Text,
-			URL:  (*URL)(action.URL),
+			URL:  action.URL,
 			Msg:  action.Msg,
 		}
 	}
@@ -314,14 +314,14 @@ func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig 
 		TokenID:      in.TokenID,
 		Color:        in.Color,
 		Emoji:        in.Emoji,
-		IconURL:      (*URL)(in.IconURL),
+		IconURL:      in.IconURL,
 		Text:         in.Text,
 		Title:        in.Title,
 		TitleLink:    in.TitleLink,
 		Fields:       convertRocketChatFieldConfigsFrom(in.Fields),
 		ShortFields:  in.ShortFields,
-		ImageURL:     (*URL)(in.ImageURL),
-		ThumbURL:     (*URL)(in.ThumbURL),
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
@@ -349,7 +349,7 @@ func convertSlackActionsFrom(in []v1alpha1.SlackAction) []SlackAction {
 		out[i] = SlackAction{
 			Type:  in[i].Type,
 			Text:  in[i].Text,
-			URL:   (*URL)(in[i].URL),
+			URL:   in[i].URL,
 			Style: in[i].Style,
 			Name:  in[i].Name,
 			Value: in[i].Value,
@@ -375,7 +375,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Username:     in.Username,
 		Color:        in.Color,
 		Title:        in.Title,
-		TitleLink:    (*URL)(in.TitleLink),
+		TitleLink:    in.TitleLink,
 		Pretext:      in.Pretext,
 		Text:         in.Text,
 		Fields:       convertSlackFieldsFrom(in.Fields),
@@ -384,9 +384,9 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Fallback:     in.Fallback,
 		CallbackID:   in.CallbackID,
 		IconEmoji:    in.IconEmoji,
-		IconURL:      (*URL)(in.IconURL),
-		ImageURL:     (*URL)(in.ImageURL),
-		ThumbURL:     (*URL)(in.ThumbURL),
+		IconURL:      in.IconURL,
+		ImageURL:     in.ImageURL,
+		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		MrkdwnIn:     in.MrkdwnIn,
 		Actions:      convertSlackActionsFrom(in.Actions),
@@ -408,7 +408,7 @@ func convertWebexConfigFrom(in v1alpha1.WebexConfig) WebexConfig {
 func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 	return WebhookConfig{
 		SendResolved: in.SendResolved,
-		URL:          (*URL)(in.URL),
+		URL:          in.URL,
 		URLSecret:    convertSecretKeySelectorFrom(in.URLSecret),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
@@ -475,7 +475,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		TokenFile:    in.TokenFile,
 		Title:        in.Title,
 		Message:      in.Message,
-		URL:          (*URL)(in.URL),
+		URL:          in.URL,
 		URLTitle:     in.URLTitle,
 		Device:       in.Device,
 		Sound:        in.Sound,
@@ -491,7 +491,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 func convertSNSConfigFrom(in v1alpha1.SNSConfig) SNSConfig {
 	return SNSConfig{
 		SendResolved: in.SendResolved,
-		ApiURL:       (*URL)(in.ApiURL),
+		ApiURL:       in.ApiURL,
 		Sigv4:        in.Sigv4,
 		TopicARN:     in.TopicARN,
 		Subject:      in.Subject,
@@ -544,6 +544,7 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha1.AlertmanagerConfig)
 
 	dst.ObjectMeta = src.ObjectMeta
+	dst.Status = src.Status
 
 	for _, in := range src.Spec.Receivers {
 		out := Receiver{

@@ -17,7 +17,6 @@
 package v1alpha1
 
 import (
-	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 )
 
@@ -25,7 +24,7 @@ import (
 // with apply.
 type SNSConfigApplyConfiguration struct {
 	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	ApiURL       *monitoringv1alpha1.URL       `json:"apiURL,omitempty"`
+	ApiURL       *string                       `json:"apiURL,omitempty"`
 	Sigv4        *v1.Sigv4ApplyConfiguration   `json:"sigv4,omitempty"`
 	TopicARN     *string                       `json:"topicARN,omitempty"`
 	Subject      *string                       `json:"subject,omitempty"`
@@ -53,7 +52,7 @@ func (b *SNSConfigApplyConfiguration) WithSendResolved(value bool) *SNSConfigApp
 // WithApiURL sets the ApiURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ApiURL field is set to the value of the last call.
-func (b *SNSConfigApplyConfiguration) WithApiURL(value monitoringv1alpha1.URL) *SNSConfigApplyConfiguration {
+func (b *SNSConfigApplyConfiguration) WithApiURL(value string) *SNSConfigApplyConfiguration {
 	b.ApiURL = &value
 	return b
 }

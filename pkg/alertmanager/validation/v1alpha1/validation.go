@@ -127,8 +127,10 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(conf.ClientURL)); err != nil {
-			return fmt.Errorf("[%d]: clientURL: %w", i, err)
+		if conf.ClientURL != nil && *conf.ClientURL != "" {
+			if err := validation.ValidateTemplateURL(*conf.ClientURL); err != nil {
+				return fmt.Errorf("[%d]: clientURL: %w", i, err)
+			}
 		}
 
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
@@ -136,14 +138,18 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 		}
 
 		for j, lc := range conf.PagerDutyLinkConfigs {
-			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			if lc.Href != nil && *lc.Href != "" {
+				if err := validation.ValidateTemplateURL(*lc.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 
 		for j, ic := range conf.PagerDutyImageConfigs {
-			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			if ic.Href != nil && *ic.Href != "" {
+				if err := validation.ValidateTemplateURL(*ic.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 
@@ -196,27 +202,9 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 }
 
 func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
-	for i, config := range configs {
+	for _, config := range configs {
 		if err := config.Validate(); err != nil {
 			return err
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
-			return fmt.Errorf("[%d]: iconURL: %w", i, err)
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.ImageURL)); err != nil {
-			return fmt.Errorf("[%d]: imageURL: %w", i, err)
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.ThumbURL)); err != nil {
-			return fmt.Errorf("[%d]: thumbURL: %w", i, err)
-		}
-
-		for j, sa := range config.Actions {
-			if err := validation.ValidateURLPtr((*string)(sa.URL)); err != nil {
-				return fmt.Errorf("[%d]: invalid 'action'[%d]: url: %w", i, j, err)
-			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -232,7 +220,7 @@ func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
@@ -337,8 +325,10 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+		if config.URL != "" {
+			if err := validation.ValidateTemplateURL(config.URL); err != nil {
+				return fmt.Errorf("[%d]: url: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -355,8 +345,10 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.ApiURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if config.ApiURL != nil {
+			if err := validation.ValidateTemplateURL(*config.ApiURL); err != nil {
+				return fmt.Errorf("[%d]: apiURL: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {

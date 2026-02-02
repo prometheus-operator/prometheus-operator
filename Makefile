@@ -47,11 +47,12 @@ JSONNET_BINARY=$(TOOLS_BIN_DIR)/jsonnet
 JSONNETFMT_BINARY=$(TOOLS_BIN_DIR)/jsonnetfmt
 SHELLCHECK_BINARY=$(TOOLS_BIN_DIR)/shellcheck
 PROMLINTER_BINARY=$(TOOLS_BIN_DIR)/promlinter
+PROMTOOL_BINARY=$(TOOLS_BIN_DIR)/promtool
 GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
-TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
+TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -364,16 +365,20 @@ check-docs: $(MDOX_BINARY)
 test: test-unit test-long test-e2e
 
 .PHONY: test-unit
-test-unit:
+test-unit: test-prometheus-goldenfiles
 	go test -race $(TEST_RUN_ARGS) -short $(pkgs) -count=1 -v
 
 .PHONY: test-long
-test-long:
+test-long: test-prometheus-goldenfiles
 	go test $(TEST_RUN_ARGS) $(pkgs) -count=1 -v
 
 .PHONY: test-unit-update-golden
 test-unit-update-golden:
 	./scripts/update-golden-files.sh
+
+.PHONY: test-prometheus-goldenfiles
+test-prometheus-goldenfiles: $(PROMTOOL_BINARY)
+	$(PROMTOOL_BINARY) check config --syntax-only pkg/prometheus/testdata/*.golden
 
 test/instrumented-sample-app/certs/cert.pem test/instrumented-sample-app/certs/key.pem:
 	cd test/instrumented-sample-app && make generate-certs

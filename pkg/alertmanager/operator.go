@@ -590,17 +590,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	// Check if the Alertmanager instance is marked for deletion.
 	if c.rr.DeletionInProgress(am) {
-		return nil
-	}
-
-	if am.Spec.Paused {
+		c.reconciliations.ForgetObject(key)
 		return nil
 	}
 
 	logger := c.logger.With("key", key)
-	c.recordDeprecatedFields(key, logger, am)
-
 	logger.Info("sync alertmanager")
+
+	if am.Spec.Paused {
+		logger.Info("no action taken (the resource is paused)")
+		return nil
+	}
+
+	c.recordDeprecatedFields(key, logger, am)
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
@@ -1435,7 +1437,8 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("failed to validate URL: %w", err)
 			}
 		}
@@ -1678,6 +1681,10 @@ func checkMSTeamsConfigs(
 
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
 			return err
 		}
 
