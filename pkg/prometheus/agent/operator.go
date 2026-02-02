@@ -76,6 +76,7 @@ type Operator struct {
 	pmonInfs  *informers.ForResource
 	probeInfs *informers.ForResource
 	sconInfs  *informers.ForResource
+	rwInfs    *informers.ForResource
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
 	ssetInfs  *informers.ForResource
@@ -90,6 +91,7 @@ type Operator struct {
 
 	endpointSliceSupported bool // Whether the Kubernetes API supports the EndpointSlice kind.
 	scrapeConfigSupported  bool
+	remoteWriteSupported   bool
 	canReadStorageClass    bool
 
 	newEventRecorder operator.NewEventRecorderFunc
@@ -115,6 +117,13 @@ func WithEndpointSlice() ControllerOption {
 func WithScrapeConfig() ControllerOption {
 	return func(o *Operator) {
 		o.scrapeConfigSupported = true
+	}
+}
+
+// WithRemoteWrite tells that the controller manages RemoteWrite objects.
+func WithRemoteWrite() ControllerOption {
+	return func(o *Operator) {
+		o.remoteWriteSupported = true
 	}
 }
 
@@ -277,7 +286,24 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
+	if o.remoteWriteSupported {
+		o.rwInfs, err = informers.NewInformersForResource(
+			informers.NewMonitoringInformerFactories(
+				c.Namespaces.AllowList,
+				c.Namespaces.DenyList,
+				mclient,
+				resyncPeriod,
+				nil,
+			),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.RemoteWriteName),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error creating remotewrite informers: %w", err)
+		}
+	}
+
 	allowList := c.Namespaces.PrometheusAllowList
+
 	if c.WatchObjectRefsInAllNamespaces {
 		allowList = operator.MergeAllowLists(
 			c.Namespaces.PrometheusAllowList,
@@ -417,7 +443,11 @@ func (c *Operator) Run(ctx context.Context) error {
 	if c.scrapeConfigSupported {
 		go c.sconInfs.Start(ctx.Done())
 	}
+	if c.remoteWriteSupported {
+		go c.rwInfs.Start(ctx.Done())
+	}
 	go c.cmapInfs.Start(ctx.Done())
+
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
 	if c.dsetInfs != nil {
@@ -472,11 +502,13 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PodMonitor", c.pmonInfs},
 		{"Probe", c.probeInfs},
 		{"ScrapeConfig", c.sconInfs},
+		{"RemoteWrite", c.rwInfs},
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 		{"DaemonSet", c.dsetInfs},
 	} {
+
 		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
 		// nil. ScrapeConfig is one example.
 		if infs.informersForResource == nil {
@@ -574,7 +606,24 @@ func (c *Operator) addHandlers() {
 		))
 	}
 
+	if c.rwInfs != nil {
+		c.rwInfs.AddEventHandler(operator.NewEventHandler(
+			c.logger,
+			c.accessor,
+			c.metrics,
+			monitoringv1alpha1.RemoteWriteKind,
+			c.enqueueForMonitorNamespace,
+			operator.WithFilter(
+				operator.AnyFilter(
+					operator.GenerationChanged,
+					operator.LabelsChanged,
+				),
+			),
+		))
+	}
+
 	hasRefFunc := operator.HasReferenceFunc(
+
 		c.promInfs,
 		c.reconciliations,
 	)

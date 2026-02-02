@@ -1315,3 +1315,63 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 	}
 	return nil
 }
+
+// SelectRemoteWrites returns the RemoteWrites which match the selectors in the
+// Prometheus CR and filters them returning all the configuration.
+func (rs *ResourceSelector) SelectRemoteWrites(ctx context.Context, listFn ListAllByNamespaceFn) (operator.TypedResourcesSelection[*monitoringv1alpha1.RemoteWrite], error) {
+	cpf := rs.p.GetCommonPrometheusFields()
+
+	return selectObjects(
+		ctx,
+		rs.l.With("kind", monitoringv1alpha1.RemoteWriteKind),
+		rs,
+		monitoringv1alpha1.RemoteWriteKind,
+		cpf.RemoteWriteSelector,
+		cpf.RemoteWriteNamespaceSelector,
+		listFn,
+		rs.checkRemoteWrite,
+	)
+}
+
+// checkRemoteWrite verifies that the RemoteWrite object is valid.
+func (rs *ResourceSelector) checkRemoteWrite(ctx context.Context, rw *monitoringv1alpha1.RemoteWrite) error {
+	if err := rs.store.AddBasicAuth(ctx, rw.GetNamespace(), rw.Spec.BasicAuth); err != nil {
+		return fmt.Errorf("basicAuth: %w", err)
+	}
+
+	if err := rs.store.AddOAuth2(ctx, rw.GetNamespace(), rw.Spec.OAuth2); err != nil {
+		return fmt.Errorf("oauth2: %w", err)
+	}
+
+	if err := rs.store.AddTLSConfig(ctx, rw.GetNamespace(), rw.Spec.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if rw.Spec.Authorization != nil && rw.Spec.Authorization.Credentials != nil {
+		if _, err := rs.store.GetSecretKey(ctx, rw.GetNamespace(), *rw.Spec.Authorization.Credentials); err != nil {
+			return fmt.Errorf("authorization credentials: %w", err)
+		}
+	}
+
+	if rw.Spec.Sigv4 != nil {
+		if rw.Spec.Sigv4.AccessKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, rw.GetNamespace(), *rw.Spec.Sigv4.AccessKey); err != nil {
+				return fmt.Errorf("sigv4 accessKey: %w", err)
+			}
+		}
+		if rw.Spec.Sigv4.SecretKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, rw.GetNamespace(), *rw.Spec.Sigv4.SecretKey); err != nil {
+				return fmt.Errorf("sigv4 secretKey: %w", err)
+			}
+		}
+	}
+
+	if rw.Spec.AzureAD != nil && rw.Spec.AzureAD.OAuth != nil {
+		if _, err := rs.store.GetSecretKey(ctx, rw.GetNamespace(), rw.Spec.AzureAD.OAuth.ClientSecret); err != nil {
+			return fmt.Errorf("azureAD oauth clientSecret: %w", err)
+		}
+	}
+
+	return nil
+}
