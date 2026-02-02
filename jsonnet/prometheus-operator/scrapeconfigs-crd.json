@@ -819,6 +819,11 @@
                     },
                     "type": "object"
                   },
+                  "bodySizeLimit": {
+                    "description": "bodySizeLimit defines a per-scrape limit on the size of the uncompressed\nresponse body that will be accepted by Prometheus. Targets responding with\na body larger than this many bytes will cause the scrape to fail.\n\nIt requires Prometheus >= v2.28.0.",
+                    "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+                    "type": "string"
+                  },
                   "consulSDConfigs": {
                     "description": "consulSDConfigs defines a list of Consul service discovery configurations.",
                     "items": {

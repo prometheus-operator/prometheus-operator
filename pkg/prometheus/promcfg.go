@@ -3293,8 +3293,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, sc.Spec.NativeHistogramConfig)
 
-	if cpf.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	if bodySizeLimit := getLowerByteSize(sc.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
 	// StaticConfig

@@ -3210,6 +3210,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(uint64)
 		**out = **in
 	}
+	if in.BodySizeLimit != nil {
+		in, out := &in.BodySizeLimit, &out.BodySizeLimit
+		*out = new(monitoringv1.ByteSize)
+		**out = **in
+	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
 	if in.KeepDroppedTargets != nil {
 		in, out := &in.KeepDroppedTargets, &out.KeepDroppedTargets

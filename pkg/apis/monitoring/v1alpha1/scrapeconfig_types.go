@@ -339,6 +339,14 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+	// response body that will be accepted by Prometheus. Targets responding with
+	// a body larger than this many bytes will cause the scrape to fail.
+	//
+	// It requires Prometheus >= v2.28.0.
+	//
+	// +optional
+	BodySizeLimit *v1.ByteSize `json:"bodySizeLimit,omitempty"`
 
 	v1.NativeHistogramConfig `json:",inline"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
