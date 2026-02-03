@@ -222,15 +222,15 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	Authorization   *authorization `yaml:"authorization,omitempty"`
-	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
-	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
-	BearerToken     string         `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
-	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
+	Authorization   *authorization     `yaml:"authorization,omitempty"`
+	BasicAuth       *basicAuth         `yaml:"basic_auth,omitempty"`
+	OAuth2          *oauth2            `yaml:"oauth2,omitempty"`
+	BearerToken     string             `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string             `yaml:"bearer_token_file,omitempty"`
+	TLSConfig       *tlsConfig         `yaml:"tls_config,omitempty"`
 	HTTPHeaders     *commoncfg.Headers `yaml:"http_headers,omitempty"`
-	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
-	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
+	FollowRedirects *bool              `yaml:"follow_redirects,omitempty"`
+	EnableHTTP2     *bool              `yaml:"enable_http2,omitempty"`
 
 	proxyConfig `yaml:",inline"`
 }

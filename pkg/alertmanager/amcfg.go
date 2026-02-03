@@ -27,8 +27,8 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
-	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/alertmanager/timeinterval"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/api/core/v1"
