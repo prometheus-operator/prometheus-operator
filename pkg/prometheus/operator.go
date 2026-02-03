@@ -199,17 +199,10 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	}
 
 	var (
-		availableStatus    = monitoringv1.ConditionTrue
-		availableReason    string
-		availableCondition = monitoringv1.Condition{
-			Type: monitoringv1.Available,
-			LastTransitionTime: metav1.Time{
-				Time: time.Now().UTC(),
-			},
-			ObservedGeneration: p.GetObjectMeta().GetGeneration(),
-		}
-		messages []string
-		replicas = 1
+		availableStatus = monitoringv1.ConditionTrue
+		availableReason string
+		messages        []string
+		replicas        = 1
 	)
 
 	if commonFields.Replicas != nil {
@@ -273,7 +266,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 		case len(stsReporter.ReadyPods()) == 0:
 			availableReason = "NoPodReady"
 			availableStatus = monitoringv1.ConditionFalse
-		case availableCondition.Status != monitoringv1.ConditionFalse:
+		case availableStatus != monitoringv1.ConditionFalse:
 			availableReason = "SomePodsNotReady"
 			availableStatus = monitoringv1.ConditionDegraded
 		}
