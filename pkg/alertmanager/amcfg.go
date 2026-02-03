@@ -2281,6 +2281,18 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		hc.EnableHTTP2 = nil
 	}
 
+	if hc.HTTPHeaders != nil {
+		if err := hc.HTTPHeaders.Validate(); err != nil {
+			return err
+		}
+
+		if !amVersion.GTE(semver.MustParse("0.28.0")) {
+			msg := "'http_headers' set in 'http_config' but supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+			logger.Warn(msg, "current_version", amVersion.String())
+			hc.HTTPHeaders = nil
+		}
+	}
+
 	if err := hc.TLSConfig.sanitize(amVersion, logger); err != nil {
 		return err
 	}

@@ -1,0 +1,8 @@
+http_headers:
+  X-Custom-Header:
+    values:
+    - foo
+  X-Other:
+    values:
+    - a
+    - b

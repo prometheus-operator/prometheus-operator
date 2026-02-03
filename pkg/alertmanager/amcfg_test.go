@@ -26,6 +26,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
@@ -5050,6 +5051,9 @@ func TestHTTPClientConfig(t *testing.T) {
 	httpConfigV26Allowed := semver.Version{Major: 0, Minor: 26}
 	httpConfigV26NotAllowed := semver.Version{Major: 0, Minor: 25}
 
+	httpConfigHeadersAllowed := semver.Version{Major: 0, Minor: 28}
+	httpConfigHeadersNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	// test the http config independently since all receivers rely on same behaviour
 	for _, tc := range []struct {
 		name           string
@@ -5345,6 +5349,37 @@ func TestHTTPClientConfig(t *testing.T) {
 			},
 			againstVersion: httpConfigV26Allowed,
 			expectErr:      true,
+		},
+		{
+			name: "http_headers with reserved header returns error",
+			in: &httpClientConfig{
+				HTTPHeaders: &commoncfg.Headers{
+					Headers: map[string]commoncfg.Header{
+						"Authorization": {
+							Values: []string{"Bearer token"},
+						},
+					},
+				},
+			},
+			againstVersion: httpConfigHeadersNotAllowed,
+			expectErr:      true,
+		},
+		{
+			name: "http_headers preserved with custom headers",
+			in: &httpClientConfig{
+				HTTPHeaders: &commoncfg.Headers{
+					Headers: map[string]commoncfg.Header{
+						"X-Custom-Header": {
+							Values: []string{"foo"},
+						},
+						"X-Other": {
+							Values: []string{"a", "b"},
+						},
+					},
+				},
+			},
+			againstVersion: httpConfigHeadersAllowed,
+			golden:         "http_headers_preserved.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
