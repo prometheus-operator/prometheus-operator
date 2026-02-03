@@ -29,6 +29,7 @@ type HTTPConfigApplyConfiguration struct {
 	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
 	BearerTokenSecret                *corev1.SecretKeySelector               `json:"bearerTokenSecret,omitempty"`
 	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	HTTPHeaders                      map[string]HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`
 	ProxyURLOriginal                 *string                                 `json:"proxyURL,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
 	FollowRedirects                  *bool `json:"followRedirects,omitempty"`
@@ -78,6 +79,20 @@ func (b *HTTPConfigApplyConfiguration) WithBearerTokenSecret(value corev1.Secret
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *HTTPConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApplyConfiguration) *HTTPConfigApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *HTTPConfigApplyConfiguration) WithHTTPHeaders(entries map[string]HTTPHeaderApplyConfiguration) *HTTPConfigApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]HTTPHeaderApplyConfiguration, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
+	}
 	return b
 }
 

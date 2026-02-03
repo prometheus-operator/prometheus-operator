@@ -259,6 +259,13 @@ spec:
                         honorTimestamps defines whether Prometheus preserves the timestamps
                         when exposed by the target.
                       type: boolean
+                    httpHeaders:
+                      additionalProperties:
+                        type: string
+                      description: |-
+                        httpHeaders defines custom HTTP headers to be sent with requests.
+                        Header values may contain secrets.
+                      type: object
                     interval:
                       description: |-
                         interval at which Prometheus scrapes the metrics from the target.

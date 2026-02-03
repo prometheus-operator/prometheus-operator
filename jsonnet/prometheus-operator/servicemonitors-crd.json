@@ -200,6 +200,13 @@
                           "description": "honorTimestamps defines whether Prometheus preserves the timestamps\nwhen exposed by the target.",
                           "type": "boolean"
                         },
+                        "httpHeaders": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "description": "httpHeaders defines custom HTTP headers to be sent with requests.\nHeader values may contain secrets.",
+                          "type": "object"
+                        },
                         "interval": {
                           "description": "interval at which Prometheus scrapes the metrics from the target.\n\nIf empty, Prometheus uses the global scrape interval.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

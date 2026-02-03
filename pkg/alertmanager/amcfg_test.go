@@ -2748,6 +2748,9 @@ func TestGenerateConfig(t *testing.T) {
 										},
 									},
 									FollowRedirects: ptr.To(true),
+									HTTPHeaders: map[string]monitoringv1alpha1.HTTPHeader{
+										"X-Test": {Values: []string{"hello"}},
+									},
 								},
 							}},
 						}},
@@ -7027,6 +7030,34 @@ func TestLoadConfig(t *testing.T) {
 			require.Equal(t, tc.expected, ac)
 		})
 	}
+}
+
+func TestLoadConfig_HTTPHeadersInHTTPConfig(t *testing.T) {
+	cfg := `
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+- name: test
+  webhook_configs:
+  - url: http://example.invalid
+    http_config:
+      http_headers:
+        X-Test:
+          values:
+          - hello
+templates: []
+`
+
+	ac, err := alertmanagerConfigFromBytes([]byte(cfg))
+	require.NoError(t, err)
+
+	require.Len(t, ac.Receivers, 2)
+	require.NotNil(t, ac.Receivers[1].WebhookConfigs)
+	require.Len(t, ac.Receivers[1].WebhookConfigs, 1)
+	require.NotNil(t, ac.Receivers[1].WebhookConfigs[0].HTTPConfig)
+	require.NotNil(t, ac.Receivers[1].WebhookConfigs[0].HTTPConfig.HTTPHeaders)
+	require.Equal(t, []string{"hello"}, ac.Receivers[1].WebhookConfigs[0].HTTPConfig.HTTPHeaders.Headers["X-Test"].Values)
 }
 
 func TestConvertHTTPConfig(t *testing.T) {

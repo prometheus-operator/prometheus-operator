@@ -27,6 +27,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
@@ -1757,6 +1758,26 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		proxyConfig:     proxyConfig,
 		FollowRedirects: in.FollowRedirects,
 		EnableHTTP2:     in.EnableHTTP2,
+	}
+
+	if len(in.HTTPHeaders) > 0 {
+		headers := &commoncfg.Headers{Headers: map[string]commoncfg.Header{}}
+		for name, h := range in.HTTPHeaders {
+			outHeader := commoncfg.Header{Values: append([]string{}, h.Values...)}
+			if len(h.Secrets) > 0 {
+				for _, sel := range h.Secrets {
+					v, err := cb.store.GetSecretKey(ctx, crKey.Namespace, sel)
+					if err != nil {
+						return nil, fmt.Errorf("failed to get HTTP header secret for %q: %w", name, err)
+					}
+					if v != "" {
+						outHeader.Secrets = append(outHeader.Secrets, commoncfg.Secret(v))
+					}
+				}
+			}
+			headers.Headers[name] = outHeader
+		}
+		out.HTTPHeaders = headers
 	}
 
 	if in.BasicAuth != nil {
