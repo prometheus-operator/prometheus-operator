@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"slices"
 	"strings"
@@ -491,18 +492,24 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	return nil
 }
 
-func validateProberURL(url string) error {
-	hostPort := strings.Split(url, ":")
-
-	if !govalidator.IsHost(hostPort[0]) {
-		return fmt.Errorf("invalid host: %q", hostPort[0])
+func validateProberURL(proberURL string) error {
+	// Try to parse as host:port (handles IPv6 in [bracket]:port format correctly)
+	host, port, err := net.SplitHostPort(proberURL)
+	if err != nil {
+		// No port specified - validate the entire input as a host.
+		// This handles bare hostnames, IPv4, and IPv6 addresses without ports.
+		if !govalidator.IsHost(proberURL) {
+			return fmt.Errorf("invalid host: %q", proberURL)
+		}
+		return nil
 	}
 
-	// handling cases with url specified as host:port
-	if len(hostPort) > 1 {
-		if !govalidator.IsPort(hostPort[1]) {
-			return fmt.Errorf("invalid port: %q", hostPort[1])
-		}
+	// Validate the extracted host and port
+	if !govalidator.IsHost(host) {
+		return fmt.Errorf("invalid host: %q", host)
+	}
+	if !govalidator.IsPort(port) {
+		return fmt.Errorf("invalid port: %q", port)
 	}
 
 	return nil
