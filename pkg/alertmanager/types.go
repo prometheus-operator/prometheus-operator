@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"github.com/prometheus/alertmanager/config"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 )
 
@@ -221,16 +222,16 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	Authorization   *authorization `yaml:"authorization,omitempty"`
-	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
-	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
-	BearerToken     string         `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
-	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
-	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
-	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
-
-	proxyConfig `yaml:",inline"`
+	Authorization   *authorization     `yaml:"authorization,omitempty"`
+	BasicAuth       *basicAuth         `yaml:"basic_auth,omitempty"`
+	OAuth2          *oauth2            `yaml:"oauth2,omitempty"`
+	BearerToken     string             `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string             `yaml:"bearer_token_file,omitempty"`
+	TLSConfig       *tlsConfig         `yaml:"tls_config,omitempty"`
+	FollowRedirects *bool              `yaml:"follow_redirects,omitempty"`
+	EnableHTTP2     *bool              `yaml:"enable_http2,omitempty"`
+	HTTPHeaders     *commoncfg.Headers `yaml:"http_headers,omitempty"`
+	proxyConfig     `yaml:",inline"`
 }
 
 type proxyConfig struct {
