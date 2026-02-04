@@ -589,8 +589,8 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	if shouldCreate {
 		logger.Debug("creating statefulset")
-		if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-			return fmt.Errorf("creating thanos statefulset failed: %w", err)
+		if _, err := k8sutil.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
+			return fmt.Errorf("failed to create thanos statefulset: %w", err)
 		}
 
 		return nil
@@ -721,7 +721,7 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	tr.Status.Conditions = operator.UpdateConditions(tr.Status.Conditions, availableCondition, reconciledCondition)
 	tr.Status.Paused = tr.Spec.Paused
 
-	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, applyConfigurationFromThanosRuler(tr), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = o.mclient.MonitoringV1().ThanosRulers(tr.Namespace).ApplyStatus(ctx, applyConfigurationFromThanosRuler(tr), metav1.ApplyOptions{FieldManager: k8sutil.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		return fmt.Errorf("failed to apply status subresource: %w", err)
 	}
 
