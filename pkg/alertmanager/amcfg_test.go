@@ -4018,6 +4018,12 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
+	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
+	jiraURL := config.URL{}
+	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
+	jiraURL.URL = jiraGlobalURL
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4910,6 +4916,77 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_app_token_and_slack_api_url_with_same_url_is_allowed.golden",
+		}, {
+			name:           "jira_config for supported versions",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://example.com",
+								Project:   "foo",
+								IssueType: "bug",
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_for_supported_versions.golden",
+		},
+		{
+			name:           "jira_config returns error for unsupported versions",
+			againstVersion: versionJiraNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://example.com",
+								Project:   "foo",
+								IssueType: "bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_config api_url set globally",
+			againstVersion: versionJiraNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					JiraAPIURL: &jiraURL,
+				},
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								Project:   "foo",
+								IssueType: "bug",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "jira_config returns error for missing project and issue_type mandatory field",
+			againstVersion: versionJiraAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
