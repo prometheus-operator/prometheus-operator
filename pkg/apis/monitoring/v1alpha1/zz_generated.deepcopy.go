@@ -3122,7 +3122,7 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	}
 	if in.BodySizeLimit != nil {
 		in, out := &in.BodySizeLimit, &out.BodySizeLimit
-		*out = new(monitoringv1.ByteSize)
+		*out = new(v1.ByteSize)
 		**out = **in
 	}
 	in.NativeHistogramConfig.DeepCopyInto(&out.NativeHistogramConfig)
