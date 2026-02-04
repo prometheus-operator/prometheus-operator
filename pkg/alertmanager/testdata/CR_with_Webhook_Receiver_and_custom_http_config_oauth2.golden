@@ -19,5 +19,9 @@ receivers:
         token_url: https://test.com
         endpoint_params:
           some: value
+      http_headers:
+        X-Test:
+          values:
+          - hello
       follow_redirects: true
 templates: []

@@ -1101,6 +1101,13 @@
                                 "description": "followRedirects defines whether the client should follow HTTP 3xx\nredirects.",
                                 "type": "boolean"
                               },
+                              "httpHeaders": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "description": "httpHeaders defines custom HTTP headers to be sent with requests.\nHeader values may contain secrets.",
+                                "type": "object"
+                              },
                               "noProxy": {
                                 "description": "noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.",
                                 "type": "string"

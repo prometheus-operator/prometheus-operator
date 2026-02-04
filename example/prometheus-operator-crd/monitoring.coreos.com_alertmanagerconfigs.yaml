@@ -422,6 +422,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1471,6 +1517,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2238,6 +2330,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3076,6 +3214,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3924,6 +4108,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4784,6 +5014,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5712,6 +5988,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6701,6 +7023,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7501,6 +7869,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8378,6 +8792,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9186,6 +9646,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9936,6 +10442,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10666,6 +11218,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11478,6 +12076,52 @@ spec:
                                   followRedirects specifies whether the client should follow HTTP 3xx redirects.
                                   When true, the client will automatically follow redirect responses.
                                 type: boolean
+                              httpHeaders:
+                                additionalProperties:
+                                  description: |-
+                                    HTTPHeader represents the configuration for a single HTTP header.
+                                    The header value can be provided inline via `values` and/or via secrets via `secrets`.
+                                  properties:
+                                    secrets:
+                                      description: secrets defines the secret keys
+                                        whose contents will be used as header values.
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    values:
+                                      description: values defines the header values.
+                                      items:
+                                        type: string
+                                      type: array
+                                  type: object
+                                description: |-
+                                  httpHeaders defines custom HTTP headers to be sent with requests.
+                                  Header values may contain secrets.
+                                type: object
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names

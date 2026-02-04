@@ -289,6 +289,20 @@ func (b *ProbeSpecApplyConfiguration) WithEnableHTTP2(value bool) *ProbeSpecAppl
 	return b
 }
 
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *ProbeSpecApplyConfiguration) WithHTTPHeaders(entries map[string]string) *ProbeSpecApplyConfiguration {
+	if b.HTTPConfigWithoutTLSApplyConfiguration.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPConfigWithoutTLSApplyConfiguration.HTTPHeaders = make(map[string]string, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPConfigWithoutTLSApplyConfiguration.HTTPHeaders[k] = v
+	}
+	return b
+}
+
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.

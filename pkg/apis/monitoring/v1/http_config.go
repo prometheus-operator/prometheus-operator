@@ -111,6 +111,12 @@ type HTTPConfigWithoutTLS struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+
+	// httpHeaders defines custom HTTP headers to be sent with requests.
+	// Header values may contain secrets.
+	//
+	// +optional
+	HTTPHeaders map[string]string `json:"httpHeaders,omitempty"`
 }
 
 // Validate semantically validates the given HTTPConfigWithoutTLS.

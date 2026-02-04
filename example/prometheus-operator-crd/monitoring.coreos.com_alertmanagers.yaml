@@ -1290,6 +1290,13 @@ spec:
                               followRedirects defines whether the client should follow HTTP 3xx
                               redirects.
                             type: boolean
+                          httpHeaders:
+                            additionalProperties:
+                              type: string
+                            description: |-
+                              httpHeaders defines custom HTTP headers to be sent with requests.
+                              Header values may contain secrets.
+                            type: object
                           noProxy:
                             description: |-
                               noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names

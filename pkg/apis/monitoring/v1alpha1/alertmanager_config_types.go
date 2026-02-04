@@ -731,6 +731,12 @@ type HTTPConfig struct {
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 
+	// httpHeaders defines custom HTTP headers to be sent with requests.
+	// Header values may contain secrets.
+	//
+	// +optional
+	HTTPHeaders map[string]HTTPHeader `json:"httpHeaders,omitempty"`
+
 	// proxyURL defines an optional proxy URL for HTTP requests.
 	// If defined, this field takes precedence over `proxyUrl`.
 	//
@@ -748,6 +754,18 @@ type HTTPConfig struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+}
+
+// HTTPHeader represents the configuration for a single HTTP header.
+// The header value can be provided inline via `values` and/or via secrets via `secrets`.
+type HTTPHeader struct {
+	// values defines the header values.
+	// +optional
+	Values []string `json:"values,omitempty"`
+
+	// secrets defines the secret keys whose contents will be used as header values.
+	// +optional
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex

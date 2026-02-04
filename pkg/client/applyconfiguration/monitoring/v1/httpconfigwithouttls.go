@@ -29,6 +29,7 @@ type HTTPConfigWithoutTLSApplyConfiguration struct {
 	BearerTokenSecret *corev1.SecretKeySelector            `json:"bearerTokenSecret,omitempty"`
 	FollowRedirects   *bool                                `json:"followRedirects,omitempty"`
 	EnableHTTP2       *bool                                `json:"enableHttp2,omitempty"`
+	HTTPHeaders       map[string]string                    `json:"httpHeaders,omitempty"`
 }
 
 // HTTPConfigWithoutTLSApplyConfiguration constructs a declarative configuration of the HTTPConfigWithoutTLS type for use with
@@ -82,5 +83,19 @@ func (b *HTTPConfigWithoutTLSApplyConfiguration) WithFollowRedirects(value bool)
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
 func (b *HTTPConfigWithoutTLSApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigWithoutTLSApplyConfiguration {
 	b.EnableHTTP2 = &value
+	return b
+}
+
+// WithHTTPHeaders puts the entries into the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, the entries provided by each call will be put on the HTTPHeaders field,
+// overwriting an existing map entries in HTTPHeaders field with the same key.
+func (b *HTTPConfigWithoutTLSApplyConfiguration) WithHTTPHeaders(entries map[string]string) *HTTPConfigWithoutTLSApplyConfiguration {
+	if b.HTTPHeaders == nil && len(entries) > 0 {
+		b.HTTPHeaders = make(map[string]string, len(entries))
+	}
+	for k, v := range entries {
+		b.HTTPHeaders[k] = v
+	}
 	return b
 }

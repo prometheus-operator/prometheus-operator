@@ -175,6 +175,13 @@
                     "description": "followRedirects defines whether the client should follow HTTP 3xx\nredirects.",
                     "type": "boolean"
                   },
+                  "httpHeaders": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "httpHeaders defines custom HTTP headers to be sent with requests.\nHeader values may contain secrets.",
+                    "type": "object"
+                  },
                   "interval": {
                     "description": "interval at which targets are probed using the configured prober.\nIf not specified Prometheus' global scrape interval is used.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
