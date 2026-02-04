@@ -194,19 +194,19 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 		}
 
 		if config.IconURL != nil && *config.IconURL != "" {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.IconURL))); err != nil {
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(string(*config.IconURL))); err != nil {
 				return fmt.Errorf("invalid 'iconURL': %w", err)
 			}
 		}
 
 		if config.ImageURL != nil && *config.ImageURL != "" {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ImageURL))); err != nil {
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(string(*config.ImageURL))); err != nil {
 				return fmt.Errorf("invalid 'imageURL': %w", err)
 			}
 		}
 
 		if config.ThumbURL != nil && *config.ThumbURL != "" {
-			if _, err := validation.ValidateURL(strings.TrimSpace(string(*config.ThumbURL))); err != nil {
+			if err := validation.ValidateTemplateURL(strings.TrimSpace(string(*config.ThumbURL))); err != nil {
 				return fmt.Errorf("invalid 'thumbURL': %w", err)
 			}
 		}
@@ -214,7 +214,7 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 		if l := len(config.Actions); l > 0 {
 			for _, a := range config.Actions {
 				if a.URL != nil && *a.URL != "" {
-					if _, err := validation.ValidateURL(strings.TrimSpace(string(*a.URL))); err != nil {
+					if err := validation.ValidateTemplateURL(strings.TrimSpace(string(*a.URL))); err != nil {
 						if a.Msg != nil {
 							return fmt.Errorf("invalid 'url' for '%s': %w", *a.Msg, err)
 						}
