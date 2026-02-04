@@ -193,10 +193,6 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 // Get invokes all wrapped informers and returns the first found runtime object.
 // It returns a NotFound error if the object isn't found in any informer.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
-	if len(w.informers) == 0 {
-		return nil, apierrors.NewNotFound(w.gr, name)
-	}
-
 	for _, inf := range w.informers {
 		ret, err := inf.Lister().Get(name)
 		if apierrors.IsNotFound(err) {
