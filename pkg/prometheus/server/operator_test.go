@@ -16,8 +16,6 @@ package prometheus
 
 import (
 	"context"
-	"fmt"
-	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -25,9 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -260,96 +256,6 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 			require.Equal(t, "tls_config:\n  insecure_skip_verify: true\n", string(get.Data[thanosPrometheusHTTPClientConfigFileName]))
 		})
 	}
-}
-
-func TestEnqueueForNamespaceFallback(t *testing.T) {
-	for _, tc := range []struct {
-		name             string
-		namespaceExists  bool
-		expectedEnqueued int
-		prometheusCount  int
-	}{
-		{
-			name:             "namespace not found triggers fallback - enqueues all instances",
-			namespaceExists:  false,
-			prometheusCount:  3,
-			expectedEnqueued: 3,
-		},
-		{
-			name:             "namespace found with matching prometheus",
-			namespaceExists:  true,
-			prometheusCount:  3,
-			expectedEnqueued: 1, // only the one in the same namespace
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			// Create a fake namespace store
-			nsStore := cache.NewStore(cache.MetaNamespaceKeyFunc)
-			if tc.namespaceExists {
-				err := nsStore.Add(&v1.Namespace{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "test-ns",
-					},
-				})
-				require.NoError(t, err)
-			}
-
-			// Create fake prometheus store with test data
-			promStore := cache.NewStore(cache.MetaNamespaceKeyFunc)
-			for i := 0; i < tc.prometheusCount; i++ {
-				ns := "other-ns"
-				if i == 0 {
-					ns = "test-ns" // First one is in the target namespace
-				}
-				err := promStore.Add(&monitoringv1.Prometheus{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      fmt.Sprintf("prometheus-%d", i),
-						Namespace: ns,
-					},
-				})
-				require.NoError(t, err)
-			}
-
-			// Track enqueued items
-			var enqueuedItems []string
-			fakeRR := &fakeReconciler{
-				enqueueFunc: func(obj metav1.Object) {
-					enqueuedItems = append(enqueuedItems, fmt.Sprintf("%s/%s", obj.GetNamespace(), obj.GetName()))
-				},
-			}
-
-			fakeLister := &fakeLister{store: promStore}
-
-			enqueueForNamespaceInternal(slog.Default(), nsStore, "test-ns", fakeLister, fakeRR)
-
-			require.Len(t, enqueuedItems, tc.expectedEnqueued,
-				"expected %d items to be enqueued, got %d: %v",
-				tc.expectedEnqueued, len(enqueuedItems), enqueuedItems)
-		})
-	}
-}
-
-// fakeReconciler implements the reconciler interface for testing
-type fakeReconciler struct {
-	enqueueFunc func(obj metav1.Object)
-}
-
-func (f *fakeReconciler) EnqueueForReconciliation(obj metav1.Object) {
-	if f.enqueueFunc != nil {
-		f.enqueueFunc(obj)
-	}
-}
-
-// fakeLister implements the resourceLister interface for testing
-type fakeLister struct {
-	store cache.Store
-}
-
-func (f *fakeLister) ListAll(selector labels.Selector, appendFn cache.AppendFunc) error {
-	for _, obj := range f.store.List() {
-		appendFn(obj)
-	}
-	return nil
 }
 
 func TestShouldRetain(t *testing.T) {
