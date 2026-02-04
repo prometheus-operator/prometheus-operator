@@ -574,7 +574,7 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*tr, o.config, tlsAssets, ruleConfigMapNames, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*tr, o.config, tlsAssets, ruleConfigMapNames)
 	if err != nil {
 		return err
 	}
@@ -728,19 +728,12 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	return nil
 }
 
-func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
-
-	// The controller should ignore any changes to RevisionHistoryLimit field because
-	// it may be modified by external actors.
-	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712
-	ss.RevisionHistoryLimit = nil
-
+func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string) (string, error) {
 	hash, err := hashstructure.Hash(struct {
 		ThanosRulerLabels      map[string]string
 		ThanosRulerAnnotations map[string]string
 		ThanosRulerGeneration  int64
 		Config                 Config
-		StatefulSetSpec        appsv1.StatefulSetSpec
 		RuleConfigMaps         []string `hash:"set"`
 		ShardedSecret          *operator.ShardedSecret
 	}{
@@ -748,7 +741,6 @@ func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *opera
 		ThanosRulerAnnotations: tr.Annotations,
 		ThanosRulerGeneration:  tr.Generation,
 		Config:                 c,
-		StatefulSetSpec:        ss,
 		RuleConfigMaps:         ruleConfigMapNames,
 		ShardedSecret:          tlsAssets,
 	},
