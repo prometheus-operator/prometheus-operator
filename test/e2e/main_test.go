@@ -302,6 +302,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromQueryLogFile":                          testPromQueryLogFile,
 		"PromDegradedCondition":                     testPromDegradedConditionStatus,
 		"PromUnavailableCondition":                  testPromUnavailableConditionStatus,
+		"PromStatusConditionLastTransitionTime":     testPromStatusConditionLastTransitionTime,
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
