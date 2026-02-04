@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/prometheus/alertmanager/config"
-	"github.com/prometheus/common/model"
 	"k8s.io/utils/ptr"
 )
 
@@ -34,17 +33,6 @@ func ValidateURLPtr(url *string) error {
 		return err
 	}
 
-	return nil
-}
-
-func ValidateNonZeroDuration(duration string) error {
-	d, err := model.ParseDuration(duration)
-	if err != nil {
-		return fmt.Errorf("invalid duration %q: %w", duration, err)
-	}
-	if d == 0 {
-		return fmt.Errorf("duration cannot be zero")
-	}
 	return nil
 }
 

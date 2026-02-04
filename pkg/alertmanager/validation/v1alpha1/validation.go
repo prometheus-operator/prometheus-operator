@@ -18,14 +18,11 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"regexp"
 	"strings"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
-
-var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
@@ -422,24 +419,6 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	for _, namedActiveTimeInterval := range r.ActiveTimeIntervals {
 		if _, found := muteTimeIntervals[namedActiveTimeInterval]; !found {
 			return fmt.Errorf("time interval %q not found", namedActiveTimeInterval)
-		}
-	}
-
-	if r.GroupInterval != nil {
-		if err := validation.ValidateNonZeroDuration(string(*r.GroupInterval)); err != nil {
-			return fmt.Errorf("groupInterval: %w", err)
-		}
-	}
-
-	if r.GroupWait != nil && *r.GroupWait != "" {
-		if !durationRe.MatchString(string(*r.GroupWait)) {
-			return fmt.Errorf("groupWait %s does not match required regex: %s", *r.GroupWait, durationRe.String())
-		}
-	}
-
-	if r.RepeatInterval != nil {
-		if err := validation.ValidateNonZeroDuration(string(*r.RepeatInterval)); err != nil {
-			return fmt.Errorf("repeatInterval: %w", err)
 		}
 	}
 

@@ -575,9 +575,9 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
-		GroupWait:           durationToString((*monitoringv1.Duration)(in.GroupWait)),
-		GroupInterval:       durationToString((*monitoringv1.Duration)(in.GroupInterval)),
-		RepeatInterval:      durationToString((*monitoringv1.Duration)(in.RepeatInterval)),
+		GroupWait:           ptr.Deref((*string)(in.GroupWait), ""),
+		GroupInterval:       ptr.Deref((*string)(in.GroupInterval), ""),
+		RepeatInterval:      ptr.Deref((*string)(in.RepeatInterval), ""),
 		Continue:            in.Continue,
 		Match:               match,
 		MatchRE:             matchRE,
@@ -2929,27 +2929,17 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		}
 	}
 
-	if r.GroupInterval != "" {
-		d, err := model.ParseDuration(r.GroupInterval)
-		if err != nil {
-			return fmt.Errorf("group_interval: %w", err)
-		}
-		if d == 0 {
-			// Reset the value if it's a zero duration because Alertmanager would reject it.
-			r.GroupInterval = ""
-		}
+	d, err := convertToNonZeroDuration(r.GroupInterval)
+	if err != nil {
+		return fmt.Errorf("group_interval: %w", err)
+	}
+	r.GroupInterval = d
 
+	d, err = convertToNonZeroDuration(r.RepeatInterval)
+	if err != nil {
+		return fmt.Errorf("repeat_interval: %w", err)
 	}
-	if r.RepeatInterval != "" {
-		d, err := model.ParseDuration(r.RepeatInterval)
-		if err != nil {
-			return fmt.Errorf("repeat_interval: %w", err)
-		}
-		if d == 0 {
-			// Reset the value if it's a zero duration because Alertmanager would reject it.
-			r.RepeatInterval = ""
-		}
-	}
+	r.RepeatInterval = d
 
 	for i, child := range r.Routes {
 		if err := child.sanitize(amVersion, logger); err != nil {
@@ -2961,6 +2951,24 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	r.MatchRE = convertMapToNilIfEmpty(r.MatchRE)
 	r.Matchers = convertSliceToNilIfEmpty(r.Matchers)
 	return nil
+}
+
+// convertToNonZeroDuration returns an empty string if d is a zero duration.
+func convertToNonZeroDuration(d string) (string, error) {
+	if d == "" {
+		return "", nil
+	}
+
+	duration, err := model.ParseDuration(d)
+	if err != nil {
+		return "", err
+	}
+
+	if duration == 0 {
+		return "", nil
+	}
+
+	return d, nil
 }
 
 func checkNotEmptyMap(in ...map[string]string) bool {
@@ -2995,15 +3003,6 @@ func convertSliceToNilIfEmpty(in []string) []string {
 	return nil
 }
 
-func durationToString(d *monitoringv1.Duration) string {
-	if d == nil {
-		return ""
-	}
-	return string(*d)
-}
-
-// contains will return true if any slice value with all whitespace removed
-// is equal to the provided value with all whitespace removed.
 func contains(value string, in []string) bool {
 	for _, str := range in {
 		if strings.ReplaceAll(value, " ", "") == strings.ReplaceAll(str, " ", "") {

@@ -19,7 +19,6 @@ import (
 
 	"k8s.io/utils/ptr"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -438,40 +437,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					Route: &monitoringv1beta1.Route{
 						Receiver:          "same",
 						MuteTimeIntervals: []string{"awol"},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fails to validate zero groupInterval",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-					},
-					Route: &monitoringv1beta1.Route{
-						Receiver:      "same",
-						GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("0s")),
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fails to validate zero repeatInterval",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-					},
-					Route: &monitoringv1beta1.Route{
-						Receiver:       "same",
-						RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("0m")),
 					},
 				},
 			},
