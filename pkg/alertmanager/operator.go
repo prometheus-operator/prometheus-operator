@@ -680,7 +680,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Debug("no current statefulset found")
 		logger.Debug("creating statefulset")
 		if _, err := k8sutil.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
-			return fmt.Errorf("creating statefulset failed: %w", err)
+			return fmt.Errorf("failed to create statefulset: %w", err)
 		}
 		return nil
 	}
