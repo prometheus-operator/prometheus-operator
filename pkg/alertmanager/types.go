@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"github.com/prometheus/alertmanager/config"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 )
 
@@ -74,6 +75,9 @@ type globalConfig struct {
 	RocketChatTokenFile   string          `yaml:"rocketchat_token_file,omitempty"`
 	RocketChatTokenID     string          `yaml:"rocketchat_token_id,omitempty"`
 	RocketChatTokenIDFile string          `yaml:"rocketchat_token_id_file,omitempty"`
+	SlackAppToken         string          `yaml:"slack_app_token,omitempty"`
+	SlackAppTokenFile     string          `yaml:"slack_app_token_file,omitempty"`
+	SlackAppURL           *config.URL     `yaml:"slack_app_url,omitempty"`
 }
 
 type route struct {
@@ -120,7 +124,7 @@ type receiver struct {
 	JiraConfigs       []*jiraConfig       `yaml:"jira_configs,omitempty"`
 	RocketChatConfigs []*rocketChatConfig `yaml:"rocketchat_configs,omitempty"`
 	MattermostConfigs []*mattermostConfig `yaml:"mattermost_configs,omitempty"`
-	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_config,omitempty"`
+	IncidentioConfigs []*incidentioConfig `yaml:"incidentio_configs,omitempty"`
 }
 
 type webhookConfig struct {
@@ -192,6 +196,9 @@ type slackConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty"`
 	APIURLFile    string            `yaml:"api_url_file,omitempty"`
+	AppToken      string            `yaml:"app_token,omitempty"`
+	AppTokenFile  string            `yaml:"app_token_file,omitempty"`
+	AppURL        string            `yaml:"app_url,omitempty"`
 	Channel       string            `yaml:"channel,omitempty"`
 	Username      string            `yaml:"username,omitempty"`
 	Color         string            `yaml:"color,omitempty"`
@@ -215,16 +222,16 @@ type slackConfig struct {
 }
 
 type httpClientConfig struct {
-	Authorization   *authorization `yaml:"authorization,omitempty"`
-	BasicAuth       *basicAuth     `yaml:"basic_auth,omitempty"`
-	OAuth2          *oauth2        `yaml:"oauth2,omitempty"`
-	BearerToken     string         `yaml:"bearer_token,omitempty"`
-	BearerTokenFile string         `yaml:"bearer_token_file,omitempty"`
-	TLSConfig       *tlsConfig     `yaml:"tls_config,omitempty"`
-	FollowRedirects *bool          `yaml:"follow_redirects,omitempty"`
-	EnableHTTP2     *bool          `yaml:"enable_http2,omitempty"`
-
-	proxyConfig `yaml:",inline"`
+	Authorization   *authorization     `yaml:"authorization,omitempty"`
+	BasicAuth       *basicAuth         `yaml:"basic_auth,omitempty"`
+	OAuth2          *oauth2            `yaml:"oauth2,omitempty"`
+	BearerToken     string             `yaml:"bearer_token,omitempty"`
+	BearerTokenFile string             `yaml:"bearer_token_file,omitempty"`
+	TLSConfig       *tlsConfig         `yaml:"tls_config,omitempty"`
+	FollowRedirects *bool              `yaml:"follow_redirects,omitempty"`
+	EnableHTTP2     *bool              `yaml:"enable_http2,omitempty"`
+	HTTPHeaders     *commoncfg.Headers `yaml:"http_headers,omitempty"`
+	proxyConfig     `yaml:",inline"`
 }
 
 type proxyConfig struct {
@@ -448,6 +455,7 @@ type jiraConfig struct {
 	WontFixResolution string            `yaml:"wont_fix_resolution,omitempty"`
 	ReopenDuration    model.Duration    `yaml:"reopen_duration,omitempty"`
 	Fields            map[string]any    `yaml:"fields,omitempty"`
+	APIType           string            `yaml:"api_type,omitempty"`
 }
 
 type rocketchatAttachmentField struct {

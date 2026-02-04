@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/discovery"
@@ -55,10 +56,18 @@ import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
-// KubeConfigEnv (optionally) specify the location of kubeconfig file.
-const KubeConfigEnv = "KUBECONFIG"
+const (
+	// KubeConfigEnv (optionally) specify the location of kubeconfig file.
+	KubeConfigEnv = "KUBECONFIG"
 
-const StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
+	// StatusCleanupFinalizerName is the name of the finalizer used to garbage
+	// collect status bindings on configuration resources.
+	StatusCleanupFinalizerName = "monitoring.coreos.com/status-cleanup"
+
+	// PrometheusOperatorFieldManager is the field manager name used by the
+	// operator.
+	PrometheusOperatorFieldManager = "PrometheusOperator"
+)
 
 var invalidDNS1123Characters = regexp.MustCompile("[^-a-z0-9]+")
 
@@ -316,6 +325,37 @@ func CreateOrUpdateEndpointSlice(ctx context.Context, c clientdiscoveryv1.Endpoi
 	})
 }
 
+// CreateStatefulSetOrPatchLabels creates a StatefulSet resource.
+// If the StatefulSet already exists, it patches the labels from the input StatefulSet.
+func CreateStatefulSetOrPatchLabels(ctx context.Context, ssetClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) (*appsv1.StatefulSet, error) {
+	created, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{})
+	if err == nil {
+		return created, nil
+	}
+
+	if !apierrors.IsAlreadyExists(err) {
+		return nil, err
+	}
+
+	// StatefulSet already exists, patch the labels
+	patchData, err := json.Marshal(map[string]any{
+		"metadata": map[string]any{
+			"labels": sset.Labels,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ssetClient.Patch(
+		ctx,
+		sset.Name,
+		types.StrategicMergePatchType,
+		patchData,
+		metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager},
+	)
+}
+
 // updateStatefulSet updates a StatefulSet resource preserving custom labels and annotations from the current resource.
 func updateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
@@ -405,6 +445,30 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			return nil
 		}
 		_, err = secretClient.Update(ctx, desired, metav1.UpdateOptions{})
+		return err
+	})
+}
+
+// CreateOrUpdateConfigMap merges metadata of existing ConfigMap with new one and updates it.
+func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInterface, desired *v1.ConfigMap) error {
+	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		existingCM, err := cmClient.Get(ctx, desired.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+
+			_, err = cmClient.Create(ctx, desired, metav1.CreateOptions{})
+			return err
+		}
+
+		mutated := existingCM.DeepCopyObject().(*v1.ConfigMap)
+		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
+		if apiequality.Semantic.DeepEqual(existingCM, desired) {
+			return nil
+		}
+		_, err = cmClient.Update(ctx, desired, metav1.UpdateOptions{})
 		return err
 	})
 }
@@ -664,12 +728,23 @@ func FinalizerAddPatch(finalizers []string, finalizerName string) ([]byte, error
 	return json.Marshal(patch)
 }
 
-// FinalizerDeletePatch generates the JSON patch payload which deletes the finalizer from the object's metadata.
-// If the finalizer is not present, it returns nil.
+// FinalizerDeletePatch generates a JSON Patch payload to remove the specified
+// finalizer from an object's metadata.
+//
+// If the finalizer is not present, the function returns nil.
+//
+// The patch includes a "test" operation before "remove" to ensure the value at
+// the computed index matches the expected finalizer. This prevents race
+// conditions when finalizers are modified concurrently.
 func FinalizerDeletePatch(finalizers []string, finalizerName string) ([]byte, error) {
 	for i, f := range finalizers {
 		if f == finalizerName {
 			patch := []map[string]any{
+				{
+					"op":    "test",
+					"path":  fmt.Sprintf("/metadata/finalizers/%d", i),
+					"value": finalizerName,
+				},
 				{
 					"op":   "remove",
 					"path": fmt.Sprintf("/metadata/finalizers/%d", i),

@@ -9,10 +9,10 @@ scrape_configs:
   nomad_sd_configs:
   - authorization:
       type: Bearer
-      credentials: value
+      credentials: 00000000-0000-0000-0000-000000000000
     proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
-    proxy_from_environment: true
+    proxy_from_environment: false
     proxy_connect_header:
       header:
       - value

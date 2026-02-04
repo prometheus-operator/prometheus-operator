@@ -474,7 +474,17 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 		}
 
 		c := cg.generateK8SSDConfig(tc.ServiceMonitor.Spec.NamespaceSelector, tc.ServiceMonitor.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(tc.ServiceMonitor.Namespace), kubernetesSDRoleEndpoint, attachMetaConfig)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.Golden)
 	}
@@ -516,7 +526,17 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 	}
 	c := cg.generateK8SSDConfig(pm.Spec.NamespaceSelector, pm.Namespace, nil, assets.NewTestStoreBuilder().ForNamespace(pm.Namespace), kubernetesSDRolePod, attachMetadataConfig)
 
-	s, err := yaml.Marshal(yaml.MapSlice{c})
+	// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+	fullConfig := yaml.MapSlice{
+		{Key: "scrape_configs", Value: []yaml.MapSlice{
+			{
+				{Key: "job_name", Value: "k8s-sd-test"},
+				c,
+			},
+		}},
+	}
+
+	s, err := yaml.Marshal(fullConfig)
 	require.NoError(t, err)
 
 	golden.Assert(t, string(s), "NamespaceSetCorrectlyForPodMonitor.golden")
@@ -891,8 +911,6 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 						Key: "password",
 					},
 				},
-				BearerToken:     "bearer_token",
-				BearerTokenFile: "bearer_token_file",
 			},
 			store: assets.NewTestStoreBuilder(
 				&v1.Secret{
@@ -978,7 +996,17 @@ func TestK8SSDConfigGeneration(t *testing.T) {
 			tc.role,
 			attachMetaConfig,
 		)
-		s, err := yaml.Marshal(yaml.MapSlice{c})
+		// Wrap partial K8s SD config in a full Prometheus config to satisfy promtool validation.
+		fullConfig := yaml.MapSlice{
+			{Key: "scrape_configs", Value: []yaml.MapSlice{
+				{
+					{Key: "job_name", Value: "k8s-sd-test"},
+					c,
+				},
+			}},
+		}
+
+		s, err := yaml.Marshal(fullConfig)
 		require.NoError(t, err)
 		golden.Assert(t, string(s), tc.golden)
 	}
@@ -1195,7 +1223,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionV1.golden",
+			golden: "v2/AlertmanagerAPIVersionV1.golden",
 		},
 		{
 			name:    "Alertmanager API Compatible version",
@@ -1240,7 +1268,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionV1LowerCasePrometheusV3.golden",
+			golden: "v2/AlertmanagerAPIVersionV1LowerCasePrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIV1 Incompatible with Prometheus V3",
@@ -1255,7 +1283,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 					},
 				},
 			},
-			golden: "AlertmanagerAPIVersionV1UpperCasePrometheusV3.golden",
+			golden: "v2/AlertmanagerAPIVersionV1UpperCasePrometheusV3.golden",
 		},
 		{
 			name:    "Alertmanager APIV2 Incompatible with Prometheus V3",
@@ -1266,7 +1294,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 						Name:       "alertmanager-main",
 						Namespace:  ptr.To("default"),
 						Port:       intstr.FromString("web"),
-						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion1),
+						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 					},
 				},
 			},
@@ -1510,7 +1538,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 			nil,
 			nil,
 			&assets.StoreBuilder{},
-			golden.Get(t, "TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
+			golden.Get(t, "input/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
 			nil,
 			nil,
@@ -1570,7 +1598,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		nil,
 		&assets.StoreBuilder{},
 		nil,
-		golden.Get(t, "AdditionalAlertRelabelConfigs.golden"),
+		golden.Get(t, "input/AdditionalAlertRelabelConfigs.golden"),
 		nil,
 		nil,
 	)
@@ -1765,6 +1793,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -1832,6 +1861,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -1895,6 +1925,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -1966,6 +1997,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 									Regex:        "(.*)",
 									Replacement:  ptr.To("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+									TargetLabel:  "pod_ready",
 								},
 							},
 						},
@@ -4004,7 +4036,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 					SendInterval: "1m",
 				},
 			},
-			golden: "RemoteWriteConfig_v2.10.0_1.golden",
+			golden: "legacy-versions/RemoteWriteConfig_v2.10.0_1.golden",
 		},
 		{
 			version: "v2.27.1",
@@ -4039,7 +4071,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("client-id"),
+						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
@@ -4066,26 +4098,6 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADOAuth_v2.48.0_1.golden",
 		},
 		{
-			version: "v2.47.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					OAuth: &monitoringv1.AzureOAuth{
-						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
-						ClientID: "00000000-0000-0000-0000-000000000000",
-						ClientSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
-								Name: "azure-oauth-secret",
-							},
-							Key: "secret-key",
-						},
-					},
-				},
-			},
-			golden: "RemoteWriteConfigAzureADOAuth_v2.47.0_1.golden",
-		},
-		{
 			version: "v2.52.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
@@ -4099,30 +4111,31 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfigAzureADSDK_v2.52.0.golden",
 		},
 		{
-			version: "v2.51.0",
-			remoteWrite: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
-				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
-					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
-					},
-				},
-			},
-			golden: "RemoteWriteConfigAzureADSDK_v2.51.0.golden",
-		},
-		{
 			version: "v3.5.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To(""),
+						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
 			golden: "RemoteWriteConfig_AzureADManagedIdentity_v3.5.0.golden",
+		},
+		{
+			version: "v3.7.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzureGovernment"),
+					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
+						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
+						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
+					},
+				},
+			},
+			golden: "RemoteWriteConfigAzureADWorkloadIdentity_v3.7.0.golden",
 		},
 		{
 			version: "v2.26.0",
@@ -4478,6 +4491,34 @@ func TestRemoteWriteConfig(t *testing.T) {
 				MetadataConfig: &monitoringv1.MetadataConfig{},
 			},
 			golden: "RemoteWriteConfigWithEmptyMetadataConfig.golden",
+		},
+		{
+			version: "v3.8.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+				},
+			},
+			golden: "RemoteWriteConfig_AzureADScope_v3.8.0.golden",
+		},
+		{
+			version: "v3.9.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				AzureAD: &monitoringv1.AzureAD{
+					Cloud: ptr.To("AzurePublic"),
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+					},
+					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+				},
+			},
+			golden: "RemoteWriteConfig_AzureADScope_v3.9.0.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
@@ -5038,7 +5079,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
+			golden: "native-histograms/NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
@@ -5048,7 +5089,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
 				ConvertClassicHistogramsToNHCB: ptr.To(true),
 			},
-			golden: "NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
+			golden: "native-histograms/NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
 		{
 			version: "v2.44.0",
@@ -5228,6 +5269,45 @@ func TestBodySizeLimits(t *testing.T) {
 			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
+}
+
+func TestScrapeConfigBodySizeLimit(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.CommonPrometheusFields.Version = "v2.28.0"
+
+	scrapeConfig := monitoringv1alpha1.ScrapeConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "testscrapeconfig1",
+			Namespace: "default",
+		},
+		Spec: monitoringv1alpha1.ScrapeConfigSpec{
+			StaticConfigs: []monitoringv1alpha1.StaticConfig{
+				{
+					Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+				},
+			},
+			BodySizeLimit: ptr.To[monitoringv1.ByteSize]("500MB"),
+		},
+	}
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		p,
+		nil,
+		nil,
+		nil,
+		map[string]*monitoringv1alpha1.ScrapeConfig{
+			"testscrapeconfig1": &scrapeConfig,
+		},
+		&assets.StoreBuilder{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "ScrapeConfigBodySizeLimit.golden")
 }
 
 func TestMatchExpressionsServiceMonitor(t *testing.T) {
@@ -6219,7 +6299,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1",
 						},
@@ -6236,7 +6316,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1_sharded",
 						},
@@ -6263,7 +6343,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
 					{
-						Targets: []monitoringv1alpha1.Target{"http://localhost:9100"},
+						Targets: []monitoringv1alpha1.Target{"localhost:9100"},
 						Labels: map[string]string{
 							"label1": "value1",
 						},
@@ -7271,11 +7351,12 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -7359,7 +7440,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
-								Role:  monitoringv1alpha1.KubernetesRolePod,
+								Role:  monitoringv1alpha1.KubernetesRoleNode,
 								Label: ptr.To("component=executor"),
 							},
 						},
@@ -7393,7 +7474,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7417,7 +7499,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -7435,7 +7518,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -7467,7 +7551,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
-						Role: monitoringv1alpha1.KubernetesRoleNode,
+						Role:      monitoringv1alpha1.KubernetesRoleNode,
+						APIServer: ptr.To("https://kubernetes.default.svc"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -7594,7 +7679,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8018,7 +8103,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8216,7 +8301,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 					},
 				},
 			},
@@ -8243,7 +8329,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -8255,7 +8342,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8279,7 +8366,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &v1.SecretKeySelector{
@@ -8328,7 +8416,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						SubscriptionID: "11AAAA11-A11A-111A-A111-1111A1111A11",
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -8374,7 +8463,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 						"clientSecret": []byte("my-secret"),
 					},
 				},
@@ -8658,7 +8747,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -8764,7 +8853,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -8842,7 +8931,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9139,7 +9228,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -9217,7 +9306,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9333,7 +9422,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -9401,7 +9490,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9432,7 +9521,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9464,7 +9553,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -9935,7 +10024,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config NoTranslation translation strategy",
 			version: "v3.4.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				TranslationStrategy: ptr.To(monitoringv1.NoTranslation),
+				TranslationStrategy: nil,
 			},
 			golden: "OTLPConfig_Config_translation_strategy_with_notranslation.golden",
 		},
@@ -10153,7 +10242,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -10167,7 +10256,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Server:          "127.0.0.1",
+						Server:          "http://127.0.0.1:5681",
 						ClientID:        ptr.To("client"),
 						FetchTimeout:    (*monitoringv1.Duration)(ptr.To("5s")),
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
@@ -10203,6 +10292,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -10244,6 +10334,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								Key: "key",
 							},
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -10287,6 +10378,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							MaxVersion: ptr.To(monitoringv1.TLSVersion12),
 							MinVersion: ptr.To(monitoringv1.TLSVersion10),
 						},
+						Server: "http://localhost:5681",
 					},
 				},
 			},
@@ -10302,7 +10394,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -10983,7 +11075,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -10997,7 +11089,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 						},
 						FollowRedirects: ptr.To(true),
 						EnableHTTP2:     ptr.To(true),
-						Server:          "127.0.0.1",
+						Server:          "http://localhost:8761/eureka",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
 				},
@@ -11031,6 +11123,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:8761/eureka",
 					},
 				},
 			},
@@ -11072,6 +11165,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 								Key: "private-key",
 							},
 						},
+						Server: "http://localhost:8761/eureka",
 					},
 				},
 			},
@@ -11087,7 +11181,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11162,7 +11256,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11214,6 +11308,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 								"param2": "value2",
 							},
 						},
+						Server: "http://localhost:4646",
 					},
 				},
 			},
@@ -11255,6 +11350,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 								Key: "key",
 							},
 						},
+						Server: "http://localhost:4646",
 					},
 				},
 			},
@@ -11270,7 +11366,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11347,7 +11443,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11398,7 +11494,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11505,7 +11601,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11582,7 +11678,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11627,7 +11723,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11652,7 +11748,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
 					{
-						URL:   "ftp://www.example.com",
+						URL:   "https://www.example.com",
 						Query: "vhost", // This is not a valid PuppetDB query, just a mock.
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
@@ -11685,7 +11781,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				PuppetDBSDConfigs: []monitoringv1alpha1.PuppetDBSDConfig{
 					{
-						URL:   "acp://www.example.com",
+						URL:   "https://www.example.com",
 						Query: "vhost", // This is not a valid PuppetDB query, just a mock.
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
@@ -11734,7 +11830,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -11852,7 +11948,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -11896,7 +11992,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -12006,7 +12102,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -12158,24 +12254,24 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						AccessKey: "AccessKey",
+						AccessKey: "SCWABCDEFGH123456789",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "credential",
 						},
-						ProjectID:  "1",
+						ProjectID:  "00000000-0000-0000-0000-000000000001",
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
-						Zone:       ptr.To("beijing-1"),
+						Zone:       ptr.To("fr-par-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						ApiURL:     ptr.To("https://api.scaleway.com"),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -12199,14 +12295,14 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
-						AccessKey: "AccessKey",
+						AccessKey: "SCWABCDEFGH123456789",
 						SecretKey: v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "credential",
 						},
-						ProjectID: "1",
+						ProjectID: "00000000-0000-0000-0000-000000000001",
 						Role:      monitoringv1alpha1.ScalewayRoleInstance,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
@@ -12247,7 +12343,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -12323,7 +12419,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(true),
+							ProxyFromEnvironment: ptr.To(false),
 							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
 								"header": {
 									{
@@ -12398,7 +12494,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 					Data: map[string][]byte{
 						"proxy-header": []byte("value"),
 						"token":        []byte("value"),
-						"credential":   []byte("value"),
+						"credential":   []byte("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 				&v1.ConfigMap{
@@ -13399,9 +13495,11 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.PrometheusSpec{
-					Alerting: tc.alerting,
+					Alerting:           tc.alerting,
+					EvaluationInterval: "30s",
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						ServiceDiscoveryRole: tc.sdRole,
+						ScrapeInterval:       "30s",
 					},
 				},
 			}
@@ -13617,9 +13715,11 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			},
 			Spec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: tc.version,
+					Version:        tc.version,
+					ScrapeInterval: "30s",
 				},
-				Alerting: tc.alerting,
+				Alerting:           tc.alerting,
+				EvaluationInterval: "30s",
 			},
 		}
 

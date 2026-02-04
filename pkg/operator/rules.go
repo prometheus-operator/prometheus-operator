@@ -388,26 +388,32 @@ func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]stri
 		return nil, fmt.Errorf("failed to generate ConfigMaps for PrometheusRule: %w", err)
 	}
 
-	// Delete and recreate the configmap(s). It's not very efficient but proved
-	// to be robust enough so far.
-	if len(current) > 0 {
-		prs.logger.Debug("deleting ConfigMaps for PrometheusRule")
-		// In theory we could use DeleteCollection but the method isn't
-		// supported by the fake client.
-		// See https://github.com/kubernetes/kubernetes/issues/105357
-		for _, cm := range current {
-			err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
-			if err != nil {
-				return nil, fmt.Errorf("failed to delete ConfigMap %q: %w", cm.Name, err)
-			}
+	// Build a set of desired ConfigMap names for quick lookup.
+	desiredNames := make(map[string]struct{}, len(configMaps))
+	for _, cm := range configMaps {
+		desiredNames[cm.Name] = struct{}{}
+	}
+
+	// Create or update the desired ConfigMaps first to ensure rules are never
+	// missing. This avoids the race condition where deleting ConfigMaps before
+	// creating new ones could cause the config-reloader to reload Prometheus
+	// with missing rules.
+	prs.logger.Debug("creating/updating ConfigMaps for PrometheusRule")
+	for i := range configMaps {
+		if err := k8sutil.CreateOrUpdateConfigMap(ctx, prs.cmClient, &configMaps[i]); err != nil {
+			return nil, fmt.Errorf("failed to create or update ConfigMap %q: %w", configMaps[i].Name, err)
 		}
 	}
 
-	prs.logger.Debug("creating ConfigMaps for PrometheusRule")
-	for _, cm := range configMaps {
-		_, err = prs.cmClient.Create(ctx, &cm, metav1.CreateOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create ConfigMap %q: %w", cm.Name, err)
+	// Delete ConfigMaps that are no longer needed (excess shards from previous
+	// reconciliations). This happens after creates/updates to ensure rules
+	// remain available throughout the sync process.
+	for _, cm := range current {
+		if _, exists := desiredNames[cm.Name]; !exists {
+			prs.logger.Debug("deleting excess ConfigMap for PrometheusRule", "configmap", cm.Name)
+			if err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{}); err != nil {
+				return nil, fmt.Errorf("failed to delete excess ConfigMap %q: %w", cm.Name, err)
+			}
 		}
 	}
 

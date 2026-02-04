@@ -44,6 +44,7 @@ import (
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
+	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
@@ -127,6 +128,7 @@ var (
 	kubeletEndpoints     bool
 	kubeletEndpointSlice bool
 	kubeletSyncPeriod    time.Duration
+	kubeletHTTPMetrics   bool
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -149,6 +151,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
 	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
 	fs.DurationVar(&kubeletSyncPeriod, "kubelet-sync-period", 3*time.Minute, "How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m).")
+	fs.BoolVar(&kubeletHTTPMetrics, "kubelet-http-metrics", true, "Include HTTP metrics port (10255) in kubelet service. Set to false if your cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+).")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -246,6 +249,29 @@ func run(fs *flag.FlagSet) int {
 		return 0
 	}
 
+	// Determine command (default to "start")
+	cmd := "start"
+	if fs.NArg() > 0 {
+		cmd = fs.Arg(0)
+	}
+
+	// Route to appropriate command handler
+	switch cmd {
+	case "start":
+		return start()
+	case "crds":
+		return crds()
+	case "full-crds":
+		return fullCrds()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", cmd)
+		fmt.Fprintln(os.Stderr, "Available commands: crds, full-crds, start")
+		return 1
+	}
+}
+
+// start runs the Prometheus Operator.
+func start() int {
 	logger, err := logging.NewLoggerSlog(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
@@ -637,6 +663,7 @@ func run(fs *flag.FlagSet) int {
 		opts := []kubelet.ControllerOption{
 			kubelet.WithNodeAddressPriority(nodeAddressPriority.String()),
 			kubelet.WithSyncPeriod(kubeletSyncPeriod),
+			kubelet.WithHTTPMetrics(kubeletHTTPMetrics),
 		}
 
 		kubeletService := strings.Split(kubeletObject, "/")
@@ -766,5 +793,35 @@ func run(fs *flag.FlagSet) int {
 }
 
 func main() {
-	os.Exit(run(flag.CommandLine))
+	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s [arguments] [<command>]\n\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "Commands:")
+		fmt.Fprintln(os.Stderr, "  start      Run the operator (default)")
+		fmt.Fprintln(os.Stderr, "  crds       Print the CRDs in YAML format to standard output")
+		fmt.Fprintln(os.Stderr, "  full-crds  Print the full CRDs (with all fields) in YAML format to standard output")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Arguments:")
+		fs.PrintDefaults()
+	}
+	os.Exit(run(fs))
+}
+
+// crds prints all embedded CRDs to stdout.
+func crds() int {
+	if err := crd.PrintAll(os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "Error printing CRDs: %v\n", err)
+		return 1
+	}
+	return 0
+}
+
+// fullCrds prints all embedded full CRDs to stdout.
+func fullCrds() int {
+	if err := crd.PrintAllFull(os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "Error printing full CRDs: %v\n", err)
+		return 1
+	}
+	return 0
 }

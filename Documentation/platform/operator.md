@@ -15,6 +15,15 @@ description: Command line arguments for the operator binary
 
 ```console mdox-exec="./operator --help"
 Usage of ./operator:
+
+  ./operator [arguments] [<command>]
+
+Commands:
+  start      Run the operator (default)
+  crds       Print the CRDs in YAML format to standard output
+  full-crds  Print the full CRDs (with all fields) in YAML format to standard output
+
+Arguments:
   -alertmanager-config-namespaces value
     	Namespaces where AlertmanagerConfig custom resources and corresponding Secrets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for AlertmanagerConfig custom resources.
   -alertmanager-default-base-image string
@@ -66,6 +75,8 @@ Usage of ./operator:
     	Create Endpoints objects for kubelet targets. (default true)
   -kubelet-endpointslice
     	Create EndpointSlice objects for kubelet targets.
+  -kubelet-http-metrics
+    	Include HTTP metrics port (10255) in kubelet service. Set to false if your cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+). (default true)
   -kubelet-node-address-priority value
     	Node address priority used by kubelet. Either 'internal' or 'external'. Default: 'internal'.
   -kubelet-selector value
@@ -85,7 +96,7 @@ Usage of ./operator:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.87.1")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.88.1")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value

@@ -1875,11 +1875,11 @@ type AzureAD struct {
 	// +optional
 	Cloud *string `json:"cloud,omitempty"`
 	// managedIdentity defines the Azure User-assigned Managed identity.
-	// Cannot be set at the same time as `oauth` or `sdk`.
+	// Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
 	// +optional
 	ManagedIdentity *ManagedIdentity `json:"managedIdentity,omitempty"`
 	// oauth defines the oauth config that is being used to authenticate.
-	// Cannot be set at the same time as `managedIdentity` or `sdk`.
+	// Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
 	//
@@ -1887,11 +1887,22 @@ type AzureAD struct {
 	OAuth *AzureOAuth `json:"oauth,omitempty"`
 	// sdk defines the Azure SDK config that is being used to authenticate.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-	// Cannot be set at the same time as `oauth` or `managedIdentity`.
+	// Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
 	// +optional
 	SDK *AzureSDK `json:"sdk,omitempty"`
+	// workloadIdentity defines the Azure Workload Identity authentication.
+	// Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+	//
+	// It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
+	// +optional
+	WorkloadIdentity *AzureWorkloadIdentity `json:"workloadIdentity,omitempty"`
+	// scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+	// It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+	// +kubebuilder:validation:Pattern=`^[\w\s:/.\\-]+$`
+	// +optional
+	Scope *string `json:"scope,omitempty"`
 }
 
 // AzureOAuth defines the Azure OAuth settings.
@@ -1929,6 +1940,19 @@ type AzureSDK struct {
 	// +optional
 	// +kubebuilder:validation:Pattern:=^[0-9a-zA-Z-.]+$
 	TenantID *string `json:"tenantId,omitempty"`
+}
+
+// AzureWorkloadIdentity defines the Azure Workload Identity authentication configuration.
+type AzureWorkloadIdentity struct {
+	// clientId is the clientID of the Azure Active Directory application.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	ClientID string `json:"clientId"`
+
+	// tenantId is the tenant ID of the Azure Active Directory application.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	TenantID string `json:"tenantId"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

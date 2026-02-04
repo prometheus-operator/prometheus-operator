@@ -30,7 +30,7 @@ scrape_configs:
     action: keep
 - job_name: gce_app_bar
   scrape_interval: 5s
-  gce_sd_config:
+  gce_sd_configs:
   - project: foo
     zone: us-central1
   relabel_configs:
@@ -57,7 +57,7 @@ scrape_configs:
     action: keep
 - job_name: gce_app_bar_custom_shard_relabeling
   scrape_interval: 5s
-  gce_sd_config:
+  gce_sd_configs:
   - project: foo_custom_shard_relabeling
     zone: us-central1
   relabel_configs:

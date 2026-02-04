@@ -17,6 +17,7 @@ scrape_configs:
       endpoint_params:
         param1: value1
         param2: value2
+    server: http://localhost:8761/eureka
   relabel_configs:
   - source_labels:
     - job

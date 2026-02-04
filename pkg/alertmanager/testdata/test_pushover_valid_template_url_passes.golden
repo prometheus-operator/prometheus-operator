@@ -1,0 +1,7 @@
+receivers:
+- name: ""
+  pushover_configs:
+  - user_key: key
+    token: token
+    url: '{{ .labels.url }}'
+templates: []

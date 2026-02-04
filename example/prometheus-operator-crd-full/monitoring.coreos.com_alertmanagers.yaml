@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
+    operator.prometheus.io/version: 0.88.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -2318,7 +2319,7 @@ spec:
                             type: string
                         type: object
                       webex:
-                        description: webex defines the default configuration for Jira.
+                        description: webex defines the default configuration for Webex.
                         properties:
                           apiURL:
                             description: |-
@@ -4518,6 +4519,17 @@ spec:
                 x-kubernetes-list-map-keys:
                 - ip
                 x-kubernetes-list-type: map
+              hostNetwork:
+                description: |-
+                  hostNetwork controls whether the pod may use the node network namespace.
+
+                  Make sure to understand the security implications if you want to enable
+                  it (https://kubernetes.io/docs/concepts/configuration/overview/).
+
+                  When hostNetwork is enabled, this will set the DNS policy to
+                  `ClusterFirstWithHostNet` automatically (unless `.spec.dnsPolicy` is set
+                  to a different value).
+                type: boolean
               hostUsers:
                 description: |-
                   hostUsers supports the user space in Kubernetes.

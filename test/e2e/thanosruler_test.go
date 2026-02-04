@@ -636,3 +636,33 @@ func testThanosRulerStateless(t *testing.T) {
 	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, promSVC.Name, testAlert)
 	require.NoError(t, err)
 }
+
+func testThanosRulerScaleUpWithoutLabels(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create a ThanosRuler resource with 1 replica
+	tr, err := framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com"))
+	require.NoError(t, err)
+
+	// Remove all labels on the StatefulSet using Patch
+	stsName := fmt.Sprintf("thanos-ruler-%s", name)
+	err = framework.RemoveAllLabelsFromStatefulSet(ctx, stsName, ns)
+	require.NoError(t, err)
+
+	// Scale up the ThanosRuler resource to 2 replicas
+	_, err = framework.UpdateThanosRulerReplicasAndWaitUntilReady(ctx, tr.Name, ns, 2)
+	require.NoError(t, err)
+
+	// Verify the StatefulSet now has labels again (restored by the operator)
+	stsClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}

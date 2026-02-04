@@ -133,17 +133,23 @@ func newWorkQueueMetricsProvider(reg prometheus.Registerer) *workQueueMetricsPro
 		),
 		latency: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "prometheus_operator_workqueue_latency_seconds",
-				Help:    "Histogram of latency for the queue",
-				Buckets: []float64{.1, .5, 1, 5, 10},
+				Name:                            "prometheus_operator_workqueue_latency_seconds",
+				Help:                            "Histogram of latency for the queue",
+				Buckets:                         []float64{.1, .5, 1, 5, 10},
+				NativeHistogramBucketFactor:     1.1,
+				NativeHistogramMaxBucketNumber:  100,
+				NativeHistogramMinResetDuration: 1 * time.Hour,
 			},
 			[]string{"name"},
 		),
 		workDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "prometheus_operator_workqueue_work_duration_seconds",
-				Help:    "Histogram of work duration for the queue",
-				Buckets: []float64{.1, .5, 1, 5, 10},
+				Name:                            "prometheus_operator_workqueue_work_duration_seconds",
+				Help:                            "Histogram of work duration for the queue",
+				Buckets:                         []float64{.1, .5, 1, 5, 10},
+				NativeHistogramBucketFactor:     1.1,
+				NativeHistogramMaxBucketNumber:  100,
+				NativeHistogramMinResetDuration: 1 * time.Hour,
 			},
 			[]string{"name"},
 		),
@@ -232,9 +238,12 @@ func NewResourceReconciler(
 	})
 
 	reconcileDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "prometheus_operator_reconcile_duration_seconds",
-		Help:    "Histogram of reconcile operations",
-		Buckets: []float64{.1, .5, 1, 5, 10},
+		Name:                            "prometheus_operator_reconcile_duration_seconds",
+		Help:                            "Histogram of reconcile operations",
+		Buckets:                         []float64{.1, .5, 1, 5, 10},
+		NativeHistogramBucketFactor:     1.1,
+		NativeHistogramMaxBucketNumber:  100,
+		NativeHistogramMinResetDuration: 1 * time.Hour,
 	})
 
 	statusTotal := prometheus.NewCounter(prometheus.CounterOpts{
@@ -445,11 +454,13 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 	mOld, err := meta.Accessor(old)
 	if err != nil {
 		rr.logger.Error("failed to get old object meta", "err", err, "key", key)
+		return
 	}
 
 	mCur, err := meta.Accessor(cur)
 	if err != nil {
 		rr.logger.Error("failed to get current object meta", "err", err, "key", key)
+		return
 	}
 
 	if !rr.isManagedByController(mCur) {

@@ -9,17 +9,17 @@ scrape_configs:
   eureka_sd_configs:
   - authorization:
       type: Bearer
-      credentials: value
+      credentials: 00000000-0000-0000-0000-000000000000
     proxy_url: http://no-proxy.com
     no_proxy: 0.0.0.0
-    proxy_from_environment: true
+    proxy_from_environment: false
     proxy_connect_header:
       header:
       - value
     follow_redirects: true
     enable_http2: true
     refresh_interval: 30s
-    server: 127.0.0.1
+    server: http://localhost:8761/eureka
   relabel_configs:
   - source_labels:
     - job

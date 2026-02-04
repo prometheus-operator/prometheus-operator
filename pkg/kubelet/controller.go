@@ -74,6 +74,11 @@ type Controller struct {
 	manageEndpointSlice bool
 	manageEndpoints     bool
 	syncPeriod          time.Duration
+
+	// httpMetricsEnabled controls whether to include the insecure HTTP metrics
+	// port (10255) in the kubelet Service. Set to false when the cluster has
+	// disabled the insecure kubelet read-only port (e.g., GKE 1.32+).
+	httpMetricsEnabled bool
 }
 
 type ControllerOption func(*Controller)
@@ -105,6 +110,16 @@ func WithNodeAddressPriority(s string) ControllerOption {
 func WithSyncPeriod(d time.Duration) ControllerOption {
 	return func(c *Controller) {
 		c.syncPeriod = d
+	}
+}
+
+// WithHTTPMetrics controls whether to include the insecure HTTP metrics port
+// (10255) in the kubelet Service. When disabled, only the secure HTTPS port
+// (10250) and cAdvisor port (4194) are included. This is useful when the
+// cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+).
+func WithHTTPMetrics(enabled bool) ControllerOption {
+	return func(c *Controller) {
+		c.httpMetricsEnabled = enabled
 	}
 }
 
@@ -433,20 +448,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 		Subsets: []v1.EndpointSubset{
 			{
 				Addresses: make([]v1.EndpointAddress, len(addresses)),
-				Ports: []v1.EndpointPort{
-					{
-						Name: httpsPortName,
-						Port: httpsPort,
-					},
-					{
-						Name: httpPortName,
-						Port: httpPort,
-					},
-					{
-						Name: cAdvisorPortName,
-						Port: cAdvisorPort,
-					},
-				},
+				Ports:     c.endpointPorts(),
 			},
 		},
 	}
@@ -486,20 +488,7 @@ func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
 		Spec: v1.ServiceSpec{
 			Type:      v1.ServiceTypeClusterIP,
 			ClusterIP: v1.ClusterIPNone,
-			Ports: []v1.ServicePort{
-				{
-					Name: httpsPortName,
-					Port: httpsPort,
-				},
-				{
-					Name: httpPortName,
-					Port: httpPort,
-				},
-				{
-					Name: cAdvisorPortName,
-					Port: cAdvisorPort,
-				},
-			},
+			Ports:     c.servicePorts(),
 		},
 	}
 
@@ -626,20 +615,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 					},
 					},
 				},
-				Ports: []discoveryv1.EndpointPort{
-					{
-						Name: ptr.To(httpsPortName),
-						Port: ptr.To(httpsPort),
-					},
-					{
-						Name: ptr.To(httpPortName),
-						Port: ptr.To(httpPort),
-					},
-					{
-						Name: ptr.To(cAdvisorPortName),
-						Port: ptr.To(cAdvisorPort),
-					},
-				},
+				Ports: c.endpointSlicePorts(),
 			}
 
 			if a.ipv4 {
@@ -687,4 +663,76 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 
 func (c *Controller) fullCapacity(eps []discoveryv1.Endpoint) bool {
 	return len(eps) >= c.maxEndpointsPerSlice
+}
+
+// servicePorts returns the list of ServicePort for the kubelet Service.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) servicePorts() []v1.ServicePort {
+	ports := []v1.ServicePort{
+		{
+			Name: httpsPortName,
+			Port: httpsPort,
+		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, v1.ServicePort{
+			Name: httpPortName,
+			Port: httpPort,
+		})
+	}
+
+	return ports
+}
+
+// endpointPorts returns the list of EndpointPort for the kubelet Endpoints.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) endpointPorts() []v1.EndpointPort {
+	ports := []v1.EndpointPort{
+		{
+			Name: httpsPortName,
+			Port: httpsPort,
+		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, v1.EndpointPort{
+			Name: httpPortName,
+			Port: httpPort,
+		})
+	}
+
+	return ports
+}
+
+// endpointSlicePorts returns the list of EndpointPort for the kubelet EndpointSlice.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) endpointSlicePorts() []discoveryv1.EndpointPort {
+	ports := []discoveryv1.EndpointPort{
+		{
+			Name: ptr.To(httpsPortName),
+			Port: ptr.To(httpsPort),
+		},
+		{
+			Name: ptr.To(cAdvisorPortName),
+			Port: ptr.To(cAdvisorPort),
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, discoveryv1.EndpointPort{
+			Name: ptr.To(httpPortName),
+			Port: ptr.To(httpPort),
+		})
+	}
+
+	return ports
 }

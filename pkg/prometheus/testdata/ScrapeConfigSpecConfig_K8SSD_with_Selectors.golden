@@ -9,7 +9,7 @@ scrape_configs:
   kubernetes_sd_configs:
   - role: node
     selectors:
-    - role: pod
+    - role: node
       label: component=executor
   relabel_configs:
   - source_labels:

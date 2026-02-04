@@ -213,7 +213,7 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 			ctx,
 			obj,
 			metav1.UpdateOptions{
-				FieldManager:    PrometheusOperatorFieldManager,
+				FieldManager:    k8sutil.PrometheusOperatorFieldManager,
 				FieldValidation: metav1.FieldValidationStrict,
 			},
 		); err != nil {
@@ -238,7 +238,7 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		patch,
 		metav1.PatchOptions{
-			FieldManager:    PrometheusOperatorFieldManager,
+			FieldManager:    k8sutil.PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
@@ -270,7 +270,7 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		p,
 		metav1.PatchOptions{
-			FieldManager:    PrometheusOperatorFieldManager,
+			FieldManager:    k8sutil.PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,

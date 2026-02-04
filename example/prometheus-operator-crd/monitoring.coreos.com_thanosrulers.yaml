@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.87.1
+    operator.prometheus.io/version: 0.88.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -4852,7 +4852,7 @@ spec:
                         managedIdentity:
                           description: |-
                             managedIdentity defines the Azure User-assigned Managed identity.
-                            Cannot be set at the same time as `oauth` or `sdk`.
+                            Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
                           properties:
                             clientId:
                               description: |-
@@ -4865,7 +4865,7 @@ spec:
                         oauth:
                           description: |-
                             oauth defines the oauth config that is being used to authenticate.
-                            Cannot be set at the same time as `managedIdentity` or `sdk`.
+                            Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
                           properties:
@@ -4913,11 +4913,17 @@ spec:
                           - clientSecret
                           - tenantId
                           type: object
+                        scope:
+                          description: |-
+                            scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+                            It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+                          pattern: ^[\w\s:/.\\-]+$
+                          type: string
                         sdk:
                           description: |-
                             sdk defines the Azure SDK config that is being used to authenticate.
                             See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
-                            Cannot be set at the same time as `oauth` or `managedIdentity`.
+                            Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
 
                             It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
                           properties:
@@ -4927,6 +4933,27 @@ spec:
                                 authenticate.
                               pattern: ^[0-9a-zA-Z-.]+$
                               type: string
+                          type: object
+                        workloadIdentity:
+                          description: |-
+                            workloadIdentity defines the Azure Workload Identity authentication.
+                            Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+
+                            It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
+                          properties:
+                            clientId:
+                              description: clientId is the clientID of the Azure Active
+                                Directory application.
+                              minLength: 1
+                              type: string
+                            tenantId:
+                              description: tenantId is the tenant ID of the Azure
+                                Active Directory application.
+                              minLength: 1
+                              type: string
+                          required:
+                          - clientId
+                          - tenantId
                           type: object
                       type: object
                     basicAuth:

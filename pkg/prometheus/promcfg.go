@@ -2803,8 +2803,21 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 					})
 			}
 
+			if spec.AzureAD.WorkloadIdentity != nil {
+				workloadIdentityConfig := yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
+					{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
+				}
+
+				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
+			}
+
 			if spec.AzureAD.Cloud != nil {
 				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
+			}
+
+			if scope := ptr.Deref(spec.AzureAD.Scope, ""); scope != "" {
+				azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
 			}
 
 			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
@@ -3280,8 +3293,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, sc.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, sc.Spec.NativeHistogramConfig)
 
-	if cpf.EnforcedBodySizeLimit != "" {
-		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", cpf.EnforcedBodySizeLimit)
+	if bodySizeLimit := getLowerByteSize(sc.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
+		cfg = cg.WithMinimumVersion("2.28.0").AppendMapItem(cfg, "body_size_limit", bodySizeLimit)
 	}
 
 	// StaticConfig

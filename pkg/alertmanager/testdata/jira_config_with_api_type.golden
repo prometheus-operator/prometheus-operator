@@ -1,0 +1,8 @@
+receivers:
+- name: ""
+  jira_configs:
+  - api_url: http://issues.example.com
+    project: Monitoring
+    issue_type: Bug
+    api_type: datacenter
+templates: []

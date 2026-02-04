@@ -8,5 +8,6 @@ scrape_configs: []
 remote_write:
 - url: http://example.com
   azuread:
-    managed_identity: {}
+    managed_identity:
+      client_id: 00000000-0000-0000-0000-000000000000
     cloud: AzureGovernment

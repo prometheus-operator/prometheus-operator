@@ -628,7 +628,11 @@ func TestFinalizerDeletePatch(t *testing.T) {
 			require.NoError(t, err)
 
 			if tt.expectPatch {
+				// The patch should include a "test" operation before "remove" to ensure
+				// the finalizer at the index matches the expected value, preventing
+				// race conditions from removing the wrong finalizer.
 				expected := []map[string]any{
+					{"op": "test", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex), "value": tt.finalizerName},
 					{"op": "remove", "path": fmt.Sprintf("/metadata/finalizers/%d", tt.expectedIndex)},
 				}
 				expectedBytes, err := json.Marshal(expected)
@@ -748,6 +752,85 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestCreateStatefulSetOrPatchLabels(t *testing.T) {
+	testCases := []struct {
+		name                string
+		existingStatefulSet *appsv1.StatefulSet
+		newStatefulSet      *appsv1.StatefulSet
+		expectedLabels      map[string]string
+	}{
+		{
+			name: "create new statefulset successfully",
+			newStatefulSet: &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "prometheus",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app": "prometheus",
+						"env": "prod",
+					},
+				},
+			},
+			expectedLabels: map[string]string{
+				"app": "prometheus",
+				"env": "prod",
+			},
+		},
+		{
+			name: "statefulset already exists - patch labels",
+			existingStatefulSet: &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "prometheus",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app": "prometheus",
+						"env": "dev",
+					},
+				},
+			},
+			newStatefulSet: &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "prometheus",
+					Namespace: "default",
+					Labels: map[string]string{
+						"app":     "prometheus",
+						"env":     "prod",
+						"version": "v2.0",
+					},
+				},
+			},
+			expectedLabels: map[string]string{
+				"app":     "prometheus",
+				"env":     "prod",
+				"version": "v2.0",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			var clientSet *fake.Clientset
+			if tc.existingStatefulSet != nil {
+				clientSet = fake.NewClientset(tc.existingStatefulSet)
+			} else {
+				clientSet = fake.NewClientset()
+			}
+
+			ssetClient := clientSet.AppsV1().StatefulSets(tc.newStatefulSet.Namespace)
+
+			_, err := CreateStatefulSetOrPatchLabels(ctx, ssetClient, tc.newStatefulSet)
+			require.NoError(t, err)
+
+			// Verify the statefulset in the cluster has the expected labels
+			result, err := ssetClient.Get(ctx, tc.newStatefulSet.Name, metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedLabels, result.Labels)
 		})
 	}
 }

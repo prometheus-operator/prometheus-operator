@@ -1104,6 +1104,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
+					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
 					APIURL: &v1.SecretKeySelector{
@@ -1116,7 +1117,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: "my-action",
+							Name: ptr.To("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1130,7 +1131,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &v1.SecretKeySelector{
@@ -1139,15 +1140,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
-					CorpID: "testingCorpID",
+					CorpID: ptr.To("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					Smarthost: "example.com:25",
-					From:      "admin@example.com",
-					To:        "test@example.com",
+					Smarthost: ptr.To("example.com:25"),
+					From:      ptr.To("admin@example.com"),
+					To:        ptr.To("test@example.com"),
 					AuthPassword: &v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: testingSecret,
@@ -1203,7 +1204,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
-						ApiURL: "https://sns.us-east-2.amazonaws.com",
+						ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
 							AccessKey: &v1.SecretKeySelector{
@@ -1219,7 +1220,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 								Key: testingSecretKey,
 							},
 						},
-						TopicARN: "test-topicARN",
+						TopicARN: ptr.To("test-topicARN"),
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
@@ -1302,7 +1303,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1357,7 +1358,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: ptr.To("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1536,6 +1537,7 @@ receivers:
   - api_key: 1234abc
   pagerduty_configs:
   - routing_key: 1234abc
+    url: https://pagerduty.example.com
   slack_configs:
   - api_url: http://slack.example.com
     fields:
@@ -2887,4 +2889,35 @@ func testAlertManagerServiceName(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
+}
+
+func testAMScaleUpWithoutLabels(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create an Alertmanager resource with 1 replica
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, framework.MakeBasicAlertmanager(ns, name, 1))
+	require.NoError(t, err)
+
+	// Remove all labels on the StatefulSet using Patch
+	stsName := fmt.Sprintf("alertmanager-%s", name)
+	err = framework.RemoveAllLabelsFromStatefulSet(ctx, stsName, ns)
+	require.NoError(t, err)
+
+	// Scale up the Alertmanager resource to 2 replicas
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(ctx, am.Name, ns, 2)
+	require.NoError(t, err)
+
+	// Verify the StatefulSet now has labels again (restored by the operator)
+	stsClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
 }

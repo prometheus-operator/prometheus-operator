@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
 // PagerDutyConfigApplyConfiguration represents a declarative configuration of the PagerDutyConfig type for use
@@ -26,7 +27,7 @@ type PagerDutyConfigApplyConfiguration struct {
 	SendResolved          *bool                                    `json:"sendResolved,omitempty"`
 	RoutingKey            *SecretKeySelectorApplyConfiguration     `json:"routingKey,omitempty"`
 	ServiceKey            *SecretKeySelectorApplyConfiguration     `json:"serviceKey,omitempty"`
-	URL                   *string                                  `json:"url,omitempty"`
+	URL                   *monitoringv1beta1.URL                   `json:"url,omitempty"`
 	Client                *string                                  `json:"client,omitempty"`
 	ClientURL             *string                                  `json:"clientURL,omitempty"`
 	Description           *string                                  `json:"description,omitempty"`
@@ -75,7 +76,7 @@ func (b *PagerDutyConfigApplyConfiguration) WithServiceKey(value *SecretKeySelec
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *PagerDutyConfigApplyConfiguration) WithURL(value string) *PagerDutyConfigApplyConfiguration {
+func (b *PagerDutyConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL) *PagerDutyConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }

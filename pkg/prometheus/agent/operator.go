@@ -16,6 +16,7 @@ package prometheusagent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -609,6 +610,7 @@ func (c *Operator) addHandlers() {
 
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
+	c.reconciliations.ResetStatus(key)
 	err := c.sync(ctx, key)
 	c.reconciliations.SetStatus(key, err)
 
@@ -617,7 +619,6 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 func (c *Operator) sync(ctx context.Context, key string) error {
 	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
-
 	if err != nil {
 		return err
 	}
@@ -629,6 +630,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	logger := c.logger.With("key", key)
+	logger.Info("sync prometheusagent")
 
 	finalizersAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
 	if err != nil {
@@ -648,11 +650,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if p.Spec.Paused {
-		logger.Info("the resource is paused, not reconciling")
+		logger.Info("no action taken (the resource is paused)")
 		return nil
 	}
-
-	logger.Info("sync prometheusagent")
 
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
@@ -838,8 +838,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 
 		if notFound {
 			logger.Debug("creating statefulset")
-			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-				return fmt.Errorf("creating statefulset failed: %w", err)
+			if _, err := k8sutil.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
+				return fmt.Errorf("failed to create statefulset: %w", err)
 			}
 			continue
 		}
@@ -867,6 +867,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		ssets[ssetName] = struct{}{}
 	}
 
+	var deleteErrs []error
 	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
 		s := obj.(*appsv1.StatefulSet)
 
@@ -880,12 +881,17 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			return
 		}
 
-		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
-			c.logger.Error("failed to delete StatefulSet object", "err", err, "name", s.GetName(), "namespace", s.GetNamespace())
+		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
+			if !apierrors.IsNotFound(delErr) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
+			}
 		}
 	})
 	if err != nil {
 		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
+	}
+	if len(deleteErrs) > 0 {
+		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
 
 	return nil
@@ -1033,10 +1039,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p.Status.Selector = selector.String()
 	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
 
-	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: k8sutil.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		c.logger.Info("failed to apply prometheus status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
-		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: k8sutil.PrometheusOperatorFieldManager, Force: true}); err != nil {
 			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
 		}
 	}
@@ -1191,13 +1197,14 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	c.metrics.TriggerByCounter("Namespace", operator.UpdateEvent).Inc()
 
 	// Check for Prometheus Agent instances selecting ServiceMonitors, PodMonitors,
-	// and Probes in the namespace.
+	// Probes and ScrapeConfigs in the namespace.
 	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1alpha1.PrometheusAgent)
 
 		for name, selector := range map[string]*metav1.LabelSelector{
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
 			"Probes":          p.Spec.ProbeNamespaceSelector,
+			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
 
