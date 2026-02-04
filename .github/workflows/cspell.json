@@ -422,6 +422,7 @@
     "selfsigned",
     "FIPS",
     "FIPSSTS",
+    "AWSSD",
     "checkmark"
   ]
 }

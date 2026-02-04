@@ -4474,6 +4474,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "AWS SD config with supported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       true,
+		},
+		{
+			scenario: "AWS SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.7.0",
+			valid:       false,
+		},
+		{
 			scenario: "Inexistent Scrape Class",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
