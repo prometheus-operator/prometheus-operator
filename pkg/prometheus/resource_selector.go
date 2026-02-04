@@ -492,6 +492,11 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	return nil
 }
 
+// validateProberURL checks that the prober URL is a valid host or host:port.
+// We use govalidator.IsHost() because the standard library doesn't offer a
+// single function that validates a string as an IP (v4/v6) or DNS hostname.
+// Similarly, govalidator.IsPort() validates that a string is a numeric port
+// in the valid range (1-65535), which has no stdlib equivalent.
 func validateProberURL(proberURL string) error {
 	// Try to parse as host:port (handles IPv6 in [bracket]:port format correctly)
 	host, port, err := net.SplitHostPort(proberURL)
