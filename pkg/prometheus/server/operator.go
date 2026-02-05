@@ -84,6 +84,7 @@ type Operator struct {
 	pmonInfs  *informers.ForResource
 	probeInfs *informers.ForResource
 	sconInfs  *informers.ForResource
+	rwInfs    *informers.ForResource
 	ruleInfs  *informers.ForResource
 	cmapInfs  *informers.ForResource
 	secrInfs  *informers.ForResource
@@ -97,6 +98,7 @@ type Operator struct {
 
 	endpointSliceSupported        bool
 	scrapeConfigSupported         bool
+	remoteWriteSupported          bool
 	canReadStorageClass           bool
 	disableUnmanagedConfiguration bool
 	retentionPoliciesEnabled      bool
@@ -137,6 +139,13 @@ func WithEndpointSlice() ControllerOption {
 func WithScrapeConfig() ControllerOption {
 	return func(o *Operator) {
 		o.scrapeConfigSupported = true
+	}
+}
+
+// WithRemoteWrite tells that the controller manages RemoteWrite objects.
+func WithRemoteWrite() ControllerOption {
+	return func(o *Operator) {
+		o.remoteWriteSupported = true
 	}
 }
 
@@ -314,7 +323,24 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			return nil, fmt.Errorf("error creating scrapeconfigs informers: %w", err)
 		}
 	}
+
+	if o.remoteWriteSupported {
+		o.rwInfs, err = informers.NewInformersForResource(
+			informers.NewMonitoringInformerFactories(
+				c.Namespaces.AllowList,
+				c.Namespaces.DenyList,
+				mclient,
+				resyncPeriod,
+				nil,
+			),
+			monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.RemoteWriteName),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error creating remotewrite informers: %w", err)
+		}
+	}
 	o.ruleInfs, err = informers.NewInformersForResource(
+
 		informers.NewMonitoringInformerFactories(
 			c.Namespaces.AllowList,
 			c.Namespaces.DenyList,
@@ -438,10 +464,12 @@ func (c *Operator) waitForCacheSync(ctx context.Context) error {
 		{"PrometheusRule", c.ruleInfs},
 		{"Probe", c.probeInfs},
 		{"ScrapeConfig", c.sconInfs},
+		{"RemoteWrite", c.rwInfs},
 		{"ConfigMap", c.cmapInfs},
 		{"Secret", c.secrInfs},
 		{"StatefulSet", c.ssetInfs},
 	} {
+
 		// Skipping informers that were not started. If prerequisites for a CRD were not met, their informer will be
 		// nil. ScrapeConfig is one example.
 		if infs.informersForResource == nil {
@@ -535,6 +563,22 @@ func (c *Operator) addHandlers() {
 		))
 	}
 
+	if c.rwInfs != nil {
+		c.rwInfs.AddEventHandler(operator.NewEventHandler(
+			c.logger,
+			c.accessor,
+			c.metrics,
+			monitoringv1alpha1.RemoteWriteKind,
+			c.enqueueForMonitorNamespace,
+			operator.WithFilter(
+				operator.AnyFilter(
+					operator.GenerationChanged,
+					operator.LabelsChanged,
+				),
+			),
+		))
+	}
+
 	c.ruleInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
@@ -595,7 +639,11 @@ func (c *Operator) Run(ctx context.Context) error {
 	if c.scrapeConfigSupported {
 		go c.sconInfs.Start(ctx.Done())
 	}
+	if c.remoteWriteSupported {
+		go c.rwInfs.Start(ctx.Done())
+	}
 	go c.ruleInfs.Start(ctx.Done())
+
 	go c.cmapInfs.Start(ctx.Done())
 	go c.secrInfs.Start(ctx.Done())
 	go c.ssetInfs.Start(ctx.Done())
@@ -748,7 +796,24 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			c.rr.EnqueueForReconciliation(p)
 			return
 		}
+
+		// Check for Prometheus instances selecting RemoteWrites in
+		// the NS.
+		rwNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RemoteWriteNamespaceSelector)
+		if err != nil {
+			c.logger.Error(
+				fmt.Sprintf("failed to convert RemoteWriteNamespaceSelector of %q to selector", p.Name),
+				"err", err,
+			)
+			return
+		}
+
+		if rwNSSelector.Matches(labels.Set(ns.Labels)) {
+			c.rr.EnqueueForReconciliation(p)
+			return
+		}
 	})
+
 	if err != nil {
 		c.logger.Error(
 			"listing all Prometheus instances from cache failed",
@@ -784,6 +849,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"PrometheusRules": p.Spec.RuleNamespaceSelector,
 			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
+			"RemoteWrites":    p.Spec.RemoteWriteNamespaceSelector,
 		} {
 
 			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)

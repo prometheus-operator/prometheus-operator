@@ -2217,6 +2217,39 @@ namespace only.</p>
 </tr>
 <tr>
 <td>
+<code>remoteWriteSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteSelector defines the RemoteWrite objects to be selected for remote write configuration.
+An empty label selector matches all objects. A null label selector matches no objects.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteNamespaceSelector defines the namespaces to match for RemoteWrite discovery.
+An empty label selector matches all namespaces. A null label selector matches the current
+namespace only.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>version</code><br/>
 <em>
 string
@@ -8438,6 +8471,39 @@ Kubernetes meta/v1.LabelSelector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
 <p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteSelector defines the RemoteWrite objects to be selected for remote write configuration.
+An empty label selector matches all objects. A null label selector matches no objects.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteNamespaceSelector defines the namespaces to match for RemoteWrite discovery.
+An empty label selector matches all namespaces. A null label selector matches the current
+namespace only.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -14966,6 +15032,39 @@ namespace only.</p>
 </tr>
 <tr>
 <td>
+<code>remoteWriteSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteSelector defines the RemoteWrite objects to be selected for remote write configuration.
+An empty label selector matches all objects. A null label selector matches no objects.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteNamespaceSelector defines the namespaces to match for RemoteWrite discovery.
+An empty label selector matches all namespaces. A null label selector matches the current
+namespace only.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>version</code><br/>
 <em>
 string
@@ -17762,7 +17861,7 @@ bool
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.RemoteWrite">RemoteWrite</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>)
 </p>
 <div>
 <p>RemoteWriteSpec defines the configuration to write samples from Prometheus
@@ -22382,6 +22481,8 @@ Resource Types:
 </li><li>
 <a href="#monitoring.coreos.com/v1alpha1.PrometheusAgent">PrometheusAgent</a>
 </li><li>
+<a href="#monitoring.coreos.com/v1alpha1.RemoteWrite">RemoteWrite</a>
+</li><li>
 <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfig">ScrapeConfig</a>
 </li></ul>
 <h3 id="monitoring.coreos.com/v1alpha1.AlertmanagerConfig">AlertmanagerConfig
@@ -22783,6 +22884,39 @@ Kubernetes meta/v1.LabelSelector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
 <p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteSelector defines the RemoteWrite objects to be selected for remote write configuration.
+An empty label selector matches all objects. A null label selector matches no objects.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteNamespaceSelector defines the namespaces to match for RemoteWrite discovery.
+An empty label selector matches all namespaces. A null label selector matches the current
+namespace only.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>
@@ -24302,6 +24436,444 @@ PrometheusStatus
 <p>status defines the most recent observed status of the Prometheus cluster. Read-only.
 More info:
 <a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.RemoteWrite">RemoteWrite
+</h3>
+<div>
+<p>RemoteWrite defines a remote write endpoint for Prometheus to send metrics to.
+It allows users in different namespaces to configure their own remote write
+destinations without modifying the central Prometheus resource.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+monitoring.coreos.com/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>RemoteWrite</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadata is the standard object&rsquo;s metadata. More info:
+<a href="https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata">https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#metadata</a></p>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteSpec">
+RemoteWriteSpec
+</a>
+</em>
+</td>
+<td>
+<p>spec defines the desired remote write configuration.</p>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>url</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>url defines the URL of the endpoint to send samples to.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>name of the remote write queue, it must be unique if specified. The
+name is used in metrics and logging in order to differentiate queues.</p>
+<p>It requires Prometheus &gt;= v2.15.0 or Thanos &gt;= 0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMessageVersion">
+RemoteWriteMessageVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageVersion defines the Remote Write message&rsquo;s version to use when writing to the endpoint.</p>
+<p><code>Version1.0</code> corresponds to the <code>prometheus.WriteRequest</code> protobuf message introduced in Remote Write 1.0.
+<code>Version2.0</code> corresponds to the <code>io.prometheus.write.v2.Request</code> protobuf message introduced in Remote Write 2.0.</p>
+<p>When <code>Version2.0</code> is selected, Prometheus will automatically be
+configured to append the metadata of scraped metrics to the WAL.</p>
+<p>Before setting this field, consult with your remote storage provider
+what message version it supports.</p>
+<p>It requires Prometheus &gt;= v2.54.0 or Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendExemplars</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendExemplars enables sending of exemplars over remote write. Note that
+exemplar-storage itself must be enabled using the <code>spec.enableFeatures</code>
+option for exemplars to be scraped in the first place.</p>
+<p>It requires Prometheus &gt;= v2.27.0 or Thanos &gt;= v0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sendNativeHistograms</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendNativeHistograms enables sending of native histograms, also known as sparse histograms
+over remote write.</p>
+<p>It requires Prometheus &gt;= v2.40.0 or Thanos &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteTimeout</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteTimeout defines the timeout for requests to the remote write endpoint.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code><br/>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>headers defines the custom HTTP headers to be sent along with each remote write request.
+Be aware that headers that are set by Prometheus itself can&rsquo;t be overwritten.</p>
+<p>It requires Prometheus &gt;= v2.25.0 or Thanos &gt;= v0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>writeRelabelConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RelabelConfig">
+[]RelabelConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>writeRelabelConfigs defines the list of remote write relabel configurations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>oauth2</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2">
+OAuth2
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>oauth2 configuration for the URL.</p>
+<p>It requires Prometheus &gt;= v2.27.0 or Thanos &gt;= v0.24.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>basicAuth</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.BasicAuth">
+BasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>basicAuth configuration for the URL.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bearerTokenFile defines the file from which to read bearer token for the URL.</p>
+<p>Deprecated: this will be removed in a future release. Prefer using <code>authorization</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorization</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Authorization">
+Authorization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorization section for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sigv4</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Sigv4">
+Sigv4
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sigv4 defines the AWS&rsquo;s Signature Verification 4 for the URL.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>azureAd</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AzureAD">
+AzureAD
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>azureAd for the URL.</p>
+<p>It requires Prometheus &gt;= v2.45.0 or Thanos &gt;= v0.31.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>sigv4</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearerToken</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bearerToken is deprecated: this will be removed in a future release.
+<em>Warning: this field shouldn&rsquo;t be used because the token value appears
+in clear-text. Prefer using <code>authorization</code>.</em></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tlsConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSConfig">
+TLSConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tlsConfig to use for the URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyUrl</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>proxyUrl defines the HTTP proxy server to use.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>noProxy</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
+that should be excluded from proxying. IP and domain names can
+contain port numbers.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyFromEnvironment</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>proxyConnectHeader</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+map[string][]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>proxyConnectHeader optionally specifies headers to send to
+proxies during CONNECT requests.</p>
+<p>It requires Prometheus &gt;= v2.43.0, Alertmanager &gt;= v0.25.0 or Thanos &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>followRedirects</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>followRedirects defines whether HTTP requests follow HTTP 3xx redirects.</p>
+<p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>queueConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.QueueConfig">
+QueueConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>queueConfig allows tuning of the remote write queue parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadataConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.MetadataConfig">
+MetadataConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>metadataConfig defines how to send a series metadata to the remote storage.</p>
+<p>When the field is empty, <strong>no metadata</strong> is sent. But when the field is
+null, metadata is sent.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>enableHTTP2</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enableHTTP2 defines whether to enable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>roundRobinDNS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>roundRobinDNS controls the DNS resolution behavior for remote-write connections.
+When enabled:
+- The remote-write mechanism will resolve the hostname via DNS.
+- It will randomly select one of the resolved IP addresses and connect to it.</p>
+<p>When disabled (default behavior):
+- The Go standard library will handle hostname resolution.
+- It will attempt connections to each resolved IP address sequentially.</p>
+<p>Note: The connection timeout applies to the entire resolution and connection process.</p>
+<pre><code>If disabled, the timeout is distributed across all connection attempts.
+</code></pre>
+<p>It requires Prometheus &gt;= v3.1.0 or Thanos &gt;= v0.38.0.</p>
+</td>
+</tr>
+</table>
 </td>
 </tr>
 </tbody>
@@ -31510,6 +32082,39 @@ Kubernetes meta/v1.LabelSelector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
 <p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteSelector defines the RemoteWrite objects to be selected for remote write configuration.
+An empty label selector matches all objects. A null label selector matches no objects.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>remoteWriteNamespaceSelector</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>remoteWriteNamespaceSelector defines the namespaces to match for RemoteWrite discovery.
+An empty label selector matches all namespaces. A null label selector matches the current
+namespace only.</p>
+<p>Note that the RemoteWrite custom resource definition is currently at Alpha level.</p>
 </td>
 </tr>
 <tr>

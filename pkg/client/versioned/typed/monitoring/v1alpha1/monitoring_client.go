@@ -28,6 +28,7 @@ type MonitoringV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AlertmanagerConfigsGetter
 	PrometheusAgentsGetter
+	RemoteWritesGetter
 	ScrapeConfigsGetter
 }
 
@@ -42,6 +43,10 @@ func (c *MonitoringV1alpha1Client) AlertmanagerConfigs(namespace string) Alertma
 
 func (c *MonitoringV1alpha1Client) PrometheusAgents(namespace string) PrometheusAgentInterface {
 	return newPrometheusAgents(c, namespace)
+}
+
+func (c *MonitoringV1alpha1Client) RemoteWrites(namespace string) RemoteWriteInterface {
+	return newRemoteWrites(c, namespace)
 }
 
 func (c *MonitoringV1alpha1Client) ScrapeConfigs(namespace string) ScrapeConfigInterface {

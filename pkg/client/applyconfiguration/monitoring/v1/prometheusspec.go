@@ -130,6 +130,22 @@ func (b *PrometheusSpecApplyConfiguration) WithScrapeConfigNamespaceSelector(val
 	return b
 }
 
+// WithRemoteWriteSelector sets the RemoteWriteSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RemoteWriteSelector field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRemoteWriteSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.RemoteWriteSelector = value
+	return b
+}
+
+// WithRemoteWriteNamespaceSelector sets the RemoteWriteNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RemoteWriteNamespaceSelector field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRemoteWriteNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.RemoteWriteNamespaceSelector = value
+	return b
+}
+
 // WithVersion sets the Version field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Version field is set to the value of the last call.
