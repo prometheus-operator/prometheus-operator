@@ -1804,7 +1804,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "e2e",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-							URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+							URL: ptr.To("http://example.com"),
 						}},
 					}},
 				},
