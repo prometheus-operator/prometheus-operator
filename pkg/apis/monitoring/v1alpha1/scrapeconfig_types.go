@@ -174,78 +174,102 @@ type ScrapeConfigSpec struct {
 	// +optional
 	JobName *string `json:"jobName,omitempty"`
 	// staticConfigs defines a list of static targets with a common label set.
+	// +listType=atomic
 	// +optional
 	StaticConfigs []StaticConfig `json:"staticConfigs,omitempty"`
 	// fileSDConfigs defines a list of file service discovery configurations.
+	// +listType=atomic
 	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// httpSDConfigs defines a list of HTTP service discovery configurations.
+	// +listType=atomic
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// kubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
+	// +listType=atomic
 	// +optional
 	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// consulSDConfigs defines a list of Consul service discovery configurations.
+	// +listType=atomic
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
 	// dnsSDConfigs defines a list of DNS service discovery configurations.
+	// +listType=atomic
 	// +optional
 	DNSSDConfigs []DNSSDConfig `json:"dnsSDConfigs,omitempty"`
 	// ec2SDConfigs defines a list of EC2 service discovery configurations.
+	// +listType=atomic
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// azureSDConfigs defines a list of Azure service discovery configurations.
+	// +listType=atomic
 	// +optional
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// gceSDConfigs defines a list of GCE service discovery configurations.
+	// +listType=atomic
 	// +optional
 	GCESDConfigs []GCESDConfig `json:"gceSDConfigs,omitempty"`
 	// openstackSDConfigs defines a list of OpenStack service discovery configurations.
+	// +listType=atomic
 	// +optional
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// digitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
+	// +listType=atomic
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// kumaSDConfigs defines a list of Kuma service discovery configurations.
+	// +listType=atomic
 	// +optional
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
 	// eurekaSDConfigs defines a list of Eureka service discovery configurations.
+	// +listType=atomic
 	// +optional
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// dockerSDConfigs defines a list of Docker service discovery configurations.
+	// +listType=atomic
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// linodeSDConfigs defines a list of Linode service discovery configurations.
+	// +listType=atomic
 	// +optional
 	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// hetznerSDConfigs defines a list of Hetzner service discovery configurations.
+	// +listType=atomic
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// nomadSDConfigs defines a list of Nomad service discovery configurations.
+	// +listType=atomic
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// dockerSwarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	// +listType=atomic
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// puppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	// +listType=atomic
 	// +optional
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// lightSailSDConfigs defines a list of Lightsail service discovery configurations.
+	// +listType=atomic
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// ovhcloudSDConfigs defines a list of OVHcloud service discovery configurations.
+	// +listType=atomic
 	// +optional
 	OVHCloudSDConfigs []OVHCloudSDConfig `json:"ovhcloudSDConfigs,omitempty"`
 	// scalewaySDConfigs defines a list of Scaleway instances and baremetal service discovery configurations.
+	// +listType=atomic
 	// +optional
 	ScalewaySDConfigs []ScalewaySDConfig `json:"scalewaySDConfigs,omitempty"`
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
+	// +listType=atomic
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	// +listType=atomic
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
@@ -267,6 +291,7 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v2.49.0.
 	//
+	//nolint:kubeapilinter
 	// +listType=set
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
@@ -357,6 +382,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
+	// +listType=atomic
 	// +kubebuilder:validation:MinItems:=1
 	// +optional
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
@@ -617,6 +643,7 @@ const (
 // +k8s:openapi-gen=true
 type DNSSDConfig struct {
 	// names defines a list of DNS domain names to be queried.
+	// +listType=atomic
 	// +kubebuilder:validation:MinItems:=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +required
