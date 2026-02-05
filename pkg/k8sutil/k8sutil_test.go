@@ -21,15 +21,19 @@ import (
 	"maps"
 	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/client-go/kubernetes/fake"
+	kubetesting "k8s.io/client-go/testing"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -848,4 +852,328 @@ func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
 			},
 		},
 	}
+}
+
+// TestForceUpdateStatefulSet tests the ForceUpdateStatefulSet function,
+// specifically verifying that it handles immutable field updates correctly
+// by deleting and immediately recreating the StatefulSet in the same call.
+//
+// This test demonstrates the race condition that would occur without immediate
+// recreation: if ForceUpdateStatefulSet only deleted the StatefulSet and relied
+// on a subsequent reconciliation to recreate it, the informer cache might still
+// contain a stale object with DeletionTimestamp set, causing the recreation to
+// be skipped. By recreating immediately within the same function call, we avoid
+// this race condition entirely.
+func TestForceUpdateStatefulSet(t *testing.T) {
+	namespace := "test-ns"
+
+	// Helper to create a basic StatefulSet for testing.
+	makeStatefulSet := func(name string, selector map[string]string) *appsv1.StatefulSet {
+		return &appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:            name,
+				Namespace:       namespace,
+				ResourceVersion: "1",
+				UID:             "test-uid-123",
+			},
+			Spec: appsv1.StatefulSetSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: selector,
+				},
+				Template: corev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: selector,
+					},
+				},
+			},
+		}
+	}
+
+	// immutableFieldError creates a 422 Invalid error that simulates what
+	// the Kubernetes API server returns when trying to update immutable fields.
+	immutableFieldError := func(name string) *apierrors.StatusError {
+		return &apierrors.StatusError{
+			ErrStatus: metav1.Status{
+				Status:  metav1.StatusFailure,
+				Code:    422,
+				Reason:  metav1.StatusReasonInvalid,
+				Message: "StatefulSet.apps \"" + name + "\" is invalid",
+				Details: &metav1.StatusDetails{
+					Name:  name,
+					Group: "apps",
+					Kind:  "StatefulSet",
+					Causes: []metav1.StatusCause{
+						{
+							Type:    metav1.CauseTypeFieldValueInvalid,
+							Message: "Forbidden: updates to statefulset spec for fields other than 'replicas', 'template', 'updateStrategy', 'persistentVolumeClaimRetentionPolicy' and 'minReadySeconds' are forbidden",
+							Field:   "spec",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	t.Run("normal update succeeds without delete", func(t *testing.T) {
+		// When the update succeeds (no immutable field changes), the StatefulSet
+		// should be updated in place without deletion.
+		sset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus"})
+		fakeClient := fake.NewSimpleClientset(sset)
+		ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+		// Modify a mutable field (template labels).
+		modifiedSset := sset.DeepCopy()
+		modifiedSset.Spec.Template.Labels["version"] = "v2"
+
+		var onDeleteCalled bool
+		err := ForceUpdateStatefulSet(context.Background(), ssetClient, modifiedSset, func(reason string) {
+			onDeleteCalled = true
+		})
+
+		require.NoError(t, err)
+		require.False(t, onDeleteCalled, "onDeleteFunc should not be called for normal updates")
+
+		// Verify the StatefulSet was updated.
+		updated, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})
+		require.NoError(t, err)
+		require.Equal(t, "v2", updated.Spec.Template.Labels["version"])
+	})
+
+	t.Run("immutable field change triggers delete and immediate recreate", func(t *testing.T) {
+		// This is the critical test case that demonstrates the fix.
+		//
+		// When an immutable field (like .spec.selector) changes, the API server
+		// returns a 422 error. The function must:
+		// 1. Delete the existing StatefulSet
+		// 2. IMMEDIATELY recreate it in the same function call
+		//
+		// Without immediate recreation, the next reconciliation might see a stale
+		// cached object with DeletionTimestamp set and skip the recreation.
+		sset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus"})
+		fakeClient := fake.NewSimpleClientset(sset)
+		ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+		// Track operations to verify the sequence: update -> delete -> create.
+		var operations []string
+		var updateAttempts atomic.Int32
+
+		fakeClient.PrependReactor("update", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			operations = append(operations, "update")
+			// First update attempt fails with 422 (immutable field error).
+			// This simulates changing the selector.
+			if updateAttempts.Add(1) == 1 {
+				return true, nil, immutableFieldError("prometheus")
+			}
+			return false, nil, nil
+		})
+
+		fakeClient.PrependReactor("delete", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			operations = append(operations, "delete")
+			return false, nil, nil // Let the fake client handle the actual delete.
+		})
+
+		fakeClient.PrependReactor("create", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			operations = append(operations, "create")
+			return false, nil, nil // Let the fake client handle the actual create.
+		})
+
+		// Modify the selector (immutable field).
+		modifiedSset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus-new"})
+
+		var onDeleteCalled bool
+		var deleteReason string
+		err := ForceUpdateStatefulSet(context.Background(), ssetClient, modifiedSset, func(reason string) {
+			onDeleteCalled = true
+			deleteReason = reason
+		})
+
+		require.NoError(t, err)
+		require.True(t, onDeleteCalled, "onDeleteFunc should be called when deletion is required")
+		require.Contains(t, deleteReason, "Forbidden")
+
+		// Verify the operation sequence: update failed, then delete, then create.
+		require.Equal(t, []string{"update", "delete", "create"}, operations,
+			"expected sequence: update -> delete -> create for immutable field changes")
+
+		// CRITICAL: Verify the StatefulSet exists after ForceUpdateStatefulSet returns.
+		// This is the key assertion that proves the fix works. Without immediate
+		// recreation, the StatefulSet would not exist at this point, and the
+		// controller would have to wait for another reconciliation triggered by
+		// a delete event from the informer. But that event might be lost or delayed,
+		// or the cache might still show a stale object with DeletionTimestamp.
+		recreatedSset, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})
+		require.NoError(t, err, "StatefulSet must exist after ForceUpdateStatefulSet completes")
+		require.NotNil(t, recreatedSset)
+		require.Equal(t, "prometheus-new", recreatedSset.Spec.Selector.MatchLabels["app"],
+			"recreated StatefulSet should have the new selector")
+
+		// Verify ResourceVersion and UID were cleared for the create operation.
+		// This ensures Kubernetes treats it as a new resource.
+		require.Empty(t, modifiedSset.ResourceVersion, "ResourceVersion should be cleared before create")
+		require.Empty(t, modifiedSset.UID, "UID should be cleared before create")
+	})
+
+	t.Run("delete failure is propagated", func(t *testing.T) {
+		// If deletion fails, the error should be returned.
+		sset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus"})
+		fakeClient := fake.NewSimpleClientset(sset)
+		ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+		fakeClient.PrependReactor("update", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			return true, nil, immutableFieldError("prometheus")
+		})
+
+		fakeClient.PrependReactor("delete", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			return true, nil, fmt.Errorf("simulated delete failure")
+		})
+
+		modifiedSset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus-new"})
+
+		err := ForceUpdateStatefulSet(context.Background(), ssetClient, modifiedSset, nil)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to delete StatefulSet for recreation")
+	})
+
+	t.Run("create failure after delete is propagated", func(t *testing.T) {
+		// If creation fails after deletion, the error should be returned.
+		// This is an important edge case - the StatefulSet is now deleted,
+		// and the create failed, so the controller will need to recreate it
+		// in a subsequent reconciliation.
+		sset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus"})
+		fakeClient := fake.NewSimpleClientset(sset)
+		ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+		fakeClient.PrependReactor("update", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			return true, nil, immutableFieldError("prometheus")
+		})
+
+		fakeClient.PrependReactor("create", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			return true, nil, fmt.Errorf("simulated create failure")
+		})
+
+		modifiedSset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus-new"})
+
+		err := ForceUpdateStatefulSet(context.Background(), ssetClient, modifiedSset, nil)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to recreate StatefulSet")
+	})
+
+	t.Run("non-422 update errors are returned directly", func(t *testing.T) {
+		// If the update fails with a non-422 error, it should be returned
+		// without attempting delete/recreate.
+		sset := makeStatefulSet("prometheus", map[string]string{"app": "prometheus"})
+		fakeClient := fake.NewSimpleClientset(sset)
+		ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+		fakeClient.PrependReactor("update", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+			return true, nil, fmt.Errorf("some other error")
+		})
+
+		modifiedSset := sset.DeepCopy()
+
+		err := ForceUpdateStatefulSet(context.Background(), ssetClient, modifiedSset, nil)
+
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to update StatefulSet")
+		require.Contains(t, err.Error(), "some other error")
+	})
+}
+
+// TestForceUpdateStatefulSet_StaleCacheScenario specifically demonstrates
+// the race condition that the immediate recreation fix addresses.
+//
+// Scenario without the fix:
+// 1. Update fails with 422 (immutable field change)
+// 2. Old implementation deletes StatefulSet and returns
+// 3. Next reconciliation is triggered by informer's delete event
+// 4. BUT: Informer cache might still have stale object with DeletionTimestamp
+// 5. Controller sees DeletionTimestamp, skips creation (thinks deletion is in progress)
+// 6. StatefulSet remains missing until cache eventually syncs
+//
+// This test verifies that with the fix, step 2-6 are replaced with:
+// 2. Delete StatefulSet and immediately create new one
+// 3. Function returns with StatefulSet already existing
+// 4. Next reconciliation finds existing StatefulSet, no race condition
+func TestForceUpdateStatefulSet_StaleCacheScenario(t *testing.T) {
+	namespace := "test-ns"
+
+	// Create a StatefulSet that would appear in a stale cache with DeletionTimestamp.
+	existingSset := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "prometheus",
+			Namespace:       namespace,
+			ResourceVersion: "1",
+			UID:             "original-uid",
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "prometheus"},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": "prometheus"},
+				},
+			},
+		},
+	}
+
+	fakeClient := fake.NewSimpleClientset(existingSset)
+	ssetClient := fakeClient.AppsV1().StatefulSets(namespace)
+
+	// Simulate the 422 error for immutable field changes.
+	fakeClient.PrependReactor("update", "statefulsets", func(action kubetesting.Action) (bool, runtime.Object, error) {
+		return true, nil, &apierrors.StatusError{
+			ErrStatus: metav1.Status{
+				Status: metav1.StatusFailure,
+				Code:   422,
+				Reason: metav1.StatusReasonInvalid,
+				Details: &metav1.StatusDetails{
+					Causes: []metav1.StatusCause{
+						{Message: "spec.selector is immutable"},
+					},
+				},
+			},
+		}
+	})
+
+	// New StatefulSet with different selector (immutable field change).
+	newSset := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "prometheus",
+			Namespace:       namespace,
+			ResourceVersion: "1",
+			UID:             "original-uid",
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "prometheus", "version": "v2"},
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": "prometheus", "version": "v2"},
+				},
+			},
+		},
+	}
+
+	err := ForceUpdateStatefulSet(context.Background(), ssetClient, newSset, func(reason string) {
+		t.Logf("StatefulSet recreation triggered: %s", reason)
+	})
+	require.NoError(t, err)
+
+	// The key assertion: after ForceUpdateStatefulSet returns, the StatefulSet
+	// MUST exist. This is what makes the fix essential - without immediate
+	// recreation, the StatefulSet would be deleted and the function would return,
+	// leaving the cluster in a degraded state until the next reconciliation
+	// (which might be delayed or might see stale cache data).
+	result, err := ssetClient.Get(context.Background(), "prometheus", metav1.GetOptions{})
+	require.NoError(t, err, "StatefulSet must exist immediately after ForceUpdateStatefulSet")
+	require.Equal(t, "v2", result.Spec.Selector.MatchLabels["version"],
+		"StatefulSet should have been recreated with new selector")
+
+	// Verify the UID and ResourceVersion were cleared (new resource).
+	require.Empty(t, newSset.ResourceVersion)
+	require.Empty(t, newSset.UID)
 }
