@@ -582,9 +582,9 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
-		GroupWait:           in.GroupWait,
-		GroupInterval:       in.GroupInterval,
-		RepeatInterval:      in.RepeatInterval,
+		GroupWait:           ptr.Deref((*string)(in.GroupWait), ""),
+		GroupInterval:       ptr.Deref((*string)(in.GroupInterval), ""),
+		RepeatInterval:      ptr.Deref((*string)(in.RepeatInterval), ""),
 		Continue:            in.Continue,
 		Match:               match,
 		MatchRE:             matchRE,
@@ -3087,6 +3087,25 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		r.ActiveTimeIntervals = nil
 	}
 
+	if r.GroupWait != "" {
+		_, err := model.ParseDuration(r.GroupWait)
+		if err != nil {
+			return fmt.Errorf("group_wait: %w", err)
+		}
+	}
+
+	d, err := convertToNonZeroDuration(r.GroupInterval)
+	if err != nil {
+		return fmt.Errorf("group_interval: %w", err)
+	}
+	r.GroupInterval = d
+
+	d, err = convertToNonZeroDuration(r.RepeatInterval)
+	if err != nil {
+		return fmt.Errorf("repeat_interval: %w", err)
+	}
+	r.RepeatInterval = d
+
 	for i, child := range r.Routes {
 		if err := child.sanitize(amVersion, logger); err != nil {
 			return fmt.Errorf("route[%d]: %w", i, err)
@@ -3097,6 +3116,24 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	r.MatchRE = convertMapToNilIfEmpty(r.MatchRE)
 	r.Matchers = convertSliceToNilIfEmpty(r.Matchers)
 	return nil
+}
+
+// convertToNonZeroDuration returns an empty string if d is a zero duration.
+func convertToNonZeroDuration(d string) (string, error) {
+	if d == "" {
+		return "", nil
+	}
+
+	duration, err := model.ParseDuration(d)
+	if err != nil {
+		return "", err
+	}
+
+	if duration == 0 {
+		return "", nil
+	}
+
+	return d, nil
 }
 
 func checkNotEmptyMap(in ...map[string]string) bool {
@@ -3131,8 +3168,6 @@ func convertSliceToNilIfEmpty(in []string) []string {
 	return nil
 }
 
-// contains will return true if any slice value with all whitespace removed
-// is equal to the provided value with all whitespace removed.
 func contains(value string, in []string) bool {
 	for _, str := range in {
 		if strings.ReplaceAll(value, " ", "") == strings.ReplaceAll(str, " ", "") {
