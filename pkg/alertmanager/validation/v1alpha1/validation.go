@@ -194,6 +194,24 @@ func validateRocketchatConfigs(configs []monitoringv1alpha1.RocketChatConfig) er
 			return fmt.Errorf("[%d]: apiURL: %w", i, err)
 		}
 
+		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'iconURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ImageURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'imageURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ThumbURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'thumbURL': %w", i, err)
+		}
+
+		for j, a := range config.Actions {
+			if err := validation.ValidateTemplateURLPtr(a.URL); err != nil {
+				return fmt.Errorf("[%d]: actions[%d]: invalid 'url': %w", i, j, err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

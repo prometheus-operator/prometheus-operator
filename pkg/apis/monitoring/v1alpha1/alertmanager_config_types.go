@@ -1343,10 +1343,14 @@ type RocketChatConfig struct {
 	Channel *string `json:"channel,omitempty"`
 	// token defines the sender token for RocketChat authentication.
 	// This is the personal access token or bot token used to authenticate API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	Token v1.SecretKeySelector `json:"token,omitempty"`
 	// tokenID defines the sender token ID for RocketChat authentication.
 	// This is the user ID associated with the token used for API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// color defines the message color displayed in RocketChat.
