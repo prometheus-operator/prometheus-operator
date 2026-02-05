@@ -1,3 +1,36 @@
+## 0.89.0 / 2026-02-05
+
+* [ENHANCEMENT] Add `hostNetwork` field to the `Alertmanager` CRD. #8281
+* [ENHANCEMENT] Add the `crds` and `full-crds` commands to the operator's binary. #8251
+* [ENHANCEMENT] Report deprecated field usage in the `Reconciled` condition type. #8236
+* [ENHANCEMENT] Avoid unnecessary reconciliation upon creation of the `ThanosRuler` StatefulSet. #8347
+* [ENHANCEMENT] Add `bodySizeLimit` to the ScrapeConfig CRD. #8348
+* [ENHANCEMENT] Support `http_headers` field in the Alertmanager Secret. #8357
+* [ENHANCEMENT] Add the `-kubelet-http-metrics` flag to enable/disable the HTTP metrics port in the Kubelet endpoint (default=enabled). #8350
+* [ENHANCEMENT] Include `operator.prometheus.io/version` annotation in the full version of CRDs. #8279
+* [BUGFIX] Validate VictorOps global configuration in the `Alertmanager` CRD. #8020
+* [BUGFIX] Validate Jira global configuration in the `Alertmanager` CRD. #8265
+* [BUGFIX] Validate VictorOps receiver's URL in the `AlertmanagerConfig` CRD. #8258
+* [BUGFIX] Validate Webex receiver's URL in the `AlertmanagerConfig` CRD. #8255
+* [BUGFIX] Validate Jira receiver's URL configuration in the `AlertmanagerConfig` CRD. #8230
+* [BUGFIX] Validate OpsGenie receiver configuration in the `AlertmanagerConfig` CRD. #8267
+* [BUGFIX] Validate WeChat receiver configuration in the `AlertmanagerConfig` CRD. #8271
+* [BUGFIX] Validate SNS receiver configuration in the `AlertmanagerConfig` CRD. #8217
+* [BUGFIX] Validate Webex global configuration in the `Alertmanager` CRD. #7979
+* [BUGFIX] Validate Telegram global configuration in the `Alertmanager` CRD. #8268
+* [BUGFIX] Restore statefulset's labels if the creation fails with AlreadyExists. #8343
+* [BUGFIX] Fix potential panic due to informer cache races. #8310
+* [BUGFIX] Support probers defined with IPv6 addresses in the `Probe` CRD. #8354
+* [BUGFIX] Prevent group and repeat intervals with zero duration from breaking Alertmanager. #8126
+* [BUGFIX] Propagate all supported RocketChat attributes for `AlertmanagerConfig` CRD. #8016
+* [BUGFIX] Add URL validation for WeChat receiver. #8256
+* [BUGFIX] Add URL validation for SNS receiver. #8259
+* [BUGFIX] Fix GCE service discovery for the `ScrapeConfig` CRD. #8284
+* [BUGFIX] Avoid stale conditions in `Alertmanager`, `ThanosRuler`, `Prometheus` and `PrometheusAgent` resources. #8304
+* [BUGFIX] Fix race condition when updating rule ConfigMaps. #8290
+* [BUGFIX] Fix race condition when patching finalizers. #8323
+* [BUGFIX] Reconcile `ScrapeConfig` resources when namespace selection changes. #8334
+
 ## 0.88.1 / 2026-01-27
 
 * [BUGFIX] Validate `webhookURL` secret for `MSTeams` receiver in `AlertmanagerConfig` CRD. #8294
