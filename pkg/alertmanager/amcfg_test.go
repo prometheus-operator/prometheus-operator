@@ -6660,7 +6660,8 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 					{
 						RocketChatConfigs: []*rocketChatConfig{
 							{
-								APIURL: "http://example.com",
+								APIURL:  "http://example.com",
+								Channel: "#example",
 							},
 						},
 					},

@@ -6331,6 +6331,8 @@ spec:
                             description: |-
                               token defines the sender token for RocketChat authentication.
                               This is the personal access token or bot token used to authenticate API requests.
+                              The secret needs to be in the same namespace as the AlertmanagerConfig
+                              object and accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -6357,6 +6359,8 @@ spec:
                             description: |-
                               tokenID defines the sender token ID for RocketChat authentication.
                               This is the user ID associated with the token used for API requests.
+                              The secret needs to be in the same namespace as the AlertmanagerConfig
+                              object and accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -18405,6 +18409,8 @@ spec:
                             description: |-
                               token defines the sender token for RocketChat authentication.
                               This is the personal access token or bot token used to authenticate API requests.
+                              The secret needs to be in the same namespace as the AlertmanagerConfig
+                              object and accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -18431,6 +18437,8 @@ spec:
                             description: |-
                               tokenID defines the sender token ID for RocketChat authentication.
                               This is the user ID associated with the token used for API requests.
+                              The secret needs to be in the same namespace as the AlertmanagerConfig
+                              object and accessible by the Prometheus Operator.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must

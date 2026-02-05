@@ -802,6 +802,10 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		SendResolved: in.SendResolved,
 	}
 
+	if in.APIURL != nil && *in.APIURL != "" {
+		out.APIURL = (string)(*in.APIURL)
+	}
+
 	token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.Token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get RocketChat token: %w", err)
@@ -813,6 +817,56 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		return nil, fmt.Errorf("failed to get RocketChat token ID: %w", err)
 	}
 	out.TokenID = &tokenID
+
+	if in.Channel != nil && *in.Channel != "" {
+		out.Channel = *in.Channel
+	}
+
+	if in.Color != nil && *in.Color != "" {
+		out.Color = *in.Color
+	}
+
+	if in.Title != nil && *in.Title != "" {
+		out.Title = *in.Title
+	}
+
+	if in.TitleLink != nil && *in.TitleLink != "" {
+		out.TitleLink = *in.TitleLink
+	}
+
+	if in.Text != nil && *in.Text != "" {
+		out.Text = *in.Text
+	}
+
+	if in.ShortFields != nil {
+		out.ShortFields = *in.ShortFields
+	}
+
+	out.Emoji = ptr.Deref(in.Emoji, "")
+	out.IconURL = ptr.Deref(in.IconURL, "")
+	out.ImageURL = ptr.Deref(in.ImageURL, "")
+	out.ThumbURL = ptr.Deref(in.ThumbURL, "")
+	out.LinkNames = ptr.Deref(in.LinkNames, false)
+
+	fields := make([]*rocketchatAttachmentField, len(in.Fields))
+	for i, f := range in.Fields {
+		fields[i] = &rocketchatAttachmentField{
+			Short: f.Short,
+			Title: ptr.Deref(f.Title, ""),
+			Value: ptr.Deref(f.Value, ""),
+		}
+	}
+	out.Fields = fields
+
+	actions := make([]*rocketchatAttachmentAction, len(in.Actions))
+	for i, a := range in.Actions {
+		actions[i] = &rocketchatAttachmentAction{
+			Text: ptr.Deref(a.Text, ""),
+			URL:  ptr.Deref(a.URL, ""),
+			Msg:  ptr.Deref(a.Msg, ""),
+		}
+	}
+	out.Actions = actions
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {

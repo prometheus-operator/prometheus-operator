@@ -5767,7 +5767,7 @@
                                 "type": "string"
                               },
                               "token": {
-                                "description": "token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.",
+                                "description": "token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
@@ -5790,7 +5790,7 @@
                                 "x-kubernetes-map-type": "atomic"
                               },
                               "tokenID": {
-                                "description": "tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.",
+                                "description": "tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.",
                                 "properties": {
                                   "key": {
                                     "description": "The key of the secret to select from.  Must be a valid secret key.",
