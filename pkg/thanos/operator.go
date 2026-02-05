@@ -586,6 +586,13 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	operator.SanitizeSTS(sset)
 
+	// Update the status of selected configuration resources (PrometheusRules).
+	// This must be called before the StatefulSet creation/update to ensure
+	// config resource bindings are updated on first reconciliation.
+	if err = o.updateConfigResourcesStatus(ctx, tr, selectedRules); err != nil {
+		return err
+	}
+
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	if shouldCreate {
 		logger.Debug("creating statefulset")
@@ -594,11 +601,6 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		return nil
-	}
-
-	err = o.updateConfigResourcesStatus(ctx, tr, selectedRules)
-	if err != nil {
-		return err
 	}
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
