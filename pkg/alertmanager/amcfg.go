@@ -842,67 +842,31 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		out.ShortFields = *in.ShortFields
 	}
 
-	if in.Emoji != nil && *in.Emoji != "" {
-		out.Emoji = *in.Emoji
-	}
+	out.Emoji = ptr.Deref(in.Emoji, "")
+	out.IconURL = ptr.Deref(in.IconURL, "")
+	out.ImageURL = ptr.Deref(in.ImageURL, "")
+	out.ThumbURL = ptr.Deref(in.ThumbURL, "")
+	out.LinkNames = ptr.Deref(in.LinkNames, false)
 
-	if in.IconURL != nil && *in.IconURL != "" {
-		out.IconURL = (string)(*in.IconURL)
-	}
-
-	if in.ImageURL != nil && *in.ImageURL != "" {
-		out.ImageURL = (string)(*in.ImageURL)
-	}
-
-	if in.ThumbURL != nil && *in.ThumbURL != "" {
-		out.ThumbURL = (string)(*in.ThumbURL)
-	}
-
-	if in.LinkNames != nil {
-		out.LinkNames = *in.LinkNames
-	}
-
-	if l := len(in.Fields); l > 0 {
-		fields := make([]*rocketchatAttachmentField, l)
-		for i, f := range in.Fields {
-			field := &rocketchatAttachmentField{
-				Short: f.Short,
-			}
-
-			if f.Title != nil {
-				field.Title = *f.Title
-			}
-
-			if f.Value != nil {
-				field.Value = *f.Value
-			}
-
-			fields[i] = field
+	fields := make([]*rocketchatAttachmentField, len(in.Fields))
+	for i, f := range in.Fields {
+		fields[i] = &rocketchatAttachmentField{
+			Short: f.Short,
+			Title: ptr.Deref(f.Title, ""),
+			Value: ptr.Deref(f.Value, ""),
 		}
-		out.Fields = fields
 	}
+	out.Fields = fields
 
-	if l := len(in.Actions); l > 0 {
-		actions := make([]*rocketchatAttachmentAction, l)
-		for i, a := range in.Actions {
-			action := &rocketchatAttachmentAction{}
-
-			if a.Text != nil {
-				action.Text = *a.Text
-			}
-
-			if a.URL != nil {
-				action.URL = (string)(*a.URL)
-			}
-
-			if a.Msg != nil {
-				action.Msg = *a.Msg
-			}
-
-			actions[i] = action
+	actions := make([]*rocketchatAttachmentAction, len(in.Actions))
+	for i, a := range in.Actions {
+		actions[i] = &rocketchatAttachmentAction{
+			Text: ptr.Deref(a.Text, ""),
+			URL:  ptr.Deref(a.URL, ""),
+			Msg:  ptr.Deref(a.Msg, ""),
 		}
-		out.Actions = actions
 	}
+	out.Actions = actions
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
