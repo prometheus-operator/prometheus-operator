@@ -12713,7 +12713,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
 </p>
 <div>
 <p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -34466,13 +34466,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -34480,13 +34481,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -34494,13 +34497,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -40442,13 +40447,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -40456,13 +40462,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -40470,13 +40478,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>

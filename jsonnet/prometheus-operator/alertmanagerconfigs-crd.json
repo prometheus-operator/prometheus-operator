@@ -11786,11 +11786,15 @@
                         "x-kubernetes-list-type": "set"
                       },
                       "groupInterval": {
-                        "description": "groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: \"5m\"",
+                        "description": "groupInterval defines how long to wait before sending an updated notification.\nMust be greater than 0.\nExample: \"5m\"",
+                        "minLength": 1,
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "groupWait": {
-                        "description": "groupWait defines how long to wait before sending the initial notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: \"30s\"",
+                        "description": "groupWait defines how long to wait before sending the initial notification.\nExample: \"30s\"",
+                        "minLength": 1,
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "matchers": {
@@ -11843,7 +11847,9 @@
                         "type": "string"
                       },
                       "repeatInterval": {
-                        "description": "repeatInterval defines how long to wait before repeating the last notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: \"4h\"",
+                        "description": "repeatInterval defines how long to wait before repeating the last notification.\nMust be greater than 0.\nExample: \"4h\"",
+                        "minLength": 1,
+                        "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
                       },
                       "routes": {
