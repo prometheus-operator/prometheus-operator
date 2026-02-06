@@ -2585,6 +2585,74 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
 }
 
+func TestThanosAdditionalEnvNoError(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+	expectedThanosEnv := []v1.EnvVar{
+		{
+			Name: "OBJSTORE_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+		{
+			Name: "MY_ENV", Value: "test",
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+				AdditionalEnv: []v1.EnvVar{{Name: "MY_ENV", Value: "test"}},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	ssetContainerEnv := sset.Spec.Template.Spec.Containers[2].Env
+	require.Equal(t, expectedThanosEnv, ssetContainerEnv, "expected Thanos container env to match, want %s, got %s", expectedThanosEnv, ssetContainerEnv)
+}
+
+func TestThanosAdditionalEnvDuplicate(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	for _, tc := range []struct {
+		envvar string
+		spec   monitoringv1.ThanosSpec
+	}{
+		{
+			envvar: "OBJSTORE_CONFIG",
+			spec: monitoringv1.ThanosSpec{
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+		{
+			envvar: "TRACING_CONFIG",
+			spec: monitoringv1.ThanosSpec{
+				TracingConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+	} {
+		t.Run(tc.envvar, func(t *testing.T) {
+			expectedErrorMsg := fmt.Sprintf("can't set environment variables which are already managed by the operator: %s", tc.envvar)
+			tc.spec.AdditionalEnv = []v1.EnvVar{{Name: tc.envvar, Value: "other"}}
+			_, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{Thanos: &tc.spec},
+			})
+			require.Error(t, err)
+			require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
+		})
+	}
+}
+
 func TestPrometheusQuerySpec(t *testing.T) {
 	for _, tc := range []struct {
 		name string
