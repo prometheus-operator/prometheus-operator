@@ -5733,6 +5733,43 @@ func TestSanitizeEmailConfig(t *testing.T) {
 	}
 }
 
+func TestSanitizeEmailConfigErrors(t *testing.T) {
+	logger := newNopLogger(t)
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		errorMsg       string
+	}{
+		{
+			name:           "Test invalid URL in email header fails",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								To: "test@example.com",
+								Headers: map[string]string{
+									"List-Unsubscribe": "http://not a valid url with spaces",
+								},
+							},
+						},
+					},
+				},
+			},
+			errorMsg: "invalid URL in header",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), tc.errorMsg)
+		})
+	}
+}
+
 func TestSanitizeVictorOpsConfig(t *testing.T) {
 	logger := newNopLogger(t)
 
