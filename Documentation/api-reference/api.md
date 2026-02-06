@@ -21548,6 +21548,22 @@ operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>additionalEnv</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>additionalEnv allows setting additional environment variables for the Thanos container.
+In case of an envvar conflict (e.g. an envvar which is already set by the
+operator itself), the reconciliation will fail and an error will be logged.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.TopologySpreadConstraint">TopologySpreadConstraint
