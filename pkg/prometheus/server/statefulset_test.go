@@ -2585,6 +2585,58 @@ func TestThanosAdditionalArgsDuplicate(t *testing.T) {
 	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
 }
 
+func TestThanosAdditionalEnvNoError(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+	expectedThanosEnv := []v1.EnvVar{
+		{
+			Name: "OBJSTORE_CONFIG",
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+			},
+		},
+		{
+			Name: "MY_ENV", Value: "test",
+		},
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+				AdditionalEnv: []v1.EnvVar{{Name: "MY_ENV", Value: "test"}},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	ssetContainerEnv := sset.Spec.Template.Spec.Containers[2].Env
+	require.Equal(t, expectedThanosEnv, ssetContainerEnv, "expected Thanos container env to match, want %s, got %s", expectedThanosEnv, ssetContainerEnv)
+}
+
+func TestThanosAdditionalEnvDuplicate(t *testing.T) {
+	expectedErrorMsg := "can't set environment variables which are already managed by the operator: OBJSTORE_CONFIG"
+	testKey := "thanos-config-secret-test"
+
+	_, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				LogLevel: "info",
+				ObjectStorageConfig: &v1.SecretKeySelector{
+					Key: testKey,
+				},
+				AdditionalEnv: []v1.EnvVar{{Name: "OBJSTORE_CONFIG", Value: "other"}},
+			},
+		},
+	})
+	require.Error(t, err)
+
+	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
+}
+
 func TestPrometheusQuerySpec(t *testing.T) {
 	for _, tc := range []struct {
 		name string

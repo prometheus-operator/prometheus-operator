@@ -47,6 +47,7 @@ type ThanosSpecApplyConfiguration struct {
 	GetConfigTimeout        *monitoringv1.Duration       `json:"getConfigTimeout,omitempty"`
 	VolumeMounts            []corev1.VolumeMount         `json:"volumeMounts,omitempty"`
 	AdditionalArgs          []ArgumentApplyConfiguration `json:"additionalArgs,omitempty"`
+	AdditionalEnv           []corev1.EnvVar              `json:"additionalEnv,omitempty"`
 }
 
 // ThanosSpecApplyConfiguration constructs a declarative configuration of the ThanosSpec type for use with
@@ -242,6 +243,16 @@ func (b *ThanosSpecApplyConfiguration) WithAdditionalArgs(values ...*ArgumentApp
 			panic("nil value passed to WithAdditionalArgs")
 		}
 		b.AdditionalArgs = append(b.AdditionalArgs, *values[i])
+	}
+	return b
+}
+
+// WithAdditionalEnv adds the given value to the AdditionalEnv field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AdditionalEnv field.
+func (b *ThanosSpecApplyConfiguration) WithAdditionalEnv(values ...corev1.EnvVar) *ThanosSpecApplyConfiguration {
+	for i := range values {
+		b.AdditionalEnv = append(b.AdditionalEnv, values[i])
 	}
 	return b
 }

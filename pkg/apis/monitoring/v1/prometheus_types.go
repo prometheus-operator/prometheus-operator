@@ -1613,6 +1613,12 @@ type ThanosSpec struct {
 	// fail and an error will be logged.
 	// +optional
 	AdditionalArgs []Argument `json:"additionalArgs,omitempty"`
+
+	// additionalEnv allows setting additional environment variables for the Thanos container.
+	// In case of an envvar conflict (e.g. an envvar which is already set by the
+	// operator itself), the reconciliation will fail and an error will be logged.
+	// +optional
+	AdditionalEnv []v1.EnvVar `json:"additionalEnv,omitempty"`
 }
 
 // RemoteWriteSpec defines the configuration to write samples from Prometheus

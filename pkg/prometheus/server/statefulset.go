@@ -577,12 +577,14 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 		})
 	}
 
+	var thanosEnv []v1.EnvVar
+
 	if thanos.ObjectStorageConfig != nil || thanos.ObjectStorageConfigFile != nil {
 		if thanos.ObjectStorageConfigFile != nil {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config-file", Value: *thanos.ObjectStorageConfigFile})
 		} else {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "objstore.config", Value: "$(OBJSTORE_CONFIG)"})
-			container.Env = append(container.Env, v1.EnvVar{
+			thanosEnv = append(thanosEnv, v1.EnvVar{
 				Name: "OBJSTORE_CONFIG",
 				ValueFrom: &v1.EnvVarSource{
 					SecretKeyRef: thanos.ObjectStorageConfig,
@@ -607,7 +609,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config-file", Value: thanos.TracingConfigFile})
 		} else {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "tracing.config", Value: "$(TRACING_CONFIG)"})
-			container.Env = append(container.Env, v1.EnvVar{
+			thanosEnv = append(thanosEnv, v1.EnvVar{
 				Name: "TRACING_CONFIG",
 				ValueFrom: &v1.EnvVarSource{
 					SecretKeyRef: thanos.TracingConfig,
@@ -674,6 +676,12 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*v1.Co
 		return nil, nil, err
 	}
 	container.Args = append([]string{"sidecar"}, containerArgs...)
+
+	containerEnv, err := operator.BuildEnvironment(thanosEnv, thanos.AdditionalEnv)
+	if err != nil {
+		return nil, nil, err
+	}
+	container.Env = containerEnv
 
 	return container, volumes, nil
 }
