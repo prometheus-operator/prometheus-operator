@@ -1869,6 +1869,8 @@ type Sigv4 struct {
 
 // AzureAD defines the configuration for remote write's azuread parameters.
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="has(self.managedIdentity) || has(self.oauth) || has(self.sdk) || has(self.workloadIdentity)",message="must provide Azure Managed Identity, Azure OAuth, Azure SDK, or Azure Workload Identity"
+// +kubebuilder:validation:XValidation:rule="[has(self.managedIdentity), has(self.oauth), has(self.sdk), has(self.workloadIdentity)].filter(x, x).size() <= 1",message="only one of managedIdentity, oauth, sdk, or workloadIdentity can be set at a time"
 type AzureAD struct {
 	// cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
 	// +kubebuilder:validation:Enum=AzureChina;AzureGovernment;AzurePublic
