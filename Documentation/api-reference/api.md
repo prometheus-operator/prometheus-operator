@@ -10471,7 +10471,7 @@ DNSConfig.</p>
 <h3 id="monitoring.coreos.com/v1.Duration">Duration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.QueueConfig">QueueConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.RetainConfig">RetainConfig</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1.TracingConfig">TracingConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OVHCloudSDConfig">OVHCloudSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.MetadataConfig">MetadataConfig</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>, <a href="#monitoring.coreos.com/v1.ProbeSpec">ProbeSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.QuerySpec">QuerySpec</a>, <a href="#monitoring.coreos.com/v1.QueueConfig">QueueConfig</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.RetainConfig">RetainConfig</a>, <a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1.RuleGroup">RuleGroup</a>, <a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1.TracingConfig">TracingConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ConsulSDConfig">ConsulSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DNSSDConfig">DNSSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSDConfig">DockerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EC2SDConfig">EC2SDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.FileSDConfig">FileSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.GCESDConfig">GCESDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.IonosSDConfig">IonosSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LightSailSDConfig">LightSailSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.LinodeSDConfig">LinodeSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OVHCloudSDConfig">OVHCloudSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>Duration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -27705,7 +27705,7 @@ string
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -28525,6 +28525,289 @@ OAuth2
 <td>
 <em>(Optional)</em>
 <p>oauth2 defines the configuration to use on every scrape request.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.JiraAPIType">JiraAPIType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraAPIType defines the type of Jira API.
+The acceptable value should be either Cloud, Datacenter or Auto.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Auto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Cloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Datacenter&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>JiraConfig configures notifications via Jira.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#Jira_config">https://prometheus.io/docs/alerting/latest/configuration/#Jira_config</a>
+It requires Alertmanager &gt;= 0.28.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendResolved defines whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiURL defines the Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
+The full API path must be included.
+If not specified, default API URL will be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>project</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>project defines the project key where issues are created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>summary defines the issue summary template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>description defines the issue description template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines labels to be added to the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>priority defines the priority of the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>issueType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>issueType defines a type of the issue (e.g. Bug).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resolveTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>resolveTransition defines name of the workflow transition to resolve an issue.
+The target status must have the category &ldquo;done&rdquo;.
+NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>reopenTransition defines name of the workflow transition to reopen an issue.
+The target status should not have the category &ldquo;done&rdquo;.
+NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wontFixResolution</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenDuration</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
+The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.JiraField">
+[]JiraField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines other issue and custom fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiType</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.JiraAPIType">
+JiraAPIType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
+It requires Alertmanager &gt;= 0.29.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpConfig defines HTTP client configuration for Jira connection.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.JiraField">JiraField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraField defines a (key, value) tuple.
+See: <a href="https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types">https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>key defines the key of the tuple.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1#JSON">
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<p>value defines the value of the tuple.</p>
 </td>
 </tr>
 </tbody>
@@ -33716,6 +33999,21 @@ It requires Alertmanager &gt;= 0.26.0.</p>
 </tr>
 <tr>
 <td>
+<code>jiraConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.JiraConfig">
+[]JiraConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>jiraConfigs defines the list of Jira configurations.
+It requires Alertmanager &gt;= 0.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>msteamsv2Configs</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">
@@ -36487,7 +36785,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -37650,7 +37948,7 @@ This includes settings for certificates, CA validation, and TLS protocol options
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -37898,6 +38196,288 @@ These are the &ldquo;trigger&rdquo; alerts that cause other alerts to be inhibit
 <em>(Optional)</em>
 <p>equal defines labels that must have an equal value in the source and target alert
 for the inhibition to take effect. This ensures related alerts are properly grouped.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.JiraAPIType">JiraAPIType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraAPIType defines the type of Jira API.
+The acceptable value should be either Cloud, Datacenter or Auto.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Auto&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Cloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Datacenter&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>See <a href="https://prometheus.io/docs/alerting/latest/configuration/#Jira_config">https://prometheus.io/docs/alerting/latest/configuration/#Jira_config</a>
+It requires Alertmanager &gt;= 0.28.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendResolved defines whether to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiURL defines the Jira API URL i.e. <a href="https://company.atlassian.net/rest/api/2/">https://company.atlassian.net/rest/api/2/</a>
+The full API path must be included.
+If not specified, default API URL will be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>project</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>project defines the project key where issues are created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>summary</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>summary defines the issue summary template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>description</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>description defines the issue description template.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines labels to be added to the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>priority defines the priority of the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>issueType</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>issueType defines a type of the issue (e.g. Bug).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resolveTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>resolveTransition defines name of the workflow transition to resolve an issue.
+The target status must have the category &ldquo;done&rdquo;.
+NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenTransition</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>reopenTransition defines name of the workflow transition to reopen an issue.
+The target status should not have the category &ldquo;done&rdquo;.
+NOTE: The name of the transition can be localized and depends on the language setting of the service account.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>wontFixResolution</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reopenDuration</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Duration">
+Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
+The &lsquo;resolutiondate&rsquo; field in Jira is used to determine the age of the issue.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.JiraField">
+[]JiraField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines other issue and custom fields.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiType</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.JiraAPIType">
+JiraAPIType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
+It requires Alertmanager &gt;= 0.29.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpConfig defines HTTP client configuration for Jira connection.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.JiraField">JiraField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>)
+</p>
+<div>
+<p>JiraField defines a (key, value) tuple.
+See: <a href="https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types">https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>key defines the key of the tuple.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1#JSON">
+k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<p>value defines the value of the tuple.</p>
 </td>
 </tr>
 </tbody>
@@ -39400,6 +39980,21 @@ string
 <em>(Optional)</em>
 <p>msteamsConfigs defines the list of MSTeams configurations.
 It requires Alertmanager &gt;= 0.26.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>jiraConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.JiraConfig">
+[]JiraConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>jiraConfigs defines the list of Jira configurations.
+It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -41069,7 +41664,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.JiraConfig">JiraConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

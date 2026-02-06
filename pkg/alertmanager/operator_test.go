@@ -212,10 +212,19 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 		},
 	)
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
 
 	for _, tc := range []struct {
-		amConfig *monitoringv1alpha1.AlertmanagerConfig
-		ok       bool
+		amConfig  *monitoringv1alpha1.AlertmanagerConfig
+		amVersion *semver.Version
+		ok        bool
 	}{
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1216,6 +1225,113 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "valid-Jira-service",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project:   "projectA",
+							APIURL:    ptr.To(monitoringv1alpha1.URL("http://test.com")),
+							IssueType: "bug",
+							Labels:    []string{"aa", "bb"},
+							Fields: []monitoringv1alpha1.JiraField{
+								{
+									Key:   "customField1",
+									Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+								},
+								{
+									Key:   "customField2",
+									Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+								},
+								{
+									Key:   "customField3",
+									Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+								},
+							},
+						}},
+					}},
+				},
+			},
+			amVersion: &version28,
+			ok:        true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "jira-with-apitype",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project:   "projectA",
+							APIURL:    ptr.To(monitoringv1alpha1.URL("http://test.com")),
+							IssueType: "Bug",
+							APIType:   ptr.To(monitoringv1alpha1.JiraAPITypeDatacenter),
+						}},
+					}},
+				},
+			},
+			amVersion: &version29,
+			ok:        true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "jira-with-apitype-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project:   "projectA",
+							APIURL:    ptr.To(monitoringv1alpha1.URL("http://test.com")),
+							IssueType: "Bug",
+							APIType:   ptr.To(monitoringv1alpha1.JiraAPITypeDatacenter),
+						}},
+					}},
+				},
+			},
+			amVersion: &version28,
+			ok:        false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "old-alertmanager-Jira-service",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+							Project: "projectA",
+						}},
+					}},
+				},
+			},
+			amVersion: &version27,
+			ok:        false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "discord-with-invalid-url-in-secret",
 					Namespace: "ns1",
 				},
@@ -1337,6 +1453,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			if tc.amVersion != nil {
+				version = *tc.amVersion
+			}
 
 			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
 			if tc.ok {
