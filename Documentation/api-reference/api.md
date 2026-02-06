@@ -27705,7 +27705,7 @@ string
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -29824,6 +29824,536 @@ bool
 <em>(Optional)</em>
 <p>regex defines whether to match on equality (false) or regular-expression (true).
 Deprecated: for AlertManager &gt;= v0.22.0, <code>matchType</code> should be used instead.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostAttachmentConfig configures attachment parameters for the notifications.
+For more information, please refer to the Mattermost document:
+<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>fallback</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fallback defines a required plain-text summary of the attachment.
+This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>color</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>color defines a hex color code that will be used as
+the left border color for the attachment.
+If not specified, it will default to match the channel sidebar header background color.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pretext</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>text defines the text to be included in the attachment.
+It can be formatted using Markdown.
+For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorName defines an optional name used to identify the author.
+It will be included in a small section at the top of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorLink</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorLink defines optional URL used to hyperlink the author_name.
+If no author_name is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorIcon</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author&rsquo;s name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>title defines an optional title displayed below the author information in the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>titleLink</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>titleLink defines an optional URL used to hyperlink the title.
+If no title is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostField">
+[]MattermostField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thumbURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>thumbURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+on the right side of an attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footer defines an optional line of text that will be displayed at the bottom of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footerIcon</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+that is displayed as a 16x16 pixel thumbnail before the footer text.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>imageURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MattermostConfig defines actions for Mattermost messages.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendResolved defines whether or not to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURL</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>webhookURL defines the Mattermost webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>channel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>channel overrides the channel the message posts in.
+Use the channel’s name and not the display name, e.g. use town-square, not Town Square.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>username</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>username overrides the username the message posts as.
+Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>text defines the markdown-formatted message to display in the post.
+To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>iconURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>iconURL overrides the profile picture the message posts with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>iconEmoji</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>iconEmoji overrides the profile picture and icon_url parameter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachments</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">
+[]MattermostAttachmentConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>attachments define the message attachments used for richer formatting options.
+It is for compatibility with Slack.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>props</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostPropsConfig">
+MattermostPropsConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>props defines the extra information to be sent to Mattermost.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostPriorityConfig">
+MattermostPriorityConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>priority defines the priority parameters of the message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpConfig defines the HTTP client configuration for Mattermost webhook requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostField">MattermostField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+</p>
+<div>
+<p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>title defines the label or header text displayed for this field.
+This appears as bold text above the field value in the Slack message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>value defines the content or data displayed for this field.
+This appears below the title and can contain plain text or markdown.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>short</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>short determines whether this field can be displayed alongside other short fields.
+When true, Slack may display this field side by side with other short fields.
+When false or not specified, the field takes the full width of the message.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostPriorityConfig">MattermostPriorityConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostPriorityConfig configures the parameters related to the priority of the message.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>priority adds the priority label to the message.
+Possible values are <code>urgent</code>, <code>important</code> and <code>standard</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>requestedAck</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>requestedAck defines whether the message requires an acknowledgement from users.</p>
+<p>If set to true, the message will be marked as requiring an acknowledgment
+from the users by displaying a checkmark icon next to the message.</p>
+<p>Keep in mind that this requires the message priority to be set to <code>important</code> or <code>urgent</code>.</p>
+<p>Only for enterprise version of Mattermost.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentNotifications</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>persistentNotifications defines whether the message notification will be persisted.</p>
+<p>This can be used only with the <code>urgent</code> messages.
+If set to true recipients will receive a persistent notification
+every five minutes until they acknowledge the message.</p>
+<p>Only for enterprise version of Mattermost.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.MattermostPropsConfig">MattermostPropsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostPropsConfig configures extra information to be sent to Mattermost.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>card</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>card allows for extra information (Markdown-formatted text)
+to be sent to Mattermost that will only be displayed in the RHS panel
+after a user selects the info icon displayed alongside the post.</p>
 </td>
 </tr>
 </tbody>
@@ -33744,6 +34274,21 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mattermostConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">
+[]MattermostConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>mattermostConfigs defines the list of Mattermost configurations.
+It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig
@@ -36487,7 +37032,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -37650,7 +38195,7 @@ This includes settings for certificates, CA validation, and TLS protocol options
 <h3 id="monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsConfig">MSTeamsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MSTeamsV2Config">MSTeamsV2Config</a>, <a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>HTTPConfig defines a client HTTP configuration.
@@ -38210,6 +38755,536 @@ MatchType
 <p>matchType defines the match operation available with AlertManager &gt;= v0.22.0.
 Takes precedence over Regex (deprecated) if non-empty.
 Valid values: &ldquo;=&rdquo; (equality), &ldquo;!=&rdquo; (inequality), &ldquo;=~&rdquo; (regex match), &ldquo;!~&rdquo; (regex non-match).</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostAttachmentConfig configures attachment parameters for the notifications.
+For more information, please refer to the Mattermost document:
+<a href="https://developers.mattermost.com/integrate/reference/message-attachments/">https://developers.mattermost.com/integrate/reference/message-attachments/</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>fallback</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fallback defines a required plain-text summary of the attachment.
+This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>color</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>color defines a hex color code that will be used as
+the left border color for the attachment.
+If not specified, it will default to match the channel sidebar header background color.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pretext</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>text defines the text to be included in the attachment.
+It can be formatted using Markdown.
+For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorName defines an optional name used to identify the author.
+It will be included in a small section at the top of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorLink</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorLink defines optional URL used to hyperlink the author_name.
+If no author_name is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorIcon</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author&rsquo;s name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>title defines an optional title displayed below the author information in the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>titleLink</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>titleLink defines an optional URL used to hyperlink the title.
+If no title is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostField">
+[]MattermostField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thumbURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>thumbURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+on the right side of an attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footer defines an optional line of text that will be displayed at the bottom of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footerIcon</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+that is displayed as a 16x16 pixel thumbnail before the footer text.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>imageURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.Receiver">Receiver</a>)
+</p>
+<div>
+<p>MattermostConfig defines actions for Mattermost messages.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sendResolved</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>sendResolved defines whether or not to notify about resolved alerts.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhookURL</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>webhookURL defines the Mattermost webhook URL.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>channel</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>channel overrides the channel the message posts in.
+Use the channel’s name and not the display name, e.g. use town-square, not Town Square.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>username</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>username overrides the username the message posts as.
+Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>text</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>text defines the markdown-formatted message to display in the post.
+To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>iconURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>iconURL overrides the profile picture the message posts with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>iconEmoji</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>iconEmoji overrides the profile picture and icon_url parameter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>attachments</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">
+[]MattermostAttachmentConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>attachments define the message attachments used for richer formatting options.
+It is for compatibility with Slack.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>props</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostPropsConfig">
+MattermostPropsConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>props defines the extra information to be sent to Mattermost.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostPriorityConfig">
+MattermostPriorityConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>priority defines the priority parameters of the message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
+HTTPConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpConfig defines the HTTP client configuration for Mattermost webhook requests.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostField">MattermostField
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+</p>
+<div>
+<p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>title defines the label or header text displayed for this field.
+This appears as bold text above the field value in the Slack message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>value defines the content or data displayed for this field.
+This appears below the title and can contain plain text or markdown.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>short</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>short determines whether this field can be displayed alongside other short fields.
+When true, Slack may display this field side by side with other short fields.
+When false or not specified, the field takes the full width of the message.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostPriorityConfig">MattermostPriorityConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostPriorityConfig configures the parameters related to the priority of the message.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>priority</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>priority adds the priority label to the message.
+Possible values are <code>urgent</code>, <code>important</code> and <code>standard</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>requestedAck</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>requestedAck defines whether the message requires an acknowledgement from users.</p>
+<p>If set to true, the message will be marked as requiring an acknowledgment
+from the users by displaying a checkmark icon next to the message.</p>
+<p>Keep in mind that this requires the message priority to be set to <code>important</code> or <code>urgent</code>.</p>
+<p>Only for enterprise version of Mattermost.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentNotifications</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>persistentNotifications defines whether the message notification will be persisted.</p>
+<p>This can be used only with the <code>urgent</code> messages.
+If set to true recipients will receive a persistent notification
+every five minutes until they acknowledge the message.</p>
+<p>Only for enterprise version of Mattermost.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.MattermostPropsConfig">MattermostPropsConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
+</p>
+<div>
+<p>MattermostPropsConfig configures extra information to be sent to Mattermost.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>card</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>card allows for extra information (Markdown-formatted text)
+to be sent to Mattermost that will only be displayed in the RHS panel
+after a user selects the info icon displayed alongside the post.</p>
 </td>
 </tr>
 </tbody>
@@ -39430,6 +40505,21 @@ It requires Alertmanager &gt;= 0.28.0.</p>
 <em>(Optional)</em>
 <p>rocketchatConfigs defines the list of RocketChat configurations.
 It requires Alertmanager &gt;= 0.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>mattermostConfigs</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostConfig">
+[]MattermostConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>mattermostConfigs defines the list of Mattermost configurations.
+It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 </tbody>
@@ -41069,7 +42159,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

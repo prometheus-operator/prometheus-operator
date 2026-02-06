@@ -777,6 +777,19 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var mattermostConfigs []*mattermostConfig
+	if l := len(in.MattermostConfigs); l > 0 {
+		mattermostConfigs = make([]*mattermostConfig, l)
+		for i := range in.MattermostConfigs {
+			receiver, err := cb.convertMattermostConfig(ctx, in.MattermostConfigs[i], crKey)
+			if err != nil {
+				cb.logger.Error(fmt.Sprintf("%s", err))
+				return nil, fmt.Errorf("MattermostConfig[%d]: %w", i, err)
+			}
+			mattermostConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:              makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:   opsgenieConfigs,
@@ -794,6 +807,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		MSTeamsConfigs:    msTeamsConfigs,
 		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
+		MattermostConfigs: mattermostConfigs,
 	}, nil
 }
 
@@ -1607,6 +1621,101 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 		}
 
 		out.WebhookURL = webHookURL
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitoringv1alpha1.MattermostConfig, crKey types.NamespacedName) (*mattermostConfig, error) {
+	out := &mattermostConfig{
+		SendResolved: in.SendResolved,
+		Channel:      ptr.Deref(in.Channel, ""),
+		Username:     ptr.Deref(in.Username, ""),
+		Text:         ptr.Deref(in.Text, ""),
+		IconEmoji:    ptr.Deref(in.IconEmoji, ""),
+	}
+
+	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Mattermost webhookURL: %w", err)
+	}
+	out.WebhookURL = webhookURL
+
+	if in.IconURL != nil {
+		out.IconURL = string(*in.IconURL)
+	}
+
+	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
+	for i, c := range in.Attachments {
+		out.Attachments[i] = &mattermostAttachmentConfig{
+			Fallback:   ptr.Deref(c.Fallback, ""),
+			Color:      ptr.Deref(c.Color, ""),
+			Pretext:    ptr.Deref(c.Pretext, ""),
+			Text:       ptr.Deref(c.Text, ""),
+			AuthorName: ptr.Deref(c.AuthorName, ""),
+			Title:      ptr.Deref(c.Title, ""),
+			Footer:     ptr.Deref(c.Footer, ""),
+		}
+
+		if c.AuthorLink != nil {
+			out.Attachments[i].AuthorLink = string(*c.AuthorLink)
+		}
+
+		if c.AuthorIcon != nil {
+			out.Attachments[i].AuthorIcon = string(*c.AuthorIcon)
+		}
+
+		if c.TitleLink != nil {
+			out.Attachments[i].TitleLink = string(*c.TitleLink)
+		}
+
+		if l := len(in.Attachments[i].Fields); l > 0 {
+			fields := make([]mattermostField, l)
+			for i, f := range in.Attachments[i].Fields {
+				fields[i] = mattermostField{
+					Title: f.Title,
+					Value: f.Value,
+					Short: ptr.Deref(f.Short, false),
+				}
+			}
+			out.Attachments[i].Fields = fields
+		}
+
+		if c.ThumbURL != nil {
+			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
+		}
+
+		if c.FooterIcon != nil {
+			out.Attachments[i].FooterIcon = string(*c.FooterIcon)
+		}
+
+		if c.ImageURL != nil {
+			out.Attachments[i].ImageURL = string(*c.ImageURL)
+		}
+	}
+
+	if in.Props != nil {
+		out.Props = &mattermostPropsConfig{
+			Card: ptr.Deref(in.Props.Card, ""),
+		}
+	}
+
+	if in.Priority != nil {
+		p := in.Priority
+		out.Priority = &mattermostPriorityConfig{
+			RequestedAck:            p.RequestedAck,
+			PersistentNotifications: p.PersistentNotifications,
+		}
+
+		if p.Priority != "" {
+			out.Priority.Priority = p.Priority
+		}
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

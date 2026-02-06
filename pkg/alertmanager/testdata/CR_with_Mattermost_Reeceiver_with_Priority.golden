@@ -1,0 +1,17 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  mattermost_configs:
+  - webhook_url: https://mattermost.example.com
+    priority:
+      priority: urgent
+      requested_ack: true
+      persistent_notifications: true
+templates: []

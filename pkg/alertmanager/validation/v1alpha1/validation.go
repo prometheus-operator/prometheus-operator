@@ -113,6 +113,11 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
 		}
+
+		if err := validateMattermostConfigs(receiver.MattermostConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'mattermostConfig' - receiver %s: %w", receiver.Name, err)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -421,6 +426,47 @@ func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
 
 func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) error {
 	for _, config := range configs {
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
+	for i, config := range configs {
+
+		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
+		}
+
+		for j, att := range config.Attachments {
+			if err := validation.ValidateURLPtr((*string)(att.AuthorIcon)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorIcon: %w", i, j, err)
+			}
+
+			if err := validation.ValidateURLPtr((*string)(att.AuthorLink)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorLink: %w", i, j, err)
+			}
+
+			if err := validation.ValidateURLPtr((*string)(att.TitleLink)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: titleLink: %w", i, j, err)
+			}
+
+			if err := validation.ValidateURLPtr((*string)(att.ThumbURL)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: thumbURL: %w", i, j, err)
+			}
+
+			if err := validation.ValidateURLPtr((*string)(att.FooterIcon)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: footerIcon: %w", i, j, err)
+			}
+
+			if err := validation.ValidateURLPtr((*string)(att.ImageURL)); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: imageURL: %w", i, j, err)
+			}
+		}
+
 		if err := config.HTTPConfig.Validate(); err != nil {
 			return err
 		}
