@@ -5191,6 +5191,68 @@ func testPromDegradedConditionStatus(t *testing.T) {
 	}
 }
 
+// testPromStatusConditionLastTransitionTime validates that Prometheus status
+// conditions preserve LastTransitionTime when the condition status doesn't
+// actually change. Without the fix in pkg/prometheus/operator.go, this test
+// would fail because LastTransitionTime was being reset on every status update.
+func testPromStatusConditionLastTransitionTime(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	// Create Prometheus and wait until it's ready.
+	p := framework.MakeBasicPrometheus(ns, "test-ltt", "", 1)
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Record the LastTransitionTime values for both conditions.
+	var reconciledLTT, availableLTT metav1.Time
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == monitoringv1.Reconciled {
+			reconciledLTT = cond.LastTransitionTime
+		}
+		if cond.Type == monitoringv1.Available {
+			availableLTT = cond.LastTransitionTime
+		}
+	}
+	require.False(t, reconciledLTT.IsZero(), "Reconciled condition not found")
+	require.False(t, availableLTT.IsZero(), "Available condition not found")
+
+	// Update Prometheus with a non-condition-changing modification (external label).
+	// ExternalLabels only affects the Prometheus configuration (not the StatefulSet
+	// pod template), so it triggers a reconciliation without causing a rolling
+	// update. This means conditions stay True throughout.
+	p, err = framework.PatchPrometheusAndWaitUntilReady(
+		ctx,
+		p.Name,
+		ns,
+		monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ExternalLabels: map[string]string{"test-update": "true"},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Verify that LastTransitionTime hasn't changed for either condition.
+	// Without the fix, these assertions would fail because LastTransitionTime
+	// was being reset on every status update.
+	for _, cond := range p.Status.Conditions {
+		if cond.Type == monitoringv1.Reconciled {
+			require.Equal(t, reconciledLTT, cond.LastTransitionTime,
+				"Reconciled condition's LastTransitionTime should not change when status is unchanged")
+		}
+		if cond.Type == monitoringv1.Available {
+			require.Equal(t, availableLTT, cond.LastTransitionTime,
+				"Available condition's LastTransitionTime should not change when status is unchanged")
+		}
+	}
+}
+
 func testPromStrategicMergePatch(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
