@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -100,10 +100,16 @@ func ResolveStuckStatefulSet(ctx context.Context, logger *slog.Logger, kclient k
 }
 
 func sortPodsByOrdinal(pods []v1.Pod) {
-	sort.Slice(pods, func(i, j int) bool {
-		pi, _ := getOrdinal(pods[i].Name)
-		pj, _ := getOrdinal(pods[j].Name)
-		return pi < pj
+	slices.SortFunc(pods, func(i, j v1.Pod) int {
+		pi, _ := getOrdinal(i.Name)
+		pj, _ := getOrdinal(j.Name)
+		if pi < pj {
+			return -1
+		}
+		if pi > pj {
+			return 1
+		}
+		return 0
 	})
 }
 

@@ -1036,11 +1036,11 @@ func (tc *TracingConfig) Validate() error {
 
 // RollingUpdateStatefulSetStrategy is used to communicate parameters for RollingUpdateStatefulSetStrategyType.
 type RollingUpdateStatefulSetStrategy struct {
-	// Partition indicates the ordinal at which the StatefulSet should be partitioned for updates.
+	// partition indicates the ordinal at which the StatefulSet should be partitioned for updates.
 	// +optional
 	Partition *int32 `json:"partition,omitempty" protobuf:"varint,1,opt,name=partition"`
 
-	// MaxUnavailable is the maximum number of pods that can be unavailable during the update.
+	// maxUnavailable is the maximum number of pods that can be unavailable during the update.
 	// +optional
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty" protobuf:"bytes,2,opt,name=maxUnavailable"`
 }
