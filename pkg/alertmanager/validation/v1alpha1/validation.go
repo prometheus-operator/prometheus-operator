@@ -17,8 +17,6 @@ package v1alpha1
 import (
 	"errors"
 	"fmt"
-	"net"
-	"strings"
 
 	"k8s.io/utils/ptr"
 
@@ -130,8 +128,8 @@ func validatePagerDutyConfigs(configs []monitoringv1alpha1.PagerDutyConfig) erro
 			}
 		}
 
-		if conf.RoutingKey == nil && conf.ServiceKey == nil {
-			return errors.New("one of 'routingKey' or 'serviceKey' is required")
+		if err := validation.ValidatePagerDutyConfig(conf.RoutingKey != nil, conf.ServiceKey != nil); err != nil {
+			return err
 		}
 
 		for j, lc := range conf.PagerDutyLinkConfigs {
@@ -231,8 +229,8 @@ func validateSlackConfigs(configs []monitoringv1alpha1.SlackConfig) error {
 
 func validateWebhookConfigs(configs []monitoringv1alpha1.WebhookConfig) error {
 	for i, config := range configs {
-		if config.URL == nil && config.URLSecret == nil {
-			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
+		if err := validation.ValidateWebhookConfig(config.URL != nil, config.URLSecret != nil); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
@@ -267,22 +265,19 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 			return errors.New("missing 'to' address")
 		}
 
-		if ptr.Deref(config.Smarthost, "") != "" {
-			_, _, err := net.SplitHostPort(*config.Smarthost)
-			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
+		if smarthost := ptr.Deref(config.Smarthost, ""); smarthost != "" {
+			if err := validation.ValidateSmarthost(smarthost); err != nil {
+				return err
 			}
 		}
 
 		if config.Headers != nil {
-			// Header names are case-insensitive, check for collisions.
-			normalizedHeaders := map[string]struct{}{}
+			keys := make([]string, 0, len(config.Headers))
 			for _, v := range config.Headers {
-				normalized := strings.ToLower(v.Key)
-				if _, ok := normalizedHeaders[normalized]; ok {
-					return fmt.Errorf("duplicate header %q", normalized)
-				}
-				normalizedHeaders[normalized] = struct{}{}
+				keys = append(keys, v.Key)
+			}
+			if err := validation.ValidateEmailHeaders(keys); err != nil {
+				return err
 			}
 		}
 	}
@@ -291,23 +286,13 @@ func validateEmailConfig(configs []monitoringv1alpha1.EmailConfig) error {
 
 func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) error {
 	for i, config := range configs {
-
-		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
-		reservedFields := map[string]struct{}{
-			"routing_key":         {},
-			"message_type":        {},
-			"state_message":       {},
-			"entity_display_name": {},
-			"monitoring_tool":     {},
-			"entity_id":           {},
-			"entity_state":        {},
-		}
-
 		if len(config.CustomFields) > 0 {
+			keys := make([]string, 0, len(config.CustomFields))
 			for _, v := range config.CustomFields {
-				if _, ok := reservedFields[v.Key]; ok {
-					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", v.Key)
-				}
+				keys = append(keys, v.Key)
+			}
+			if err := validation.ValidateVictorOpsCustomFields(keys); err != nil {
+				return err
 			}
 		}
 
@@ -328,16 +313,15 @@ func validateVictorOpsConfigs(configs []monitoringv1alpha1.VictorOpsConfig) erro
 
 func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error {
 	for i, config := range configs {
-		if config.UserKey == nil && config.UserKeyFile == nil {
-			return fmt.Errorf("one of userKey or userKeyFile must be configured")
-		}
-
-		if config.Token == nil && config.TokenFile == nil {
-			return fmt.Errorf("one of token or tokenFile must be configured")
-		}
-
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return fmt.Errorf("html and monospace options are mutually exclusive")
+		if err := validation.ValidatePushoverConfig(
+			config.UserKey != nil,
+			config.UserKeyFile != nil,
+			config.Token != nil,
+			config.TokenFile != nil,
+			config.HTML != nil && *config.HTML,
+			config.Monospace != nil && *config.Monospace,
+		); err != nil {
+			return err
 		}
 
 		if config.URL != "" {
@@ -356,8 +340,12 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 
 func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 	for i, config := range configs {
-		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
-			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
+		if err := validation.ValidateSNSConfig(
+			ptr.Deref(config.TargetARN, "") != "",
+			ptr.Deref(config.TopicARN, "") != "",
+			ptr.Deref(config.PhoneNumber, "") != "",
+		); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if config.ApiURL != nil {
@@ -375,12 +363,12 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 
 func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
 	for i, config := range configs {
-		if config.BotToken == nil && config.BotTokenFile == nil {
-			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
-		}
-
-		if config.ChatID == 0 {
-			return fmt.Errorf("[%d]: mandatory field %q is empty", i, "chatID")
+		if err := validation.ValidateTelegramConfig(
+			config.BotToken != nil,
+			config.BotTokenFile != nil,
+			config.ChatID,
+		); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
@@ -438,38 +426,23 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 		return nil
 	}
 
-	if r.Receiver == "" {
-		if topLevelRoute {
-			return errors.New("root route must define a receiver")
-		}
-	} else {
-		if _, found := receivers[r.Receiver]; !found {
-			return fmt.Errorf("receiver %q not found", r.Receiver)
-		}
+	if err := validation.ValidateRouteReceiver(r.Receiver, receivers, topLevelRoute); err != nil {
+		return err
 	}
 
-	if groupLen := len(r.GroupBy); groupLen > 0 {
-		groupedBy := make(map[string]struct{}, groupLen)
-		for _, str := range r.GroupBy {
-			if _, found := groupedBy[str]; found {
-				return fmt.Errorf("duplicate values not permitted in route 'groupBy': %v", r.GroupBy)
-			}
-			groupedBy[str] = struct{}{}
-		}
-		if _, found := groupedBy["..."]; found && groupLen > 1 {
-			return fmt.Errorf("'...' must be a sole value in route 'groupBy': %v", r.GroupBy)
-		}
+	if err := validation.ValidateRouteGroupBy(r.GroupBy); err != nil {
+		return err
 	}
 
 	for _, namedMuteTimeInterval := range r.MuteTimeIntervals {
-		if _, found := muteTimeIntervals[namedMuteTimeInterval]; !found {
-			return fmt.Errorf("mute time interval %q not found", namedMuteTimeInterval)
+		if err := validation.ValidateTimeIntervalReference(namedMuteTimeInterval, muteTimeIntervals, true); err != nil {
+			return err
 		}
 	}
 
 	for _, namedActiveTimeInterval := range r.ActiveTimeIntervals {
-		if _, found := muteTimeIntervals[namedActiveTimeInterval]; !found {
-			return fmt.Errorf("time interval %q not found", namedActiveTimeInterval)
+		if err := validation.ValidateTimeIntervalReference(namedActiveTimeInterval, muteTimeIntervals, false); err != nil {
+			return err
 		}
 	}
 
