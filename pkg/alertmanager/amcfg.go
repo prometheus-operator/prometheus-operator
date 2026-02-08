@@ -2849,6 +2849,12 @@ func (tc *msTeamsV2Config) sanitize(amVersion semver.Version, logger *slog.Logge
 		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
 	}
 
+	if tc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
 	return tc.HTTPConfig.sanitize(amVersion, logger)
 }
 
