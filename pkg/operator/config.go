@@ -112,6 +112,10 @@ func DefaultConfig(cpu, memory string) Config {
 				description: "Updates the status subresource for configuration resources",
 				enabled:     false,
 			},
+			RemoteWriteCustomResourceDefinitionFeature: FeatureGate{
+				description: "Enables the usage of the RemoteWrite Custom Resource Definition",
+				enabled:     false,
+			},
 		},
 		RepairPolicy: NoneRepairPolicy,
 	}
