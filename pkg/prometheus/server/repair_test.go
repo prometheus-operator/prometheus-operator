@@ -27,6 +27,8 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
+	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
 
 func TestResolveStuckStatefulSet_Delete(t *testing.T) {
@@ -37,16 +39,16 @@ func TestResolveStuckStatefulSet_Delete(t *testing.T) {
 	op := &Operator{
 		kclient: client,
 		logger:  logger,
+		config: prompkg.Config{
+			RepairPolicy: operator.DeleteRepairPolicy,
+		},
 	}
 
-	repairPolicy := monitoringv1.DeleteNotReadyPodsRepairPolicy
 	p := &monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-						RepairPolicy: &repairPolicy,
-					},
+					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
 				},
 			},
 		},
@@ -103,16 +105,16 @@ func TestResolveStuckStatefulSet_IgnoreReady(t *testing.T) {
 	op := &Operator{
 		kclient: client,
 		logger:  logger,
+		config: prompkg.Config{
+			RepairPolicy: operator.DeleteRepairPolicy,
+		},
 	}
 
-	repairPolicy := monitoringv1.DeleteNotReadyPodsRepairPolicy
 	p := &monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-						RepairPolicy: &repairPolicy,
-					},
+					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
 				},
 			},
 		},
@@ -168,16 +170,16 @@ func TestResolveStuckStatefulSet_IgnoreCurrentRevision(t *testing.T) {
 	op := &Operator{
 		kclient: client,
 		logger:  logger,
+		config: prompkg.Config{
+			RepairPolicy: operator.DeleteRepairPolicy,
+		},
 	}
 
-	repairPolicy := monitoringv1.DeleteNotReadyPodsRepairPolicy
 	p := &monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				UpdateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-						RepairPolicy: &repairPolicy,
-					},
+					RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
 				},
 			},
 		},
