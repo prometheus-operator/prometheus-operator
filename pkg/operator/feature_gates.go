@@ -34,6 +34,9 @@ const (
 
 	// StatusForConfigurationResourcesFeature enables the status subresource for Prometheus-Operator Config Objects.
 	StatusForConfigurationResourcesFeature FeatureGateName = "StatusForConfigurationResources"
+
+	// RemoteWriteCustomResourceDefinitionFeature enables the usage of the RemoteWrite Custom Resource Definition.
+	RemoteWriteCustomResourceDefinitionFeature FeatureGateName = "RemoteWriteCustomResourceDefinition"
 )
 
 type FeatureGateName string
