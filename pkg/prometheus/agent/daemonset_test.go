@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -228,10 +229,40 @@ func TestHostUsersForDaemonSet(t *testing.T) {
 						CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 							HostUsers: tc.hostUsers,
 						},
-					}},
+					},
+				},
 			)
 			require.NoError(t, err)
 			require.Equal(t, tc.hostUsers, dset.Spec.Template.Spec.HostUsers)
 		})
 	}
+}
+
+func TestAdditionalDaemonSetVolumes(t *testing.T) {
+	addedVolumeName := "added-volume"
+	dset, err := makeDaemonSetFromPrometheus(
+		monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Volumes: []v1.Volume{
+						{
+							Name: addedVolumeName,
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+	hasAddedVolume := false
+	for _, vol := range dset.Spec.Template.Spec.Volumes {
+		if vol.Name == addedVolumeName && vol.EmptyDir != nil {
+			hasAddedVolume = true
+			break
+		}
+	}
+	require.True(t, hasAddedVolume, "expected to find added volume in DaemonSet spec")
 }
