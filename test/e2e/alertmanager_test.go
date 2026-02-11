@@ -1626,6 +1626,9 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
+  msteams_configs:
+  - webhook_url: https://msteams.webhook.url
+    title: Alert
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
