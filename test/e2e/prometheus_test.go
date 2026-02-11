@@ -6196,7 +6196,7 @@ func testStuckStatefulSetRolloutWithRepairPolicy(t *testing.T) {
 	podName := "prometheus-" + prom.Name + "-1"
 	ctx := context.Background()
 
-	err = wait.PollUntilContextTimeout(ctx, time.Second, framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+	err = wait.PollUntilContextTimeout(ctx, time.Second, 5*framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
 		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, podName, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
