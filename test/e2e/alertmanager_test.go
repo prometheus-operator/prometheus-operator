@@ -1870,6 +1870,18 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://rocketchat.api.url")),
+				Token: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "rocketchat",
+					},
+					Key: "token",
+				},
+				TokenID: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "rocketchat",
+					},
+					Key: "tokenid",
+				},
 			},
 			WebexConfig: &monitoringv1.GlobalWebexConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://webex.api.url")),
@@ -1955,6 +1967,15 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"apisecret": []byte(`abcdef1234567890`),
 		},
 	}
+	rocketchat := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":   []byte(`abcdef1234567890`),
+			"tokenid": []byte(`abc123`),
+		},
+	}
 
 	ctx := context.Background()
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
@@ -1970,6 +1991,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &victorops, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &wechat, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &rocketchat, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -2004,6 +2027,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   webex_api_url: https://webex.api.url
   jira_api_url: https://jira.api.url
   rocketchat_api_url: https://rocketchat.api.url
+  rocketchat_token: abcdef1234567890
+  rocketchat_token_id: abc123
 route:
   receiver: %[1]s
   routes:
