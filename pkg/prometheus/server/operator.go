@@ -657,12 +657,19 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		return
 	}
 	if !found {
-		c.logger.Error(
-			fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName),
+		c.logger.Warn(
+			"namespace not found, treating as empty namespace",
+			"namespace", nsName,
 		)
-		return
 	}
-	ns := nsObject.(*v1.Namespace)
+
+	// If the namespace is found, use it. Otherwise, treat it as an empty
+	// namespace so that Prometheus instances in that namespace and those
+	// with namespace selectors matching everything are still enqueued.
+	ns := &v1.Namespace{}
+	if found {
+		ns = nsObject.(*v1.Namespace)
+	}
 
 	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus instances in the namespace.
@@ -755,7 +762,6 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
