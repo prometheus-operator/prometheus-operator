@@ -54,6 +54,10 @@ Arguments:
     	Config Reloader memory limits. Value "0" disables it and causes no limit to be configured. (default 50Mi)
   -config-reloader-memory-request value
     	Config Reloader memory requests. Value "0" disables it and causes no request to be configured. (default 50Mi)
+  -configmap-field-selector value
+    	Field selector to filter ConfigMaps to watch
+  -configmap-label-selector value
+    	Label selector to filter ConfigMaps to watch
   -controller-id operator.prometheus.io/controller-id
     	Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an operator.prometheus.io/controller-id annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.
   -deny-namespaces value

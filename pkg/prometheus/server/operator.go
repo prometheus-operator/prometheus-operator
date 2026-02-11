@@ -338,7 +338,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = c.ConfigMapListWatchFieldSelector.String()
+				options.LabelSelector = c.ConfigMapListWatchLabelSelector.String()
+			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
