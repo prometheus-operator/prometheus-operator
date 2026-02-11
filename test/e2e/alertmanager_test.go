@@ -1848,6 +1848,13 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
+				APISecret: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: "wechat",
+					},
+					Key: "apisecret",
+				},
+				APICorpID: ptr.To("abc123"),
 			},
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
@@ -1940,6 +1947,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"apikey": []byte(`abcdef1234567890`),
 		},
 	}
+	wechat := v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "wechat",
+		},
+		Data: map[string][]byte{
+			"apisecret": []byte(`abcdef1234567890`),
+		},
+	}
 
 	ctx := context.Background()
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
@@ -1953,6 +1968,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &victorops, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &wechat, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -1979,6 +1996,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
   wechat_api_url: https://wechat.api.url
+  wechat_api_secret: abcdef1234567890
+  wechat_api_corp_id: abc123
   victorops_api_url: https://victorops.api.url
   victorops_api_key: abcdef1234567890
   telegram_api_url: https://telegram.api.url
