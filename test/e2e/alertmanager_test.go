@@ -1077,27 +1077,27 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	require.NoError(t, err)
 
 	msteamsWebhookURL := "https://msteams.webhook.url"
-	msteamsWebhookURLSecret := &v1.Secret{
+	msteamsSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "msteams-webhook-url",
+			Name: "msteams",
 		},
 		Data: map[string][]byte{
 			"webhook-url": []byte(msteamsWebhookURL),
 		},
 	}
-	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsWebhookURLSecret, metav1.CreateOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	msteamsv2WebhookURL := "https://msteamsv2.webhook.url"
-	msteamsv2WebhookURLSecret := &v1.Secret{
+	msteamsv2 := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "msteamsv2-webhook-url",
+			Name: "msteamsv2",
 		},
 		Data: map[string][]byte{
 			"webhook-url": []byte(msteamsv2WebhookURL),
 		},
 	}
-	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2WebhookURLSecret, metav1.CreateOptions{})
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// A valid AlertmanagerConfig resource with many receivers.
@@ -1263,15 +1263,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
-				//MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
-				//	WebhookURL: v1.SecretKeySelector{
-				//		LocalObjectReference: v1.LocalObjectReference{
-				//			Name: "msteams-webhook-url",
-				//		},
-				//		Key: "webhook-url",
-				//	},
-				//	Title: ptr.To("Alert"),
-				//}},
+				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+					WebhookURL: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "msteams",
+						},
+						Key: "webhook-url",
+					},
+					Title: ptr.To("Alert"),
+				}},
 				//MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
 				//	WebhookURL: &v1.SecretKeySelector{
 				//		LocalObjectReference: v1.LocalObjectReference{
