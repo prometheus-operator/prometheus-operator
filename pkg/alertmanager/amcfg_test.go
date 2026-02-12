@@ -4769,6 +4769,22 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
 		},
 		{
+			name:           "Test text is optional in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermos_text_is_optional.golden",
+		},
+		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
 			againstVersion: versionTimeoutConfigNotAllowed,
 
