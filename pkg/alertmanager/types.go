@@ -68,6 +68,8 @@ type globalConfig struct {
 	VictorOpsAPIKey       string          `yaml:"victorops_api_key,omitempty"`
 	VictorOpsAPIKeyFile   string          `yaml:"victorops_api_key_file,omitempty"`
 	TelegramAPIURL        *config.URL     `yaml:"telegram_api_url,omitempty"`
+	TelegramBotToken      string          `yaml:"telegram_bot_token,omitempty"`
+	TelegramBotTokenFile  string          `yaml:"telegram_bot_token_file,omitempty"`
 	WebexAPIURL           *config.URL     `yaml:"webex_api_url,omitempty"`
 	JiraAPIURL            *config.URL     `yaml:"jira_api_url,omitempty"`
 	RocketChatAPIURL      *config.URL     `yaml:"rocketchat_api_url,omitempty"`

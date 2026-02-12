@@ -2230,6 +2230,24 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.VictorOpsAPIKeyFile = ""
 	}
 
+	if gc.TelegramBotToken != "" && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'telegram_bot_token' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.TelegramBotToken = ""
+	}
+
+	if gc.TelegramBotTokenFile != "" && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'telegram_bot_token_file' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.TelegramBotTokenFile = ""
+	}
+
+	if gc.TelegramBotToken != "" && gc.TelegramBotTokenFile != "" {
+		msg := "'telegram_bot_token' and 'telegram_bot_token_file' are mutually exclusive - 'telegram_bot_token' has taken precedence"
+		logger.Warn(msg)
+		gc.TelegramBotTokenFile = ""
+	}
+
 	return nil
 }
 
