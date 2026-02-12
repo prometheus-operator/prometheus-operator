@@ -1420,7 +1420,7 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		},
 		{
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
@@ -1428,7 +1428,7 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		},
 		{
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
+				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
 					MaxUnavailable: ptr.To(intstr.FromInt(1)),
 				},
@@ -1442,7 +1442,7 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		},
 		{
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
-				Type: monitoringv1.OnDeleteStatefulSetStrategyType,
+				Type: appsv1.OnDeleteStatefulSetStrategyType,
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.OnDeleteStatefulSetStrategyType,

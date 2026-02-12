@@ -71,6 +71,7 @@ type Config struct {
 	LocalHost                    string
 	ClusterDomain                string
 	ReloaderConfig               operator.ContainerConfig
+	RepairPolicy                 operator.RepairPolicy
 	AlertmanagerDefaultBaseImage string
 	Annotations                  operator.Map
 	Labels                       operator.Map
@@ -171,6 +172,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			LocalHost:                    c.LocalHost,
 			ClusterDomain:                c.ClusterDomain,
 			ReloaderConfig:               c.ReloaderConfig,
+			RepairPolicy:                 c.RepairPolicy,
 			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
 			Annotations:                  c.Annotations,
 			Labels:                       c.Labels,
@@ -669,6 +671,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 	operator.SanitizeSTS(sset)
+
+	if err := c.resolveStuckStatefulSet(ctx, logger, am, existingStatefulSet); err != nil {
+		logger.Error("failed to resolve stuck statefulset", "err", err)
+	}
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")

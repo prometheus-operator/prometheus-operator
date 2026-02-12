@@ -554,7 +554,9 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 	rr.logger.Debug("StatefulSet updated")
 	rr.metrics.TriggerByCounter("StatefulSet", UpdateEvent).Inc()
 
-	if !rr.hasStateChanged(old, cur) {
+	if reflect.DeepEqual(old.Spec, cur.Spec) &&
+		reflect.DeepEqual(old.Labels, cur.Labels) &&
+		reflect.DeepEqual(old.Annotations, cur.Annotations) {
 		// If the statefulset state (spec, labels or annotations) hasn't
 		// changed, the operator can only update the status subresource instead
 		// of doing a full reconciliation.
