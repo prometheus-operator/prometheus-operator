@@ -1236,6 +1236,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		if err != nil {
 			return err
 		}
+
+		err = checkIncidentioConfigs(ctx, receiver.IncidentioConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1718,6 +1723,40 @@ func checkMSTeamsV2Configs(
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func checkIncidentioConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.IncidentioConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.29.0")) {
+		return fmt.Errorf("'incidentioConfigs' is available in Alertmanager >= 0.29.0 only - current %s", amVersion)
+	}
+
+	for _, config := range configs {
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+
+		if config.URL != "" {
+			if _, err := validation.ValidateURL(strings.TrimSpace(string(config.URL))); err != nil {
+				return fmt.Errorf("failed to validate incident.io URL: %w", err)
+			}
 		}
 	}
 
