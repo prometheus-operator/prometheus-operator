@@ -269,7 +269,10 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 			config.Namespaces.DenyList,
 			c.mdClient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = config.ConfigMapListWatchFieldSelector.String()
+				options.LabelSelector = config.ConfigMapListWatchLabelSelector.String()
+			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),

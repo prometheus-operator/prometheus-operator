@@ -57,11 +57,13 @@ type Config struct {
 	LocalHost string
 
 	// Label and field selectors for resource watchers.
-	PromSelector                 LabelSelector
-	AlertmanagerSelector         LabelSelector
-	ThanosRulerSelector          LabelSelector
-	SecretListWatchFieldSelector FieldSelector
-	SecretListWatchLabelSelector LabelSelector
+	PromSelector                    LabelSelector
+	AlertmanagerSelector            LabelSelector
+	ThanosRulerSelector             LabelSelector
+	SecretListWatchFieldSelector    FieldSelector
+	SecretListWatchLabelSelector    LabelSelector
+	ConfigMapListWatchFieldSelector FieldSelector
+	ConfigMapListWatchLabelSelector LabelSelector
 
 	// Controller id for pod ownership.
 	ControllerID string
