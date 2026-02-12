@@ -28,7 +28,7 @@ require (
 	// Since we needed the change added in https://github.com/prometheus/prometheus/pull/16928 and it's not released yet.
 	github.com/prometheus/prometheus v0.309.1
 	github.com/stretchr/testify v1.11.1
-	github.com/thanos-io/thanos v0.40.1
+	github.com/thanos-io/thanos v0.41.0
 	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.50.0
 	golang.org/x/sync v0.19.0
