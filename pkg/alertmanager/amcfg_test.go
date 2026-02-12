@@ -4024,6 +4024,9 @@ func TestSanitizeConfig(t *testing.T) {
 	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
 	jiraURL.URL = jiraGlobalURL
 
+	versionGlobalTelegramBotTokenAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalTelegramBotTokenNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4675,6 +4678,48 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "Test telegram_bot_token and telegram_bot_token_file are dropped for unsupported versions",
+			againstVersion: versionGlobalTelegramBotTokenNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotToken:     "a",
+					TelegramBotTokenFile: "/b",
+				},
+			},
+			golden: "test_telegram_bot_token_and_telegram_bot_token_file_are_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test telegram_bot_token preserved for supported versions",
+			againstVersion: versionGlobalTelegramBotTokenAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotToken: "a",
+				},
+			},
+			golden: "test_telegram_bot_token_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test telegram_bot_token_file preserved for supported versions",
+			againstVersion: versionGlobalTelegramBotTokenAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotTokenFile: "/b",
+				},
+			},
+			golden: "test_telegram_bot_token_file_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test telegram_bot_token takes precedence over telegram_bot_token_file",
+			againstVersion: versionGlobalTelegramBotTokenAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotToken:     "a",
+					TelegramBotTokenFile: "/b",
+				},
+			},
+			golden: "test_telegram_bot_token_takes_precedence_over_telegram_bot_token_file.golden",
 		},
 		{
 			name:           "summary is dropped for unsupported versions for MSTeams config",
