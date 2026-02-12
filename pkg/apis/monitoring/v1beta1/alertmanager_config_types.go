@@ -1296,7 +1296,7 @@ type RocketChatActionConfig struct {
 type IncidentioConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
-	SendResolved *bool `json:"sendResolved,omitempty"`
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
 	// httpConfig defines the HTTP client configuration for incident.io API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

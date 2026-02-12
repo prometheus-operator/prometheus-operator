@@ -1113,7 +1113,7 @@ func (in *IncidentioConfig) DeepCopyInto(out *IncidentioConfig) {
 	}
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
-		*out = new(monitoringv1.Duration)
+		*out = new(v1.Duration)
 		**out = **in
 	}
 }
