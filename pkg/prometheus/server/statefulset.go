@@ -431,7 +431,7 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 			promArgs = cg.WithMinimumVersion("2.5.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: fmt.Sprintf("%d", *query.MaxSamples)})
 		}
 
-		if query.MaxConcurrency != nil && *query.MaxConcurrency > 1 {
+		if query.MaxConcurrency != nil && *query.MaxConcurrency > 0 {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-concurrency", Value: fmt.Sprintf("%d", *query.MaxConcurrency)})
 		}
 
