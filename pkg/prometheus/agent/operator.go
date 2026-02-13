@@ -706,6 +706,11 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
 
+	// Clean up any existing StatefulSets when switching to DaemonSet mode.
+	if err := c.cleanupStatefulSetsOnModeSwitch(ctx, logger, p); err != nil {
+		return fmt.Errorf("cleaning up StatefulSets on mode switch: %w", err)
+	}
+
 	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
 
 	var notFound bool
@@ -763,6 +768,11 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 
 func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
 	logger := c.logger.With("key", key)
+
+	// Clean up any existing DaemonSets when switching to StatefulSet mode.
+	if err := c.cleanupDaemonSetsOnModeSwitch(ctx, logger, p); err != nil {
+		return fmt.Errorf("cleaning up DaemonSets on mode switch: %w", err)
+	}
 
 	if p.Spec.ServiceName != nil {
 		svcClient := c.kclient.CoreV1().Services(p.Namespace)
@@ -892,6 +902,68 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	}
 	if len(deleteErrs) > 0 {
 		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
+	}
+
+	return nil
+}
+
+// cleanupStatefulSetsOnModeSwitch deletes any existing StatefulSets for this
+// PrometheusAgent when switching from StatefulSet mode to DaemonSet mode.
+// This prevents duplicate Prometheus agents from running simultaneously.
+func (c *Operator) cleanupStatefulSetsOnModeSwitch(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent) error {
+	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
+
+	var deleteErrs []error
+	err := c.ssetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
+		s := obj.(*appsv1.StatefulSet)
+
+		if c.rr.DeletionInProgress(s) {
+			return
+		}
+
+		logger.Info("deleting StatefulSet due to mode switch to DaemonSet", "statefulset", s.Name)
+		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
+			if !apierrors.IsNotFound(delErr) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
+			}
+		}
+	})
+	if err != nil {
+		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
+	}
+	if len(deleteErrs) > 0 {
+		return errors.Join(deleteErrs...)
+	}
+
+	return nil
+}
+
+// cleanupDaemonSetsOnModeSwitch deletes any existing DaemonSets for this
+// PrometheusAgent when switching from DaemonSet mode to StatefulSet mode.
+// This prevents duplicate Prometheus agents from running simultaneously.
+func (c *Operator) cleanupDaemonSetsOnModeSwitch(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent) error {
+	dsetClient := c.kclient.AppsV1().DaemonSets(p.Namespace)
+
+	var deleteErrs []error
+	err := c.dsetInfs.ListAllByNamespace(p.Namespace, labels.SelectorFromSet(labels.Set{prompkg.PrometheusNameLabelName: p.Name, prompkg.PrometheusModeLabelName: prometheusMode}), func(obj any) {
+		d := obj.(*appsv1.DaemonSet)
+
+		if c.rr.DeletionInProgress(d) {
+			return
+		}
+
+		logger.Info("deleting DaemonSet due to mode switch to StatefulSet", "daemonset", d.Name)
+		if delErr := dsetClient.Delete(ctx, d.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
+			if !apierrors.IsNotFound(delErr) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete DaemonSet %s: %w", d.GetName(), delErr))
+			}
+		}
+	})
+	if err != nil {
+		return fmt.Errorf("listing DaemonSet resources failed: %w", err)
+	}
+	if len(deleteErrs) > 0 {
+		return errors.Join(deleteErrs...)
 	}
 
 	return nil
