@@ -5721,6 +5721,31 @@
                             ],
                             type: 'object',
                           },
+                          appToken: {
+                            description: "appToken defines the secret's key that contains the Slack app token.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nIt requires Alertmanager >= v0.30.0.",
+                            properties: {
+                              key: {
+                                description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                minLength: 1,
+                                type: 'string',
+                              },
+                              name: {
+                                description: "name defines the name of the secret in the object's namespace to select from.",
+                                minLength: 1,
+                                type: 'string',
+                              },
+                            },
+                            required: [
+                              'key',
+                              'name',
+                            ],
+                            type: 'object',
+                          },
+                          appURL: {
+                            description: 'appURL defines the URL used for Slack App message posting API.\nIt requires Alertmanager >= v0.30.0.',
+                            pattern: '^https?://.+$',
+                            type: 'string',
+                          },
                           callbackId: {
                             description: 'callbackId defines an identifier for the message used in interactive components.',
                             minLength: 1,

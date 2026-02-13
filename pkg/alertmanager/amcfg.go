@@ -486,6 +486,14 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.SlackAPIURL = &config.URL{URL: u}
 	}
 
+	if in.SlackAppToken != nil {
+		slackAppToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.SlackAppToken)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get Slack App Token: %w", err)
+		}
+		out.SlackAppToken = slackAppToken
+	}
+
 	if in.OpsGenieAPIURL != nil {
 		opsgenieAPIURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OpsGenieAPIURL)
 		if err != nil {
@@ -981,6 +989,18 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 			return nil, err
 		}
 		out.APIURL = url
+	}
+
+	if in.AppToken != nil {
+		appToken, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AppToken)
+		if err != nil {
+			return nil, err
+		}
+		out.AppToken = appToken
+	}
+
+	if ptr.Deref(in.AppURL, "") != "" {
+		out.AppURL = string(*in.AppURL)
 	}
 
 	if in.TitleLink != "" {
