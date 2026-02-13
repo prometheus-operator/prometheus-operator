@@ -1609,7 +1609,8 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			require.NoError(t, err)
 
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-			err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
+
+			_, err = o.provisionAlertmanagerConfiguration(context.Background(), tc.am, store)
 
 			if !tc.ok {
 				require.Error(t, err)
