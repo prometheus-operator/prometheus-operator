@@ -374,6 +374,7 @@ type telegramConfig struct {
 	BotToken             string            `yaml:"bot_token,omitempty"`
 	BotTokenFile         string            `yaml:"bot_token_file,omitempty"`
 	ChatID               int64             `yaml:"chat_id,omitempty"`
+	ChatIDFile           string            `yaml:"chat_id_file,omitempty"`
 	MessageThreadID      int               `yaml:"message_thread_id,omitempty"`
 	Message              string            `yaml:"message,omitempty"`
 	DisableNotifications bool              `yaml:"disable_notifications,omitempty"`
