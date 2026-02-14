@@ -777,6 +777,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var jiraConfigs []*jiraConfig
+	if l := len(in.JiraConfigs); l > 0 {
+		jiraConfigs = make([]*jiraConfig, l)
+		for i := range in.JiraConfigs {
+			receiver, err := cb.convertJiraConfig(ctx, in.JiraConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("JiraConfig[%d]: %w", i, err)
+			}
+			jiraConfigs[i] = receiver
+		}
+	}
+
 	return &receiver{
 		Name:              makeNamespacedString(in.Name, crKey),
 		OpsgenieConfigs:   opsgenieConfigs,
@@ -792,6 +804,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		TelegramConfigs:   telegramConfigs,
 		WebexConfigs:      webexConfigs,
 		MSTeamsConfigs:    msTeamsConfigs,
+		JiraConfigs:       jiraConfigs,
 		MSTeamsV2Configs:  msTeamsV2Configs,
 		RocketChatConfigs: rocketchatConfigs,
 	}, nil
@@ -1581,6 +1594,70 @@ func (cb *ConfigBuilder) convertMSTeamsConfig(
 		return nil, err
 	}
 	out.HTTPConfig = httpConfig
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertJiraConfig(ctx context.Context, in monitoringv1alpha1.JiraConfig, crKey types.NamespacedName) (*jiraConfig, error) {
+	out := &jiraConfig{
+		SendResolved:      in.SendResolved,
+		Labels:            in.Labels,
+		Summary:           ptr.Deref(in.Summary, ""),
+		Description:       ptr.Deref(in.Description, ""),
+		Priority:          ptr.Deref(in.Priority, ""),
+		ResolveTransition: ptr.Deref(in.ResolveTransition, ""),
+		ReopenTransition:  ptr.Deref(in.ReopenTransition, ""),
+		WontFixResolution: ptr.Deref(in.WontFixResolution, ""),
+	}
+
+	if in.APIURL != nil {
+		out.APIURL = (string)(*in.APIURL)
+	} else if cb.cfg.Global != nil && cb.cfg.Global.JiraAPIURL != nil {
+		out.APIURL = cb.cfg.Global.JiraAPIURL.RequestURI()
+	}
+
+	if in.Project != "" {
+		out.Project = in.Project
+	} else {
+		return nil, fmt.Errorf("project is required and must not be empty")
+	}
+
+	if in.IssueType != "" {
+		out.IssueType = in.IssueType
+	} else {
+		return nil, fmt.Errorf("IssueType is required and must not be empty")
+	}
+
+	if len(in.Fields) > 0 {
+		outFields := make(map[string]any, len(in.Fields))
+		for _, field := range in.Fields {
+			outFields[field.Key] = string(field.Value.Raw)
+		}
+		out.Fields = outFields
+	}
+
+	if in.ReopenDuration != nil {
+		reopenDuration, err := model.ParseDuration(string(*in.ReopenDuration))
+		if err != nil {
+			return nil, fmt.Errorf("parse reopen duration: %w", err)
+		}
+		out.ReopenDuration = reopenDuration
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	if in.APIType != nil {
+		switch *in.APIType {
+		case monitoringv1alpha1.JiraAPITypeCloud, monitoringv1alpha1.JiraAPITypeDatacenter, monitoringv1alpha1.JiraAPITypeAuto:
+			out.APIType = strings.ToLower(string(*in.APIType))
+		default:
+			return nil, fmt.Errorf("unsupported api type")
+		}
+	}
 
 	return out, nil
 }

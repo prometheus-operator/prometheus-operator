@@ -1227,6 +1227,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
+		err = checkJiraConfigs(ctx, receiver.JiraConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
+
 		err = checkMSTeamsV2Configs(ctx, receiver.MSTeamsV2Configs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
@@ -1679,6 +1684,42 @@ func checkMSTeamsConfigs(
 		}
 
 		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
+			return err
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkJiraConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.JiraConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.28.0")) {
+		return fmt.Errorf(`invalid syntax in receivers config; Jira integration is only available in Alertmanager >= 0.28.0`)
+	}
+
+	for _, config := range configs {
+
+		if config.APIType != nil && amVersion.LT(semver.MustParse("0.29.0")) {
+			return fmt.Errorf(
+				"'apiType' config set in 'jiraConfig' but supported in Alertmanager >= 0.29.0 only - current %s",
+				amVersion.String(),
+			)
+		}
+
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
 
