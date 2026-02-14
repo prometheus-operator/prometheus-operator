@@ -4003,6 +4003,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionTelegramMessageThreadIDAllowed := semver.Version{Major: 0, Minor: 26}
 	versionTelegramMessageThreadIDNotAllowed := semver.Version{Major: 0, Minor: 25}
 
+	versionTelegramChatIDFileAllowed := semver.Version{Major: 0, Minor: 31}
+	versionTelegramChatIDFileNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
 
@@ -4675,6 +4678,25 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "chat_id_file is presented along with chat_id",
+			againstVersion: versionTelegramChatIDFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID: 12345,
+								// Expect to drop chat_id_file as chat_id has higher precedence.
+								ChatIDFile: "/chat/id/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_config_chat_id_file_and_chat_id.golden",
 		},
 		{
 			name:           "summary is dropped for unsupported versions for MSTeams config",

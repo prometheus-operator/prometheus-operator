@@ -1,0 +1,5 @@
+receivers:
+- name: telegram
+  telegram_configs:
+  - chat_id: 12345
+templates: []
