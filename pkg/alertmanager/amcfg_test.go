@@ -7554,7 +7554,7 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "wechat_api_secret_file_unsupported_version.golden",
+			golden: "wechat_api_secret_file_supported_version.golden",
 		},
 		{
 			name:           "wechat specifies both api_secret and api_secret_file",
