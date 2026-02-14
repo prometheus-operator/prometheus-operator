@@ -4096,7 +4096,7 @@ func TestSanitizeConfig(t *testing.T) {
 		},
 		{
 			name:           "Test wechat_api_secret takes precedence over wechat_api_secret_file in global config",
-			againstVersion: versionGlobalWeChatConfigSecretFileNotAllowed,
+			againstVersion: versionGlobalWeChatConfigSecretFileAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					WeChatAPISecret:     "abcdef123456",
