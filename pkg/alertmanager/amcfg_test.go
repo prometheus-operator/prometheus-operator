@@ -4018,6 +4018,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionSlackMessageTextAllowed := semver.Version{Major: 0, Minor: 31}
+	versionSlackMessageTextNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 	jiraURL := config.URL{}
@@ -4164,6 +4167,38 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_timeout_is_added_in_slack_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test message_text is dropped in slack config for unsupported versions",
+			againstVersion: versionSlackMessageTextNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								MessageText: "test message text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_message_text_is_dropped_in_slack_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test message_text is added in slack config for supported versions",
+			againstVersion: versionSlackMessageTextAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								MessageText: "test message text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_message_text_is_added_in_slack_config_for_supported_versions.golden",
 		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
