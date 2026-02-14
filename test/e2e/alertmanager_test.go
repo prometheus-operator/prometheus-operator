@@ -1100,6 +1100,18 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	rocketchat := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":    []byte("abcdef123456"),
+			"token-id": []byte("abc123456def"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), rocketchat, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1281,6 +1293,21 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				//	},
 				//	Title: ptr.To("Alert"),
 				//}},
+				RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
+					Token: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token",
+					},
+					TokenID: v1.SecretKeySelector{
+						LocalObjectReference: v1.LocalObjectReference{
+							Name: "rocketchat",
+						},
+						Key: "token-id",
+					},
+				}},
 			}},
 		},
 	}
