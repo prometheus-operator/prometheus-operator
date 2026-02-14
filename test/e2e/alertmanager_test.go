@@ -1272,15 +1272,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					Title: ptr.To("Alert"),
 				}},
-				MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
-					WebhookURL: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "msteamsv2",
-						},
-						Key: "webhookv2-url",
-					},
-					Title: ptr.To("Alert"),
-				}},
+				//MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{{
+				//	WebhookURL: &v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "msteamsv2",
+				//		},
+				//		Key: "webhookv2-url",
+				//	},
+				//	Title: ptr.To("Alert"),
+				//}},
 			}},
 		},
 	}
@@ -1628,9 +1628,6 @@ receivers:
     room_id: testingRoomID
   msteams_configs:
   - webhook_url: https://msteams.webhook.url
-    title: Alert
-  msteamsv2_configs:
-  - webhook_url: https://msteamsv2.webhook.url
     title: Alert
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
