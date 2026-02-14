@@ -12546,6 +12546,260 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 		})
 	}
 }
+func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
+	sec := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "aws-access-api",
+			Namespace: "default",
+		},
+		Data: map[string][]byte{
+			"accessKey": []byte("access-key"),
+			"secretKey": []byte("secret-key"),
+		},
+	}
+	for _, tc := range []struct {
+		name        string
+		scSpec      monitoringv1alpha1.ScrapeConfigSpec
+		golden      string
+		version     string
+		expectedErr bool
+	}{
+		{
+			name: "aws_sd_ec2_config_valid_with_api_keys",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+						AccessKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "aws-access-api",
+							},
+							Key: "accessKey",
+						},
+						SecretKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "aws-access-api",
+							},
+							Key: "secretKey",
+						},
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigValidAPIKeys.golden",
+		},
+		{
+			name: "aws_sd_ec2_config_valid_with_role_arn",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:            monitoringv1alpha1.AWSRoleEC2,
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigValidRoleARN.golden",
+		},
+		{
+			name: "aws_sd_config_valid_with_filters",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:            monitoringv1alpha1.AWSRoleEC2,
+						Region:          ptr.To("us-east-1"),
+						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
+						Port:            ptr.To(int32(9100)),
+						Filters: []monitoringv1alpha1.Filter{
+							{
+								Name:   "tag:environment",
+								Values: []string{"prod"},
+							},
+							{
+								Name:   "tag:service",
+								Values: []string{"web", "db"},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSDConfigFilters.golden",
+		},
+		{
+			name: "aws_sd_config_wrong_secret",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+						AccessKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "wrong-secret-name",
+							},
+							Key: "accessKey",
+						},
+						SecretKey: &v1.SecretKeySelector{
+							LocalObjectReference: v1.LocalObjectReference{
+								Name: "aws-access-api",
+							},
+							Key: "secretKey",
+						},
+					},
+				},
+			},
+			expectedErr: true,
+		},
+		{
+			name: "aws_sd_config_proxyconfig",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL:             ptr.To("http://no-proxy.com"),
+							NoProxy:              ptr.To("0.0.0.0"),
+							ProxyFromEnvironment: ptr.To(true),
+							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+								"header": {
+									{
+										LocalObjectReference: v1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "proxy-header",
+									},
+								},
+							},
+						},
+						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_withProxyConfig.golden",
+		},
+		{
+			name: "aws_sd_config_http_and_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "ca",
+								},
+							},
+							Cert: monitoringv1.SecretOrConfigMap{
+								Secret: &v1.SecretKeySelector{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "cert",
+								},
+							},
+							KeySecret: &v1.SecretKeySelector{
+								LocalObjectReference: v1.LocalObjectReference{
+									Name: "tls",
+								},
+								Key: "private-key",
+							},
+						},
+						FollowRedirects: ptr.To(true),
+						EnableHTTP2:     ptr.To(true),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_TLSConfig.golden",
+		},
+		{
+			name: "aws_sd_config_ecs_clusters",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: monitoringv1alpha1.AWSRoleECS,
+						Clusters: []string{
+							"cluster-1",
+							"cluster-2",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_ECS_clusters.golden",
+		},
+		{
+			name: "aws_sd_config_clusters_not_ecs",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: monitoringv1alpha1.AWSRoleLightsail,
+						Clusters: []string{
+							"cluster-1",
+							"cluster-2",
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AWSSD_with_clusters_non_ECS.golden",
+		},
+		{
+			name: "aws_sd_config_version_not_supported",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role: monitoringv1alpha1.AWSRoleEC2,
+					},
+				},
+			},
+			version: "3.7.0",
+			golden:  "ScrapeConfigSpecConfig_AWSSD_version_not_supported.golden",
+		}} {
+		t.Run(tc.name, func(t *testing.T) {
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			p.Spec.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				scs,
+				assets.NewTestStoreBuilder(sec),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			if tc.expectedErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
 
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	p := defaultPrometheus()
