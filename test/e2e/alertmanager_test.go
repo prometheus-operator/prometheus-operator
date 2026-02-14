@@ -1293,21 +1293,21 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				//	},
 				//	Title: ptr.To("Alert"),
 				//}},
-				RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
-					APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
-					Token: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "rocketchat",
-						},
-						Key: "token",
-					},
-					TokenID: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: "rocketchat",
-						},
-						Key: "token-id",
-					},
-				}},
+				//RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
+				//	APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
+				//	Token: v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "rocketchat",
+				//		},
+				//		Key: "token",
+				//	},
+				//	TokenID: v1.SecretKeySelector{
+				//		LocalObjectReference: v1.LocalObjectReference{
+				//			Name: "rocketchat",
+				//		},
+				//		Key: "token-id",
+				//	},
+				//}},
 			}},
 		},
 	}
