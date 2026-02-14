@@ -312,6 +312,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.LinodeSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1alpha1.MatcherApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostAttachmentConfig"):
+		return &monitoringv1alpha1.MattermostAttachmentConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostConfig"):
+		return &monitoringv1alpha1.MattermostConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostField"):
+		return &monitoringv1alpha1.MattermostFieldApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostPriorityConfig"):
+		return &monitoringv1alpha1.MattermostPriorityConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("MattermostPropsConfig"):
+		return &monitoringv1alpha1.MattermostPropsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1alpha1.MSTeamsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):
@@ -406,6 +416,16 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.KeyValueApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("Matcher"):
 		return &monitoringv1beta1.MatcherApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostAttachmentConfig"):
+		return &monitoringv1beta1.MattermostAttachmentConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostConfig"):
+		return &monitoringv1beta1.MattermostConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostField"):
+		return &monitoringv1beta1.MattermostFieldApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostPriorityConfig"):
+		return &monitoringv1beta1.MattermostPriorityConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("MattermostPropsConfig"):
+		return &monitoringv1beta1.MattermostPropsConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsConfig"):
 		return &monitoringv1beta1.MSTeamsConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("MSTeamsV2Config"):

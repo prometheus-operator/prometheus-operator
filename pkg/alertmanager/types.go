@@ -506,7 +506,7 @@ type mattermostConfig struct {
 	WebhookURLFile string                        `yaml:"webhook_url_file,omitempty" json:"webhook_url_file,omitempty"`
 	Channel        string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username       string                        `yaml:"username,omitempty" json:"username,omitempty"`
-	Text           string                        `yaml:"text" json:"text"`
+	Text           string                        `yaml:"text,omitempty" json:"text,omitempty"`
 	IconURL        string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
 	IconEmoji      string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
 	Attachments    []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
@@ -539,7 +539,7 @@ type mattermostField struct {
 }
 
 type mattermostPropsConfig struct {
-	Card *string `yaml:"card,omitempty" json:"card,omitempty"`
+	Card string `yaml:"card,omitempty" json:"card,omitempty"`
 }
 
 type mattermostPriorityConfig struct {

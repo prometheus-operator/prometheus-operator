@@ -1324,6 +1324,955 @@ spec:
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic
+                    mattermostConfigs:
+                      description: |-
+                        mattermostConfigs defines the list of Mattermost configurations.
+                        It requires Alertmanager >= 0.30.0.
+                      items:
+                        description: MattermostConfig defines actions for Mattermost
+                          messages.
+                        properties:
+                          attachments:
+                            description: |-
+                              attachments define the message attachments used for richer formatting options.
+                              It is for compatibility with Slack.
+                            items:
+                              description: |-
+                                MattermostAttachmentConfig configures attachment parameters for the notifications.
+                                For more information, please refer to the Mattermost document:
+                                https://developers.mattermost.com/integrate/reference/message-attachments/
+                              properties:
+                                authorIcon:
+                                  description: authorIcon defines an optional URL
+                                    used to display a 16x16 pixel icon beside the
+                                    author's name.
+                                  pattern: ^https?://.+$
+                                  type: string
+                                authorLink:
+                                  description: |-
+                                    authorLink defines optional URL used to hyperlink the author_name.
+                                    If no author_name is specified, this field does nothing.
+                                  pattern: ^https?://.+$
+                                  type: string
+                                authorName:
+                                  description: |-
+                                    authorName defines an optional name used to identify the author.
+                                    It will be included in a small section at the top of the attachment.
+                                  minLength: 1
+                                  type: string
+                                color:
+                                  description: |-
+                                    color defines a hex color code that will be used as
+                                    the left border color for the attachment.
+                                    If not specified, it will default to match the channel sidebar header background color.
+                                  minLength: 1
+                                  type: string
+                                fallback:
+                                  description: |-
+                                    fallback defines a required plain-text summary of the attachment.
+                                    This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+                                  minLength: 1
+                                  type: string
+                                fields:
+                                  description: |-
+                                    fields defines a list of fields that are sent with each notification
+                                    to be displayed in a table format inside the attachment.
+                                  items:
+                                    description: MattermostField configures information
+                                      to be displayed in a table format inside the
+                                      attachment.
+                                    properties:
+                                      short:
+                                        description: |-
+                                          short determines whether this field can be displayed alongside other short fields.
+                                          When true, Slack may display this field side by side with other short fields.
+                                          When false or not specified, the field takes the full width of the message.
+                                        type: boolean
+                                      title:
+                                        description: |-
+                                          title defines the label or header text displayed for this field.
+                                          This appears as bold text above the field value in the Slack message.
+                                        minLength: 1
+                                        type: string
+                                      value:
+                                        description: |-
+                                          value defines the content or data displayed for this field.
+                                          This appears below the title and can contain plain text or markdown.
+                                        minLength: 1
+                                        type: string
+                                    required:
+                                    - title
+                                    - value
+                                    type: object
+                                  type: array
+                                  x-kubernetes-list-type: atomic
+                                footer:
+                                  description: footer defines an optional line of
+                                    text that will be displayed at the bottom of the
+                                    attachment.
+                                  minLength: 1
+                                  type: string
+                                footerIcon:
+                                  description: |-
+                                    footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+                                    that is displayed as a 16x16 pixel thumbnail before the footer text.
+                                  pattern: ^https?://.+$
+                                  type: string
+                                imageURL:
+                                  description: |-
+                                    imageURL defines an optional URL to an image file
+                                    (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+                                  pattern: ^https?://.+$
+                                  type: string
+                                pretext:
+                                  description: pretext defines an optional line of
+                                    text that will be shown above the attachment.
+                                    Supports @mentions.
+                                  minLength: 1
+                                  type: string
+                                text:
+                                  description: |-
+                                    text defines the text to be included in the attachment.
+                                    It can be formatted using Markdown.
+                                    For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.
+                                  minLength: 1
+                                  type: string
+                                thumbURL:
+                                  description: |-
+                                    thumbURL defines an optional URL to an image file
+                                    (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+                                    on the right side of an attachment.
+                                  pattern: ^https?://.+$
+                                  type: string
+                                title:
+                                  description: title defines an optional title displayed
+                                    below the author information in the attachment.
+                                  minLength: 1
+                                  type: string
+                                titleLink:
+                                  description: |-
+                                    titleLink defines an optional URL used to hyperlink the title.
+                                    If no title is specified, this field does nothing.
+                                  pattern: ^https?://.+$
+                                  type: string
+                              type: object
+                            minItems: 1
+                            type: array
+                          channel:
+                            description: |-
+                              channel overrides the channel the message posts in.
+                              Use the channel’s name and not the display name, e.g. use town-square, not Town Square.
+                            minLength: 1
+                            type: string
+                          httpConfig:
+                            description: httpConfig defines the HTTP client configuration
+                              for Mattermost webhook requests.
+                            properties:
+                              authorization:
+                                description: |-
+                                  authorization defines the authorization header configuration for the client.
+                                  This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
+                                properties:
+                                  credentials:
+                                    description: credentials defines a key of a Secret
+                                      in the namespace that contains the credentials
+                                      for authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  type:
+                                    description: |-
+                                      type defines the authentication type. The value is case-insensitive.
+
+                                      "Basic" is not a supported value.
+
+                                      Default: "Bearer"
+                                    type: string
+                                type: object
+                              basicAuth:
+                                description: |-
+                                  basicAuth defines the basic authentication credentials for the client.
+                                  This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
+                                properties:
+                                  password:
+                                    description: |-
+                                      password defines a key of a Secret containing the password for
+                                      authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  username:
+                                    description: |-
+                                      username defines a key of a Secret containing the username for
+                                      authentication.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                type: object
+                              bearerTokenSecret:
+                                description: |-
+                                  bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
+                                  for authentication.
+                                  The secret needs to be in the same namespace as the AlertmanagerConfig
+                                  object and accessible by the Prometheus Operator.
+                                properties:
+                                  key:
+                                    description: The key of the secret to select from.  Must
+                                      be a valid secret key.
+                                    type: string
+                                  name:
+                                    default: ""
+                                    description: |-
+                                      Name of the referent.
+                                      This field is effectively required, but due to backwards compatibility is
+                                      allowed to be empty. Instances of this type with an empty value here are
+                                      almost certainly wrong.
+                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    type: string
+                                  optional:
+                                    description: Specify whether the Secret or its
+                                      key must be defined
+                                    type: boolean
+                                required:
+                                - key
+                                type: object
+                                x-kubernetes-map-type: atomic
+                              enableHttp2:
+                                description: enableHttp2 can be used to disable HTTP2.
+                                type: boolean
+                              followRedirects:
+                                description: |-
+                                  followRedirects specifies whether the client should follow HTTP 3xx redirects.
+                                  When true, the client will automatically follow redirect responses.
+                                type: boolean
+                              noProxy:
+                                description: |-
+                                  noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
+                                  that should be excluded from proxying. IP and domain names can
+                                  contain port numbers.
+
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                type: string
+                              oauth2:
+                                description: |-
+                                  oauth2 defines the OAuth2 client credentials used to fetch a token for the targets.
+                                  This enables OAuth2 authentication flow for HTTP requests.
+                                properties:
+                                  clientId:
+                                    description: |-
+                                      clientId defines a key of a Secret or ConfigMap containing the
+                                      OAuth2 client's ID.
+                                    properties:
+                                      configMap:
+                                        description: configMap defines the ConfigMap
+                                          containing data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      secret:
+                                        description: secret defines the Secret containing
+                                          data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                    type: object
+                                  clientSecret:
+                                    description: |-
+                                      clientSecret defines a key of a Secret containing the OAuth2
+                                      client's secret.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  endpointParams:
+                                    additionalProperties:
+                                      type: string
+                                    description: |-
+                                      endpointParams configures the HTTP parameters to append to the token
+                                      URL.
+                                    type: object
+                                  noProxy:
+                                    description: |-
+                                      noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
+                                      that should be excluded from proxying. IP and domain names can
+                                      contain port numbers.
+
+                                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                    type: string
+                                  proxyConnectHeader:
+                                    additionalProperties:
+                                      items:
+                                        description: SecretKeySelector selects a key
+                                          of a Secret.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      type: array
+                                    description: |-
+                                      proxyConnectHeader optionally specifies headers to send to
+                                      proxies during CONNECT requests.
+
+                                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  proxyFromEnvironment:
+                                    description: |-
+                                      proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+
+                                      It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                    type: boolean
+                                  proxyUrl:
+                                    description: proxyUrl defines the HTTP proxy server
+                                      to use.
+                                    pattern: ^(http|https|socks5)://.+$
+                                    type: string
+                                  scopes:
+                                    description: scopes defines the OAuth2 scopes
+                                      used for the token request.
+                                    items:
+                                      type: string
+                                    type: array
+                                  tlsConfig:
+                                    description: |-
+                                      tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
+                                      It requires Prometheus >= v2.43.0.
+                                    properties:
+                                      ca:
+                                        description: ca defines the Certificate authority
+                                          used when verifying server certificates.
+                                        properties:
+                                          configMap:
+                                            description: configMap defines the ConfigMap
+                                              containing data to use for the targets.
+                                            properties:
+                                              key:
+                                                description: The key to select.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the ConfigMap
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          secret:
+                                            description: secret defines the Secret
+                                              containing data to use for the targets.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                      cert:
+                                        description: cert defines the Client certificate
+                                          to present when doing client-authentication.
+                                        properties:
+                                          configMap:
+                                            description: configMap defines the ConfigMap
+                                              containing data to use for the targets.
+                                            properties:
+                                              key:
+                                                description: The key to select.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the ConfigMap
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                          secret:
+                                            description: secret defines the Secret
+                                              containing data to use for the targets.
+                                            properties:
+                                              key:
+                                                description: The key of the secret
+                                                  to select from.  Must be a valid
+                                                  secret key.
+                                                type: string
+                                              name:
+                                                default: ""
+                                                description: |-
+                                                  Name of the referent.
+                                                  This field is effectively required, but due to backwards compatibility is
+                                                  allowed to be empty. Instances of this type with an empty value here are
+                                                  almost certainly wrong.
+                                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                type: string
+                                              optional:
+                                                description: Specify whether the Secret
+                                                  or its key must be defined
+                                                type: boolean
+                                            required:
+                                            - key
+                                            type: object
+                                            x-kubernetes-map-type: atomic
+                                        type: object
+                                      insecureSkipVerify:
+                                        description: insecureSkipVerify defines how
+                                          to disable target certificate validation.
+                                        type: boolean
+                                      keySecret:
+                                        description: keySecret defines the Secret
+                                          containing the client key file for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      maxVersion:
+                                        description: |-
+                                          maxVersion defines the maximum acceptable TLS version.
+
+                                          It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+                                        enum:
+                                        - TLS10
+                                        - TLS11
+                                        - TLS12
+                                        - TLS13
+                                        type: string
+                                      minVersion:
+                                        description: |-
+                                          minVersion defines the minimum acceptable TLS version.
+
+                                          It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+                                        enum:
+                                        - TLS10
+                                        - TLS11
+                                        - TLS12
+                                        - TLS13
+                                        type: string
+                                      serverName:
+                                        description: serverName is used to verify
+                                          the hostname for the targets.
+                                        type: string
+                                    type: object
+                                  tokenUrl:
+                                    description: tokenUrl defines the URL to fetch
+                                      the token from.
+                                    minLength: 1
+                                    type: string
+                                required:
+                                - clientId
+                                - clientSecret
+                                - tokenUrl
+                                type: object
+                              proxyConnectHeader:
+                                additionalProperties:
+                                  items:
+                                    description: SecretKeySelector selects a key of
+                                      a Secret.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  type: array
+                                description: |-
+                                  proxyConnectHeader optionally specifies headers to send to
+                                  proxies during CONNECT requests.
+
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                type: object
+                                x-kubernetes-map-type: atomic
+                              proxyFromEnvironment:
+                                description: |-
+                                  proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+
+                                  It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+                                type: boolean
+                              proxyURL:
+                                description: |-
+                                  proxyURL defines an optional proxy URL for HTTP requests.
+                                  If defined, this field takes precedence over `proxyUrl`.
+                                type: string
+                              proxyUrl:
+                                description: proxyUrl defines the HTTP proxy server
+                                  to use.
+                                pattern: ^(http|https|socks5)://.+$
+                                type: string
+                              tlsConfig:
+                                description: |-
+                                  tlsConfig defines the TLS configuration for the client.
+                                  This includes settings for certificates, CA validation, and TLS protocol options.
+                                properties:
+                                  ca:
+                                    description: ca defines the Certificate authority
+                                      used when verifying server certificates.
+                                    properties:
+                                      configMap:
+                                        description: configMap defines the ConfigMap
+                                          containing data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      secret:
+                                        description: secret defines the Secret containing
+                                          data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                    type: object
+                                  cert:
+                                    description: cert defines the Client certificate
+                                      to present when doing client-authentication.
+                                    properties:
+                                      configMap:
+                                        description: configMap defines the ConfigMap
+                                          containing data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key to select.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the ConfigMap
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                      secret:
+                                        description: secret defines the Secret containing
+                                          data to use for the targets.
+                                        properties:
+                                          key:
+                                            description: The key of the secret to
+                                              select from.  Must be a valid secret
+                                              key.
+                                            type: string
+                                          name:
+                                            default: ""
+                                            description: |-
+                                              Name of the referent.
+                                              This field is effectively required, but due to backwards compatibility is
+                                              allowed to be empty. Instances of this type with an empty value here are
+                                              almost certainly wrong.
+                                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                            type: string
+                                          optional:
+                                            description: Specify whether the Secret
+                                              or its key must be defined
+                                            type: boolean
+                                        required:
+                                        - key
+                                        type: object
+                                        x-kubernetes-map-type: atomic
+                                    type: object
+                                  insecureSkipVerify:
+                                    description: insecureSkipVerify defines how to
+                                      disable target certificate validation.
+                                    type: boolean
+                                  keySecret:
+                                    description: keySecret defines the Secret containing
+                                      the client key file for the targets.
+                                    properties:
+                                      key:
+                                        description: The key of the secret to select
+                                          from.  Must be a valid secret key.
+                                        type: string
+                                      name:
+                                        default: ""
+                                        description: |-
+                                          Name of the referent.
+                                          This field is effectively required, but due to backwards compatibility is
+                                          allowed to be empty. Instances of this type with an empty value here are
+                                          almost certainly wrong.
+                                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        type: string
+                                      optional:
+                                        description: Specify whether the Secret or
+                                          its key must be defined
+                                        type: boolean
+                                    required:
+                                    - key
+                                    type: object
+                                    x-kubernetes-map-type: atomic
+                                  maxVersion:
+                                    description: |-
+                                      maxVersion defines the maximum acceptable TLS version.
+
+                                      It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  minVersion:
+                                    description: |-
+                                      minVersion defines the minimum acceptable TLS version.
+
+                                      It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+                                    enum:
+                                    - TLS10
+                                    - TLS11
+                                    - TLS12
+                                    - TLS13
+                                    type: string
+                                  serverName:
+                                    description: serverName is used to verify the
+                                      hostname for the targets.
+                                    type: string
+                                type: object
+                            type: object
+                          iconEmoji:
+                            description: iconEmoji overrides the profile picture and
+                              icon_url parameter.
+                            minLength: 1
+                            type: string
+                          iconURL:
+                            description: iconURL overrides the profile picture the
+                              message posts with.
+                            pattern: ^https?://.+$
+                            type: string
+                          priority:
+                            description: priority defines the priority parameters
+                              of the message.
+                            properties:
+                              persistentNotifications:
+                                description: |-
+                                  persistentNotifications defines whether the message notification will be persisted.
+
+                                  This can be used only with the `urgent` messages.
+                                  If set to true recipients will receive a persistent notification
+                                  every five minutes until they acknowledge the message.
+
+                                  Only for enterprise version of Mattermost.
+                                type: boolean
+                              priority:
+                                description: |-
+                                  priority adds the priority label to the message.
+                                  Possible values are `urgent`, `important` and `standard`.
+                                enum:
+                                - urgent
+                                - important
+                                - standard
+                                type: string
+                              requestedAck:
+                                description: |-
+                                  requestedAck defines whether the message requires an acknowledgement from users.
+
+                                  If set to true, the message will be marked as requiring an acknowledgment
+                                  from the users by displaying a checkmark icon next to the message.
+
+                                  Keep in mind that this requires the message priority to be set to `important` or `urgent`.
+
+                                  Only for enterprise version of Mattermost.
+                                type: boolean
+                            required:
+                            - priority
+                            type: object
+                          props:
+                            description: props defines the extra information to be
+                              sent to Mattermost.
+                            properties:
+                              card:
+                                description: |-
+                                  card allows for extra information (Markdown-formatted text)
+                                  to be sent to Mattermost that will only be displayed in the RHS panel
+                                  after a user selects the info icon displayed alongside the post.
+                                type: string
+                            type: object
+                          sendResolved:
+                            description: sendResolved defines whether or not to notify
+                              about resolved alerts.
+                            type: boolean
+                          text:
+                            description: |-
+                              text defines the markdown-formatted message to display in the post.
+                              To trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.
+                            minLength: 1
+                            type: string
+                          username:
+                            description: |-
+                              username overrides the username the message posts as.
+                              Defaults to the username set during webhook creation; if no username was set during creation, webhook is used.
+                            minLength: 1
+                            type: string
+                          webhookURL:
+                            description: webhookURL defines the Mattermost webhook
+                              URL.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                        required:
+                        - webhookURL
+                        type: object
+                      type: array
                     msteamsConfigs:
                       description: |-
                         msteamsConfigs defines the list of MSTeams configurations.
