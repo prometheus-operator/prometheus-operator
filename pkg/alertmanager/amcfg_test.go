@@ -4169,7 +4169,7 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_slack_timeout_is_added_in_slack_config_for_supported_versions.golden",
 		},
 		{
-			name:           "Test timeout is dropped in slack config for unsupported versions",
+			name:           "Test message_text is dropped in slack config for unsupported versions",
 			againstVersion: versionSlackMessageTextNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
