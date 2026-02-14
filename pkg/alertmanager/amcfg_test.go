@@ -4691,6 +4691,7 @@ func TestSanitizeConfig(t *testing.T) {
 								ChatID: 12345,
 								// Expect to drop chat_id_file as chat_id has higher precedence.
 								ChatIDFile: "/chat/id/file",
+								BotToken:   "test",
 							},
 						},
 					},
@@ -4710,6 +4711,7 @@ func TestSanitizeConfig(t *testing.T) {
 								ChatID: 12345,
 								// Expect to drop chat_id_file.
 								ChatIDFile: "/chat/id/file",
+								BotToken:   "test",
 							},
 						},
 					},
@@ -4728,6 +4730,7 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								// Expect to drop chat_id_file.
 								ChatIDFile: "/chat/id/file",
+								BotToken:   "test",
 							},
 						},
 					},
@@ -4746,6 +4749,7 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								// Expect to drop chat_id_file.
 								ChatIDFile: "/chat/id/file",
+								BotToken:   "test",
 							},
 						},
 					},
