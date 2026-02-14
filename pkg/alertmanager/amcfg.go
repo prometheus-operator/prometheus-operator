@@ -2859,6 +2859,18 @@ func (wcc *weChatConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		}
 	}
 
+	if wcc.APISecretFile != "" && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'api_secret_file' supported in Alertmanager >= 0.31.0 only - dropping field `api_secret_file` from wechat config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		wcc.APISecretFile = ""
+	}
+
+	if wcc.APISecret != "" && wcc.APISecretFile != "" {
+		msg := "'api_secret' and 'api_secret_file' are mutually exclusive for telegram receiver config - 'api_secret' has taken precedence"
+		logger.Warn(msg)
+		wcc.APISecretFile = ""
+	}
+
 	return wcc.HTTPConfig.sanitize(amVersion, logger)
 }
 
