@@ -7495,6 +7495,9 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionWeChatAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versionSecretFileAllowed := semver.Version{Major: 0, Minor: 31}
+	versionSecretFileNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -7535,6 +7538,76 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 				},
 			},
 			golden: "wechat_valid_url_passes.golden",
+		},
+		{
+			name:           "wechat api_secret_file supported version",
+			againstVersion: versionSecretFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL:        "https://api.weixin.qq.com/cgi-bin/message/send",
+								APISecretFile: "/api/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_api_secret_file_supported_version.golden",
+		},
+		{
+			name:           "wechat specifies both api_secret and api_secret_file",
+			againstVersion: versionSecretFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL:        "https://api.weixin.qq.com/cgi-bin/message/send",
+								APISecret:     "abcdef123456",
+								APISecretFile: "/api/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_specifies_both_api_secret_and_api_secret_file.golden",
+		},
+		{
+			name:           "wechat api_secret_file unsupported version",
+			againstVersion: versionSecretFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL:        "https://api.weixin.qq.com/cgi-bin/message/send",
+								APISecretFile: "/api/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_api_secret_file_unsupported_version.golden",
+		},
+		{
+			name:           "wechat specifies both api_secret and api_secret_file unsupported version",
+			againstVersion: versionSecretFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WeChatConfigs: []*weChatConfig{
+							{
+								APIURL:        "https://api.weixin.qq.com/cgi-bin/message/send",
+								APISecret:     "abcdef123456",
+								APISecretFile: "/api/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "wechat_specifies_both_api_secret_and_api_secret_file_unsupported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
