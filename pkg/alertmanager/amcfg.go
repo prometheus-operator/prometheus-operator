@@ -2695,6 +2695,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+	lessThanV0_31 := amVersion.LT(semver.MustParse("0.31.0"))
 
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
@@ -2750,6 +2751,12 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
 		logger.Warn(msg)
 		sc.APIURLFile = ""
+	}
+
+	if sc.MessageText != "" && lessThanV0_31 {
+		msg := "'message_text' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.MessageText = ""
 	}
 
 	return nil
