@@ -4699,6 +4699,61 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "telegram_config_chat_id_file_and_chat_id.golden",
 		},
 		{
+			name:           "chat_id_file not supported is presented along with chat_id",
+			againstVersion: versionTelegramChatIDFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								ChatID: 12345,
+								// Expect to drop chat_id_file.
+								ChatIDFile: "/chat/id/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_config_chat_id_file_not_supported_and_chat_id.golden",
+		},
+		{
+			name:           "chat_id_file not supported",
+			againstVersion: versionTelegramChatIDFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								// Expect to drop chat_id_file.
+								ChatIDFile: "/chat/id/file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "chat_id_file supported",
+			againstVersion: versionTelegramChatIDFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						Name: "telegram",
+						TelegramConfigs: []*telegramConfig{
+							{
+								// Expect to drop chat_id_file.
+								ChatIDFile: "/chat/id/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_config_chat_id_supported.golden",
+		},
+		{
 			name:           "summary is dropped for unsupported versions for MSTeams config",
 			againstVersion: versionMSTeamsSummaryNotAllowed,
 			in: &alertmanagerConfig{
