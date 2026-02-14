@@ -2230,6 +2230,18 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.VictorOpsAPIKeyFile = ""
 	}
 
+	if gc.WeChatAPISecretFile != "" && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'wechat_api_secret_file' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.WeChatAPISecretFile = ""
+	}
+
+	if gc.WeChatAPISecret != "" && gc.WeChatAPISecretFile != "" {
+		msg := "'wechat_api_secret' and 'wechat_api_secret_file' are mutually exclusive - 'wechat_api_secret' has taken precedence"
+		logger.Warn(msg)
+		gc.WeChatAPISecretFile = ""
+	}
+
 	return nil
 }
 

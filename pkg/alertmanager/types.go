@@ -78,6 +78,7 @@ type globalConfig struct {
 	SlackAppToken         string          `yaml:"slack_app_token,omitempty"`
 	SlackAppTokenFile     string          `yaml:"slack_app_token_file,omitempty"`
 	SlackAppURL           *config.URL     `yaml:"slack_app_url,omitempty"`
+	WeChatAPISecretFile   string          `yaml:"wechat_api_secret_file,omitempty"`
 }
 
 type route struct {
