@@ -4057,12 +4057,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
-	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
-	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
-	jiraURL := config.URL{}
-	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
-	jiraURL.URL = jiraGlobalURL
-
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
