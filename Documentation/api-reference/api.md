@@ -35997,6 +35997,20 @@ before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.SlackConfirmationField">SlackConfirmationField
@@ -40587,6 +40601,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
