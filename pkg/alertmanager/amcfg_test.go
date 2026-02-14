@@ -3979,6 +3979,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
 	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
 
+	versionGlobalWeChatConfigSecretFileAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalWeChatConfigSecretFileNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
@@ -4080,6 +4083,27 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_api_url_file is dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test wechat_api_secret_file is dropped for unsupported versions",
+			againstVersion: versionGlobalWeChatConfigSecretFileNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					WeChatAPISecretFile: "/test",
+				},
+			},
+			golden: "test_wechat_api_secret_file_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test wechat_api_secret takes precedence over wechat_api_secret_file in global config",
+			againstVersion: versionGlobalWeChatConfigSecretFileNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					WeChatAPISecret:     "abcdef123456",
+					WeChatAPISecretFile: "/wechat/api/secret",
+				},
+			},
+			golden: "test_wechat_api_secret_takes_precedence_over_wechat_api_secret_file_in_global_config.golden",
 		},
 		{
 			name:           "Test api_url takes precedence in slack config",

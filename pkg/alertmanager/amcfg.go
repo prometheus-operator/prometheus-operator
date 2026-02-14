@@ -2230,6 +2230,12 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.VictorOpsAPIKeyFile = ""
 	}
 
+	if gc.WeChatAPISecret != "" && gc.WeChatAPISecretFile != "" {
+		msg := "'wechat_api_secret' and 'wechat_api_secret_file' are mutually exclusive - 'wechat_api_secret' has taken precedence"
+		logger.Warn(msg)
+		gc.WeChatAPISecretFile = ""
+	}
+
 	return nil
 }
 
