@@ -85,6 +85,7 @@ function(params) {
                  'alertmanagers/finalizers',
                  'alertmanagers/status',
                  'alertmanagerconfigs',
+                 'alertmanagerconfigs/status',
                  'prometheuses',
                  'prometheuses/finalizers',
                  'prometheuses/status',
