@@ -324,6 +324,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
 		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
 		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
+		"StuckStatefulSetRolloutWithRepairPolicy":   testStuckStatefulSetRolloutWithRepairPolicy,
 	}
 
 	for name, f := range testFuncs {

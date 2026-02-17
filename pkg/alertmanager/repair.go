@@ -12,31 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package operator
+package alertmanager
 
 import (
+	"context"
+	"log/slog"
+
 	appsv1 "k8s.io/api/apps/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
-// UpdateStrategyForStatefulSet converts a monitoring update strategy to a statefulset update strategy.
-func UpdateStrategyForStatefulSet(updateStrategy *monitoringv1.StatefulSetUpdateStrategy) appsv1.StatefulSetUpdateStrategy {
-	if updateStrategy == nil {
-		return appsv1.StatefulSetUpdateStrategy{
-			Type: appsv1.RollingUpdateStatefulSetStrategyType,
-		}
-	}
-
-	converted := appsv1.StatefulSetUpdateStrategy{
-		Type: updateStrategy.Type,
-	}
-	if updateStrategy.RollingUpdate != nil {
-		converted.RollingUpdate = &appsv1.RollingUpdateStatefulSetStrategy{
-			Partition:      updateStrategy.RollingUpdate.Partition,
-			MaxUnavailable: updateStrategy.RollingUpdate.MaxUnavailable,
-		}
-	}
-
-	return converted
+func (c *Operator) resolveStuckStatefulSet(ctx context.Context, logger *slog.Logger, _ *monitoringv1.Alertmanager, sset *appsv1.StatefulSet) error {
+	return operator.ResolveStuckStatefulSet(ctx, logger, c.kclient, sset, c.config.RepairPolicy)
 }
