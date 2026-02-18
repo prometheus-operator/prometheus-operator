@@ -11,10 +11,9 @@ jobs:
     if: github.repository == 'prometheus-operator/prometheus-operator'
     steps:
     - name: Reclaim disk space
-      run: |
-        docker image prune --force --all
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /usr/local/lib/android
+      uses: palmsoftware/quick-cleanup@v0
+      with:
+        cleanup-mode: aggressive
     - uses: actions/checkout@v6
     - name: Import environment variables from file
       run: |
