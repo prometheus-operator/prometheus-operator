@@ -72,6 +72,7 @@ Arguments:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  RemoteWriteCustomResourceDefinition: Enables the RemoteWrite CRD support (enabled: false)
     	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
