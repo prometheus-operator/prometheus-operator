@@ -26,6 +26,8 @@ type Interface interface {
 	AlertmanagerConfigs() AlertmanagerConfigInformer
 	// PrometheusAgents returns a PrometheusAgentInformer.
 	PrometheusAgents() PrometheusAgentInformer
+	// RemoteWrites returns a RemoteWriteInformer.
+	RemoteWrites() RemoteWriteInformer
 	// ScrapeConfigs returns a ScrapeConfigInformer.
 	ScrapeConfigs() ScrapeConfigInformer
 }
@@ -49,6 +51,11 @@ func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
 // PrometheusAgents returns a PrometheusAgentInformer.
 func (v *version) PrometheusAgents() PrometheusAgentInformer {
 	return &prometheusAgentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// RemoteWrites returns a RemoteWriteInformer.
+func (v *version) RemoteWrites() RemoteWriteInformer {
+	return &remoteWriteInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // ScrapeConfigs returns a ScrapeConfigInformer.

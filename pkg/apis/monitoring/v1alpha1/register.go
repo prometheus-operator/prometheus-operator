@@ -51,6 +51,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&AlertmanagerConfigList{},
 		&PrometheusAgent{},
 		&PrometheusAgentList{},
+		&RemoteWrite{},
+		&RemoteWriteList{},
 		&ScrapeConfig{},
 		&ScrapeConfigList{},
 	)
