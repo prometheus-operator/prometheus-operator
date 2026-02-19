@@ -17,3 +17,13 @@ updates:
     directory: /
     schedule:
       interval: daily
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+    groups:
+      prometheus-images:
+        patterns:
+          - "quay.io/prometheus/golang-builder"
+          - "quay.io/prometheus/busybox-*"
