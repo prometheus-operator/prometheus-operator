@@ -1009,3 +1009,102 @@ func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "additionalScrapeConfigs cannot be set when mode is DaemonSet")
 }
+
+// testAgentStuckStatefulSetRollout ensures that when the rollout of a
+// PrometheusAgent statefulset pod gets stuck, it will get unstuck after
+// fixing the spec.
+func testAgentStuckStatefulSetRollout(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	p := framework.MakeBasicPrometheusAgent(ns, "statefulset-rollout", "test", 2)
+
+	pAgent, err := framework.CreatePrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		ns,
+		p,
+	)
+	require.NoError(t, err)
+
+	badImage := "quay.io/prometheus/prometheus:foobar"
+	pAgent, err = framework.PatchPrometheusAgent(
+		context.Background(),
+		pAgent.Name,
+		pAgent.Namespace,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: &badImage,
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	var loopError error
+	err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		current, err := framework.MonClientV1alpha1.PrometheusAgents(pAgent.Namespace).Get(ctx, pAgent.Name, metav1.GetOptions{})
+		if err != nil {
+			loopError = fmt.Errorf("failed to get object: %w", err)
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionTrue); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionDegraded); err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// The rollout should start from the highest pod ordinal.
+		pod, err := framework.KubeClient.CoreV1().Pods(pAgent.Namespace).Get(ctx, "prom-agent-"+pAgent.Name+"-1", metav1.GetOptions{})
+		if err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.Image != badImage {
+				continue
+			}
+
+			if cs.State.Waiting == nil {
+				loopError = fmt.Errorf("container not waiting")
+				return false, nil
+			}
+
+			if cs.State.Waiting.Reason != "ErrImagePull" && cs.State.Waiting.Reason != "ImagePullBackOff" {
+				loopError = fmt.Errorf("container waiting with reason %q", cs.State.Waiting.Reason)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("found no container with image %q", badImage)
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("%v: %v", err, loopError)
+	}
+
+	// Fix the bad image and ensure that the resource goes back to ready.
+	_, err = framework.PatchPrometheusAgentAndWaitUntilReady(
+		context.Background(),
+		pAgent.Name,
+		pAgent.Namespace,
+		monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Image: ptr.To(operator.DefaultPrometheusImage),
+			},
+		},
+	)
+	require.NoError(t, err)
+}

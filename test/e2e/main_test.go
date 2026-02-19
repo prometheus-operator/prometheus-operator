@@ -323,6 +323,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
 		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
+		"AgentStuckStatefulSetRollout":              testAgentStuckStatefulSetRollout,
 		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
 	}
 
