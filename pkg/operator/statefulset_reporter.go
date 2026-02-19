@@ -17,11 +17,13 @@ package operator
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
@@ -88,6 +90,60 @@ func (sr *StatefulSetReporter) ReadyPods() []*Pod {
 	return sr.filterPods(func(p *Pod) bool {
 		return p.Ready()
 	})
+}
+
+// StuckPods returns pods that are not ready and running on a previous
+// StatefulSet revision. These pods block the rollout because the StatefulSet
+// controller won't replace them automatically (especially on K8s 1.35+ with
+// MaxUnavailableStatefulSet enabled by default).
+func (sr *StatefulSetReporter) StuckPods() []*Pod {
+	if sr.sset == nil {
+		return nil
+	}
+	return sr.filterPods(func(p *Pod) bool {
+		return !sr.IsUpdated(p) && !p.Ready()
+	})
+}
+
+// RepairStuckPods evicts or deletes pods that are stuck on a previous
+// revision and not ready, based on the given repair policy. This unblocks
+// StatefulSet rollouts that the K8s controller won't resolve on its own.
+func RepairStuckPods(ctx context.Context, logger *slog.Logger, kclient kubernetes.Interface, repairPolicy monitoringv1.RepairPolicyType, sr *StatefulSetReporter) error {
+	if repairPolicy == "" || repairPolicy == monitoringv1.RepairPolicyNone {
+		return nil
+	}
+
+	stuck := sr.StuckPods()
+	if len(stuck) == 0 {
+		return nil
+	}
+
+	for _, p := range stuck {
+		podName := p.Name
+		namespace := p.Namespace
+
+		switch repairPolicy {
+		case monitoringv1.RepairPolicyEvictNotReadyPods:
+			logger.Info("evicting stuck pod to unblock rollout", "pod", podName, "namespace", namespace)
+			eviction := &policyv1.Eviction{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      podName,
+					Namespace: namespace,
+				},
+			}
+			if err := kclient.CoreV1().Pods(namespace).EvictV1(ctx, eviction); err != nil {
+				return fmt.Errorf("failed to evict pod %s/%s: %w", namespace, podName, err)
+			}
+
+		case monitoringv1.RepairPolicyDeleteNotReadyPods:
+			logger.Info("deleting stuck pod to unblock rollout", "pod", podName, "namespace", namespace)
+			if err := kclient.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{}); err != nil {
+				return fmt.Errorf("failed to delete pod %s/%s: %w", namespace, podName, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (sr *StatefulSetReporter) filterPods(f func(*Pod) bool) []*Pod {

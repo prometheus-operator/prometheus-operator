@@ -6189,6 +6189,15 @@
                   "updateStrategy": {
                     "description": "updateStrategy indicates the strategy that will be employed to update\nPods in the StatefulSet when a revision is made to statefulset's Pod\nTemplate.\n\nThe default strategy is RollingUpdate.",
                     "properties": {
+                      "repairPolicy": {
+                        "description": "repairPolicy defines how to deal with stuck rollouts.\nWhen a StatefulSet rollout gets stuck (e.g. because of a bad image),\nthe Kubernetes StatefulSet controller may not automatically unblock\nthe rollout after the spec is fixed (especially with Kubernetes 1.35+\nwhere the MaxUnavailableStatefulSet feature is enabled by default).\n\nWhen set to \"EvictNotReadyPods\", the operator evicts pods that are not\nready and running on a previous revision to unblock the rollout.\nWhen set to \"DeleteNotReadyPods\", the operator deletes those pods instead.\n\nDefault is \"None\" (the operator doesn't take any action).",
+                        "enum": [
+                          "None",
+                          "EvictNotReadyPods",
+                          "DeleteNotReadyPods"
+                        ],
+                        "type": "string"
+                      },
                       "rollingUpdate": {
                         "description": "rollingUpdate is used to communicate parameters when type is RollingUpdate.",
                         "properties": {

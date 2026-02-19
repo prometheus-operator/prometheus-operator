@@ -7369,6 +7369,24 @@ spec:
 
                   The default strategy is RollingUpdate.
                 properties:
+                  repairPolicy:
+                    description: |-
+                      repairPolicy defines how to deal with stuck rollouts.
+                      When a StatefulSet rollout gets stuck (e.g. because of a bad image),
+                      the Kubernetes StatefulSet controller may not automatically unblock
+                      the rollout after the spec is fixed (especially with Kubernetes 1.35+
+                      where the MaxUnavailableStatefulSet feature is enabled by default).
+
+                      When set to "EvictNotReadyPods", the operator evicts pods that are not
+                      ready and running on a previous revision to unblock the rollout.
+                      When set to "DeleteNotReadyPods", the operator deletes those pods instead.
+
+                      Default is "None" (the operator doesn't take any action).
+                    enum:
+                    - None
+                    - EvictNotReadyPods
+                    - DeleteNotReadyPods
+                    type: string
                   rollingUpdate:
                     description: rollingUpdate is used to communicate parameters when
                       type is RollingUpdate.

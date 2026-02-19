@@ -5942,6 +5942,10 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 
 // testStuckStatefulSetRollout ensures that when the rollout of a statefulset
 // pod gets stuck, it will get unstuck after fixing the spec.
+// With Kubernetes 1.35+ (MaxUnavailableStatefulSet enabled by default), the
+// StatefulSet controller no longer deletes stuck pods after a spec rollback.
+// The operator's RepairPolicy (EvictNotReadyPods) handles this by evicting
+// pods that are not ready and stuck on a previous revision.
 func testStuckStatefulSetRollout(t *testing.T) {
 	t.Parallel()
 
@@ -5951,10 +5955,16 @@ func testStuckStatefulSetRollout(t *testing.T) {
 
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
+	p := framework.MakeBasicPrometheus(ns, "statefulset-rollout", "test", 2)
+	p.Spec.UpdateStrategy = &monitoringv1.StatefulSetUpdateStrategy{
+		Type:         monitoringv1.RollingUpdateStatefulSetStrategyType,
+		RepairPolicy: ptr.To(monitoringv1.RepairPolicyEvictNotReadyPods),
+	}
+
 	prom, err := framework.CreatePrometheusAndWaitUntilReady(
 		context.Background(),
 		ns,
-		framework.MakeBasicPrometheus(ns, "statefulset-rollout", "test", 2),
+		p,
 	)
 	require.NoError(t, err)
 

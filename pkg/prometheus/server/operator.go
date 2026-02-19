@@ -1021,6 +1021,34 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 	}
 
+	// Check for stuck pods on previous revisions and repair them if the
+	// update strategy's repair policy is configured.
+	repairPolicy := monitoringv1.RepairPolicyNone
+	if p.Spec.UpdateStrategy != nil && p.Spec.UpdateStrategy.RepairPolicy != nil {
+		repairPolicy = *p.Spec.UpdateStrategy.RepairPolicy
+	}
+	if repairPolicy != monitoringv1.RepairPolicyNone {
+		for shard, ssetName := range expected {
+			obj, err := c.ssetInfs.Get(prompkg.KeyToStatefulSetKey(p, key, shard))
+			if err != nil {
+				continue
+			}
+			existingSset := obj.(*appsv1.StatefulSet)
+			if c.rr.DeletionInProgress(existingSset) {
+				continue
+			}
+
+			stsReporter, err := operator.NewStatefulSetReporter(ctx, c.kclient, existingSset)
+			if err != nil {
+				return fmt.Errorf("failed to get statefulset reporter for %s: %w", ssetName, err)
+			}
+
+			if err := operator.RepairStuckPods(ctx, c.logger, c.kclient, repairPolicy, stsReporter); err != nil {
+				return fmt.Errorf("failed to repair stuck pods for statefulset %s: %w", ssetName, err)
+			}
+		}
+	}
+
 	ssets := map[string]struct{}{}
 	for _, ssetName := range expected {
 		ssets[ssetName] = struct{}{}

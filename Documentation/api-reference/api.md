@@ -18148,6 +18148,36 @@ When enabled:
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.RepairPolicyType">RepairPolicyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy</a>)
+</p>
+<div>
+<p>RepairPolicyType defines the strategy for handling stuck StatefulSet rollouts.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;DeleteNotReadyPods&#34;</p></td>
+<td><p>RepairPolicyDeleteNotReadyPods means the operator deletes pods that
+are not ready and stuck on a previous StatefulSet revision.</p>
+</td>
+</tr><tr><td><p>&#34;EvictNotReadyPods&#34;</p></td>
+<td><p>RepairPolicyEvictNotReadyPods means the operator evicts pods that are
+not ready and stuck on a previous StatefulSet revision, allowing the
+StatefulSet controller to create replacement pods with the latest revision.</p>
+</td>
+</tr><tr><td><p>&#34;None&#34;</p></td>
+<td><p>RepairPolicyNone means the operator won&rsquo;t take any action to unblock
+stuck rollouts. This is the default behavior.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.RetainConfig">RetainConfig
 </h3>
 <p>
@@ -19642,6 +19672,28 @@ RollingUpdateStatefulSetStrategy
 <td>
 <em>(Optional)</em>
 <p>rollingUpdate is used to communicate parameters when type is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>repairPolicy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RepairPolicyType">
+RepairPolicyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>repairPolicy defines how to deal with stuck rollouts.
+When a StatefulSet rollout gets stuck (e.g. because of a bad image),
+the Kubernetes StatefulSet controller may not automatically unblock
+the rollout after the spec is fixed (especially with Kubernetes 1.35+
+where the MaxUnavailableStatefulSet feature is enabled by default).</p>
+<p>When set to &ldquo;EvictNotReadyPods&rdquo;, the operator evicts pods that are not
+ready and running on a previous revision to unblock the rollout.
+When set to &ldquo;DeleteNotReadyPods&rdquo;, the operator deletes those pods instead.</p>
+<p>Default is &ldquo;None&rdquo; (the operator doesn&rsquo;t take any action).</p>
 </td>
 </tr>
 </tbody>

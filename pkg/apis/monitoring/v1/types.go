@@ -985,7 +985,42 @@ type StatefulSetUpdateStrategy struct {
 	//
 	// +optional
 	RollingUpdate *RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+
+	// repairPolicy defines how to deal with stuck rollouts.
+	// When a StatefulSet rollout gets stuck (e.g. because of a bad image),
+	// the Kubernetes StatefulSet controller may not automatically unblock
+	// the rollout after the spec is fixed (especially with Kubernetes 1.35+
+	// where the MaxUnavailableStatefulSet feature is enabled by default).
+	//
+	// When set to "EvictNotReadyPods", the operator evicts pods that are not
+	// ready and running on a previous revision to unblock the rollout.
+	// When set to "DeleteNotReadyPods", the operator deletes those pods instead.
+	//
+	// Default is "None" (the operator doesn't take any action).
+	//
+	// +optional
+	RepairPolicy *RepairPolicyType `json:"repairPolicy,omitempty"`
 }
+
+// RepairPolicyType defines the strategy for handling stuck StatefulSet rollouts.
+//
+// +kubebuilder:validation:Enum=None;EvictNotReadyPods;DeleteNotReadyPods
+type RepairPolicyType string
+
+const (
+	// RepairPolicyNone means the operator won't take any action to unblock
+	// stuck rollouts. This is the default behavior.
+	RepairPolicyNone RepairPolicyType = "None"
+
+	// RepairPolicyEvictNotReadyPods means the operator evicts pods that are
+	// not ready and stuck on a previous StatefulSet revision, allowing the
+	// StatefulSet controller to create replacement pods with the latest revision.
+	RepairPolicyEvictNotReadyPods RepairPolicyType = "EvictNotReadyPods"
+
+	// RepairPolicyDeleteNotReadyPods means the operator deletes pods that
+	// are not ready and stuck on a previous StatefulSet revision.
+	RepairPolicyDeleteNotReadyPods RepairPolicyType = "DeleteNotReadyPods"
+)
 
 // RollingUpdateStatefulSetStrategy is used to communicate parameter for the RollingUpdate strategy.
 type RollingUpdateStatefulSetStrategy struct {

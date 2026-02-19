@@ -25,6 +25,7 @@ import (
 type StatefulSetUpdateStrategyApplyConfiguration struct {
 	Type          *monitoringv1.StatefulSetUpdateStrategyType         `json:"type,omitempty"`
 	RollingUpdate *RollingUpdateStatefulSetStrategyApplyConfiguration `json:"rollingUpdate,omitempty"`
+	RepairPolicy  *monitoringv1.RepairPolicyType                      `json:"repairPolicy,omitempty"`
 }
 
 // StatefulSetUpdateStrategyApplyConfiguration constructs a declarative configuration of the StatefulSetUpdateStrategy type for use with
@@ -46,5 +47,13 @@ func (b *StatefulSetUpdateStrategyApplyConfiguration) WithType(value monitoringv
 // If called multiple times, the RollingUpdate field is set to the value of the last call.
 func (b *StatefulSetUpdateStrategyApplyConfiguration) WithRollingUpdate(value *RollingUpdateStatefulSetStrategyApplyConfiguration) *StatefulSetUpdateStrategyApplyConfiguration {
 	b.RollingUpdate = value
+	return b
+}
+
+// WithRepairPolicy sets the RepairPolicy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RepairPolicy field is set to the value of the last call.
+func (b *StatefulSetUpdateStrategyApplyConfiguration) WithRepairPolicy(value monitoringv1.RepairPolicyType) *StatefulSetUpdateStrategyApplyConfiguration {
+	b.RepairPolicy = &value
 	return b
 }
