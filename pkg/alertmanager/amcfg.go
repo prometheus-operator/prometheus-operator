@@ -1094,9 +1094,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.ServiceKey = serviceKey
 	}
 
-	var details map[string]string
+	var details map[string]any
 	if l := len(in.Details); l > 0 {
-		details = make(map[string]string, l)
+		details = make(map[string]any, l)
 		for _, d := range in.Details {
 			details[d.Key] = d.Value
 		}
