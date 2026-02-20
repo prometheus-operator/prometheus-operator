@@ -286,7 +286,7 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	}
 
 	pStatus.Conditions = operator.UpdateConditions(
-		pStatus.Conditions,
+		p.GetStatus().Conditions,
 		monitoringv1.Condition{
 			Type:    monitoringv1.Available,
 			Status:  availableStatus,
