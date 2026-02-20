@@ -6483,6 +6483,28 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			},
 			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 		},
+		{
+			name:           "Test nested field in description",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
