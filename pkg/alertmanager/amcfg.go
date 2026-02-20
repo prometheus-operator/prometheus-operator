@@ -2688,8 +2688,10 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	for _, v := range pdc.Details {
-		if _, ok := v.(string); !ok {
-			return fmt.Errorf("'details' value in non-string format is supported in Alertmanager >= 0.30.0 only")
+		if lessThanV0_30 {
+			if _, ok := v.(string); !ok {
+				return fmt.Errorf("'details' value in non-string format is supported in Alertmanager >= 0.30.0 only")
+			}
 		}
 	}
 
