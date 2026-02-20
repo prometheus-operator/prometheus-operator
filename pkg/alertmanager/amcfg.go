@@ -2546,6 +2546,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.PagerdutyConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2679,6 +2685,12 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		pdc.Timeout = nil
+	}
+
+	for _, v := range pdc.Details {
+		if _, ok := v.(string); !ok {
+			return fmt.Errorf("'details' value in non-string format is supported in Alertmanager >= 0.30.0 only")
+		}
 	}
 
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
