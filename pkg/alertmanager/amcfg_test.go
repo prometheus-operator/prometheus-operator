@@ -6384,6 +6384,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test routing_key takes precedence in pagerduty config",
@@ -6503,11 +6504,56 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
+			golden: "test_nested_field_in_description.golden",
+		},
+		{
+			name:           "Test string field in description for version not support nested field",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": "value",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_string_field_in_description_for_version_not_support_nested_field.golden",
+		},
+		{
+			name:           "Test nested field in description result in error for unsupported version",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amPagerDutyCfg, err := yaml.Marshal(tc.in)
