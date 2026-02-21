@@ -54,6 +54,7 @@ type globalConfig struct {
 	SMTPAuthIdentity      string          `yaml:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS        *bool           `yaml:"smtp_require_tls,omitempty"`
 	SMTPTLSConfig         *tlsConfig      `yaml:"smtp_tls_config,omitempty"`
+	SMTPForceImplicitTLS  *bool           `yaml:"smtp_force_implicit_tls,omitempty"`
 	SlackAPIURL           *config.URL     `yaml:"slack_api_url,omitempty"`
 	SlackAPIURLFile       string          `yaml:"slack_api_url_file,omitempty"`
 	PagerdutyURL          *config.URL     `yaml:"pagerduty_url,omitempty"`
