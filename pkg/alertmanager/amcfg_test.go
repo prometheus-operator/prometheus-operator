@@ -4036,6 +4036,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionGlobalSMTPAuthSecretFileAllowed := semver.Version{Major: 0, Minor: 31}
 	versionGlobalSMTPAuthSecretFileNotAllowed := semver.Version{Major: 0, Minor: 30}
 
+	versionGlobalSMTPForceImplicitTLSAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalSMTPForceImplicitTLSNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4096,6 +4099,16 @@ func TestSanitizeConfig(t *testing.T) {
 				Global: &globalConfig{
 					SMTPAuthSecret:     "authsecret12345",
 					SMTPAuthSecretFile: "/smtp/auth/secret/file",
+				},
+			},
+			golden: "test_smtp_auth_secret_takes_precedence_over_smtp_auth_secret_file.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls added for supported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
 				},
 			},
 			golden: "test_smtp_auth_secret_takes_precedence_over_smtp_auth_secret_file.golden",
