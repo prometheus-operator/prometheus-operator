@@ -4111,7 +4111,17 @@ func TestSanitizeConfig(t *testing.T) {
 					SMTPForceImplicitTLS: ptr.To(true),
 				},
 			},
-			golden: "test_smtp_auth_secret_takes_precedence_over_smtp_auth_secret_file.golden",
+			golden: "test_smtp_force_implicit_tls_added_for_supported_version.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls dropped for unsupported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
+				},
+			},
+			golden: "test_smtp_force_implicit_tls_dropped_for_unsupported_version.golden",
 		},
 		{
 			name:           "Test slack_api_url takes precedence in global config",
