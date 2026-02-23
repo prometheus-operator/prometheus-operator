@@ -461,8 +461,8 @@ type jiraConfig struct {
 	SendResolved      *bool             `yaml:"send_resolved,omitempty"`
 	APIURL            string            `yaml:"api_url,omitempty"`
 	Project           string            `yaml:"project,omitempty"`
-	Summary           string            `yaml:"summary,omitempty"`
-	Description       string            `yaml:"description,omitempty"`
+	Summary           jiraFieldConfig   `yaml:"summary,omitempty"`
+	Description       jiraFieldConfig   `yaml:"description,omitempty"`
 	Labels            []string          `yaml:"labels,omitempty"`
 	Priority          string            `yaml:"priority,omitempty"`
 	IssueType         string            `yaml:"issue_type,omitempty"`
@@ -472,6 +472,11 @@ type jiraConfig struct {
 	ReopenDuration    model.Duration    `yaml:"reopen_duration,omitempty"`
 	Fields            map[string]any    `yaml:"fields,omitempty"`
 	APIType           string            `yaml:"api_type,omitempty"`
+}
+
+type jiraFieldConfig struct {
+	Template     string `yaml:"template,omitempty"`
+	EnableUpdate *bool  `yaml:"enable_update,omitempty"`
 }
 
 type rocketchatAttachmentField struct {
