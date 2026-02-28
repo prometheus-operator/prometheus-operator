@@ -27335,6 +27335,63 @@ SafeTLSConfig
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled defines whether to enable threading, which makes alert notifications in the same
+alert group show up in the same email thread.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
+(none means group by alert group key, no date).</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig
@@ -37673,6 +37730,63 @@ SafeTLSConfig
 <em>(Optional)</em>
 <p>tlsConfig defines the TLS configuration for SMTP connections.
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled defines whether to enable threading, which makes alert notifications in the same
+alert group show up in the same email thread.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
+(none means group by alert group key, no date).</p>
 </td>
 </tr>
 </tbody>

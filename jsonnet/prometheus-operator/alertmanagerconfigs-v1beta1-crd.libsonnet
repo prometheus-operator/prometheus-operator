@@ -917,6 +917,21 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          threading: {
+                            description: 'threading defines the threading configuration for email receiver.',
+                            properties: {
+                              enabled: {
+                                description: 'enabled defines whether to enable threading, which makes alert notifications in the same\nalert group show up in the same email thread.',
+                                type: 'boolean',
+                              },
+                              threadByDate: {
+                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.\n(none means group by alert group key, no date).',
+                                minLength: 1,
+                                type: 'string',
+                              },
+                            },
+                            type: 'object',
+                          },
                           tlsConfig: {
                             description: 'tlsConfig defines the TLS configuration for SMTP connections.\nThis includes settings for certificates, CA validation, and TLS protocol options.',
                             properties: {

@@ -903,6 +903,21 @@ type EmailConfig struct {
 	// This includes settings for certificates, CA validation, and TLS protocol options.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// threading defines the threading configuration for email receiver.
+	// +optional
+	Threading *EmailThreadingConfig `json:"threading,omitempty"`
+}
+
+type EmailThreadingConfig struct {
+	// enabled defines whether to enable threading, which makes alert notifications in the same
+	// alert group show up in the same email thread.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"` // nolint:kubeapilinter
+	// threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
+	// (none means group by alert group key, no date).
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ThreadByDate *string `json:"threadByDate,omitempty"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
