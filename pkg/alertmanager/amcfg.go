@@ -1584,6 +1584,7 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 		Channel:      ptr.Deref(in.Channel, ""),
 		Username:     ptr.Deref(in.Username, ""),
 		Text:         ptr.Deref(in.Text, ""),
+		IconURL:      ptr.Deref(in.IconURL, ""),
 		IconEmoji:    ptr.Deref(in.IconEmoji, ""),
 	}
 
@@ -1593,10 +1594,6 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 	}
 	out.WebhookURL = webhookURL
 
-	if in.IconURL != nil {
-		out.IconURL = string(*in.IconURL)
-	}
-
 	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
 	for i, c := range in.Attachments {
 		out.Attachments[i] = &mattermostAttachmentConfig{
@@ -1605,20 +1602,14 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 			Pretext:    ptr.Deref(c.Pretext, ""),
 			Text:       ptr.Deref(c.Text, ""),
 			AuthorName: ptr.Deref(c.AuthorName, ""),
+			AuthorLink: ptr.Deref(c.AuthorLink, ""),
+			AuthorIcon: ptr.Deref(c.AuthorIcon, ""),
 			Title:      ptr.Deref(c.Title, ""),
+			TitleLink:  ptr.Deref(c.TitleLink, ""),
+			ThumbURL:   ptr.Deref(c.ThumbURL, ""),
 			Footer:     ptr.Deref(c.Footer, ""),
-		}
-
-		if c.AuthorLink != nil {
-			out.Attachments[i].AuthorLink = string(*c.AuthorLink)
-		}
-
-		if c.AuthorIcon != nil {
-			out.Attachments[i].AuthorIcon = string(*c.AuthorIcon)
-		}
-
-		if c.TitleLink != nil {
-			out.Attachments[i].TitleLink = string(*c.TitleLink)
+			FooterIcon: ptr.Deref(c.FooterIcon, ""),
+			ImageURL:   ptr.Deref(c.ImageURL, ""),
 		}
 
 		if l := len(in.Attachments[i].Fields); l > 0 {
@@ -1631,18 +1622,6 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 				}
 			}
 			out.Attachments[i].Fields = fields
-		}
-
-		if c.ThumbURL != nil {
-			out.Attachments[i].ThumbURL = string(*c.ThumbURL)
-		}
-
-		if c.FooterIcon != nil {
-			out.Attachments[i].FooterIcon = string(*c.FooterIcon)
-		}
-
-		if c.ImageURL != nil {
-			out.Attachments[i].ImageURL = string(*c.ImageURL)
 		}
 	}
 
