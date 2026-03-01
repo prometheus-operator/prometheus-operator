@@ -143,6 +143,8 @@ Arguments:
     	Address on which to expose metrics and web interface. (default ":8080")
   -web.tls-cipher-suites value
     	Comma-separated list of cipher suites for the server. Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).If omitted, the default Go cipher suites will be used. Note that TLS 1.3 ciphersuites are not configurable.
+  -web.tls-curves value
+    	Comma-separated list of TLS curves for the server. Supported values: CurveP256, CurveP384, CurveP521, X25519, X25519MLKEM768.
   -web.tls-min-version string
     	Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants. (default "VersionTLS13")
   -web.tls-reload-interval duration

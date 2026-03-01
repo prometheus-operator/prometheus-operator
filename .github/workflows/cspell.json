@@ -422,6 +422,8 @@
     "selfsigned",
     "FIPS",
     "FIPSSTS",
-    "checkmark"
+    "checkmark",
+    "STARTTLS",
+    "MLKEM"
   ]
 }

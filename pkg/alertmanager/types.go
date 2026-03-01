@@ -54,6 +54,7 @@ type globalConfig struct {
 	SMTPAuthIdentity      string          `yaml:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS        *bool           `yaml:"smtp_require_tls,omitempty"`
 	SMTPTLSConfig         *tlsConfig      `yaml:"smtp_tls_config,omitempty"`
+	SMTPForceImplicitTLS  *bool           `yaml:"smtp_force_implicit_tls,omitempty"`
 	SlackAPIURL           *config.URL     `yaml:"slack_api_url,omitempty"`
 	SlackAPIURLFile       string          `yaml:"slack_api_url_file,omitempty"`
 	PagerdutyURL          *config.URL     `yaml:"pagerduty_url,omitempty"`
@@ -151,7 +152,7 @@ type pagerdutyConfig struct {
 	Client         string            `yaml:"client,omitempty"`
 	ClientURL      string            `yaml:"client_url,omitempty"`
 	Description    string            `yaml:"description,omitempty"`
-	Details        map[string]string `yaml:"details,omitempty"`
+	Details        map[string]any    `yaml:"details,omitempty"`
 	Images         []pagerdutyImage  `yaml:"images,omitempty"`
 	Links          []pagerdutyLink   `yaml:"links,omitempty"`
 	Severity       string            `yaml:"severity,omitempty"`
@@ -339,7 +340,7 @@ type emailConfig struct {
 	Text             *string           `yaml:"text,omitempty"`
 	RequireTLS       *bool             `yaml:"require_tls,omitempty"`
 	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty"`
-	ImplicitTLS      *bool             `yaml:"implicit_tls,omitempty"`
+	ForceImplicitTLS *bool             `yaml:"force_implicit_tls,omitempty"`
 }
 
 type pushoverConfig struct {

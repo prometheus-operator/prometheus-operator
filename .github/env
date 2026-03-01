@@ -1,4 +1,4 @@
 golang-version=1.25
 kind-version=v0.30.0
 kind-image=kindest/node:v1.34.2
-golangci-lint-version=v2.8.0
+golangci-lint-version=v2.9.0

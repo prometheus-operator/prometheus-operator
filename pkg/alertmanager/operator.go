@@ -509,10 +509,9 @@ func (c *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (c *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := c.alrtInfs.ListAll(labels.Everything(), func(o any) {
-		a := o.(*monitoringv1.Alertmanager)
-		processFn(a, a.Status.Conditions)
+		processFn(o.(*monitoringv1.Alertmanager))
 	}); err != nil {
 		c.logger.Error("failed to list Alertmanager objects", "err", err)
 	}
@@ -1407,6 +1406,10 @@ func checkSlackConfigs(
 			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
 				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
+		}
+
+		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
+			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {

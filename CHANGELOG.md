@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [ENHANCEMENT] Add `--web.tls-curves` CLI argument to the operator and admission-webhook binaries. #8385
+
 ## 0.89.0 / 2026-02-05
 
 * [ENHANCEMENT] Add `hostNetwork` field to the `Alertmanager` CRD. #8281

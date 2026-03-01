@@ -403,10 +403,9 @@ func (o *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (o *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (o *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := o.thanosRulerInfs.ListAll(labels.Everything(), func(o any) {
-		a := o.(*monitoringv1.ThanosRuler)
-		processFn(a, a.Status.Conditions)
+		processFn(o.(*monitoringv1.ThanosRuler))
 	}); err != nil {
 		o.logger.Error("failed to list ThanosRuler objects", "err", err)
 	}

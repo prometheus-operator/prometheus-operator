@@ -453,6 +453,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.30.0.
 	// +optional
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// messageText defines text content of the Slack message.
+	// If set, this is sent as the top-level 'text' field in the Slack payload.
+	// It requires Alertmanager >= v0.31.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 }
 
 // SlackAction configures a single Slack action that is sent with each

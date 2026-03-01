@@ -25,6 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/utils/ptr"
 
@@ -665,4 +666,59 @@ func testThanosRulerScaleUpWithoutLabels(t *testing.T) {
 	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}
+
+func testThanosRulerStatusUpdatedReplicasRollback(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create a ThanosRuler resource with 1 replica.
+	_, err := framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com"))
+	require.NoError(t, err)
+
+	// Verify the initial status has updatedReplicas=1.
+	tr, err := framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, int32(1), tr.Status.UpdatedReplicas, "expected initial updatedReplicas to be 1")
+
+	// Patch the status.updatedReplicas field to 0 to simulate a race condition
+	// in the status reconciliation.
+	tr, err = framework.MonClientV1.ThanosRulers(ns).Patch(
+		ctx,
+		name,
+		types.JSONPatchType,
+		[]byte(`[{"op":"replace","path":"/status/updatedReplicas","value":0}]`),
+		metav1.PatchOptions{},
+		"status",
+	)
+	require.NoError(t, err)
+	// Verify the field was set to 0
+	require.Equal(t, int32(0), tr.Status.UpdatedReplicas, "expected updatedReplicas to be 0 after patch")
+
+	// Wait for the operator to reconcile and rollback the status field to 1.
+	var loopError error
+	err = wait.PollUntilContextTimeout(ctx, time.Second, 2*framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		tr, loopError = framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
+		if loopError != nil {
+			return false, nil
+		}
+
+		if tr.Status.UpdatedReplicas == 1 {
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("expected updatedReplicas to be rolled back to 1, but got %d", tr.Status.UpdatedReplicas)
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for status field to be rolled back: %v: %v", err, loopError)
+	}
 }

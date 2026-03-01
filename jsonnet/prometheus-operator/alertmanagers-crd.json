@@ -1823,6 +1823,10 @@
                                 "description": "authUsername represents SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.",
                                 "type": "string"
                               },
+                              "forceImplicitTLS": {
+                                "description": "forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.\ntrue: force use of implicit TLS (direct TLS connection on any port)\nfalse: force disable implicit TLS (use explicit TLS/STARTTLS if required)\nnil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility\nIt requires Alertmanager >= v0.31.0.",
+                                "type": "boolean"
+                              },
                               "from": {
                                 "description": "from defines the default SMTP From header field.",
                                 "type": "string"

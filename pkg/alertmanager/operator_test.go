@@ -1080,6 +1080,28 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-message-text",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								MessageText: ptr.To("test message text"),
+							},
+						},
+					}},
+				},
+			},
+			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "subroute-with-unknown-field",
 					Namespace: "ns1",
 				},

@@ -994,6 +994,80 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_amVersion21.golden",
 		},
 		{
+			name:      "valid smtpConfig forceImplicitTLS",
+			amVersion: &version31,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					ForceImplicitTLS: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_smtpConfig_forceImplicitTLS.golden",
+		},
+		{
+			name:      "invalid smtpConfig forceImplicitTLS unsupported version",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					ForceImplicitTLS: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name:      "valid global config telegram api url",
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
@@ -3285,6 +3359,40 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
 		},
 		{
+			name:      "CR with Slack Receiver with MessageText",
+			kclient:   fake.NewSimpleClientset(),
+			amVersion: &semver.Version{Major: 0, Minor: 31},
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								MessageText: ptr.To("test message text"),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_MessageText.golden",
+		},
+		{
 			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
@@ -4132,6 +4240,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionGlobalSMTPAuthSecretFileAllowed := semver.Version{Major: 0, Minor: 31}
 	versionGlobalSMTPAuthSecretFileNotAllowed := semver.Version{Major: 0, Minor: 30}
 
+	versionGlobalSMTPForceImplicitTLSAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalSMTPForceImplicitTLSNotAllowed := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4195,6 +4306,26 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_smtp_auth_secret_takes_precedence_over_smtp_auth_secret_file.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls added for supported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
+				},
+			},
+			golden: "test_smtp_force_implicit_tls_added_for_supported_version.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls dropped for unsupported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
+				},
+			},
+			golden: "test_smtp_force_implicit_tls_dropped_for_unsupported_version.golden",
 		},
 		{
 			name:           "Test slack_api_url takes precedence in global config",
@@ -5970,36 +6101,36 @@ func TestSanitizeEmailConfig(t *testing.T) {
 			golden: "test_smtp_auth_password_file_is_dropped_in_email_config_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test implicit_tls is dropped in email config for unsupported versions",
+			name:           "Test force_implicit_tls is dropped in email config for unsupported versions",
 			againstVersion: semver.Version{Major: 0, Minor: 30},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						EmailConfigs: []*emailConfig{
 							{
-								ImplicitTLS: ptr.To(true),
+								ForceImplicitTLS: ptr.To(true),
 							},
 						},
 					},
 				},
 			},
-			golden: "test_implicit_tls_is_dropped_in_email_config_for_unsupported_versions.golden",
+			golden: "test_force_implicit_tls_is_dropped_in_email_config_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test implicit_tls is added in email config for supported version",
+			name:           "Test force_implicit_tls is added in email config for supported version",
 			againstVersion: semver.Version{Major: 0, Minor: 31},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						EmailConfigs: []*emailConfig{
 							{
-								ImplicitTLS: ptr.To(true),
+								ForceImplicitTLS: ptr.To(true),
 							},
 						},
 					},
 				},
 			},
-			golden: "test_implicit_tls_is_added_in_email_config_for_supported_versions.golden",
+			golden: "test_force_implicit_tls_is_added_in_email_config_for_supported_versions.golden",
 		},
 		{
 			name:           "Test auth_secret_file is added in email config for supported version",
@@ -6025,7 +6156,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					{
 						EmailConfigs: []*emailConfig{
 							{
-								ImplicitTLS: ptr.To(true),
+								AuthSecretFile: "/auth/secret/file",
 							},
 						},
 					},
@@ -6496,6 +6627,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test routing_key takes precedence in pagerduty config",
@@ -6595,9 +6727,76 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			},
 			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 		},
+		{
+			name:           "Test nested field in description",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_nested_field_in_description.golden",
+		},
+		{
+			name:           "Test string field in description for version not support nested field",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": "value",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_string_field_in_description_for_version_not_support_nested_field.golden",
+		},
+		{
+			name:           "Test nested field in description result in error for unsupported version",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amPagerDutyCfg, err := yaml.Marshal(tc.in)

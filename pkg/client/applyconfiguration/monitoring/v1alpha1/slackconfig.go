@@ -47,6 +47,7 @@ type SlackConfigApplyConfiguration struct {
 	Actions      []SlackActionApplyConfiguration `json:"actions,omitempty"`
 	HTTPConfig   *HTTPConfigApplyConfiguration   `json:"httpConfig,omitempty"`
 	Timeout      *monitoringv1.Duration          `json:"timeout,omitempty"`
+	MessageText  *string                         `json:"messageText,omitempty"`
 }
 
 // SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with
@@ -248,5 +249,13 @@ func (b *SlackConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyCon
 // If called multiple times, the Timeout field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration) *SlackConfigApplyConfiguration {
 	b.Timeout = &value
+	return b
+}
+
+// WithMessageText sets the MessageText field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MessageText field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithMessageText(value string) *SlackConfigApplyConfiguration {
+	b.MessageText = &value
 	return b
 }
