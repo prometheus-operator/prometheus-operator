@@ -679,9 +679,18 @@ type GlobalTelegramConfig struct {
 	APIURL *URL `json:"apiURL,omitempty"`
 
 	// botToken represents the bot token configuration for Telegram.
+	// It is mutually exclusive with `botTokenFile`.
+	// Either `botToken` or `botTokenFile` is required.
 	// It requires Alertmanager >= v0.31.0.
 	// +optional
 	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
+
+	// botTokenFile defines the file to read the Telegram bot token from.
+	// It is mutually exclusive with `botToken`.
+	// Either `botToken` or `botTokenFile` is required.
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	BotTokenFile *string `json:"botTokenFile,omitempty"`
 }
 
 // GlobalJiraConfig configures global Jira parameters.

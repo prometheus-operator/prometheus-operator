@@ -11488,6 +11488,23 @@ Kubernetes core/v1.SecretKeySelector
 <td>
 <em>(Optional)</em>
 <p>botToken represents the bot token configuration for Telegram.
+It is mutually exclusive with <code>botTokenFile</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>botTokenFile defines the file to read the Telegram bot token from.
+It is mutually exclusive with <code>botToken</code>.
+Either <code>botToken</code> or <code>botTokenFile</code> is required.
 It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>

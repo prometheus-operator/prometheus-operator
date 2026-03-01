@@ -62,6 +62,10 @@ func validatingTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
 		return nil
 	}
 
+	if tc.BotToken != nil && tc.BotTokenFile != nil {
+		return fmt.Errorf("botToken and botTokenFile are mutually exclusive.")
+	}
+
 	if err := validation.ValidateURLPtr((*string)(tc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
 	}

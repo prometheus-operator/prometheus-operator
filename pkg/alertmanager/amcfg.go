@@ -1977,6 +1977,10 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(ctx context.Context, out *g
 		out.TelegramBotToken = token
 	}
 
+	if in.BotTokenFile != nil {
+		out.TelegramBotTokenFile = *in.BotTokenFile
+	}
+
 	return nil
 }
 
