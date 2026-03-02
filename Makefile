@@ -118,7 +118,7 @@ clean: ## Remove all files and directories ignored by git.
 
 .PHONY: build
 build: ## Build all binaries.
-	operator prometheus-config-reloader admission-webhook k8s-gen
+	$(MAKE) operator prometheus-config-reloader admission-webhook k8s-gen
 
 .PHONY: operator
 operator: ## Build operator binary.
