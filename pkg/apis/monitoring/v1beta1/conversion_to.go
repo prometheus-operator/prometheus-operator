@@ -431,20 +431,21 @@ func convertWeChatConfigTo(in WeChatConfig) v1alpha1.WeChatConfig {
 
 func convertEmailConfigTo(in EmailConfig) v1alpha1.EmailConfig {
 	return v1alpha1.EmailConfig{
-		SendResolved: in.SendResolved,
-		To:           in.To,
-		From:         in.From,
-		Hello:        in.Hello,
-		Smarthost:    in.Smarthost,
-		AuthUsername: in.AuthUsername,
-		AuthPassword: convertSecretKeySelectorTo(in.AuthPassword),
-		AuthSecret:   convertSecretKeySelectorTo(in.AuthSecret),
-		AuthIdentity: in.AuthIdentity,
-		Headers:      convertKeyValuesTo(in.Headers),
-		HTML:         in.HTML,
-		Text:         in.Text,
-		RequireTLS:   in.RequireTLS,
-		TLSConfig:    in.TLSConfig,
+		SendResolved:     in.SendResolved,
+		To:               in.To,
+		From:             in.From,
+		Hello:            in.Hello,
+		Smarthost:        in.Smarthost,
+		AuthUsername:     in.AuthUsername,
+		AuthPassword:     convertSecretKeySelectorTo(in.AuthPassword),
+		AuthSecret:       convertSecretKeySelectorTo(in.AuthSecret),
+		AuthIdentity:     in.AuthIdentity,
+		Headers:          convertKeyValuesTo(in.Headers),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		TLSConfig:        in.TLSConfig,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 }
 

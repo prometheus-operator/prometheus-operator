@@ -1269,15 +1269,16 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
-		VSendResolved: in.SendResolved,
-		To:            ptr.Deref(in.To, ""),
-		From:          ptr.Deref(in.From, ""),
-		Hello:         ptr.Deref(in.Hello, ""),
-		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
-		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
-		HTML:          in.HTML,
-		Text:          in.Text,
-		RequireTLS:    in.RequireTLS,
+		VSendResolved:    in.SendResolved,
+		To:               ptr.Deref(in.To, ""),
+		From:             ptr.Deref(in.From, ""),
+		Hello:            ptr.Deref(in.Hello, ""),
+		AuthUsername:     ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:     ptr.Deref(in.AuthIdentity, ""),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 
 	if ptr.Deref(in.Smarthost, "") == "" {
