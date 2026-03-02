@@ -309,7 +309,7 @@ Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) 
 
 .PHONY: format
 format: ## Format all files.
-	go-fmt jsonnet-fmt check-license shellcheck docs
+	$(MAKE) go-fmt jsonnet-fmt check-license shellcheck docs
 
 .PHONY: go-fmt
 go-fmt: ## Run go fmt against code.
