@@ -255,7 +255,7 @@ generate-tls-certs: ## Generate TLS certificates for testing.
 
 .PHONY: generate-docs
 generate-docs: ## Generate operator documentation.
-	$(shell find Documentation -type f)
+	find Documentation -type f
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f) ## Generate bundle.yaml.
 	scripts/generate-bundle.sh
