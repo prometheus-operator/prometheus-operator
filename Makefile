@@ -232,7 +232,7 @@ tidy: ## Tidy Go modules.
 
 .PHONY: generate
 generate: ## Generate all files (CRDs, client-go libraries, docs, etc.).
-	k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
+	$(MAKE) k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
