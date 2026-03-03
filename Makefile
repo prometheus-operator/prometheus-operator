@@ -117,8 +117,7 @@ clean: ## Remove all files and directories ignored by git.
 ##############
 
 .PHONY: build
-build: ## Build all binaries.
-	$(MAKE) operator prometheus-config-reloader admission-webhook k8s-gen
+build: operator prometheus-config-reloader admission-webhook k8s-gen ## Build all binaries.
 
 .PHONY: operator
 operator: ## Build operator binary.
@@ -231,8 +230,7 @@ tidy: ## Tidy Go modules.
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: ## Generate all files (CRDs, client-go libraries, docs, etc.).
-	$(MAKE) k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version
+generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version ## Generate all files (CRDs, client-go libraries, docs, etc.).
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -308,8 +306,7 @@ Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) 
 ##############
 
 .PHONY: format
-format: ## Format all files.
-	$(MAKE) go-fmt jsonnet-fmt check-license shellcheck docs
+format: go-fmt jsonnet-fmt check-license shellcheck docs ## Format all files.
 
 .PHONY: go-fmt
 go-fmt: ## Run go fmt against code.
