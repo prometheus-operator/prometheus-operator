@@ -802,7 +802,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 	}
 
 	for i, config := range sc.Spec.HTTPSDConfigs {
-		if _, err := url.Parse(config.URL); err != nil {
+		if _, err := url.Parse(string(config.URL)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1124,7 +1124,7 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 
 func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.NomadSDConfigs {
-		if err := validateServer(config.Server); err != nil {
+		if err := validateServer(string(config.Server)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -1192,7 +1192,7 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 	}
 
 	for i, config := range sc.Spec.PuppetDBSDConfigs {
-		parsedURL, err := url.Parse(config.URL)
+		parsedURL, err := url.Parse(string(config.URL))
 		if err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

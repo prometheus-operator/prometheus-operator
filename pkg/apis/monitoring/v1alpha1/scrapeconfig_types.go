@@ -420,10 +420,8 @@ type FileSDConfig struct {
 // +k8s:openapi-gen=true
 type HTTPSDConfig struct {
 	// url defines the URL from which the targets are fetched.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
 	// +optional
@@ -846,9 +844,8 @@ type OpenStackSDConfig struct {
 	Region string `json:"region"`
 	// identityEndpoint defines the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
-	// +kubebuilder:validation:Pattern=`^http(s)?:\/\/.+$`
 	// +optional
-	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
+	IdentityEndpoint *URL `json:"identityEndpoint,omitempty"`
 	// username defines the username required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
 	// In Identity V3, either userid or a combination of username
@@ -1005,10 +1002,8 @@ type KumaSDConfig struct {
 // +k8s:openapi-gen=true
 type EurekaSDConfig struct {
 	// server defines the URL to connect to the Eureka server.
-	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	Server string `json:"server"`
+	Server URL `json:"server"`
 	// basicAuth defines the BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
@@ -1163,10 +1158,8 @@ type NomadSDConfig struct {
 	Region *string `json:"region,omitempty"`
 	// server defines the Nomad server address to connect to for service discovery.
 	// This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
-	Server string `json:"server"`
+	Server URL `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
 	// This determines how Nomad service tags are concatenated into Prometheus labels.
 	// +optional
@@ -1334,10 +1327,8 @@ type LinodeSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
 type PuppetDBSDConfig struct {
 	// url defines the URL of the PuppetDB root query endpoint.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 	// query defines the Puppet Query Language (PQL) query. Only resources are supported.
 	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
 	// +kubebuilder:validation:MinLength=1
@@ -1468,9 +1459,8 @@ type ScalewaySDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// apiURL defines the API URL to use when doing the server listing requests.
-	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +optional
-	ApiURL *string `json:"apiURL,omitempty"`
+	ApiURL *URL `json:"apiURL,omitempty"`
 	// zone defines the availability zone of your targets (e.g. fr-par-1).
 	// +kubebuilder:validation:MinLength=1
 	// +optional

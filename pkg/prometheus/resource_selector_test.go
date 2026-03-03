@@ -4348,7 +4348,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 						Zone:       ptr.To("beijing-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com/")),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 					},

@@ -8647,7 +8647,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 					{
 						Role:             monitoringv1alpha1.OpenStackRoleInstance,
 						Region:           "region-1",
-						IdentityEndpoint: ptr.To("http://identity.example.com:5000/v2.0"),
+						IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://identity.example.com:5000/v2.0")),
 						Username:         ptr.To("nova-user-1"),
 						Password: &v1.SecretKeySelector{
 							LocalObjectReference: v1.LocalObjectReference{
@@ -12265,7 +12265,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
 						Zone:       ptr.To("fr-par-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com"),
+						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 						ProxyConfig: monitoringv1.ProxyConfig{

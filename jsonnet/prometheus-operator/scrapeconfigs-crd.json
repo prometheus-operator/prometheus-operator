@@ -4326,8 +4326,7 @@
                         },
                         "server": {
                           "description": "server defines the URL to connect to the Eureka server.",
-                          "minLength": 1,
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "tlsConfig": {
@@ -5861,8 +5860,7 @@
                         },
                         "url": {
                           "description": "url defines the URL from which the targets are fetched.",
-                          "minLength": 1,
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         }
                       },
@@ -9694,8 +9692,7 @@
                         },
                         "server": {
                           "description": "server defines the Nomad server address to connect to for service discovery.\nThis should be the full URL including protocol (e.g., \"https://nomad.example.com:4646\").",
-                          "minLength": 1,
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "tagSeparator": {
@@ -10246,7 +10243,7 @@
                         },
                         "identityEndpoint": {
                           "description": "identityEndpoint defines the HTTP endpoint that is required to work with\nthe Identity API of the appropriate version.",
-                          "pattern": "^http(s)?:\\/\\/.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "password": {
@@ -11260,8 +11257,7 @@
                         },
                         "url": {
                           "description": "url defines the URL of the PuppetDB root query endpoint.",
-                          "minLength": 1,
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         }
                       },
@@ -11359,7 +11355,7 @@
                         },
                         "apiURL": {
                           "description": "apiURL defines the API URL to use when doing the server listing requests.",
-                          "pattern": "^http(s)?://.+$",
+                          "pattern": "^https?://.+$",
                           "type": "string"
                         },
                         "enableHTTP2": {

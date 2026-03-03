@@ -27376,7 +27376,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27946,7 +27948,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30070,7 +30074,9 @@ When specified, only resources within this region will be discovered.</p>
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30420,7 +30426,9 @@ string
 <td>
 <code>identityEndpoint</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33068,7 +33076,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34581,7 +34591,9 @@ int32
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -36533,7 +36545,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

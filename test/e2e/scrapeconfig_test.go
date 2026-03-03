@@ -2813,7 +2813,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("http://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://example.com")),
 				},
 			},
 		},
@@ -2826,7 +2826,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("https://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("https://example.com")),
 				},
 			},
 		},
@@ -2839,7 +2839,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("ftp://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},
@@ -2852,7 +2852,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To(""),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("")),
 				},
 			},
 		},
@@ -3590,7 +3590,7 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("https://api.scaleway.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
 				},
 			},
 		},
@@ -3610,7 +3610,7 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("ftp://example.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},

@@ -4648,8 +4648,7 @@ spec:
                     server:
                       description: server defines the URL to connect to the Eureka
                         server.
-                      minLength: 1
-                      pattern: ^http(s)?://.+$
+                      pattern: ^https?://.+$
                       type: string
                     tlsConfig:
                       description: tlsConfig defines the TLS configuration to connect
@@ -6300,8 +6299,7 @@ spec:
                     url:
                       description: url defines the URL from which the targets are
                         fetched.
-                      minLength: 1
-                      pattern: ^http(s)?://.+$
+                      pattern: ^https?://.+$
                       type: string
                   required:
                   - url
@@ -10431,8 +10429,7 @@ spec:
                       description: |-
                         server defines the Nomad server address to connect to for service discovery.
                         This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
-                      minLength: 1
-                      pattern: ^http(s)?://.+$
+                      pattern: ^https?://.+$
                       type: string
                     tagSeparator:
                       description: |-
@@ -11014,7 +11011,7 @@ spec:
                       description: |-
                         identityEndpoint defines the HTTP endpoint that is required to work with
                         the Identity API of the appropriate version.
-                      pattern: ^http(s)?:\/\/.+$
+                      pattern: ^https?://.+$
                       type: string
                     password:
                       description: |-
@@ -12102,8 +12099,7 @@ spec:
                     url:
                       description: url defines the URL of the PuppetDB root query
                         endpoint.
-                      minLength: 1
-                      pattern: ^http(s)?://.+$
+                      pattern: ^https?://.+$
                       type: string
                   required:
                   - query
@@ -12222,7 +12218,7 @@ spec:
                     apiURL:
                       description: apiURL defines the API URL to use when doing the
                         server listing requests.
-                      pattern: ^http(s)?://.+$
+                      pattern: ^https?://.+$
                       type: string
                     enableHTTP2:
                       description: enableHTTP2 defines whether to enable HTTP2.
