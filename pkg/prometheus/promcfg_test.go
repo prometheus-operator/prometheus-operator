@@ -8919,7 +8919,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &v1.SecretKeySelector{
 								LocalObjectReference: v1.LocalObjectReference{
@@ -8990,7 +8990,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &v1.ConfigMapKeySelector{
@@ -9053,7 +9053,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -9109,7 +9109,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -9166,7 +9166,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -11274,7 +11274,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 						TagSeparator:    ptr.To(","),
 						Namespace:       ptr.To("default"),
 						Region:          ptr.To("default"),
-						Server:          "127.0.0.1",
+						Server:          "http://127.0.0.1:4646",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
 				},

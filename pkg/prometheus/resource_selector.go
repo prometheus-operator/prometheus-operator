@@ -708,6 +708,10 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
+		if config.Role == monitoringv1alpha1.KubernetesRoleEndpointSlice && rs.version.LT(semver.MustParse("2.21.0")) {
+			return fmt.Errorf("[%d]: EndpointSlice role is only supported for Prometheus version >= 2.21.0", i)
+		}
+
 		if config.APIServer != nil && config.Namespaces != nil {
 			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
 				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
@@ -971,6 +975,10 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 
 func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.DockerSDConfigs {
+		if config.MatchFirstNetwork != nil && rs.version.LT(semver.MustParse("2.54.1")) {
+			return fmt.Errorf("[%d]: field `matchFirstNetwork` is only supported for Prometheus version >= 2.54.1", i)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1086,6 +1094,10 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 
 func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.HetznerSDConfigs {
+		if config.LabelSelector != nil && rs.version.LT(semver.MustParse("3.5.0")) {
+			return fmt.Errorf("[%d]: field `labelSelector` is only supported for Prometheus version >= 3.5.0", i)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1112,6 +1124,10 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 
 func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.NomadSDConfigs {
+		if err := validateServer(config.Server); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

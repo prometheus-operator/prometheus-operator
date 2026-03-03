@@ -3864,7 +3864,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 				},
 			},
 		},
@@ -3882,11 +3882,22 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid Port",
+		name: "Invalid Host without scheme",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
 					Host: "127.0.0.1",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "unix:///var/run/docker.sock",
 					Port: ptr.To(int32(80)),
 				},
 			},
@@ -3898,7 +3909,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Port: ptr.To(int32(-1)),
 				},
 			},
@@ -3910,7 +3921,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
+					Host:               "unix:///var/run/docker.sock",
 					HostNetworkingHost: ptr.To("localhost"),
 				},
 			},
@@ -3922,7 +3933,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
+					Host:               "unix:///var/run/docker.sock",
 					HostNetworkingHost: ptr.To(""),
 				},
 			},
@@ -3934,7 +3945,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
+					Host:              "unix:///var/run/docker.sock",
 					MatchFirstNetwork: ptr.To(true),
 				},
 			},
@@ -3946,7 +3957,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
+					Host:              "unix:///var/run/docker.sock",
 					MatchFirstNetwork: ptr.To(false),
 				},
 			},
@@ -3958,7 +3969,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3975,7 +3986,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3992,7 +4003,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4009,7 +4020,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4026,7 +4037,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4038,7 +4049,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4050,7 +4061,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -4062,7 +4073,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					FollowRedirects: ptr.To(false),
 				},
 			},
@@ -4074,7 +4085,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
+					Host:        "unix:///var/run/docker.sock",
 					EnableHTTP2: ptr.To(true),
 				},
 			},
@@ -4086,7 +4097,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
+					Host:        "unix:///var/run/docker.sock",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
@@ -4560,7 +4571,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:4646",
 				},
 			},
 		},
@@ -4578,11 +4589,22 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Invalid Server without scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "AllowStale True",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
+					Server:     "http://localhost:4646",
 					AllowStale: ptr.To(true),
 				},
 			},
@@ -4594,7 +4616,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
+					Server:     "http://localhost:4646",
 					AllowStale: ptr.To(false),
 				},
 			},
@@ -4606,7 +4628,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:    "localhost",
+					Server:    "http://localhost:4646",
 					Namespace: ptr.To("default"),
 				},
 			},
@@ -4618,7 +4640,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4630,7 +4652,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4642,7 +4664,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:4646",
 					Region: ptr.To("us-east"),
 				},
 			},
@@ -4654,7 +4676,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:       "localhost",
+					Server:       "http://localhost:4646",
 					TagSeparator: ptr.To(","),
 				},
 			},
@@ -4666,7 +4688,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -4678,7 +4700,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					FollowRedirects: ptr.To(false),
 				},
 			},
@@ -4690,7 +4712,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:4646",
 					EnableHTTP2: ptr.To(true),
 				},
 			},
@@ -4702,7 +4724,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:4646",
 					EnableHTTP2: ptr.To(false),
 				},
 			},

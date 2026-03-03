@@ -28,7 +28,7 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
-// kubebuilder:validation:MinLength:=1
+// +kubebuilder:validation:MinLength=1
 type Target string
 
 // SDFile represents a file used for service discovery
@@ -61,7 +61,7 @@ type AttachMetadata struct {
 // Filter name and value pairs to limit the discovery process to a subset of available resources.
 type Filter struct {
 	// name of the Filter.
-	// +kubebuilder:vaidation:MinLength=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 	// values defines values to filter on.
@@ -683,7 +683,7 @@ type EC2SDConfig struct {
 	// +optional
 	Filters        Filters `json:"filters,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the EC2 API.
 	// It requires Prometheus >= v2.41.0
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -926,7 +926,7 @@ type OpenStackSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 // +k8s:openapi-gen=true
 type DigitalOceanSDConfig struct {
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the DigitalOcean API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -942,7 +942,7 @@ type DigitalOceanSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the DigitalOcean API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
@@ -978,13 +978,13 @@ type KumaSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Kuma control plane.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Kuma control plane.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1012,14 +1012,14 @@ type EurekaSDConfig struct {
 	// basicAuth defines the BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Eureka server.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Eureka server.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -1043,15 +1043,16 @@ type EurekaSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config
 // +k8s:openapi-gen=true
 type DockerSDConfig struct {
-	// host defines the address of the docker daemon
+	// host defines the address of the docker daemon.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
 	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
-	// +optionals
+	// tlsConfig defines the TLS configuration to connect to the Docker daemon.
+	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// +kubebuilder:validation:Minimum=0
@@ -1078,7 +1079,7 @@ type DockerSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Docker daemon.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1105,7 +1106,7 @@ type HetznerSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Hetzner API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1121,7 +1122,7 @@ type HetznerSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Hetzner API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
@@ -1163,6 +1164,7 @@ type NomadSDConfig struct {
 	// server defines the Nomad server address to connect to for service discovery.
 	// This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
 	Server string `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
@@ -1172,14 +1174,14 @@ type NomadSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Nomad API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Nomad API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -1267,7 +1269,7 @@ type DockerSwarmSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Docker Swarm API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1276,7 +1278,7 @@ type DockerSwarmSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1308,7 +1310,7 @@ type LinodeSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Linode API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1320,7 +1322,7 @@ type LinodeSDConfig struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Linode API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
@@ -1359,7 +1361,7 @@ type PuppetDBSDConfig struct {
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the PuppetDB API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1368,7 +1370,7 @@ type PuppetDBSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the PuppetDB server.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1413,7 +1415,7 @@ type LightSailSDConfig struct {
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Lightsail API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1422,7 +1424,7 @@ type LightSailSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Lightsail API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1495,7 +1497,7 @@ type ScalewaySDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Scaleway API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -1516,12 +1518,12 @@ type IonosSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// authorization defines the  header configuration to authenticate against the IONOS.
+	// authorization defines the header configuration to authenticate against the IONOS API.
 	// Cannot be set at the same time as `oauth2`.
 	// +required
 	Authorization  v1.SafeAuthorization `json:"authorization"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the IONOS API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
