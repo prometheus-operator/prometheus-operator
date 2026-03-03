@@ -645,14 +645,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -666,15 +670,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -2911,9 +2919,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -2928,7 +2935,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -2937,9 +2944,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -5383,13 +5390,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -5403,13 +5414,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -7174,14 +7183,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -7195,15 +7208,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -9136,9 +9153,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -9153,7 +9169,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -9162,9 +9178,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -15676,9 +15692,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -15693,7 +15708,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -15702,9 +15717,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -20747,13 +20762,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -20767,13 +20786,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -23497,9 +23514,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -23514,7 +23530,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -23523,9 +23539,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -32240,9 +32256,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -32257,7 +32272,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -32266,9 +32281,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>

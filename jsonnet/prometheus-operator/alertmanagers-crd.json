@@ -2574,7 +2574,7 @@
                     "type": "string"
                   },
                   "containers": {
-                    "description": "containers allows injecting additional containers. This is meant to\nallow adding an authentication proxy to an Alertmanager pod.\nContainers described here modify an operator generated container if they\nshare the same name and modifications are done via a strategic merge\npatch. The current container names are: `alertmanager` and\n`config-reloader`. Overriding containers is entirely outside the scope\nof what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
+                    "description": "containers allows injecting additional containers or modifying operator\ngenerated containers. This can be used to allow adding an authentication\nproxy to the Pods or to change the behavior of an operator generated\ncontainer. Containers described here modify an operator generated\ncontainer if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of containers managed by the operator are:\n* `alertmanager`\n* `config-reloader`\n* `thanos-sidecar`\n\nOverriding containers which are managed by the operator require careful\ntesting, especially when upgrading to a new version of the operator.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -4058,7 +4058,7 @@
                     "type": "array"
                   },
                   "initContainers": {
-                    "description": "initContainers allows adding initContainers to the pod definition. Those can be used to e.g.\nfetch secrets for injection into the Alertmanager configuration from external sources. Any\nerrors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator\ngenerated init containers if they share the same name and modifications are\ndone via a strategic merge patch. The current init container name is:\n`init-config-reloader`. Overriding init containers is entirely outside the\nscope of what the maintainers will support and by doing so, you accept that\nthis behaviour may break at any time without notice.",
+                    "description": "initContainers allows injecting initContainers to the Pod definition. Those\ncan be used to e.g.  fetch secrets for injection into the Prometheus\nconfiguration from external sources. Any errors during the execution of\nan initContainer will lead to a restart of the Pod. More info:\nhttps://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator generated init\ncontainers if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of init container name managed by the operator are:\n* `init-config-reloader`.\n\nOverriding init containers which are managed by the operator require\ncareful testing, especially when upgrading to a new version of the\noperator.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
