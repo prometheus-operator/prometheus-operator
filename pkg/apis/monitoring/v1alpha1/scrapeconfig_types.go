@@ -246,11 +246,11 @@ type ScrapeConfigSpec struct {
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// metricsPath defines the HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
 	// scrapeInterval defines the interval between consecutive scrapes.
@@ -268,7 +268,7 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v2.49.0.
 	//
 	// +listType=set
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -357,7 +357,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -386,7 +386,7 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// targets defines the list of targets for this static configuration.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +required
 	Targets []Target `json:"targets"`
@@ -405,7 +405,7 @@ type FileSDConfig struct {
 	// prometheus-operator project makes no guarantees about the working directory where the configuration file is
 	// stored.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +required
 	Files []SDFile `json:"files"`
@@ -420,8 +420,8 @@ type FileSDConfig struct {
 // +k8s:openapi-gen=true
 type HTTPSDConfig struct {
 	// url defines the URL from which the targets are fetched.
-	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
 	URL string `json:"url"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -617,7 +617,7 @@ const (
 // +k8s:openapi-gen=true
 type DNSSDConfig struct {
 	// names defines a list of DNS domain names to be queried.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +required
 	Names []string `json:"names"`
@@ -792,17 +792,17 @@ type AzureSDConfig struct {
 // +k8s:openapi-gen=true
 type GCESDConfig struct {
 	// project defines the Google Cloud Project ID
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Project string `json:"project"`
 	// zone defines the zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Zone string `json:"zone"`
 	// filter defines the filter that can be used optionally to filter the instance list by other criteria
 	// Syntax of this filter is described in the filter query parameter section:
 	// https://cloud.google.com/compute/docs/reference/latest/instances/list
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -816,7 +816,7 @@ type GCESDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// tagSeparator defines the tag separator is used to separate the tags on concatenation
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
@@ -841,23 +841,23 @@ type OpenStackSDConfig struct {
 	// +required
 	Role OpenStackRole `json:"role"`
 	// region defines the OpenStack Region.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Region string `json:"region"`
 	// identityEndpoint defines the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
-	// +kubebuilder:validation:Pattern:=`^http(s)?:\/\/.+$`
+	// +kubebuilder:validation:Pattern=`^http(s)?:\/\/.+$`
 	// +optional
 	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
 	// username defines the username required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
 	// In Identity V3, either userid or a combination of username
 	// and domainId or domainName are needed
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Username *string `json:"username,omitempty"`
 	// userid defines the OpenStack userid.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	UserID *string `json:"userid,omitempty"`
 	// password defines the password for the Identity V2 and V3 APIs. Consult with your provider's
@@ -866,29 +866,29 @@ type OpenStackSDConfig struct {
 	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 	// domainName defines at most one of domainId and domainName that must be provided if using username
 	// with Identity V3. Otherwise, either are optional.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	DomainName *string `json:"domainName,omitempty"`
 	// domainID defines The OpenStack domainID.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	DomainID *string `json:"domainID,omitempty"`
 	// projectName defines an optional field for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
 	// Some require both. Your provider's authentication policies will determine
 	// how these fields influence authentication.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ProjectName *string `json:"projectName,omitempty"`
 	// projectID defines the OpenStack projectID.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ProjectID *string `json:"projectID,omitempty"`
 	// applicationCredentialName defines the ApplicationCredentialID or ApplicationCredentialName fields are
 	// required if using an application credential to authenticate. Some providers
 	// allow you to create an application credential to authenticate rather than a
 	// password.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// applicationCredentialId defines the OpenStack applicationCredentialId.
@@ -1005,7 +1005,7 @@ type KumaSDConfig struct {
 // +k8s:openapi-gen=true
 type EurekaSDConfig struct {
 	// server defines the URL to connect to the Eureka server.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Server string `json:"server"`
@@ -1164,7 +1164,7 @@ type NomadSDConfig struct {
 	// server defines the Nomad server address to connect to for service discovery.
 	// This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
 	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
 	Server string `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
@@ -1334,8 +1334,8 @@ type LinodeSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
 type PuppetDBSDConfig struct {
 	// url defines the URL of the PuppetDB root query endpoint.
-	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +required
 	URL string `json:"url"`
 	// query defines the Puppet Query Language (PQL) query. Only resources are supported.
@@ -1468,7 +1468,7 @@ type ScalewaySDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// apiURL defines the API URL to use when doing the server listing requests.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
+	// +kubebuilder:validation:Pattern="^http(s)?://.+$"
 	// +optional
 	ApiURL *string `json:"apiURL,omitempty"`
 	// zone defines the availability zone of your targets (e.g. fr-par-1).
