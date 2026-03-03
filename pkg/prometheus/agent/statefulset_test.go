@@ -492,3 +492,32 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		})
 	}
 }
+
+func TestAdditionalStatefulSetVolumes(t *testing.T) {
+	addedVolumeName := "added-volume"
+	sset, err := makeStatefulSetFromPrometheus(
+		monitoringv1alpha1.PrometheusAgent{
+			Spec: monitoringv1alpha1.PrometheusAgentSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Volumes: []v1.Volume{
+						{
+							Name: addedVolumeName,
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+	hasAddedVolume := false
+	for _, vol := range sset.Spec.Template.Spec.Volumes {
+		if vol.Name == addedVolumeName && vol.EmptyDir != nil {
+			hasAddedVolume = true
+			break
+		}
+	}
+	require.True(t, hasAddedVolume, "expected to find added volume in StatefulSet spec")
+}
