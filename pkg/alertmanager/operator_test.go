@@ -209,6 +209,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				"template-url":         []byte("{{ .labels.url }}"),
 				"invalid-url":          []byte("://foo"),
 				"invalid-template-url": []byte("{{ .labels.url"),
+				"token":                []byte("abc1243"),
 			},
 		},
 	)
@@ -1355,6 +1356,34 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-bottoken",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
+							{
+								BotToken: &v1.SecretKeySelector{
+									Key: "token",
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+								BotTokenFile: ptr.To("/bot/token/file"),
+							},
+						},
+					}},
+				},
+			},
+			ok: false,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
