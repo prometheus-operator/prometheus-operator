@@ -228,6 +228,7 @@ func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
+		"AlertmanagerConfigCRDValidation":         testAlertmanagerConfigCRDValidation,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
@@ -251,6 +252,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 		"AMStatusScale":                           testAlertmanagerStatusScale,
 		"AMServiceName":                           testAlertManagerServiceName,
+		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
 	}
 
 	for name, f := range testFuncs {
@@ -302,6 +304,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromQueryLogFile":                          testPromQueryLogFile,
 		"PromDegradedCondition":                     testPromDegradedConditionStatus,
 		"PromUnavailableCondition":                  testPromUnavailableConditionStatus,
+		"PromStatusConditionLastTransitionTime":     testPromStatusConditionLastTransitionTime,
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
@@ -321,6 +324,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
 		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
+		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
 	}
 
 	for name, f := range testFuncs {
@@ -341,6 +345,8 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 		"ThanosRulerServiceName":                        testThanosRulerServiceName,
 		"ThanosRulerStateless":                          testThanosRulerStateless,
+		"ThanosRulerScaleUpWithoutLabels":               testThanosRulerScaleUpWithoutLabels,
+		"ThanosRulerStatusUpdatedReplicasRollback":      testThanosRulerStatusUpdatedReplicasRollback,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)

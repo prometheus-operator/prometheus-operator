@@ -25,7 +25,7 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 // MaxSecretDataSizeBytes is the maximum data size that a single secret shard
@@ -46,7 +46,7 @@ func (s *ShardedSecret) updateSecrets(ctx context.Context, sClient corev1.Secret
 	secrets := s.shard()
 
 	for _, secret := range secrets {
-		err := k8sutil.CreateOrUpdateSecret(ctx, sClient, secret)
+		err := k8s.CreateOrUpdateSecret(ctx, sClient, secret)
 		if err != nil {
 			return fmt.Errorf("failed to create secret %q: %w", secret.Name, err)
 		}

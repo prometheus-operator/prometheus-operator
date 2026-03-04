@@ -2628,6 +2628,14 @@ func TestPrometheusQuerySpec(t *testing.T) {
 			},
 		},
 		{
+			name:           "maxConcurrency set to 1",
+			maxConcurrency: ptr.To(int32(1)),
+
+			expected: []string{
+				"--query.max-concurrency=1",
+			},
+		},
+		{
 			name:           "max samples skipped if version < 2.5",
 			lookbackDelta:  ptr.To("2m"),
 			maxConcurrency: ptr.To(int32(10)),

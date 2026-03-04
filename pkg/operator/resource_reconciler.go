@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 // Syncer knows how to synchronize statefulset-based or daemonset-based resources.
@@ -467,7 +467,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	if !k8sutil.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
+	if !k8s.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
 		return
 	}
 

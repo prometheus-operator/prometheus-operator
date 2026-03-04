@@ -24,7 +24,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -143,7 +143,7 @@ func makeDaemonSetSpec(
 		),
 	)
 
-	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
+	initContainers, err := k8s.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
@@ -185,7 +185,7 @@ func makeDaemonSetSpec(
 		),
 	}, additionalContainers...)
 
-	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
+	containers, err := k8s.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -225,8 +225,8 @@ func makeDaemonSetSpec(
 	if cpf.HostNetwork {
 		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
-	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
-	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
 
 	return &spec, nil
 }

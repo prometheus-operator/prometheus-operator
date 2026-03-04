@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 type InformerGetter interface {
@@ -100,7 +100,7 @@ func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string)
 	}
 
 	obj = obj.DeepCopyObject()
-	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+	if err = k8s.AddTypeInformationToObject(obj); err != nil {
 		return zero, err
 	}
 

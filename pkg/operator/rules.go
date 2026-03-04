@@ -37,7 +37,7 @@ import (
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 )
 
@@ -239,7 +239,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 	for _, ns := range namespaces {
 		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj any) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
-			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
+			if err := k8s.AddTypeInformationToObject(promRule); err != nil {
 				prs.logger.Error("failed to set rule type information", "namespace", ns, "err", err)
 				return
 			}
@@ -400,7 +400,7 @@ func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]stri
 	// with missing rules.
 	prs.logger.Debug("creating/updating ConfigMaps for PrometheusRule")
 	for i := range configMaps {
-		if err := k8sutil.CreateOrUpdateConfigMap(ctx, prs.cmClient, &configMaps[i]); err != nil {
+		if err := k8s.CreateOrUpdateConfigMap(ctx, prs.cmClient, &configMaps[i]); err != nil {
 			return nil, fmt.Errorf("failed to create or update ConfigMap %q: %w", configMaps[i].Name, err)
 		}
 	}

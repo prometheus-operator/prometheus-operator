@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/rest"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 func SourceToIOReader(source string) (io.Reader, error) {
@@ -91,7 +91,7 @@ func (f *Framework) WaitForPodsReady(ctx context.Context, namespace string, time
 
 		runningAndReady := 0
 		for _, p := range pl.Items {
-			isRunningAndReady, err := k8sutil.PodRunningAndReady(p)
+			isRunningAndReady, err := k8s.PodRunningAndReady(p)
 			if err != nil {
 				return false, nil
 			}

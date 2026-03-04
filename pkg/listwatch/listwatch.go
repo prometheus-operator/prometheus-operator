@@ -36,7 +36,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 const (
@@ -69,11 +69,11 @@ func NewNamespaceListWatchFromClient(
 		l = slog.New(slog.DiscardHandler)
 	}
 
-	listWatchAllowed, reasons, err := k8sutil.IsAllowed(
+	listWatchAllowed, reasons, err := k8s.IsAllowed(
 		ctx,
 		ssarClient,
 		nil, // namespaces is a cluster-scoped resource.
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Resource: "namespaces",
 			Verbs:    []string{"list", "watch"},
 		},
@@ -129,16 +129,16 @@ func NewNamespaceListWatchFromClient(
 	// At this point, the operator has no list/watch permissions on the
 	// namespaces resource. Check if it has at least the get permission to
 	// emulate the list/watch operations.
-	attrs := make([]k8sutil.ResourceAttribute, 0, len(allowedNamespaces))
+	attrs := make([]k8s.ResourceAttribute, 0, len(allowedNamespaces))
 	for n := range allowedNamespaces {
-		attrs = append(attrs, k8sutil.ResourceAttribute{
+		attrs = append(attrs, k8s.ResourceAttribute{
 			Verbs:    []string{"get"},
 			Resource: "namespaces",
 			Name:     n,
 		})
 	}
 
-	getAllowed, reasons, err := k8sutil.IsAllowed(
+	getAllowed, reasons, err := k8s.IsAllowed(
 		ctx,
 		ssarClient,
 		nil, // namespaces is a cluster-scoped resource.

@@ -40,7 +40,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
 	monitoringclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
@@ -291,7 +291,10 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			c.Namespaces.DenyList,
 			o.mdClient,
 			resyncPeriod,
-			nil,
+			func(options *metav1.ListOptions) {
+				options.FieldSelector = c.ConfigMapListWatchFieldSelector.String()
+				options.LabelSelector = c.ConfigMapListWatchLabelSelector.String()
+			},
 		),
 		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
@@ -447,10 +450,9 @@ func (c *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (c *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := c.promInfs.ListAll(labels.Everything(), func(o any) {
-		p := o.(*monitoringv1alpha1.PrometheusAgent)
-		processFn(p, p.Status.Conditions)
+		processFn(o.(*monitoringv1alpha1.PrometheusAgent))
 	}); err != nil {
 		c.logger.Error("failed to list PrometheusAgent objects", "err", err)
 	}
@@ -735,7 +737,7 @@ func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv
 		return nil
 	}
 
-	err = k8sutil.UpdateDaemonSet(ctx, dsetClient, dset)
+	err = k8s.UpdateDaemonSet(ctx, dsetClient, dset)
 	sErr, ok := err.(*apierrors.StatusError)
 
 	if ok && sErr.ErrStatus.Code == 422 && sErr.ErrStatus.Reason == metav1.StatusReasonInvalid {
@@ -768,7 +770,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		svcClient := c.kclient.CoreV1().Services(p.Namespace)
 		selectorLabels := makeSelectorLabels(p.Name)
 
-		if err := k8sutil.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
+		if err := k8s.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
 			return err
 		}
 	} else {
@@ -781,7 +783,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			c.config,
 		)
 
-		if _, err := k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
+		if _, err := k8s.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 			return fmt.Errorf("synchronizing default governing service failed: %w", err)
 		}
 	}
@@ -838,8 +840,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 
 		if notFound {
 			logger.Debug("creating statefulset")
-			if _, err := ssetClient.Create(ctx, sset, metav1.CreateOptions{}); err != nil {
-				return fmt.Errorf("creating statefulset failed: %w", err)
+			if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
+				return fmt.Errorf("failed to create statefulset: %w", err)
 			}
 			continue
 		}
@@ -854,7 +856,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)
 
-		if err = k8sutil.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
+		if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 			c.metrics.StsDeleteCreateCounter().Inc()
 			logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 		}); err != nil {
@@ -943,7 +945,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	}
 
 	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-	additionalScrapeConfigs, err := k8sutil.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
+	additionalScrapeConfigs, err := k8s.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
 	}
@@ -968,7 +970,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	}
 
 	logger.Debug("updating Prometheus configuration secret")
-	return k8sutil.CreateOrUpdateSecret(ctx, sClient, s)
+	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
 func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
@@ -1039,10 +1041,10 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	p.Status.Selector = selector.String()
 	p.Status.Shards = ptr.Deref(p.Spec.Shards, 1)
 
-	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+	if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, true), metav1.ApplyOptions{FieldManager: k8s.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		c.logger.Info("failed to apply prometheus status subresource, trying again without scale fields", "err", err)
 		// Try again, but this time does not update scale subresource.
-		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: operator.PrometheusOperatorFieldManager, Force: true}); err != nil {
+		if _, err = c.mclient.MonitoringV1alpha1().PrometheusAgents(p.Namespace).ApplyStatus(ctx, prompkg.ApplyConfigurationFromPrometheusAgent(p, false), metav1.ApplyOptions{FieldManager: k8s.PrometheusOperatorFieldManager, Force: true}); err != nil {
 			return fmt.Errorf("failed to Apply prometheus agent status subresource: %w", err)
 		}
 	}
@@ -1208,7 +1210,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
 
-			sync, err := k8sutil.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
+			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
 				c.logger.Error(
 					"failed to detect label selection change",

@@ -33,7 +33,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -473,7 +473,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}, additionalContainers...)
 
-	containers, err := k8sutil.MergePatchContainers(operatorContainers, tr.Spec.Containers)
+	containers, err := k8s.MergePatchContainers(operatorContainers, tr.Spec.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -517,8 +517,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		},
 	}
 
-	k8sutil.UpdateDNSConfig(&spec.Template.Spec, tr.Spec.DNSConfig)
-	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, tr.Spec.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec.Template.Spec, tr.Spec.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec.Template.Spec, tr.Spec.DNSPolicy)
 
 	return &spec, nil
 }

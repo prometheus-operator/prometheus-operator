@@ -34,7 +34,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/clustertlsconfig"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -583,7 +583,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		watchedDirectories = append(watchedDirectories, alertmanagerTemplatesDir)
 	}
 
-	rn := k8sutil.NewResourceNamerWithPrefix("secret")
+	rn := k8s.NewResourceNamerWithPrefix("secret")
 	for _, s := range a.Spec.Secrets {
 		name, err := rn.DNS1123Label(s)
 		if err != nil {
@@ -609,7 +609,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		watchedDirectories = append(watchedDirectories, mountPath)
 	}
 
-	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
+	rn = k8s.NewResourceNamerWithPrefix("configmap")
 	for _, c := range a.Spec.ConfigMaps {
 		name, err := rn.DNS1123Label(c)
 		if err != nil {
@@ -751,7 +751,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		),
 	}
 
-	containers, err := k8sutil.MergePatchContainers(defaultContainers, a.Spec.Containers)
+	containers, err := k8s.MergePatchContainers(defaultContainers, a.Spec.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -772,7 +772,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		),
 	)
 
-	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, a.Spec.InitContainers)
+	initContainers, err := k8s.MergePatchContainers(operatorInitContainers, a.Spec.InitContainers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
@@ -821,8 +821,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	if a.Spec.HostNetwork {
 		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
-	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, a.Spec.DNSPolicy)
-	k8sutil.UpdateDNSConfig(&spec.Template.Spec, a.Spec.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec.Template.Spec, a.Spec.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec.Template.Spec, a.Spec.DNSConfig)
 	return &spec, nil
 }
 

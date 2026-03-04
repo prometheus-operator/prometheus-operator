@@ -42,7 +42,7 @@ jobs:
       - name: Check the cosign version
         run: cosign version
       - name: Install crane
-        uses: imjasonh/setup-crane@v0.4
+        uses: imjasonh/setup-crane@v0.5
       - name: Login to quay.io
         uses: docker/login-action@v3
         with:

@@ -57,11 +57,13 @@ type Config struct {
 	LocalHost string
 
 	// Label and field selectors for resource watchers.
-	PromSelector                 LabelSelector
-	AlertmanagerSelector         LabelSelector
-	ThanosRulerSelector          LabelSelector
-	SecretListWatchFieldSelector FieldSelector
-	SecretListWatchLabelSelector LabelSelector
+	PromSelector                    LabelSelector
+	AlertmanagerSelector            LabelSelector
+	ThanosRulerSelector             LabelSelector
+	SecretListWatchFieldSelector    FieldSelector
+	SecretListWatchLabelSelector    LabelSelector
+	ConfigMapListWatchFieldSelector FieldSelector
+	ConfigMapListWatchLabelSelector LabelSelector
 
 	// Controller id for pod ownership.
 	ControllerID string
@@ -107,6 +109,10 @@ func DefaultConfig(cpu, memory string) Config {
 			},
 			StatusForConfigurationResourcesFeature: FeatureGate{
 				description: "Updates the status subresource for configuration resources",
+				enabled:     false,
+			},
+			RemoteWriteCustomResourceDefinitionFeature: FeatureGate{
+				description: "Enables the RemoteWrite CRD support",
 				enabled:     false,
 			},
 		},

@@ -33,7 +33,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 const (
@@ -213,7 +213,7 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 			ctx,
 			obj,
 			metav1.UpdateOptions{
-				FieldManager:    PrometheusOperatorFieldManager,
+				FieldManager:    k8s.PrometheusOperatorFieldManager,
 				FieldValidation: metav1.FieldValidationStrict,
 			},
 		); err != nil {
@@ -238,7 +238,7 @@ func (crs *ConfigResourceSyncer) UpdateBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		patch,
 		metav1.PatchOptions{
-			FieldManager:    PrometheusOperatorFieldManager,
+			FieldManager:    k8s.PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
@@ -270,7 +270,7 @@ func (crs *ConfigResourceSyncer) RemoveBinding(ctx context.Context, configResour
 		types.JSONPatchType,
 		p,
 		metav1.PatchOptions{
-			FieldManager:    PrometheusOperatorFieldManager,
+			FieldManager:    k8s.PrometheusOperatorFieldManager,
 			FieldValidation: metav1.FieldValidationStrict,
 		},
 		statusSubResource,
@@ -307,7 +307,7 @@ func CleanupBindings[T ConfigurationResource](
 		if !ok {
 			return
 		}
-		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+		if err = k8s.AddTypeInformationToObject(obj); err != nil {
 			err = fmt.Errorf("failed to add type information: %w", err)
 			return
 		}

@@ -26,7 +26,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 var (
@@ -109,7 +109,7 @@ func (c Config) CreateOrUpdateWebConfigSecret(ctx context.Context, secretClient 
 		configFile: data,
 	}
 
-	return k8sutil.CreateOrUpdateSecret(ctx, secretClient, s)
+	return k8s.CreateOrUpdateSecret(ctx, secretClient, s)
 }
 
 func (c Config) generateConfigFileContents() ([]byte, error) {

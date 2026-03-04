@@ -595,6 +595,10 @@ func (tr *ThanosRuler) ExpectedReplicas() int {
 	return int(*tr.Spec.Replicas)
 }
 
+func (tr *ThanosRuler) GetAvailableReplicas() int  { return int(tr.Status.AvailableReplicas) }
+func (tr *ThanosRuler) GetUpdatedReplicas() int    { return int(tr.Status.UpdatedReplicas) }
+func (tr *ThanosRuler) GetConditions() []Condition { return tr.Status.Conditions }
+
 func (tr *ThanosRuler) SetReplicas(i int)            { tr.Status.Replicas = int32(i) }
 func (tr *ThanosRuler) SetUpdatedReplicas(i int)     { tr.Status.UpdatedReplicas = int32(i) }
 func (tr *ThanosRuler) SetAvailableReplicas(i int)   { tr.Status.AvailableReplicas = int32(i) }

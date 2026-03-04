@@ -27,7 +27,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -271,7 +271,7 @@ func makeStatefulSetSpec(
 		),
 	)
 
-	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
+	initContainers, err := k8s.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
@@ -320,7 +320,7 @@ func makeStatefulSetSpec(
 		),
 	}, additionalContainers...)
 
-	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
+	containers, err := k8s.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -370,8 +370,8 @@ func makeStatefulSetSpec(
 	if cpf.HostNetwork {
 		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
-	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
-	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
 
 	return &spec, nil
 }
@@ -431,7 +431,7 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 			promArgs = cg.WithMinimumVersion("2.5.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "query.max-samples", Value: fmt.Sprintf("%d", *query.MaxSamples)})
 		}
 
-		if query.MaxConcurrency != nil && *query.MaxConcurrency > 1 {
+		if ptr.Deref(query.MaxConcurrency, 0) > 0 {
 			promArgs = append(promArgs, monitoringv1.Argument{Name: "query.max-concurrency", Value: fmt.Sprintf("%d", *query.MaxConcurrency)})
 		}
 

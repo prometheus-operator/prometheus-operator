@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/metadata"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 // FinalizerSyncer holds the configuration and dependencies
@@ -62,7 +62,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInP
 	// The resource isn't being deleted, add the finalizer if missing.
 	if !deletionInProgress {
 		// Add finalizer to the workload resource if it doesn't have one.
-		patchBytes, err := k8sutil.FinalizerAddPatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+		patchBytes, err := k8s.FinalizerAddPatch(finalizers, k8s.StatusCleanupFinalizerName)
 		if err != nil {
 			return false, fmt.Errorf("failed to marshal patch: %w", err)
 		}
@@ -71,7 +71,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInP
 			return false, nil
 		}
 		if err = s.updateObject(ctx, p, patchBytes); err != nil {
-			return false, fmt.Errorf("failed to add %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+			return false, fmt.Errorf("failed to add %q finalizer: %w", k8s.StatusCleanupFinalizerName, err)
 		}
 		return true, nil
 	}
@@ -82,7 +82,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInP
 	}
 
 	// If the workload instance is marked for deletion, we remove the finalizer.
-	patchBytes, err := k8sutil.FinalizerDeletePatch(finalizers, k8sutil.StatusCleanupFinalizerName)
+	patchBytes, err := k8s.FinalizerDeletePatch(finalizers, k8s.StatusCleanupFinalizerName)
 	if err != nil {
 		return false, fmt.Errorf("failed to marshal patch: %w", err)
 	}
@@ -91,7 +91,7 @@ func (s *FinalizerSyncer) Sync(ctx context.Context, p metav1.Object, deletionInP
 	}
 
 	if err = s.updateObject(ctx, p, patchBytes); err != nil {
-		return false, fmt.Errorf("failed to remove %q finalizer: %w", k8sutil.StatusCleanupFinalizerName, err)
+		return false, fmt.Errorf("failed to remove %q finalizer: %w", k8s.StatusCleanupFinalizerName, err)
 	}
 
 	return false, nil
@@ -105,7 +105,7 @@ func (s *FinalizerSyncer) updateObject(
 ) error {
 	_, err := s.mdClient.Resource(s.gvr).
 		Namespace(p.GetNamespace()).
-		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: PrometheusOperatorFieldManager})
+		Patch(ctx, p.GetName(), types.JSONPatchType, patchBytes, metav1.PatchOptions{FieldManager: k8s.PrometheusOperatorFieldManager})
 
 	return err
 }

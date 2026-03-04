@@ -108,6 +108,17 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 	return tr, nil
 }
 
+func (f *Framework) UpdateThanosRulerReplicasAndWaitUntilReady(ctx context.Context, name, ns string, replicas int32) (*monitoringv1.ThanosRuler, error) {
+	return f.PatchThanosRulerAndWaitUntilReady(
+		ctx,
+		name,
+		ns,
+		monitoringv1.ThanosRulerSpec{
+			Replicas: ptr.To(replicas),
+		},
+	)
+}
+
 func (f *Framework) WaitForThanosRulerReady(ctx context.Context, ns string, tr *monitoringv1.ThanosRuler, timeout time.Duration) error {
 	expected := *tr.Spec.Replicas
 

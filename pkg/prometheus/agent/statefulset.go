@@ -25,7 +25,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -217,7 +217,7 @@ func makeStatefulSetSpec(
 		),
 	)
 
-	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
+	initContainers, err := k8s.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
@@ -259,7 +259,7 @@ func makeStatefulSetSpec(
 		),
 	}, additionalContainers...)
 
-	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
+	containers, err := k8s.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -287,8 +287,8 @@ func makeStatefulSetSpec(
 	if cpf.HostNetwork {
 		spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
 	}
-	k8sutil.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
-	k8sutil.UpdateDNSConfig(&spec, cpf.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec, cpf.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec, cpf.DNSConfig)
 
 	// By default, podManagementPolicy is set to Parallel to mitigate rollout
 	// issues in Kubernetes (see https://github.com/kubernetes/kubernetes/issues/60164).

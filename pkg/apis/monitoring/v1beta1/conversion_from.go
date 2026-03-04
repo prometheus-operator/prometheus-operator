@@ -394,6 +394,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Actions:      convertSlackActionsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		Timeout:      in.Timeout,
+		MessageText:  in.MessageText,
 	}
 }
 
@@ -436,20 +437,21 @@ func convertWeChatConfigFrom(in v1alpha1.WeChatConfig) WeChatConfig {
 
 func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 	return EmailConfig{
-		SendResolved: in.SendResolved,
-		To:           in.To,
-		From:         in.From,
-		Hello:        in.Hello,
-		Smarthost:    in.Smarthost,
-		AuthUsername: in.AuthUsername,
-		AuthPassword: convertSecretKeySelectorFrom(in.AuthPassword),
-		AuthSecret:   convertSecretKeySelectorFrom(in.AuthSecret),
-		AuthIdentity: in.AuthIdentity,
-		Headers:      convertKeyValuesFrom(in.Headers),
-		HTML:         in.HTML,
-		Text:         in.Text,
-		RequireTLS:   in.RequireTLS,
-		TLSConfig:    in.TLSConfig,
+		SendResolved:     in.SendResolved,
+		To:               in.To,
+		From:             in.From,
+		Hello:            in.Hello,
+		Smarthost:        in.Smarthost,
+		AuthUsername:     in.AuthUsername,
+		AuthPassword:     convertSecretKeySelectorFrom(in.AuthPassword),
+		AuthSecret:       convertSecretKeySelectorFrom(in.AuthSecret),
+		AuthIdentity:     in.AuthIdentity,
+		Headers:          convertKeyValuesFrom(in.Headers),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		TLSConfig:        in.TLSConfig,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 }
 
@@ -546,6 +548,7 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 	src := srcRaw.(*v1alpha1.AlertmanagerConfig)
 
 	dst.ObjectMeta = src.ObjectMeta
+	dst.Status = src.Status
 
 	for _, in := range src.Spec.Receivers {
 		out := Receiver{

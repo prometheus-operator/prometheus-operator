@@ -584,3 +584,73 @@ func newLogger() *slog.Logger {
 
 	return l
 }
+
+func TestHTTPMetricsPorts(t *testing.T) {
+	for _, tc := range []struct {
+		name                  string
+		httpMetricsEnabled    bool
+		expectedServicePorts  int
+		expectedEndpointPorts int
+		expectHTTPMetricsPort bool
+	}{
+		{
+			name:                  "HTTP metrics enabled (default)",
+			httpMetricsEnabled:    true,
+			expectedServicePorts:  3, // https-metrics, http-metrics, cadvisor
+			expectedEndpointPorts: 3,
+			expectHTTPMetricsPort: true,
+		},
+		{
+			name:                  "HTTP metrics disabled",
+			httpMetricsEnabled:    false,
+			expectedServicePorts:  2, // https-metrics, cadvisor (no http-metrics)
+			expectedEndpointPorts: 2,
+			expectHTTPMetricsPort: false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Controller{
+				httpMetricsEnabled: tc.httpMetricsEnabled,
+			}
+
+			// Test servicePorts
+			svcPorts := c.servicePorts()
+			require.Len(t, svcPorts, tc.expectedServicePorts, "unexpected number of service ports")
+
+			hasHTTPPort := false
+			for _, p := range svcPorts {
+				if p.Name == httpPortName && p.Port == httpPort {
+					hasHTTPPort = true
+					break
+				}
+			}
+			require.Equal(t, tc.expectHTTPMetricsPort, hasHTTPPort, "http-metrics port presence mismatch in service ports")
+
+			// Test endpointPorts
+			epPorts := c.endpointPorts()
+			require.Len(t, epPorts, tc.expectedEndpointPorts, "unexpected number of endpoint ports")
+
+			hasHTTPPort = false
+			for _, p := range epPorts {
+				if p.Name == httpPortName && p.Port == httpPort {
+					hasHTTPPort = true
+					break
+				}
+			}
+			require.Equal(t, tc.expectHTTPMetricsPort, hasHTTPPort, "http-metrics port presence mismatch in endpoint ports")
+
+			// Test endpointSlicePorts
+			epsPorts := c.endpointSlicePorts()
+			require.Len(t, epsPorts, tc.expectedEndpointPorts, "unexpected number of endpointslice ports")
+
+			hasHTTPPort = false
+			for _, p := range epsPorts {
+				if p.Name != nil && *p.Name == httpPortName && p.Port != nil && *p.Port == httpPort {
+					hasHTTPPort = true
+					break
+				}
+			}
+			require.Equal(t, tc.expectHTTPMetricsPort, hasHTTPPort, "http-metrics port presence mismatch in endpointslice ports")
+		})
+	}
+}

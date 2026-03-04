@@ -28,7 +28,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -266,7 +266,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)
 
 	// Mount related secrets
-	rn := k8sutil.NewResourceNamerWithPrefix("secret")
+	rn := k8s.NewResourceNamerWithPrefix("secret")
 	for _, s := range cpf.Secrets {
 		name, err := rn.DNS1123Label(s)
 		if err != nil {
@@ -288,7 +288,7 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		})
 	}
 
-	rn = k8sutil.NewResourceNamerWithPrefix("configmap")
+	rn = k8s.NewResourceNamerWithPrefix("configmap")
 	for _, c := range cpf.ConfigMaps {
 		name, err := rn.DNS1123Label(c)
 		if err != nil {

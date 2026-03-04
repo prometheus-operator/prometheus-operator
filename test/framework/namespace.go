@@ -16,7 +16,6 @@ package framework
 
 import (
 	"context"
-	"encoding/json"
 	"maps"
 	"testing"
 
@@ -24,12 +23,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *TestCtx) string {
 	name := testCtx.ID()
-	rn := k8sutil.ResourceNamer{}
+	rn := k8s.ResourceNamer{}
 	name, err := rn.UniqueDNS1123Label(name)
 	if err != nil {
 		t.Fatalf("failed to generate namespace %v: %v", name, err)
@@ -81,25 +80,7 @@ func (f *Framework) AddLabelsToNamespace(ctx context.Context, name string, addit
 }
 
 func (f *Framework) RemoveLabelsFromNamespace(ctx context.Context, name string, labels ...string) error {
-	ns, err := f.KubeClient.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	if len(ns.Labels) == 0 {
-		return nil
-	}
-
-	type patch struct {
-		Op   string `json:"op"`
-		Path string `json:"path"`
-	}
-
-	var patches []patch
-	for _, l := range labels {
-		patches = append(patches, patch{Op: "remove", Path: "/metadata/labels/" + l})
-	}
-	b, err := json.Marshal(patches)
+	b, err := removeLabelsPatch(labels...)
 	if err != nil {
 		return err
 	}
