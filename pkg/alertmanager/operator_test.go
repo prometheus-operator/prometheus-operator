@@ -195,7 +195,16 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 // after selecting AlertmanagerConfig resources and before generating the
 // Alertmanager configuration.
 func TestCheckAlertmanagerConfig(t *testing.T) {
-	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version26, err := semver.ParseTolerant("v0.26.0")
+	require.NoError(t, err)
+
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
 	c := fake.NewSimpleClientset(
@@ -216,6 +225,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 
 	for _, tc := range []struct {
 		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		version  *semver.Version
 		ok       bool
 	}{
 		{
@@ -1360,7 +1370,59 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "telegram-bottoken",
+					Name:      "email-config-with-implicit-tls",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost:        ptr.To("example.com:587"),
+								From:             ptr.To("admin@example.com"),
+								To:               ptr.To("customers@example.com"),
+								ForceImplicitTLS: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version31,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "email-config-with-implicit-tls",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost:        ptr.To("example.com:587"),
+								From:             ptr.To("admin@example.com"),
+								To:               ptr.To("customers@example.com"),
+								ForceImplicitTLS: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-with-bottoken",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1383,13 +1445,18 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					}},
 				},
 			},
-			ok: false,
+			version: &version26,
+			ok:      false,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, version, store)
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
 			if tc.ok {
 				require.NoError(t, err)
 				return
