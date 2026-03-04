@@ -198,6 +198,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)
 
+	version25, err := semver.ParseTolerant("v0.25.0")
+	require.NoError(t, err)
+
 	version26, err := semver.ParseTolerant("v0.26.0")
 	require.NoError(t, err)
 
@@ -1446,6 +1449,29 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version26,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-with-unsupported-bottokenfile",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
+							{
+								BotTokenFile: ptr.To("/bot/token/file"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version25,
 			ok:      false,
 		},
 	} {
