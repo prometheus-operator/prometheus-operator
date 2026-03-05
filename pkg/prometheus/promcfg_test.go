@@ -5310,6 +5310,72 @@ func TestScrapeConfigBodySizeLimit(t *testing.T) {
 	golden.Assert(t, string(cfg), "ScrapeConfigBodySizeLimit.golden")
 }
 
+func TestScrapeConfigScrapeFailureLogFile(t *testing.T) {
+	for _, tc := range []struct {
+		scenario             string
+		prometheusVersion    string
+		scrapeFailureLogFile *string
+		golden               string
+	}{
+		{
+			scenario:             "scrape_failure_log_file set",
+			prometheusVersion:    "v2.55.0",
+			scrapeFailureLogFile: ptr.To("/tmp/scrape_failures.log"),
+			golden:               "ScrapeConfigScrapeFailureLogFile.golden",
+		},
+		{
+			scenario:             "scrape_failure_log_file unsupported version",
+			prometheusVersion:    "v2.54.0",
+			scrapeFailureLogFile: ptr.To("/tmp/scrape_failures.log"),
+			golden:               "ScrapeConfigScrapeFailureLogFileUnsupportedVersion.golden",
+		},
+		{
+			scenario:          "scrape_failure_log_file not set",
+			prometheusVersion: "v2.55.0",
+			golden:            "ScrapeConfigScrapeFailureLogFileNotSet.golden",
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.prometheusVersion
+
+			scrapeConfig := monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testscrapeconfig1",
+					Namespace: "default",
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					StaticConfigs: []monitoringv1alpha1.StaticConfig{
+						{
+							Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+						},
+					},
+					ScrapeFailureLogFile: tc.scrapeFailureLogFile,
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				map[string]*monitoringv1alpha1.ScrapeConfig{
+					"testscrapeconfig1": &scrapeConfig,
+				},
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestMatchExpressionsServiceMonitor(t *testing.T) {
 	p := defaultPrometheus()
 

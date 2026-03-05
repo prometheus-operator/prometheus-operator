@@ -79,6 +79,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	v1.ProxyConfigApplyConfiguration           `json:",inline"`
 	NameValidationScheme                       *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 	NameEscapingScheme                         *monitoringv1.NameEscapingSchemeOptions   `json:"nameEscapingScheme,omitempty"`
+	ScrapeFailureLogFile                       *string                                   `json:"scrapeFailureLogFile,omitempty"`
 	ScrapeClassName                            *string                                   `json:"scrapeClass,omitempty"`
 }
 
@@ -704,6 +705,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithNameValidationScheme(value moni
 // If called multiple times, the NameEscapingScheme field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithNameEscapingScheme(value monitoringv1.NameEscapingSchemeOptions) *ScrapeConfigSpecApplyConfiguration {
 	b.NameEscapingScheme = &value
+	return b
+}
+
+// WithScrapeFailureLogFile sets the ScrapeFailureLogFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ScrapeFailureLogFile field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeFailureLogFile(value string) *ScrapeConfigSpecApplyConfiguration {
+	b.ScrapeFailureLogFile = &value
 	return b
 }
 
