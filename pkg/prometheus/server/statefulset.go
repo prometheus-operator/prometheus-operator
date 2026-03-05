@@ -458,8 +458,13 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 
 // appendServerVolumes returns a set of volumes to be mounted on the statefulset spec that are specific to Prometheus Server.
 func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, volumeMounts []corev1.VolumeMount, ruleConfigMapNames []string) ([]corev1.Volume, []corev1.VolumeMount) {
-	// not mount 2 emptyDir volumes at the same mountpath
-	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
+	// Only add the query log file volume when the log directory isn't already
+	// mounted by BuildCommonVolumes. The log directory is mounted whenever
+	// per-ScrapeConfig failure logs are not disabled or when the global
+	// ScrapeFailureLogFile uses the default volume.
+	logDirAlreadyMounted := (p.Spec.ScrapeFailureLogFile != nil && prompkg.UsesDefaultFileVolume(*p.Spec.ScrapeFailureLogFile)) ||
+		!ptr.Deref(p.Spec.DisableScrapeFailureLogFile, false)
+	if volume, ok := queryLogFileVolume(p.Spec.QueryLogFile); ok && !logDirAlreadyMounted {
 		volumes = append(volumes, volume)
 	}
 
@@ -485,8 +490,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, vo
 		})
 	}
 
-	// Prevent mounting 2 emptyDir volumes at the same mountpath
-	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && p.Spec.ScrapeFailureLogFile == nil {
+	if vmount, ok := queryLogFileVolumeMount(p.Spec.QueryLogFile); ok && !logDirAlreadyMounted {
 		volumeMounts = append(volumeMounts, vmount)
 	}
 

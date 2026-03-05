@@ -288,12 +288,13 @@ func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 }
 
 func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
-	// An emptyDir is only mounted by the Operator if the given
-	// path is only a base filename.
+	// The emptyDir is not mounted when DisableScrapeFailureLogFile is true,
+	// even when a global ScrapeFailureLogFile with a full path is set.
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
 		Spec: monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+				ScrapeFailureLogFile:        ptr.To("/tmp/file.log"),
+				DisableScrapeFailureLogFile: ptr.To(true),
 			},
 		},
 	})
