@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  slack_configs:
+  - app_token: xoxb-1234-abcdefgh
+templates: []
