@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 )
@@ -33,13 +33,13 @@ var _ = Owner(&fakeOwner{})
 func TestUpdateObject(t *testing.T) {
 	for _, tc := range []struct {
 		opts []ObjectOption
-		o    *v1.Secret
+		o    *corev1.Secret
 
-		exp *v1.Secret
+		exp *corev1.Secret
 	}{
 		{
-			o: &v1.Secret{},
-			exp: &v1.Secret{
+			o: &corev1.Secret{},
+			exp: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"app.kubernetes.io/managed-by": "prometheus-operator",
@@ -67,7 +67,7 @@ func TestUpdateObject(t *testing.T) {
 					},
 				),
 			},
-			o: &v1.Secret{
+			o: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{"annotation1": "val1", "annotation2": "val2"},
 					Labels:      map[string]string{"managed-by": "prometheus-operator2", "label2": "val2"},
@@ -81,7 +81,7 @@ func TestUpdateObject(t *testing.T) {
 					},
 				},
 			},
-			exp: &v1.Secret{
+			exp: &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: map[string]string{
 						"annotation1": "val1",

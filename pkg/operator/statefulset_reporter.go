@@ -21,7 +21,7 @@ import (
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
@@ -30,19 +30,19 @@ import (
 )
 
 // Pod is an alias for the Kubernetes v1.Pod type.
-type Pod v1.Pod
+type Pod corev1.Pod
 
 // Ready returns true if the pod is ready.
 func (p *Pod) Ready() bool {
-	if p.Status.Phase != v1.PodRunning {
+	if p.Status.Phase != corev1.PodRunning {
 		return false
 	}
 
 	for _, cond := range p.Status.Conditions {
-		if cond.Type != v1.PodReady {
+		if cond.Type != corev1.PodReady {
 			continue
 		}
-		return cond.Status == v1.ConditionTrue
+		return cond.Status == corev1.ConditionTrue
 	}
 
 	return false
@@ -50,14 +50,14 @@ func (p *Pod) Ready() bool {
 
 // Message returns a human-readable and terse message about the state of the pod.
 func (p *Pod) Message() string {
-	for _, condType := range []v1.PodConditionType{
-		v1.PodScheduled,    // Check first that the pod is scheduled.
-		v1.PodInitialized,  // Then that init containers have been started successfully.
-		v1.ContainersReady, // Then that all containers are ready.
-		v1.PodReady,        // And finally that the pod is ready.
+	for _, condType := range []corev1.PodConditionType{
+		corev1.PodScheduled,    // Check first that the pod is scheduled.
+		corev1.PodInitialized,  // Then that init containers have been started successfully.
+		corev1.ContainersReady, // Then that all containers are ready.
+		corev1.PodReady,        // And finally that the pod is ready.
 	} {
 		for _, cond := range p.Status.Conditions {
-			if cond.Type == condType && cond.Status == v1.ConditionFalse {
+			if cond.Type == condType && cond.Status == corev1.ConditionFalse {
 				return cond.Message
 			}
 		}

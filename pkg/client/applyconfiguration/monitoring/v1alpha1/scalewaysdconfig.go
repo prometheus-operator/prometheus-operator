@@ -31,7 +31,7 @@ type ScalewaySDConfigApplyConfiguration struct {
 	ProjectID                                                    *string                          `json:"projectID,omitempty"`
 	Role                                                         *monitoringv1alpha1.ScalewayRole `json:"role,omitempty"`
 	Port                                                         *int32                           `json:"port,omitempty"`
-	ApiURL                                                       *string                          `json:"apiURL,omitempty"`
+	ApiURL                                                       *monitoringv1alpha1.URL          `json:"apiURL,omitempty"`
 	Zone                                                         *string                          `json:"zone,omitempty"`
 	NameFilter                                                   *string                          `json:"nameFilter,omitempty"`
 	TagsFilter                                                   []string                         `json:"tagsFilter,omitempty"`
@@ -91,7 +91,7 @@ func (b *ScalewaySDConfigApplyConfiguration) WithPort(value int32) *ScalewaySDCo
 // WithApiURL sets the ApiURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ApiURL field is set to the value of the last call.
-func (b *ScalewaySDConfigApplyConfiguration) WithApiURL(value string) *ScalewaySDConfigApplyConfiguration {
+func (b *ScalewaySDConfigApplyConfiguration) WithApiURL(value monitoringv1alpha1.URL) *ScalewaySDConfigApplyConfiguration {
 	b.ApiURL = &value
 	return b
 }
