@@ -1377,8 +1377,8 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SlackConfigs: []monitoringv1alpha1.SlackConfig{
 							{
-								AppToken: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
 								},
 							},
@@ -1400,8 +1400,8 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SlackConfigs: []monitoringv1alpha1.SlackConfig{
 							{
-								AppToken: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
 								},
 							},
@@ -1423,8 +1423,8 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SlackConfigs: []monitoringv1alpha1.SlackConfig{
 							{
-								AppToken: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{Name: "secret"},
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
 								},
 							},
@@ -1577,7 +1577,7 @@ func TestCheckAlertmanagerResource(t *testing.T) {
 		name      string
 		am        *monitoringv1.Alertmanager
 		version   string
-		secrets   []*v1.Secret
+		secrets   []*corev1.Secret
 		expectErr bool
 	}{
 		{
@@ -1603,8 +1603,8 @@ func TestCheckAlertmanagerResource(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Name: "global",
 						Global: &monitoringv1.AlertmanagerGlobalConfig{
-							SlackAppToken: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "slack-secret",
 								},
 								Key: "token",
@@ -1614,7 +1614,7 @@ func TestCheckAlertmanagerResource(t *testing.T) {
 				},
 			},
 			version: "0.30.0",
-			secrets: []*v1.Secret{
+			secrets: []*corev1.Secret{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "slack-secret",
@@ -1638,8 +1638,8 @@ func TestCheckAlertmanagerResource(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Name: "global",
 						Global: &monitoringv1.AlertmanagerGlobalConfig{
-							SlackAppToken: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "slack-secret",
 								},
 								Key: "token",
@@ -1662,8 +1662,8 @@ func TestCheckAlertmanagerResource(t *testing.T) {
 					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
 						Name: "global",
 						Global: &monitoringv1.AlertmanagerGlobalConfig{
-							SlackAppToken: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "missing-secret",
 								},
 								Key: "token",
