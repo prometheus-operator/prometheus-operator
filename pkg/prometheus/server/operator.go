@@ -993,6 +993,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 		operator.SanitizeSTS(sset)
 
+		if err = c.updateConfigResourcesStatus(ctx, p, *resources); err != nil {
+			return err
+		}
+
 		if notFound {
 			logger.Debug("creating statefulset")
 			if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
@@ -1060,8 +1064,6 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if len(deleteErrs) > 0 {
 		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
-
-	err = c.updateConfigResourcesStatus(ctx, p, *resources)
 
 	return err
 }
