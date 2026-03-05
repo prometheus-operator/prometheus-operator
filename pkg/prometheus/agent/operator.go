@@ -450,10 +450,9 @@ func (c *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (c *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := c.promInfs.ListAll(labels.Everything(), func(o any) {
-		p := o.(*monitoringv1alpha1.PrometheusAgent)
-		processFn(p, p.Status.Conditions)
+		processFn(o.(*monitoringv1alpha1.PrometheusAgent))
 	}); err != nil {
 		c.logger.Error("failed to list PrometheusAgent objects", "err", err)
 	}

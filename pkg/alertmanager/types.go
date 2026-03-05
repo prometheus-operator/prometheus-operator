@@ -152,7 +152,7 @@ type pagerdutyConfig struct {
 	Client         string            `yaml:"client,omitempty"`
 	ClientURL      string            `yaml:"client_url,omitempty"`
 	Description    string            `yaml:"description,omitempty"`
-	Details        map[string]string `yaml:"details,omitempty"`
+	Details        map[string]any    `yaml:"details,omitempty"`
 	Images         []pagerdutyImage  `yaml:"images,omitempty"`
 	Links          []pagerdutyLink   `yaml:"links,omitempty"`
 	Severity       string            `yaml:"severity,omitempty"`

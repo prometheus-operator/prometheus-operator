@@ -23,20 +23,21 @@ import (
 // EmailConfigApplyConfiguration represents a declarative configuration of the EmailConfig type for use
 // with apply.
 type EmailConfigApplyConfiguration struct {
-	SendResolved *bool                                `json:"sendResolved,omitempty"`
-	To           *string                              `json:"to,omitempty"`
-	From         *string                              `json:"from,omitempty"`
-	Hello        *string                              `json:"hello,omitempty"`
-	Smarthost    *string                              `json:"smarthost,omitempty"`
-	AuthUsername *string                              `json:"authUsername,omitempty"`
-	AuthPassword *SecretKeySelectorApplyConfiguration `json:"authPassword,omitempty"`
-	AuthSecret   *SecretKeySelectorApplyConfiguration `json:"authSecret,omitempty"`
-	AuthIdentity *string                              `json:"authIdentity,omitempty"`
-	Headers      []KeyValueApplyConfiguration         `json:"headers,omitempty"`
-	HTML         *string                              `json:"html,omitempty"`
-	Text         *string                              `json:"text,omitempty"`
-	RequireTLS   *bool                                `json:"requireTLS,omitempty"`
-	TLSConfig    *v1.SafeTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	SendResolved     *bool                                `json:"sendResolved,omitempty"`
+	To               *string                              `json:"to,omitempty"`
+	From             *string                              `json:"from,omitempty"`
+	Hello            *string                              `json:"hello,omitempty"`
+	Smarthost        *string                              `json:"smarthost,omitempty"`
+	AuthUsername     *string                              `json:"authUsername,omitempty"`
+	AuthPassword     *SecretKeySelectorApplyConfiguration `json:"authPassword,omitempty"`
+	AuthSecret       *SecretKeySelectorApplyConfiguration `json:"authSecret,omitempty"`
+	AuthIdentity     *string                              `json:"authIdentity,omitempty"`
+	Headers          []KeyValueApplyConfiguration         `json:"headers,omitempty"`
+	HTML             *string                              `json:"html,omitempty"`
+	Text             *string                              `json:"text,omitempty"`
+	RequireTLS       *bool                                `json:"requireTLS,omitempty"`
+	TLSConfig        *v1.SafeTLSConfigApplyConfiguration  `json:"tlsConfig,omitempty"`
+	ForceImplicitTLS *bool                                `json:"forceImplicitTLS,omitempty"`
 }
 
 // EmailConfigApplyConfiguration constructs a declarative configuration of the EmailConfig type for use with
@@ -159,5 +160,13 @@ func (b *EmailConfigApplyConfiguration) WithRequireTLS(value bool) *EmailConfigA
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *EmailConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApplyConfiguration) *EmailConfigApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithForceImplicitTLS sets the ForceImplicitTLS field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ForceImplicitTLS field is set to the value of the last call.
+func (b *EmailConfigApplyConfiguration) WithForceImplicitTLS(value bool) *EmailConfigApplyConfiguration {
+	b.ForceImplicitTLS = &value
 	return b
 }

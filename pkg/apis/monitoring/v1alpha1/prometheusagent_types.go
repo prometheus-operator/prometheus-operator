@@ -38,6 +38,14 @@ func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 	return l.Status
 }
 
+func (p *PrometheusAgent) ExpectedReplicas() int {
+	return p.Spec.CommonPrometheusFields.ExpectedReplicas()
+}
+
+func (p *PrometheusAgent) GetAvailableReplicas() int               { return int(p.Status.AvailableReplicas) }
+func (p *PrometheusAgent) GetUpdatedReplicas() int                 { return int(p.Status.UpdatedReplicas) }
+func (p *PrometheusAgent) GetConditions() []monitoringv1.Condition { return p.Status.Conditions }
+
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:resource:categories="prometheus-operator",shortName="promagent"

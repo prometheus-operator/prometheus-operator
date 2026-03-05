@@ -33,19 +33,36 @@ const (
 	DeprecatedFieldsInUseReason = "DeprecatedFieldsInUse"
 )
 
+// StatusGetter represents a workload resource implementing the interface
+// required by StatusPoller.
+type StatusGetter interface {
+	metav1.Object
+	GetConditions() []monitoringv1.Condition
+	ExpectedReplicas() int
+	GetUpdatedReplicas() int
+	GetAvailableReplicas() int
+}
+
+// StatusReconciler can walk through all workload resources (Iterate) and
+// trigger a status reconciliation (RefreshStatusFor).
 type StatusReconciler interface {
-	Iterate(func(metav1.Object, []monitoringv1.Condition))
+	Iterate(func(StatusGetter))
 	RefreshStatusFor(metav1.Object)
 }
 
-// StatusPoller refreshes regularly the objects for which the Available
-// condition isn't True. It ensures that the status subresource eventually
-// reflects the pods conditions.
-// For instance when a new version of the statefulset is rolled out and the
-// updated pod has non-ready containers, the statefulset status won't see
-// any update because the number of ready/updated replicas doesn't change.
-// Without the periodic refresh, the object's status would report "containers
-// with incomplete status: [init-config-reloader]" forever.
+// StatusPoller refreshes regularly the workload resources for which:
+//   - the Available condition isn't True.
+//   - the number of updated and available replicas don't match the expected
+//     replica number.
+//
+// It ensures that the status subresource gets eventually reconciled. For
+// instance when a new version of the statefulset is rolled out and the updated
+// pod has non-ready containers, the statefulset status won't see any update
+// because the number of ready/updated replicas doesn't change. Without the
+// periodic refresh, the object's status would report "containers with
+// incomplete status: [init-config-reloader]" forever.
+// It can also be that the updated/available replica fields aren't updated as
+// they should be due to races in the controller logic.
 func StatusPoller(ctx context.Context, sr StatusReconciler) {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
@@ -54,11 +71,16 @@ func StatusPoller(ctx context.Context, sr StatusReconciler) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			sr.Iterate(func(meta metav1.Object, conditions []monitoringv1.Condition) {
-				for _, cond := range conditions {
+			sr.Iterate(func(resource StatusGetter) {
+				replicas := resource.ExpectedReplicas()
+				if replicas != resource.GetUpdatedReplicas() || replicas != resource.GetAvailableReplicas() {
+					sr.RefreshStatusFor(resource)
+				}
+
+				for _, cond := range resource.GetConditions() {
 					if cond.Type == monitoringv1.Available && cond.Status != monitoringv1.ConditionTrue {
-						sr.RefreshStatusFor(meta)
-						break
+						sr.RefreshStatusFor(resource)
+						return
 					}
 				}
 			})

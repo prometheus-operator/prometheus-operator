@@ -509,10 +509,9 @@ func (c *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (c *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := c.alrtInfs.ListAll(labels.Everything(), func(o any) {
-		a := o.(*monitoringv1.Alertmanager)
-		processFn(a, a.Status.Conditions)
+		processFn(o.(*monitoringv1.Alertmanager))
 	}); err != nil {
 		c.logger.Error("failed to list Alertmanager objects", "err", err)
 	}
@@ -1200,7 +1199,7 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
-		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), store)
+		err = checkEmailConfigs(ctx, receiver.EmailConfigs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
 		}
@@ -1409,6 +1408,10 @@ func checkSlackConfigs(
 			}
 		}
 
+		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
+			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
@@ -1502,7 +1505,13 @@ func checkWebexConfigs(
 	return nil
 }
 
-func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailConfig, namespace string, store *assets.StoreBuilder) error {
+func checkEmailConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.EmailConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
 	for _, config := range configs {
 		if config.AuthPassword != nil {
 			if _, err := store.GetSecretKey(ctx, namespace, *config.AuthPassword); err != nil {
@@ -1517,6 +1526,10 @@ func checkEmailConfigs(ctx context.Context, configs []monitoringv1alpha1.EmailCo
 
 		if err := store.AddSafeTLSConfig(ctx, namespace, config.TLSConfig); err != nil {
 			return err
+		}
+
+		if config.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
+			return fmt.Errorf(`forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 	}
 

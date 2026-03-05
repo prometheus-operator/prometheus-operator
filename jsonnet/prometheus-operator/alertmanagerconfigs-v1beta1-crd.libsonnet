@@ -862,6 +862,10 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          forceImplicitTLS: {
+                            description: 'forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.\ntrue: force use of implicit TLS (direct TLS connection on any port)\nfalse: force disable implicit TLS (use explicit TLS/STARTTLS if required)\nnil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility\nIt requires Alertmanager >= v0.31.0.',
+                            type: 'boolean',
+                          },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
                             minLength: 1,
@@ -6430,6 +6434,11 @@
                           linkNames: {
                             description: 'linkNames enables automatic linking of channel names and usernames in the message.\nWhen true, @channel and @username will be converted to clickable links.',
                             type: 'boolean',
+                          },
+                          messageText: {
+                            description: "messageText defines text content of the Slack message.\nIf set, this is sent as the top-level 'text' field in the Slack payload.\nIt requires Alertmanager >= v0.31.0.",
+                            minLength: 1,
+                            type: 'string',
                           },
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
