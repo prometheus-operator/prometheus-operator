@@ -8647,7 +8647,7 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 					{
 						Role:             monitoringv1alpha1.OpenStackRoleInstance,
 						Region:           "region-1",
-						IdentityEndpoint: ptr.To("http://identity.example.com:5000/v2.0"),
+						IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://identity.example.com:5000/v2.0")),
 						Username:         ptr.To("nova-user-1"),
 						Password: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
@@ -8919,7 +8919,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -8990,7 +8990,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &corev1.ConfigMapKeySelector{
@@ -9053,7 +9053,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -9109,7 +9109,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -9166,7 +9166,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -11274,7 +11274,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 						TagSeparator:    ptr.To(","),
 						Namespace:       ptr.To("default"),
 						Region:          ptr.To("default"),
-						Server:          "127.0.0.1",
+						Server:          "http://127.0.0.1:4646",
 						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
 					},
 				},
@@ -12265,7 +12265,7 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
 						Zone:       ptr.To("fr-par-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com"),
+						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 						ProxyConfig: monitoringv1.ProxyConfig{

@@ -16,7 +16,7 @@ scrape_configs:
     proxy_connect_header:
       header:
       - value
-    server: 127.0.0.1
+    server: http://127.0.0.1:4646
     allow_stale: true
     namespace: default
     refresh_interval: 30s

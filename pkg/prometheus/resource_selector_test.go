@@ -2281,7 +2281,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			promVersion: "2.31.0",
+			promVersion: "2.20.0",
 			valid:       false,
 		},
 		{
@@ -3406,7 +3406,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -3441,7 +3441,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -3462,7 +3462,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -3481,7 +3481,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -3735,6 +3735,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -3769,6 +3770,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -3789,6 +3791,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
@@ -3814,6 +3817,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -3826,6 +3830,69 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			valid: false,
+		},
+		{
+			scenario: "Nomad SD config with invalid server (missing scheme)",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
+					{
+						Server: "localhost:4646",
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "Docker SD config with MatchFirstNetwork rejected for Prometheus < 2.54.1",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
+					{
+						Host:              "unix:///var/run/docker.sock",
+						MatchFirstNetwork: ptr.To(true),
+					},
+				}
+			},
+			promVersion: "2.54.0",
+			valid:       false,
+		},
+		{
+			scenario: "Docker SD config with MatchFirstNetwork accepted for Prometheus >= 2.54.1",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
+					{
+						Host:              "unix:///var/run/docker.sock",
+						MatchFirstNetwork: ptr.To(true),
+					},
+				}
+			},
+			promVersion: "2.54.1",
+			valid:       true,
+		},
+		{
+			scenario: "Hetzner SD config with LabelSelector rejected for Prometheus < 3.5.0",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role:          "hcloud",
+						LabelSelector: ptr.To("env=production"),
+					},
+				}
+			},
+			promVersion: "3.4.0",
+			valid:       false,
+		},
+		{
+			scenario: "Hetzner SD config with LabelSelector accepted for Prometheus >= 3.5.0",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role:          "hcloud",
+						LabelSelector: ptr.To("env=production"),
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
 		},
 		{
 			scenario: "Dockerswarm SD config with valid TLS Config",
@@ -4281,7 +4348,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 						Zone:       ptr.To("beijing-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com/")),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 					},
