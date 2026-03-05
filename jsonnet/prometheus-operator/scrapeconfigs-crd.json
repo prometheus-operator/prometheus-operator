@@ -11669,6 +11669,10 @@
                     "description": "scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.\nIt requires Prometheus >= v2.45.0.\n\nNotice: `scrapeClassicHistograms` corresponds to the `always_scrape_classic_histograms` field in the Prometheus configuration.",
                     "type": "boolean"
                   },
+                  "scrapeFailureLogFile": {
+                    "description": "scrapeFailureLogFile enables logging scrape failures for this job to a file.\nWhen set to true, the operator generates a predictable log file path:\n`/var/log/prometheus/scrapeconfig-<namespace>-<name>.log`.\nThis requires the `/var/log/prometheus` directory to be writable in the\nPrometheus pod. The directory is automatically mounted as an emptyDir volume\nunless `spec.disableScrapeFailureLogFile` is set to true on the Prometheus resource.\n\nNote: this field only applies to ScrapeConfig resources. To disable this\nfeature cluster-wide, set `spec.disableScrapeFailureLogFile: true` on the\nPrometheus/PrometheusAgent resource.\n\nIt requires Prometheus >= v2.55.0.",
+                    "type": "boolean"
+                  },
                   "scrapeInterval": {
                     "description": "scrapeInterval defines the interval between consecutive scrapes.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

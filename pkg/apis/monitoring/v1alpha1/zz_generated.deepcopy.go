@@ -3154,6 +3154,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(v1.NameEscapingSchemeOptions)
 		**out = **in
 	}
+	if in.ScrapeFailureLogFile != nil {
+		in, out := &in.ScrapeFailureLogFile, &out.ScrapeFailureLogFile
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ScrapeClassName != nil {
 		in, out := &in.ScrapeClassName, &out.ScrapeClassName
 		*out = new(string)

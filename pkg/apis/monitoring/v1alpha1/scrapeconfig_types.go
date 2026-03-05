@@ -375,6 +375,22 @@ type ScrapeConfigSpec struct {
 	//
 	// +optional
 	NameEscapingScheme *v1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
+	// scrapeFailureLogFile enables logging scrape failures for this job to a file.
+	// When set to true, the operator generates a predictable log file path:
+	// `/var/log/prometheus/scrapeconfig-<namespace>-<name>.log`.
+	// This requires the `/var/log/prometheus` directory to be writable in the
+	// Prometheus pod. The directory is automatically mounted as an emptyDir volume
+	// unless `spec.disableScrapeFailureLogFile` is set to true on the Prometheus resource.
+	//
+	// Note: this field only applies to ScrapeConfig resources. To disable this
+	// feature cluster-wide, set `spec.disableScrapeFailureLogFile: true` on the
+	// Prometheus/PrometheusAgent resource.
+	//
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +optional
+	//nolint:kubeapilinter
+	ScrapeFailureLogFile *bool `json:"scrapeFailureLogFile,omitempty"`
 	// scrapeClass defines the scrape class to apply.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

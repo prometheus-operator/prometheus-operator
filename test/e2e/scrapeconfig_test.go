@@ -16,6 +16,8 @@ package e2e
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
 // testScrapeConfigCreation tests multiple ScrapeConfig definitions.
@@ -5030,4 +5033,121 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+}
+
+// testScrapeConfigScrapeFailureLogFile verifies that when a ScrapeConfig enables
+// scrape failure logging, the operator generates a deterministic log file path in the
+// Prometheus configuration and mounts the log directory in the pod.
+// It also verifies that the workload owner can disable the feature via
+// spec.disableScrapeFailureLogFile on the Prometheus resource.
+func testScrapeConfigScrapeFailureLogFile(t *testing.T) {
+	skipPrometheusTests(t)
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperator(
+		context.Background(),
+		ns,
+		[]string{ns},
+		nil,
+		[]string{ns},
+		nil,
+		false,
+		true,
+		true,
+	)
+	require.NoError(t, err)
+
+	t.Run("log file path generated and log dir mounted", func(t *testing.T) {
+		p := framework.MakeBasicPrometheus(ns, "prom-log", "group", 1)
+		p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{"role": "scrapeconfig"},
+		}
+		_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+		require.NoError(t, err)
+
+		sc := framework.MakeBasicScrapeConfig(ns, "scrape-config-log")
+		sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+			{Targets: []monitoringv1alpha1.Target{"localhost:9090"}},
+		}
+		sc.Spec.ScrapeFailureLogFile = ptr.To(true)
+		_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
+		require.NoError(t, err)
+
+		expectedLogFile := fmt.Sprintf(
+			"scrape_failure_log_file: /var/log/prometheus/scrapeconfig-%s-%s.log",
+			ns, "scrape-config-log",
+		)
+		podName := "prometheus-prom-log-0"
+
+		// Wait until the config contains the expected scrape_failure_log_file entry.
+		require.Eventually(t, func() bool {
+			stdout, _, execErr := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
+				Command:       []string{"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml"},
+				Namespace:     ns,
+				PodName:       podName,
+				ContainerName: "prometheus",
+				CaptureStdout: true,
+				CaptureStderr: true,
+			})
+			if execErr != nil {
+				return false
+			}
+			return strings.Contains(stdout, expectedLogFile)
+		}, 3*time.Minute, 5*time.Second, "expected scrape_failure_log_file entry not found in Prometheus config")
+
+		// Verify the log directory is mounted in the pod.
+		stdout, _, err := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
+			Command:       []string{"/bin/sh", "-c", "test -d /var/log/prometheus && echo ok"},
+			Namespace:     ns,
+			PodName:       podName,
+			ContainerName: "prometheus",
+			CaptureStdout: true,
+			CaptureStderr: true,
+		})
+		require.NoError(t, err)
+		require.Equal(t, "ok", stdout, "expected /var/log/prometheus to be mounted in the Prometheus pod")
+	})
+
+	t.Run("disabled by workload owner", func(t *testing.T) {
+		p := framework.MakeBasicPrometheus(ns, "prom-log-disabled", "group", 1)
+		p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{"role": "scrapeconfig"},
+		}
+		p.Spec.DisableScrapeFailureLogFile = ptr.To(true)
+		_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+		require.NoError(t, err)
+
+		sc := framework.MakeBasicScrapeConfig(ns, "scrape-config-log-disabled")
+		sc.Spec.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+			{Targets: []monitoringv1alpha1.Target{"localhost:9090"}},
+		}
+		sc.Spec.ScrapeFailureLogFile = ptr.To(true)
+		_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
+		require.NoError(t, err)
+
+		podName := "prometheus-prom-log-disabled-0"
+
+		// Wait for the config to be rendered and verify no scrape_failure_log_file is present.
+		require.Eventually(t, func() bool {
+			stdout, _, execErr := framework.ExecWithOptions(context.Background(), testFramework.ExecOptions{
+				Command:       []string{"/bin/sh", "-c", "cat /etc/prometheus/config_out/prometheus.env.yaml"},
+				Namespace:     ns,
+				PodName:       podName,
+				ContainerName: "prometheus",
+				CaptureStdout: true,
+				CaptureStderr: true,
+			})
+			if execErr != nil {
+				return false
+			}
+			// The config must be rendered (job is present) but must not contain scrape_failure_log_file.
+			return strings.Contains(stdout, "scrape-config-log-disabled") &&
+				!strings.Contains(stdout, "scrape_failure_log_file")
+		}, 3*time.Minute, 5*time.Second, "unexpected scrape_failure_log_file found in Prometheus config when feature is disabled")
+	})
 }
