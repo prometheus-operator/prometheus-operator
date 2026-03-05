@@ -24,7 +24,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
@@ -692,7 +692,7 @@ func createUTF8Rule() *monitoringv1.PrometheusRule {
 func TestPrometheusRuleSync(t *testing.T) {
 	c := fake.NewClientset(
 		// This configmap should be left untouched.
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "prometheus-bar-rulefiles-0",
 				Namespace: "monitoring",
