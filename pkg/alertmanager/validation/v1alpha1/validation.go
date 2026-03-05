@@ -380,7 +380,7 @@ func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error 
 		}
 
 		if config.BotToken != nil && config.BotTokenFile != nil {
-			return fmt.Errorf("[%d]: one of 'botToken' or 'botTokenfile' must be configured", i)
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
 		}
 
 		if config.ChatID == 0 {
