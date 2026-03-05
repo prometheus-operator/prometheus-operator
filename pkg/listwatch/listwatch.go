@@ -240,6 +240,10 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 	options.FieldSelector = strings.Join(selectors, ",")
 }
 
+// pollBasedListerWatcher is a lister/watcher on a fixed list of namespaces.
+// It retrieves the namespaces from the Kubernetes API periodically and
+// notifies any addition/update/deletion to the client as a regular
+// lister/watcher would do.
 type pollBasedListerWatcher struct {
 	corev1Client corev1.CoreV1Interface
 	ch           chan watch.Event
@@ -330,10 +334,16 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 	)
 
 	for ns, entry := range pblw.cache {
-		result, err := pblw.corev1Client.Namespaces().Get(ctx, ns, metav1.GetOptions{ResourceVersion: entry.ns.ResourceVersion})
+		var resourceVersion string
+		if entry.ns != nil {
+			// The resource is in the cache.
+			resourceVersion = entry.ns.ResourceVersion
+		}
+		result, err := pblw.corev1Client.Namespaces().Get(ctx, ns, metav1.GetOptions{ResourceVersion: resourceVersion})
 		if err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
+				// If the namespace existed before, notify its deletion.
 				if entry.present {
 					deleted = append(deleted, ns)
 				}
@@ -343,7 +353,7 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 			continue
 		}
 
-		if entry.ns.ResourceVersion != result.ResourceVersion {
+		if resourceVersion != result.ResourceVersion {
 			updated = append(updated, result)
 		}
 	}
