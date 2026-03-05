@@ -61,6 +61,7 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 		if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal merged container %s: %w", container.Name, err)
 		}
+		sanitizeProbeHandlers(&patchResult)
 
 		// Add the patch result and remove the corresponding key from the to do list.
 		out = append(out, patchResult)
@@ -71,9 +72,45 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 	// Iterate over patches to preserve the order.
 	for _, c := range patches {
 		if container, found := containersByName[c.Name]; found {
+			sanitizeProbeHandlers(&container)
 			out = append(out, container)
 		}
 	}
 
 	return out, nil
+}
+
+// sanitizeProbeHandlers ensures each probe has at most one handler type.
+// Strategic merge can leave multiple handler types set (e.g. HTTPGet from base + TCPSocket from patch),
+// which causes Kubernetes "may not specify more than 1 handler type" validation error.
+func sanitizeProbeHandlers(c *v1.Container) {
+	for _, p := range []*v1.Probe{c.StartupProbe, c.ReadinessProbe, c.LivenessProbe} {
+		if p == nil {
+			continue
+		}
+		p.ProbeHandler = sanitizeProbeHandler(p.ProbeHandler)
+	}
+}
+
+func sanitizeProbeHandler(h v1.ProbeHandler) v1.ProbeHandler {
+	out := v1.ProbeHandler{}
+	// Keep exactly one handler. Prefer patch-friendly types (TCPSocket, Exec) over default HTTPGet
+	// so user override to tcpSocket/exec is respected after merge.
+	if h.GRPC != nil {
+		out.GRPC = h.GRPC
+		return out
+	}
+	if h.TCPSocket != nil {
+		out.TCPSocket = h.TCPSocket
+		return out
+	}
+	if h.Exec != nil {
+		out.Exec = h.Exec
+		return out
+	}
+	if h.HTTPGet != nil {
+		out.HTTPGet = h.HTTPGet
+		return out
+	}
+	return out
 }
