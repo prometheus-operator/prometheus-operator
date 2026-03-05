@@ -19,19 +19,19 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-func MakeService(source string) (*v1.Service, error) {
+func MakeService(source string) (*corev1.Service, error) {
 	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
-	resource := v1.Service{}
+	resource := corev1.Service{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&resource); err != nil {
 		return nil, fmt.Errorf("failed to decode file %s: %w", source, err)
 	}
@@ -39,7 +39,7 @@ func MakeService(source string) (*v1.Service, error) {
 	return &resource, nil
 }
 
-func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *v1.Service) (FinalizerFn, error) {
+func (f *Framework) CreateOrUpdateServiceAndWaitUntilReady(ctx context.Context, namespace string, service *corev1.Service) (FinalizerFn, error) {
 	finalizerFn := func() error { return f.DeleteServiceAndWaitUntilGone(ctx, namespace, service.Name) }
 
 	s, err := f.KubeClient.CoreV1().Services(namespace).Get(ctx, service.Name, metav1.GetOptions{})
@@ -105,7 +105,7 @@ func (f *Framework) DeleteServiceAndWaitUntilGone(ctx context.Context, namespace
 }
 
 //nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-func (f *Framework) getEndpoints(ctx context.Context, namespace, serviceName string) (*v1.Endpoints, error) {
+func (f *Framework) getEndpoints(ctx context.Context, namespace, serviceName string) (*corev1.Endpoints, error) {
 	endpoints, err := f.KubeClient.CoreV1().Endpoints(namespace).Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("requesting endpoints for service %v failed: %w", serviceName, err)

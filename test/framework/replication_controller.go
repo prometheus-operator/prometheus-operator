@@ -19,7 +19,7 @@ import (
 	"os"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -31,7 +31,7 @@ func (f *Framework) createReplicationControllerViaYml(ctx context.Context, names
 		return err
 	}
 
-	var rC v1.ReplicationController
+	var rC corev1.ReplicationController
 	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&rC)
 	if err != nil {
 		return err
@@ -51,7 +51,7 @@ func (f *Framework) deleteReplicationControllerViaYml(ctx context.Context, names
 		return err
 	}
 
-	var rC v1.ReplicationController
+	var rC corev1.ReplicationController
 	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&rC)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (f *Framework) deleteReplicationControllerViaYml(ctx context.Context, names
 	return f.KubeClient.CoreV1().ReplicationControllers(namespace).Delete(ctx, rC.Name, metav1.DeleteOptions{})
 }
 
-func (f *Framework) scaleDownReplicationController(ctx context.Context, namespace string, rC v1.ReplicationController) error {
+func (f *Framework) scaleDownReplicationController(ctx context.Context, namespace string, rC corev1.ReplicationController) error {
 	*rC.Spec.Replicas = 0
 	rCAPI := f.KubeClient.CoreV1().ReplicationControllers(namespace)
 

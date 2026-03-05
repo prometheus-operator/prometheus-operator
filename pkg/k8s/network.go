@@ -18,19 +18,19 @@ import (
 	"context"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	clientdiscoveryv1 "k8s.io/client-go/kubernetes/typed/discovery/v1"
 	"k8s.io/client-go/util/retry"
 )
 
 // CreateOrUpdateService creates or updates a Service resource.
-func CreateOrUpdateService(ctx context.Context, sclient clientv1.ServiceInterface, svc *v1.Service) (*v1.Service, error) {
-	var ret *v1.Service
+func CreateOrUpdateService(ctx context.Context, sclient typedcorev1.ServiceInterface, svc *corev1.Service) (*corev1.Service, error) {
+	var ret *corev1.Service
 
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -76,7 +76,7 @@ func mergeOwnerReferences(oldObj []metav1.OwnerReference, newObj []metav1.OwnerR
 // CreateOrUpdateEndpoints creates or updates an Endpoints resource.
 //
 //nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-func CreateOrUpdateEndpoints(ctx context.Context, eclient clientv1.EndpointsInterface, eps *v1.Endpoints) error {
+func CreateOrUpdateEndpoints(ctx context.Context, eclient typedcorev1.EndpointsInterface, eps *corev1.Endpoints) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		endpoints, err := eclient.Get(ctx, eps.Name, metav1.GetOptions{})
@@ -132,7 +132,7 @@ func CreateOrUpdateEndpointSlice(ctx context.Context, c clientdiscoveryv1.Endpoi
 // labels.
 // If it is not selected, fail the reconciliation
 // Warning: the function will panic if the resource's ServiceName is nil..
-func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient clientv1.ServiceInterface, selectorLabels map[string]string) error {
+func EnsureCustomGoverningService(ctx context.Context, namespace string, serviceName string, svcClient typedcorev1.ServiceInterface, selectorLabels map[string]string) error {
 	// Check if the custom governing service is defined in the same namespace and selects the Prometheus pod.
 	svc, err := svcClient.Get(ctx, serviceName, metav1.GetOptions{})
 	if err != nil {

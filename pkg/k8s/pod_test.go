@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -40,7 +40,7 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		},
 	}
 
-	var spec v1.PodSpec
+	var spec corev1.PodSpec
 	UpdateDNSConfig(&spec, monitoringDNSConfig)
 
 	// Verify the conversion matches the original content

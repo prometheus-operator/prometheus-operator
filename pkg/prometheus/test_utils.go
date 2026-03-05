@@ -18,15 +18,15 @@ import (
 	"fmt"
 	"log/slog"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 )
 
-func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
-	return v1.ProbeHandler{
-		HTTPGet: &v1.HTTPGetAction{
+func makeExpectedProbeHandler(probePath string) corev1.ProbeHandler {
+	return corev1.ProbeHandler{
+		HTTPGet: &corev1.HTTPGetAction{
 			Path:   probePath,
 			Port:   intstr.FromString("web"),
 			Scheme: "HTTPS",
@@ -34,8 +34,8 @@ func makeExpectedProbeHandler(probePath string) v1.ProbeHandler {
 	}
 }
 
-func MakeExpectedStartupProbe() *v1.Probe {
-	return &v1.Probe{
+func MakeExpectedStartupProbe() *corev1.Probe {
+	return &corev1.Probe{
 		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    15,
@@ -43,8 +43,8 @@ func MakeExpectedStartupProbe() *v1.Probe {
 	}
 }
 
-func MakeExpectedLivenessProbe() *v1.Probe {
-	return &v1.Probe{
+func MakeExpectedLivenessProbe() *corev1.Probe {
+	return &corev1.Probe{
 		ProbeHandler:     makeExpectedProbeHandler("/-/healthy"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
@@ -52,8 +52,8 @@ func MakeExpectedLivenessProbe() *v1.Probe {
 	}
 }
 
-func MakeExpectedReadinessProbe() *v1.Probe {
-	return &v1.Probe{
+func MakeExpectedReadinessProbe() *corev1.Probe {
+	return &corev1.Probe{
 		ProbeHandler:     makeExpectedProbeHandler("/-/ready"),
 		TimeoutSeconds:   3,
 		PeriodSeconds:    5,
