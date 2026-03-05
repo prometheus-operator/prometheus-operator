@@ -1,6 +1,0 @@
-receivers:
-- name: ""
-  email_configs:
-  - threading:
-      enabled: true
-templates: []

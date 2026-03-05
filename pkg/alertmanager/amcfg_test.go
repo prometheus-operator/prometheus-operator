@@ -5992,6 +5992,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 		name           string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		expectErr      bool
 		golden         string
 	}{
 		{
@@ -6167,11 +6168,15 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_email_config_empty_thread_by_date.golden",
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
