@@ -32,6 +32,14 @@ type PrometheusAgentListerExpansion interface{}
 // PrometheusAgentNamespaceLister.
 type PrometheusAgentNamespaceListerExpansion interface{}
 
+// RemoteWriteListerExpansion allows custom methods to be added to
+// RemoteWriteLister.
+type RemoteWriteListerExpansion interface{}
+
+// RemoteWriteNamespaceListerExpansion allows custom methods to be added to
+// RemoteWriteNamespaceLister.
+type RemoteWriteNamespaceListerExpansion interface{}
+
 // ScrapeConfigListerExpansion allows custom methods to be added to
 // ScrapeConfigLister.
 type ScrapeConfigListerExpansion interface{}
