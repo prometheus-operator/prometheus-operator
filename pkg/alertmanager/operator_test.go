@@ -1436,9 +1436,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
 							{
-								BotToken: &v1.SecretKeySelector{
+								BotToken: &corev1.SecretKeySelector{
 									Key: "token",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
