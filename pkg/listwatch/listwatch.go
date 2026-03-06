@@ -306,6 +306,15 @@ func (pblw *pollBasedListerWatcher) List(_ metav1.ListOptions) (runtime.Object, 
 	return list, nil
 }
 
+// k8s.io/client-go >= v0.35 uses the streaming approach for WatchList by default.
+// It requires the ListerWatcher to send ADDED events for all known
+// namespaces first followed by a BOOKMARK event telling the client that
+// the initial events have all been emitted.
+// A "simple" way to revert back to the legacy behavior with the client calling
+// List() first and then Watch() is to implement a
+// IsWatchListSemanticsUnSupported() function returning true.
+func (pblw *pollBasedListerWatcher) IsWatchListSemanticsUnSupported() bool { return true }
+
 func (pblw *pollBasedListerWatcher) Watch(_ metav1.ListOptions) (watch.Interface, error) {
 	return pblw, nil
 }
