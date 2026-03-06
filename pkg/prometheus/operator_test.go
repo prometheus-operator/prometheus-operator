@@ -15,11 +15,19 @@
 package prometheus
 
 import (
+	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -402,6 +410,493 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+		})
+	}
+}
+
+type fakeStatefulSetGetter []appsv1.StatefulSet
+
+func (ssg fakeStatefulSetGetter) Get(key string) (runtime.Object, error) {
+	for _, sset := range ssg {
+		if key == fmt.Sprintf("%s/%s", sset.Namespace, sset.Name) {
+			return &sset, nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(schema.GroupResource{}, "")
+}
+
+type fakeReconciledConditionGetter struct{}
+
+func (rcg *fakeReconciledConditionGetter) GetCondition(_ string, n int64) monitoringv1.Condition {
+	return monitoringv1.Condition{
+		Type:   monitoringv1.Reconciled,
+		Status: monitoringv1.ConditionTrue,
+		LastTransitionTime: metav1.Time{
+			Time: time.Now().UTC(),
+		},
+		ObservedGeneration: n,
+	}
+}
+
+type fakeDeletionChecker struct{}
+
+func (dc *fakeDeletionChecker) DeletionInProgress(_ metav1.Object) bool { return false }
+
+func fakeStatefulSet(name string) appsv1.StatefulSet {
+	return appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:       name,
+			Namespace:  "ns",
+			Generation: 45,
+		},
+		Spec: appsv1.StatefulSetSpec{
+			Selector: &metav1.LabelSelector{},
+		},
+		Status: appsv1.StatefulSetStatus{
+			UpdateRevision: name + "-ffffffff",
+		},
+	}
+}
+
+func fakeReadyPod(sts string, ordinal int, ready bool) corev1.Pod {
+	status := corev1.ConditionFalse
+	if ready {
+		status = corev1.ConditionTrue
+	}
+	return corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:       fmt.Sprintf("%s-%d", sts, ordinal),
+			Namespace:  "ns",
+			Generation: 47,
+			Labels: map[string]string{
+				"controller-revision-hash": sts + "-ffffffff",
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					Name: sts,
+					Kind: "StatefulSet",
+				},
+			},
+		},
+		Status: corev1.PodStatus{
+			Phase: corev1.PodRunning,
+			Conditions: []corev1.PodCondition{{
+				Type:   corev1.PodReady,
+				Status: status,
+			}},
+		},
+	}
+}
+
+func TestStatefulSetReporterProcess(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		p     monitoringv1.Prometheus
+		ssets []appsv1.StatefulSet
+		pods  []corev1.Pod
+		exp   *monitoringv1.PrometheusStatus
+	}{
+		{
+			name: "prometheus with (replicas=1,shards=1) and no statefulset",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "StatefulSetNotFound",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID: "0",
+					},
+				},
+			},
+		},
+		{
+			name: "prometheus with (replicas=1,shards=1) and no pods",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "NoPodReady",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID: "0",
+					},
+				},
+			},
+		},
+		{
+			name: "prometheus with (replicas=1,shards=1) with no ready pod",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, false),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "NoPodReady",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:             "0",
+						Replicas:            1,
+						UpdatedReplicas:     1,
+						UnavailableReplicas: 1,
+					},
+				},
+				Replicas:            1,
+				UpdatedReplicas:     1,
+				UnavailableReplicas: 1,
+			},
+		},
+		{
+			name: "prometheus with (replicas=1,shards=1) with ready pod",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionTrue,
+						Reason:             "",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:           "0",
+						Replicas:          1,
+						UpdatedReplicas:   1,
+						AvailableReplicas: 1,
+					},
+				},
+				Replicas:          1,
+				UpdatedReplicas:   1,
+				AvailableReplicas: 1,
+			},
+		},
+		{
+			name: "prometheus with (replicas=2,shards=1) with ready and not ready pods",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Replicas: ptr.To(int32(2)),
+					},
+				},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, true),
+				fakeReadyPod("prometheus-test", 1, false),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionDegraded,
+						Reason:             "SomePodsNotReady",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:             "0",
+						Replicas:            2,
+						UpdatedReplicas:     2,
+						AvailableReplicas:   1,
+						UnavailableReplicas: 1,
+					},
+				},
+				Replicas:            2,
+				UpdatedReplicas:     2,
+				AvailableReplicas:   1,
+				UnavailableReplicas: 1,
+			},
+		},
+		{
+			name: "prometheus with (replicas=1,shards=2) with ready pods",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Replicas: ptr.To(int32(1)),
+						Shards:   ptr.To(int32(2)),
+					},
+				},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+				fakeStatefulSet("prometheus-test-shard-1"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, true),
+				fakeReadyPod("prometheus-test-shard-1", 0, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionTrue,
+						Reason:             "",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:           "0",
+						Replicas:          1,
+						UpdatedReplicas:   1,
+						AvailableReplicas: 1,
+					},
+					{
+						ShardID:           "1",
+						Replicas:          1,
+						UpdatedReplicas:   1,
+						AvailableReplicas: 1,
+					},
+				},
+				Replicas:          2,
+				UpdatedReplicas:   2,
+				AvailableReplicas: 2,
+			},
+		},
+		{
+			name: "prometheus with (replicas=1,shards=2) with ready and not ready pods",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Replicas: ptr.To(int32(1)),
+						Shards:   ptr.To(int32(2)),
+					},
+				},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+				fakeStatefulSet("prometheus-test-shard-1"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, false),
+				fakeReadyPod("prometheus-test-shard-1", 0, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "NoPodReady",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:             "0",
+						Replicas:            1,
+						UpdatedReplicas:     1,
+						UnavailableReplicas: 1,
+					},
+					{
+						ShardID:           "1",
+						Replicas:          1,
+						UpdatedReplicas:   1,
+						AvailableReplicas: 1,
+					},
+				},
+				Replicas:            2,
+				UpdatedReplicas:     2,
+				AvailableReplicas:   1,
+				UnavailableReplicas: 1,
+			},
+		},
+		{
+			name: "prometheus with (replicas=2,shards=2) with ready and not ready pods",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Replicas: ptr.To(int32(2)),
+						Shards:   ptr.To(int32(2)),
+					},
+				},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+				fakeStatefulSet("prometheus-test-shard-1"),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, false),
+				fakeReadyPod("prometheus-test", 1, true),
+				fakeReadyPod("prometheus-test-shard-1", 0, true),
+				fakeReadyPod("prometheus-test-shard-1", 1, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionDegraded,
+						Reason:             "SomePodsNotReady",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:             "0",
+						Replicas:            2,
+						UpdatedReplicas:     2,
+						AvailableReplicas:   1,
+						UnavailableReplicas: 1,
+					},
+					{
+						ShardID:           "1",
+						Replicas:          2,
+						UpdatedReplicas:   2,
+						AvailableReplicas: 2,
+					},
+				},
+				Replicas:            4,
+				UpdatedReplicas:     4,
+				AvailableReplicas:   3,
+				UnavailableReplicas: 1,
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewClientset()
+			for _, pod := range tc.pods {
+				c.Tracker().Add(&pod)
+			}
+
+			sr := NewStatusReporter(
+				c,
+				&fakeReconciledConditionGetter{},
+				fakeStatefulSetGetter(tc.ssets),
+				&fakeDeletionChecker{},
+			)
+
+			status, err := sr.Process(context.Background(), &tc.p, fmt.Sprintf("%s/%s", tc.p.Namespace, tc.p.Name))
+			if tc.exp == nil {
+				require.Error(t, err)
+				return
+			}
+
+			for i := range status.Conditions {
+				status.Conditions[i].LastTransitionTime = metav1.NewTime(time.Time{})
+				status.Conditions[i].Message = ""
+			}
+
+			require.Equal(t, tc.exp, status)
 		})
 	}
 }
