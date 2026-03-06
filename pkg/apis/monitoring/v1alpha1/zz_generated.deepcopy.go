@@ -1727,7 +1727,7 @@ func (in *OpenStackSDConfig) DeepCopyInto(out *OpenStackSDConfig) {
 	*out = *in
 	if in.IdentityEndpoint != nil {
 		in, out := &in.IdentityEndpoint, &out.IdentityEndpoint
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Username != nil {
@@ -2739,7 +2739,7 @@ func (in *ScalewaySDConfig) DeepCopyInto(out *ScalewaySDConfig) {
 	}
 	if in.ApiURL != nil {
 		in, out := &in.ApiURL, &out.ApiURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Zone != nil {

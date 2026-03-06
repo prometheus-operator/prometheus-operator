@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -72,7 +72,7 @@ func testAlertmanagerInstanceNamespacesAllNs(t *testing.T) {
 	}
 
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(nonInstanceNs).Get(context.Background(), "alertmanager-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
+	if !apierrors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 }
@@ -195,7 +195,7 @@ func testAlertmanagerInstanceNamespacesAllowList(t *testing.T) {
 
 	// Check that the Alertmanager resource created in the "allowed" namespace hasn't been reconciled.
 	sts, err := framework.KubeClient.AppsV1().StatefulSets(allowedNs).Get(context.Background(), "alertmanager-instance", metav1.GetOptions{})
-	if !api_errors.IsNotFound(err) {
+	if !apierrors.IsNotFound(err) {
 		t.Fatalf("expected not to find an Alertmanager statefulset, but did: %v/%v", sts.Namespace, sts.Name)
 	}
 

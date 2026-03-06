@@ -28,7 +28,7 @@ import (
 type OpenStackSDConfigApplyConfiguration struct {
 	Role                        *monitoringv1alpha1.OpenStackRole                               `json:"role,omitempty"`
 	Region                      *string                                                         `json:"region,omitempty"`
-	IdentityEndpoint            *string                                                         `json:"identityEndpoint,omitempty"`
+	IdentityEndpoint            *monitoringv1alpha1.URL                                         `json:"identityEndpoint,omitempty"`
 	Username                    *string                                                         `json:"username,omitempty"`
 	UserID                      *string                                                         `json:"userid,omitempty"`
 	Password                    *v1.SecretKeySelector                                           `json:"password,omitempty"`
@@ -71,7 +71,7 @@ func (b *OpenStackSDConfigApplyConfiguration) WithRegion(value string) *OpenStac
 // WithIdentityEndpoint sets the IdentityEndpoint field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the IdentityEndpoint field is set to the value of the last call.
-func (b *OpenStackSDConfigApplyConfiguration) WithIdentityEndpoint(value string) *OpenStackSDConfigApplyConfiguration {
+func (b *OpenStackSDConfigApplyConfiguration) WithIdentityEndpoint(value monitoringv1alpha1.URL) *OpenStackSDConfigApplyConfiguration {
 	b.IdentityEndpoint = &value
 	return b
 }

@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -25,7 +26,7 @@ import (
 // PuppetDBSDConfigApplyConfiguration represents a declarative configuration of the PuppetDBSDConfig type for use
 // with apply.
 type PuppetDBSDConfigApplyConfiguration struct {
-	URL                                        *string                                           `json:"url,omitempty"`
+	URL                                        *monitoringv1alpha1.URL                           `json:"url,omitempty"`
 	Query                                      *string                                           `json:"query,omitempty"`
 	IncludeParameters                          *bool                                             `json:"includeParameters,omitempty"`
 	RefreshInterval                            *v1.Duration                                      `json:"refreshInterval,omitempty"`
@@ -48,7 +49,7 @@ func PuppetDBSDConfig() *PuppetDBSDConfigApplyConfiguration {
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *PuppetDBSDConfigApplyConfiguration) WithURL(value string) *PuppetDBSDConfigApplyConfiguration {
+func (b *PuppetDBSDConfigApplyConfiguration) WithURL(value monitoringv1alpha1.URL) *PuppetDBSDConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }
