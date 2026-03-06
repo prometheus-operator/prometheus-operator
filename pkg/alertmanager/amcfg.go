@@ -2595,6 +2595,18 @@ func (ec *emailConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		ec.AuthSecretFile = ""
 	}
 
+	if ec.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'threading' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		ec.Threading = nil
+	}
+
+	if t := ec.Threading; t != nil {
+		if t.ThreadByDate != "daily" && t.ThreadByDate != "none" {
+			return fmt.Errorf("invalid 'thread_by_date': the value must be empty, 'daily' or 'none'")
+		}
+	}
+
 	return nil
 }
 
