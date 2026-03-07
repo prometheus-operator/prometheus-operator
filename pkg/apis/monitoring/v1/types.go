@@ -168,7 +168,7 @@ type ObjectReference struct {
 	// +optional
 	// +kubebuilder:default:="monitoring.coreos.com"
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
-	Group string `json:"group"`
+	Group string `json:"group,omitempty"`
 	// resource of the referent.
 	// +required
 	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes;scrapeconfigs
@@ -1030,7 +1030,7 @@ type TracingConfig struct {
 	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
 	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
 	// +optional
-	ClientType *string `json:"clientType",omitempty`
+	ClientType *string `json:"clientType,omitempty"`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
 	// +kubebuilder:validation:MinLength:=1
@@ -1039,11 +1039,11 @@ type TracingConfig struct {
 
 	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
 	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction",omitempty`
+	SamplingFraction *resource.Quantity `json:"samplingFraction,omitempty"`
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure",omitempty` // nolint:kubeapilinter
+	Insecure *bool `json:"insecure,omitempty"` // nolint:kubeapilinter
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
@@ -1052,15 +1052,15 @@ type TracingConfig struct {
 	// compression key for supported compression types. The only supported value is `Gzip`.
 	// +kubebuilder:validation:Enum=gzip;Gzip
 	// +optional
-	Compression *string `json:"compression",omitempty`
+	Compression *string `json:"compression,omitempty"`
 
 	// timeout defines the maximum time the exporter will wait for each batch export.
 	// +optional
-	Timeout *Duration `json:"timeout",omitempty`
+	Timeout *Duration `json:"timeout,omitempty"`
 
 	// tlsConfig to use when sending traces.
 	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig",omitempty`
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // Validate semantically validates the given TracingConfig.
