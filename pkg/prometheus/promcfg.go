@@ -4806,6 +4806,116 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// AWSSDConfig
+	if len(sc.Spec.AWSSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.AWSSDConfigs))
+		for i, config := range sc.Spec.AWSSDConfigs {
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			switch config.Role {
+			case monitoringv1alpha1.AWSRoleEC2,
+				monitoringv1alpha1.AWSRoleLightsail,
+				monitoringv1alpha1.AWSRoleECS:
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role",
+					Value: strings.ToLower(string(config.Role)),
+				})
+			default:
+				cg.logger.Warn(fmt.Sprintf("ignoring role not supported by Prometheus: %s", string(config.Role)))
+			}
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.AccessKey != nil && config.SecretKey != nil {
+
+				value, err := s.GetSecretKey(*config.AccessKey)
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "access_key",
+					Value: string(value),
+				})
+
+				value, err = s.GetSecretKey(*config.SecretKey)
+				if err != nil {
+					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.SecretKey.Name, jobName, err)
+				}
+
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "secret_key",
+					Value: string(value),
+				})
+			}
+
+			if config.Profile != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "profile",
+					Value: config.Profile,
+				})
+			}
+
+			if config.RoleARN != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "role_arn",
+					Value: config.RoleARN,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			}
+
+			if len(config.Clusters) > 0 {
+				if config.Role == monitoringv1alpha1.AWSRoleECS {
+					configs[i] = append(configs[i], yaml.MapItem{
+						Key:   "clusters",
+						Value: config.Clusters,
+					})
+				} else {
+					cg.logger.Warn(fmt.Sprintf("ignoring clusters field not supported by role: %s", string(config.Role)))
+				}
+			}
+		}
+		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "aws_sd_configs", configs)
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}
