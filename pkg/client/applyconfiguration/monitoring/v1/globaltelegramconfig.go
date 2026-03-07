@@ -18,12 +18,15 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // GlobalTelegramConfigApplyConfiguration represents a declarative configuration of the GlobalTelegramConfig type for use
 // with apply.
 type GlobalTelegramConfigApplyConfiguration struct {
-	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
+	APIURL       *monitoringv1.URL         `json:"apiURL,omitempty"`
+	BotToken     *corev1.SecretKeySelector `json:"botToken,omitempty"`
+	BotTokenFile *string                   `json:"botTokenFile,omitempty"`
 }
 
 // GlobalTelegramConfigApplyConfiguration constructs a declarative configuration of the GlobalTelegramConfig type for use with
@@ -37,5 +40,21 @@ func GlobalTelegramConfig() *GlobalTelegramConfigApplyConfiguration {
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *GlobalTelegramConfigApplyConfiguration) WithAPIURL(value monitoringv1.URL) *GlobalTelegramConfigApplyConfiguration {
 	b.APIURL = &value
+	return b
+}
+
+// WithBotToken sets the BotToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BotToken field is set to the value of the last call.
+func (b *GlobalTelegramConfigApplyConfiguration) WithBotToken(value corev1.SecretKeySelector) *GlobalTelegramConfigApplyConfiguration {
+	b.BotToken = &value
+	return b
+}
+
+// WithBotTokenFile sets the BotTokenFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the BotTokenFile field is set to the value of the last call.
+func (b *GlobalTelegramConfigApplyConfiguration) WithBotTokenFile(value string) *GlobalTelegramConfigApplyConfiguration {
+	b.BotTokenFile = &value
 	return b
 }
