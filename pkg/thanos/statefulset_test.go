@@ -692,6 +692,33 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestThanosGrpcArguments(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			Version:        ptr.To("0.37.0"),
+			QueryEndpoints: emptyQueryEndpoints,
+			GRPCServerTLSConfig: &monitoringv1.TLSConfig{
+				SafeTLSConfig: monitoringv1.SafeTLSConfig{
+					MinVersion: ptr.To(monitoringv1.TLSVersion13),
+				},
+				TLSFilesConfig: monitoringv1.TLSFilesConfig{
+					CAFile:   "/tmp/ca",
+					CertFile: "/tmp/cert",
+					KeyFile:  "/tmp/key",
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+	require.NoError(t, err)
+
+	trArgs := sset.Spec.Template.Spec.Containers[0].Args
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-cert=/tmp/cert"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-key=/tmp/key"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-client-ca=/tmp/ca"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-min-version=1.3"))
+}
+
 func TestPodTemplateConfig(t *testing.T) {
 	nodeSelector := map[string]string{
 		"foo": "bar",

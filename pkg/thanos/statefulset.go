@@ -319,6 +319,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if tls.CAFile != "" {
 			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
+
+		if tlsMinVersion := operator.TLSVersionForThanos(ptr.Deref(tls.MinVersion, "")); tlsMinVersion != "" && version.GTE(semver.MustParse("0.37.0")) {
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-min-version", Value: tlsMinVersion})
+		}
 	}
 
 	if tr.Spec.ExternalPrefix != "" {

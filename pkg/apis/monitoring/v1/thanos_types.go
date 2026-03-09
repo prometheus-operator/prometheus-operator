@@ -440,8 +440,9 @@ type ThanosRulerSpec struct {
 
 	// grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
 	// recorded rule data.
-	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-	// Maps to the '--grpc-server-tls-*' CLI args.
+	//
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
+	//
 	// +optional
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
 
