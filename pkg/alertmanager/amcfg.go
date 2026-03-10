@@ -30,7 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
@@ -408,14 +408,14 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
-func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector corev1.SecretKeySelector) (string, error) {
 	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
 		_, err := validation.ValidateURL(url)
 		return err
 	})
 }
 
-func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector corev1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)

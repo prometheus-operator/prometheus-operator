@@ -25,14 +25,14 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
-	authv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
@@ -61,8 +61,8 @@ func NewNamespaceListWatchFromClient(
 	ctx context.Context,
 	l *slog.Logger,
 	k8sVersion semver.Version,
-	corev1Client corev1.CoreV1Interface,
-	ssarClient authv1.SelfSubjectAccessReviewInterface,
+	corev1Client typedcorev1.CoreV1Interface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	allowedNamespaces, deniedNamespaces map[string]struct{},
 ) (cache.ListerWatcher, bool, error) {
 	if l == nil {
@@ -169,7 +169,7 @@ func NewNamespaceListWatchFromClient(
 // IsAllNamespaces checks if the given map of namespaces
 // contains only v1.NamespaceAll.
 func IsAllNamespaces(namespaces map[string]struct{}) bool {
-	_, ok := namespaces[v1.NamespaceAll]
+	_, ok := namespaces[corev1.NamespaceAll]
 	return ok && len(namespaces) == 1
 }
 
@@ -240,8 +240,12 @@ func DenyTweak(options *metav1.ListOptions, field string, valueSet map[string]st
 	options.FieldSelector = strings.Join(selectors, ",")
 }
 
+// pollBasedListerWatcher is a lister/watcher on a fixed list of namespaces.
+// It retrieves the namespaces from the Kubernetes API periodically and
+// notifies any addition/update/deletion to the client as a regular
+// lister/watcher would do.
 type pollBasedListerWatcher struct {
-	corev1Client corev1.CoreV1Interface
+	corev1Client typedcorev1.CoreV1Interface
 	ch           chan watch.Event
 
 	ctx context.Context
@@ -252,13 +256,13 @@ type pollBasedListerWatcher struct {
 
 type cacheEntry struct {
 	present bool
-	ns      *v1.Namespace
+	ns      *corev1.Namespace
 }
 
 var _ = watch.Interface(&pollBasedListerWatcher{})
 var _ = cache.ListerWatcher(&pollBasedListerWatcher{})
 
-func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client corev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
+func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client typedcorev1.CoreV1Interface, namespaces []string) *pollBasedListerWatcher {
 	if l == nil {
 		l = slog.New(slog.DiscardHandler)
 	}
@@ -279,7 +283,7 @@ func newPollBasedListerWatcher(ctx context.Context, l *slog.Logger, corev1Client
 }
 
 func (pblw *pollBasedListerWatcher) List(_ metav1.ListOptions) (runtime.Object, error) {
-	list := &v1.NamespaceList{}
+	list := &corev1.NamespaceList{}
 
 	for ns := range pblw.cache {
 		result, err := pblw.corev1Client.Namespaces().Get(pblw.ctx, ns, metav1.GetOptions{})
@@ -301,6 +305,15 @@ func (pblw *pollBasedListerWatcher) List(_ metav1.ListOptions) (runtime.Object, 
 
 	return list, nil
 }
+
+// k8s.io/client-go >= v0.35 uses the streaming approach for WatchList by default.
+// It requires the ListerWatcher to send ADDED events for all known
+// namespaces first followed by a BOOKMARK event telling the client that
+// the initial events have all been emitted.
+// A "simple" way to revert back to the legacy behavior with the client calling
+// List() first and then Watch() is to implement a
+// IsWatchListSemanticsUnSupported() function returning true.
+func (pblw *pollBasedListerWatcher) IsWatchListSemanticsUnSupported() bool { return true }
 
 func (pblw *pollBasedListerWatcher) Watch(_ metav1.ListOptions) (watch.Interface, error) {
 	return pblw, nil
@@ -325,15 +338,21 @@ func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
 
 func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 	var (
-		updated []*v1.Namespace
+		updated []*corev1.Namespace
 		deleted []string
 	)
 
 	for ns, entry := range pblw.cache {
-		result, err := pblw.corev1Client.Namespaces().Get(ctx, ns, metav1.GetOptions{ResourceVersion: entry.ns.ResourceVersion})
+		var resourceVersion string
+		if entry.ns != nil {
+			// The resource is in the cache.
+			resourceVersion = entry.ns.ResourceVersion
+		}
+		result, err := pblw.corev1Client.Namespaces().Get(ctx, ns, metav1.GetOptions{ResourceVersion: resourceVersion})
 		if err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
+				// If the namespace existed before, notify its deletion.
 				if entry.present {
 					deleted = append(deleted, ns)
 				}
@@ -343,7 +362,7 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 			continue
 		}
 
-		if entry.ns.ResourceVersion != result.ResourceVersion {
+		if resourceVersion != result.ResourceVersion {
 			updated = append(updated, result)
 		}
 	}

@@ -1572,7 +1572,7 @@ type ThanosSpec struct {
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
 	//
 	// +optional
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
