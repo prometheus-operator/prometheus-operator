@@ -8617,7 +8617,7 @@
                         "type": "boolean"
                       },
                       "grpcServerTlsConfig": {
-                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.",
+                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.",
                         "properties": {
                           "ca": {
                             "description": "ca defines the Certificate authority used when verifying server certificates.",

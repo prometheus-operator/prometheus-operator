@@ -526,6 +526,11 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		httpBindAddress = "127.0.0.1"
 	}
 
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
+
 	thanosArgs := []monitoringv1.Argument{
 		{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", cpf.PrometheusURIScheme(), c.LocalHost, path.Clean(cpf.WebRoutePrefix()))},
 		{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
@@ -542,6 +547,10 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		}
 		if tls.CAFile != "" {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
+		}
+
+		if tlsMinVersion := operator.TLSVersionForThanos(ptr.Deref(tls.MinVersion, "")); tlsMinVersion != "" && thanosVersion.GTE(semver.MustParse("0.37.0")) {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-min-version", Value: tlsMinVersion})
 		}
 	}
 
@@ -633,11 +642,6 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 
 	if thanos.ReadyTimeout != "" {
 		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
-	}
-
-	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 	}
 
 	if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
