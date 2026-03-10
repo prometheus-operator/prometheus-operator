@@ -53,7 +53,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/kubelet"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prometheusagentcontroller "github.com/prometheus-operator/prometheus-operator/pkg/prometheus/agent"
@@ -72,9 +72,9 @@ func checkPrerequisites(
 	allowedNamespaces []string,
 	groupVersion schema.GroupVersion,
 	resource string,
-	attributes ...k8sutil.ResourceAttribute,
+	attributes ...k8s.ResourceAttribute,
 ) (bool, error) {
-	installed, err := k8sutil.IsAPIGroupVersionResourceSupported(kclient.Discovery(), groupVersion, resource)
+	installed, err := k8s.IsAPIGroupVersionResourceSupported(kclient.Discovery(), groupVersion, resource)
 	if err != nil {
 		return false, fmt.Errorf("failed to check presence of resource %q (group %q): %w", resource, groupVersion, err)
 	}
@@ -84,7 +84,7 @@ func checkPrerequisites(
 		return false, nil
 	}
 
-	allowed, errs, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), allowedNamespaces, attributes...)
+	allowed, errs, err := k8s.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), allowedNamespaces, attributes...)
 	if err != nil {
 		return false, fmt.Errorf("failed to check permissions on resource %q (group %q): %w", resource, groupVersion, err)
 	}
@@ -128,6 +128,7 @@ var (
 	kubeletEndpoints     bool
 	kubeletEndpointSlice bool
 	kubeletSyncPeriod    time.Duration
+	kubeletHTTPMetrics   bool
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
 )
@@ -150,6 +151,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&kubeletEndpointSlice, "kubelet-endpointslice", false, "Create EndpointSlice objects for kubelet targets.")
 	fs.BoolVar(&kubeletEndpoints, "kubelet-endpoints", true, "Create Endpoints objects for kubelet targets.")
 	fs.DurationVar(&kubeletSyncPeriod, "kubelet-sync-period", 3*time.Minute, "How often the operator reconciles the kubelet Endpoints and EndpointSlice objects (e.g., 10s, 2m, 1h30m).")
+	fs.BoolVar(&kubeletHTTPMetrics, "kubelet-http-metrics", true, "Include HTTP metrics port (10255) in kubelet service. Set to false if your cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+).")
 
 	// The Prometheus config reloader image is released along with the
 	// Prometheus Operator image, tagged with the same semver version. Default to
@@ -186,6 +188,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.ThanosRulerSelector, "thanos-ruler-instance-selector", "Label selector to filter ThanosRuler Custom Resources to watch.")
 	fs.Var(&cfg.SecretListWatchFieldSelector, "secret-field-selector", "Field selector to filter Secrets to watch")
 	fs.Var(&cfg.SecretListWatchLabelSelector, "secret-label-selector", "Label selector to filter Secrets to watch")
+	fs.Var(&cfg.ConfigMapListWatchFieldSelector, "configmap-field-selector", "Field selector to filter ConfigMaps to watch")
+	fs.Var(&cfg.ConfigMapListWatchLabelSelector, "configmap-label-selector", "Label selector to filter ConfigMaps to watch")
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
@@ -209,11 +213,11 @@ func checkStatusSubresourcePermissions(
 ) bool {
 	ok := true
 	for _, gvr := range gvrs {
-		allowed, errs, err := k8sutil.IsAllowed(
+		allowed, errs, err := k8s.IsAllowed(
 			ctx,
 			kclient.AuthorizationV1().SelfSubjectAccessReviews(),
 			cfg.Namespaces.AllowList.Slice(),
-			k8sutil.ResourceAttribute{
+			k8s.ResourceAttribute{
 				Group:    gvr.Group,
 				Version:  gvr.Version,
 				Resource: fmt.Sprintf("%s/status", gvr.Resource),
@@ -302,9 +306,9 @@ func start() int {
 	wg, ctx := errgroup.WithContext(ctx)
 	r := metrics.NewRegistry("prometheus_operator")
 
-	k8sutil.MustRegisterClientGoMetrics(r)
+	k8s.MustRegisterClientGoMetrics(r)
 
-	restConfig, err := k8sutil.NewClusterConfig(k8sutil.ClusterConfig{
+	restConfig, err := k8s.NewClusterConfig(k8s.ClusterConfig{
 		Host:      apiServer,
 		TLSConfig: tlsClientConfig,
 		AsUser:    impersonateUser,
@@ -357,7 +361,7 @@ func start() int {
 		nil,
 		storagev1.SchemeGroupVersion,
 		storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    storagev1.GroupName,
 			Version:  storagev1.SchemeGroupVersion.Version,
 			Resource: storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
@@ -376,8 +380,8 @@ func start() int {
 		thanosControllerOptions = append(thanosControllerOptions, thanoscontroller.WithStorageClassValidation())
 	}
 
-	canEmitEvents, reasons, err := k8sutil.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
-		k8sutil.ResourceAttribute{
+	canEmitEvents, reasons, err := k8s.IsAllowed(ctx, kclient.AuthorizationV1().SelfSubjectAccessReviews(), nil,
+		k8s.ResourceAttribute{
 			Group:    eventsv1.GroupName,
 			Version:  eventsv1.SchemeGroupVersion.Version,
 			Resource: eventsv1.SchemeGroupVersion.WithResource("events").Resource,
@@ -403,7 +407,7 @@ func start() int {
 		cfg.Namespaces.AllowList.Slice(),
 		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.ScrapeConfigName,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
 			Resource: monitoringv1alpha1.ScrapeConfigName,
@@ -435,13 +439,13 @@ func start() int {
 		cfg.Namespaces.PrometheusAllowList.Slice(),
 		monitoringv1.SchemeGroupVersion,
 		monitoringv1.PrometheusName,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: monitoringv1.PrometheusName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: fmt.Sprintf("%s/status", monitoringv1.PrometheusName),
@@ -490,13 +494,13 @@ func start() int {
 		cfg.Namespaces.PrometheusAllowList.Slice(),
 		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.PrometheusAgentName,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
 			Resource: monitoringv1alpha1.PrometheusAgentName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
 			Resource: fmt.Sprintf("%s/status", monitoringv1alpha1.PrometheusAgentName),
@@ -512,10 +516,10 @@ func start() int {
 	// If Prometheus Agent runs in DaemonSet mode, check if
 	// the operator has proper RBAC permissions on the DaemonSet resource.
 	if cfg.Gates.Enabled(operator.PrometheusAgentDaemonSetFeature) {
-		allowed, errs, err := k8sutil.IsAllowed(ctx,
+		allowed, errs, err := k8s.IsAllowed(ctx,
 			kclient.AuthorizationV1().SelfSubjectAccessReviews(),
 			cfg.Namespaces.PrometheusAllowList.Slice(),
-			k8sutil.ResourceAttribute{
+			k8s.ResourceAttribute{
 				Group:    appsv1.SchemeGroupVersion.Group,
 				Version:  appsv1.SchemeGroupVersion.Version,
 				Resource: "daemonsets",
@@ -570,13 +574,13 @@ func start() int {
 		cfg.Namespaces.AlertmanagerAllowList.Slice(),
 		monitoringv1.SchemeGroupVersion,
 		monitoringv1.AlertmanagerName,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: monitoringv1.AlertmanagerName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: fmt.Sprintf("%s/status", monitoringv1.AlertmanagerName),
@@ -611,13 +615,13 @@ func start() int {
 		cfg.Namespaces.ThanosRulerAllowList.Slice(),
 		monitoringv1.SchemeGroupVersion,
 		monitoringv1.ThanosRulerName,
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: monitoringv1.ThanosRulerName,
 			Verbs:    []string{"get", "list", "watch"},
 		},
-		k8sutil.ResourceAttribute{
+		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1.Version,
 			Resource: fmt.Sprintf("%s/status", monitoringv1.ThanosRulerName),
@@ -661,6 +665,7 @@ func start() int {
 		opts := []kubelet.ControllerOption{
 			kubelet.WithNodeAddressPriority(nodeAddressPriority.String()),
 			kubelet.WithSyncPeriod(kubeletSyncPeriod),
+			kubelet.WithHTTPMetrics(kubeletHTTPMetrics),
 		}
 
 		kubeletService := strings.Split(kubeletObject, "/")
@@ -671,11 +676,11 @@ func start() int {
 		}
 
 		if kubeletEndpointSlice {
-			allowed, errs, err := k8sutil.IsAllowed(
+			allowed, errs, err := k8s.IsAllowed(
 				ctx,
 				kclient.AuthorizationV1().SelfSubjectAccessReviews(),
 				[]string{kubeletService[0]},
-				k8sutil.ResourceAttribute{
+				k8s.ResourceAttribute{
 					Group:    discoveryv1.SchemeGroupVersion.Group,
 					Version:  discoveryv1.SchemeGroupVersion.Version,
 					Resource: "endpointslices",

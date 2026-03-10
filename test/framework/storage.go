@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -39,7 +39,7 @@ func (f *Framework) WaitForBoundPVC(ctx context.Context, ns string, labelSelecto
 		}
 
 		for _, pvc := range pvcs.Items {
-			if pvc.Status.Phase != v1.ClaimBound {
+			if pvc.Status.Phase != corev1.ClaimBound {
 				pollErr = fmt.Errorf("expecting PVC %s to have Bound phase, got %q", pvc.Name, pvc.Status.Phase)
 				return false, nil
 			}

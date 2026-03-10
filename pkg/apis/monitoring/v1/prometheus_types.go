@@ -86,6 +86,12 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 	return l.Status
 }
 
+func (p *Prometheus) ExpectedReplicas() int { return p.Spec.CommonPrometheusFields.ExpectedReplicas() }
+
+func (p *Prometheus) GetAvailableReplicas() int  { return int(p.Status.AvailableReplicas) }
+func (p *Prometheus) GetUpdatedReplicas() int    { return int(p.Status.UpdatedReplicas) }
+func (p *Prometheus) GetConditions() []Condition { return p.Status.Conditions }
+
 // +kubebuilder:validation:Enum=OnResource;OnShard
 type AdditionalLabelSelectors string
 
@@ -1013,6 +1019,18 @@ type CommonPrometheusFields struct {
 	HostUsers *bool `json:"hostUsers,omitempty"` // nolint:kubeapilinter
 }
 
+func (cpf CommonPrometheusFields) ExpectedReplicas() int {
+	replicas := 1
+	if cpf.Replicas != nil {
+		replicas = int(*cpf.Replicas)
+	}
+	shards := 1
+	if cpf.Shards != nil {
+		shards = int(*cpf.Shards)
+	}
+	return replicas * shards
+}
+
 // Specifies the validation scheme for metric and label names.
 //
 // Supported values are:
@@ -1554,7 +1572,7 @@ type ThanosSpec struct {
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
 	//
 	// +optional
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`

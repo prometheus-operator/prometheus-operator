@@ -22,7 +22,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
@@ -115,16 +115,44 @@ func TestSelectProbes(t *testing.T) {
 			valid: true,
 		},
 		{
+			scenario: "ipv6 address as prober url",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "::1"
+			},
+			valid: true,
+		},
+		{
+			scenario: "ipv6 full address as prober url",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "2001:db8::1"
+			},
+			valid: true,
+		},
+		{
+			scenario: "ipv6 address with port as prober url",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "[::1]:9090"
+			},
+			valid: true,
+		},
+		{
+			scenario: "ipv6 full address with port as prober url",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.ProberSpec.URL = "[2001:db8::1]:9090"
+			},
+			valid: true,
+		},
+		{
 			scenario: "invalid proxyconfig due to invalid proxyurl",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -141,10 +169,10 @@ func TestSelectProbes(t *testing.T) {
 				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -161,10 +189,10 @@ func TestSelectProbes(t *testing.T) {
 				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(true),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -181,10 +209,10 @@ func TestSelectProbes(t *testing.T) {
 				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "invalid_key",
@@ -200,10 +228,10 @@ func TestSelectProbes(t *testing.T) {
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.ProberSpec.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -221,10 +249,10 @@ func TestSelectProbes(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -402,7 +430,7 @@ func TestSelectProbes(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
-				&v1.Secret{
+				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
 						Namespace: "test",
@@ -681,24 +709,24 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									CA: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
 									},
 									Cert: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "cert",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
 									},
-									KeySecret: &v1.SecretKeySelector{
+									KeySecret: &corev1.SecretKeySelector{
 										Key: "key",
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 									},
@@ -719,9 +747,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									CA: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
@@ -746,15 +774,15 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									CA: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
-										ConfigMap: &v1.ConfigMapKeySelector{
+										ConfigMap: &corev1.ConfigMapKeySelector{
 											Key: "ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "configmap",
 											},
 										},
@@ -776,9 +804,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									CA: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "invalid_ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
@@ -800,9 +828,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									Cert: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "cert",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
@@ -823,9 +851,9 @@ func TestSelectServiceMonitors(t *testing.T) {
 						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
-									KeySecret: &v1.SecretKeySelector{
+									KeySecret: &corev1.SecretKeySelector{
 										Key: "key",
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 									},
@@ -846,16 +874,16 @@ func TestSelectServiceMonitors(t *testing.T) {
 							TLSConfig: &monitoringv1.TLSConfig{
 								SafeTLSConfig: monitoringv1.SafeTLSConfig{
 									Cert: monitoringv1.SecretOrConfigMap{
-										Secret: &v1.SecretKeySelector{
+										Secret: &corev1.SecretKeySelector{
 											Key: "invalid_ca",
-											LocalObjectReference: v1.LocalObjectReference{
+											LocalObjectReference: corev1.LocalObjectReference{
 												Name: "secret",
 											},
 										},
 									},
-									KeySecret: &v1.SecretKeySelector{
+									KeySecret: &corev1.SecretKeySelector{
 										Key: "key",
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 									},
@@ -876,10 +904,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -901,10 +929,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "invalid_key",
@@ -926,10 +954,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -950,10 +978,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -974,10 +1002,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -996,10 +1024,10 @@ func TestSelectServiceMonitors(t *testing.T) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1079,7 +1107,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
-				&v1.Secret{
+				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
 						Namespace: "test",
@@ -1092,7 +1120,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 						"key1":       []byte("val1"),
 					},
 				},
-				&v1.ConfigMap{
+				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "configmap",
 						Namespace: "test",
@@ -1269,10 +1297,10 @@ func TestSelectPodMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1294,10 +1322,10 @@ func TestSelectPodMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "invalid_key",
@@ -1319,10 +1347,10 @@ func TestSelectPodMonitors(t *testing.T) {
 							ProxyURL:             ptr.To("http://xxx-${dev}.svc.cluster.local:80"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1343,10 +1371,10 @@ func TestSelectPodMonitors(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1367,10 +1395,10 @@ func TestSelectPodMonitors(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1389,10 +1417,10 @@ func TestSelectPodMonitors(t *testing.T) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1472,7 +1500,7 @@ func TestSelectPodMonitors(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
-				&v1.Secret{
+				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
 						Namespace: "test",
@@ -1641,10 +1669,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1659,10 +1687,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			scenario: "invalid proxy config with proxyConnectHeaders but no proxyUrl defined or proxyFromEnvironment set to true",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1679,10 +1707,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					ProxyFromEnvironment: ptr.To(true),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1699,10 +1727,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ProxyConfig = monitoringv1.ProxyConfig{
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(true),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1720,16 +1748,16 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
 							},
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "invalid-key",
@@ -1756,22 +1784,22 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
 							},
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
 							},
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1789,10 +1817,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					ProxyURL:             ptr.To("http://no-proxy.com"),
 					NoProxy:              ptr.To("0.0.0.0"),
 					ProxyFromEnvironment: ptr.To(false),
-					ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "invalid-key",
@@ -1847,10 +1875,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1873,10 +1901,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -1897,8 +1925,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						URL: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1917,8 +1945,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						URL: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -1939,10 +1967,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "invalid-key",
@@ -1963,8 +1991,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						URL: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -1983,8 +2011,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -2002,8 +2030,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -2022,24 +2050,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2057,9 +2085,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Role: monitoringv1alpha1.KubernetesRoleNode,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -2080,10 +2108,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -2105,10 +2133,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -2253,7 +2281,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			promVersion: "2.31.0",
+			promVersion: "2.20.0",
 			valid:       false,
 		},
 		{
@@ -2318,8 +2346,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server: "example.com",
-						TokenRef: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						TokenRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -2335,8 +2363,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server: "example.com",
-						TokenRef: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						TokenRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
 							Key: "key1",
@@ -2389,8 +2417,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server: "example.com",
-						TokenRef: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						TokenRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -2401,10 +2429,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "foo",
 										},
 										Key: "invalid-key",
@@ -2425,24 +2453,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "server",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2460,9 +2488,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "server",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -2481,24 +2509,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "server",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2516,9 +2544,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "server",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -2631,14 +2659,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
@@ -2665,14 +2693,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EC2SDConfigs = []monitoringv1alpha1.EC2SDConfig{
 					{
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
 							Key: "key2",
@@ -2690,24 +2718,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2725,24 +2753,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2763,9 +2791,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -2786,10 +2814,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -2810,8 +2838,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TenantID: ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID: ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
-						ClientSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -2841,8 +2869,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
-						ClientSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -2859,8 +2887,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
-						ClientSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -2939,32 +2967,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						SubscriptionID: "11111111-1111-1111-1111-111111111111",
 						TenantID:       ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
 						ClientID:       ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
-						ClientSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ClientSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -2981,9 +3009,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3001,14 +3029,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role:   monitoringv1alpha1.OpenStackRoleInstance,
 						Region: "RegionOne",
-						Password: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Password: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						ApplicationCredentialSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ApplicationCredentialSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
@@ -3023,8 +3051,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						Password: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Password: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "invalid",
 							},
 							Key: "key1",
@@ -3039,8 +3067,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
 					{
-						ApplicationCredentialSecret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ApplicationCredentialSecret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key3",
@@ -3095,24 +3123,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3130,9 +3158,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3150,8 +3178,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -3171,24 +3199,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3206,9 +3234,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Server: "http://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3240,10 +3268,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3263,8 +3291,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Server: "http://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3282,24 +3310,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3316,9 +3344,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3338,10 +3366,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3360,8 +3388,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.EurekaSDConfigs = []monitoringv1alpha1.EurekaSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3378,27 +3406,27 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3413,12 +3441,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3434,10 +3462,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -3453,10 +3481,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
 					{
-						Host: "hostAddress",
+						Host: "unix:///var/run/docker.sock",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3474,24 +3502,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3508,9 +3536,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3527,8 +3555,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LinodeSDConfigs = []monitoringv1alpha1.LinodeSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -3545,8 +3573,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LinodeSDConfigs = []monitoringv1alpha1.LinodeSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3564,8 +3592,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: "hcloud",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key1",
@@ -3583,8 +3611,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						Role: "hcloud",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3603,24 +3631,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Role: "hcloud",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3638,9 +3666,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						Role: "hcloud",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3661,10 +3689,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3686,10 +3714,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3707,26 +3735,27 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3741,11 +3770,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3761,14 +3791,15 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3786,9 +3817,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
 					{
+						Server: "http://localhost:4646",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3800,30 +3832,93 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "Nomad SD config with invalid server (missing scheme)",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.NomadSDConfigs = []monitoringv1alpha1.NomadSDConfig{
+					{
+						Server: "localhost:4646",
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "Docker SD config with MatchFirstNetwork rejected for Prometheus < 2.54.1",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
+					{
+						Host:              "unix:///var/run/docker.sock",
+						MatchFirstNetwork: ptr.To(true),
+					},
+				}
+			},
+			promVersion: "2.54.0",
+			valid:       false,
+		},
+		{
+			scenario: "Docker SD config with MatchFirstNetwork accepted for Prometheus >= 2.54.1",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSDConfigs = []monitoringv1alpha1.DockerSDConfig{
+					{
+						Host:              "unix:///var/run/docker.sock",
+						MatchFirstNetwork: ptr.To(true),
+					},
+				}
+			},
+			promVersion: "2.54.1",
+			valid:       true,
+		},
+		{
+			scenario: "Hetzner SD config with LabelSelector rejected for Prometheus < 3.5.0",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role:          "hcloud",
+						LabelSelector: ptr.To("env=production"),
+					},
+				}
+			},
+			promVersion: "3.4.0",
+			valid:       false,
+		},
+		{
+			scenario: "Hetzner SD config with LabelSelector accepted for Prometheus >= 3.5.0",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.HetznerSDConfigs = []monitoringv1alpha1.HetznerSDConfig{
+					{
+						Role:          "hcloud",
+						LabelSelector: ptr.To("env=production"),
+					},
+				}
+			},
+			promVersion: "3.5.0",
+			valid:       true,
+		},
+		{
 			scenario: "Dockerswarm SD config with valid TLS Config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3840,9 +3935,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3862,10 +3957,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3884,8 +3979,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -3904,24 +3999,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						URL: "https://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -3939,9 +4034,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						URL: "https://example.com",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -3962,10 +4057,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -3985,8 +4080,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						URL: "https://example.com",
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -4015,24 +4110,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "cert",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
+							KeySecret: &corev1.SecretKeySelector{
 								Key: "key",
-								LocalObjectReference: v1.LocalObjectReference{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 							},
@@ -4049,9 +4144,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -4072,10 +4167,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -4096,10 +4191,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -4118,8 +4213,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
 						Authorization: &monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -4137,14 +4232,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
@@ -4171,14 +4266,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
 							Key: "key1",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
@@ -4194,14 +4289,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{
 					{
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
 							Key: "key2",
@@ -4217,14 +4312,14 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OVHCloudSDConfigs = []monitoringv1alpha1.OVHCloudSDConfig{
 					{
 						ApplicationKey: "ApplicationKey",
-						ApplicationSecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ApplicationSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
 						},
-						ConsumerKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						ConsumerKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key2",
@@ -4242,8 +4337,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key1",
@@ -4253,7 +4348,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 						Zone:       ptr.To("beijing-1"),
 						Port:       ptr.To(int32(23456)),
-						ApiURL:     ptr.To("https://api.scaleway.com/"),
+						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com/")),
 						NameFilter: ptr.To("name"),
 						TagsFilter: []string{"aa", "bb"},
 					},
@@ -4267,8 +4362,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "AccessKey",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
 							Key: "key1",
@@ -4288,10 +4383,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -4311,9 +4406,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
+								Secret: &corev1.SecretKeySelector{
 									Key: "invalid_ca",
-									LocalObjectReference: v1.LocalObjectReference{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 								},
@@ -4331,23 +4426,23 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 									Key: "cert",
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							KeySecret: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
 								Key: "key",
@@ -4365,8 +4460,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					{
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
 									},
 									Key: "invalid-ca",
@@ -4387,10 +4482,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(false),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -4411,10 +4506,10 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "key1",
@@ -4433,8 +4528,8 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{
 					{
 						Authorization: monitoringv1.SafeAuthorization{
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
 								Key: "key1",
@@ -4474,7 +4569,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewSimpleClientset(
-				&v1.Secret{
+				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
 						Namespace: "test",
@@ -4488,7 +4583,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						"key":        key,
 					},
 				},
-				&v1.ConfigMap{
+				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "configmap",
 						Namespace: "test",
@@ -4558,7 +4653,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 
 func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 	storeBuilder := assets.NewTestStoreBuilder(
-		&v1.Secret{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "foo",
 				Namespace: "default",
@@ -4568,8 +4663,8 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 			},
 		},
 	)
-	secretKey := v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	secretKey := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "foo",
 		},
 		Key: "secret",

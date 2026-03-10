@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -32,7 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -74,6 +74,11 @@ type Controller struct {
 	manageEndpointSlice bool
 	manageEndpoints     bool
 	syncPeriod          time.Duration
+
+	// httpMetricsEnabled controls whether to include the insecure HTTP metrics
+	// port (10255) in the kubelet Service. Set to false when the cluster has
+	// disabled the insecure kubelet read-only port (e.g., GKE 1.32+).
+	httpMetricsEnabled bool
 }
 
 type ControllerOption func(*Controller)
@@ -105,6 +110,16 @@ func WithNodeAddressPriority(s string) ControllerOption {
 func WithSyncPeriod(d time.Duration) ControllerOption {
 	return func(c *Controller) {
 		c.syncPeriod = d
+	}
+}
+
+// WithHTTPMetrics controls whether to include the insecure HTTP metrics port
+// (10255) in the kubelet Service. When disabled, only the secure HTTPS port
+// (10250) and cAdvisor port (4194) are included. This is useful when the
+// cluster has disabled the insecure kubelet read-only port (e.g., GKE 1.32+).
+func WithHTTPMetrics(enabled bool) ControllerOption {
+	return func(c *Controller) {
+		c.httpMetricsEnabled = enabled
 	}
 }
 
@@ -231,25 +246,25 @@ func (c *Controller) Run(ctx context.Context) error {
 // 2. NodeExternalIP
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][]string, error) {
-	m := map[v1.NodeAddressType][]string{}
+func (c *Controller) nodeAddress(node corev1.Node) (string, map[corev1.NodeAddressType][]string, error) {
+	m := map[corev1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
 	switch c.nodeAddressPriority {
 	case "internal":
-		if addresses, ok := m[v1.NodeInternalIP]; ok {
+		if addresses, ok := m[corev1.NodeInternalIP]; ok {
 			return addresses[0], m, nil
 		}
-		if addresses, ok := m[v1.NodeExternalIP]; ok {
+		if addresses, ok := m[corev1.NodeExternalIP]; ok {
 			return addresses[0], m, nil
 		}
 	case "external":
-		if addresses, ok := m[v1.NodeExternalIP]; ok {
+		if addresses, ok := m[corev1.NodeExternalIP]; ok {
 			return addresses[0], m, nil
 		}
-		if addresses, ok := m[v1.NodeInternalIP]; ok {
+		if addresses, ok := m[corev1.NodeInternalIP]; ok {
 			return addresses[0], m, nil
 		}
 	}
@@ -261,9 +276,9 @@ func (c *Controller) nodeAddress(node v1.Node) (string, map[v1.NodeAddressType][
 // condition is Unknown then that node's kubelet has not recently sent any node
 // status, so we should not add this node to the kubelet endpoint and scrape
 // it.
-func nodeReadyConditionKnown(node v1.Node) bool {
+func nodeReadyConditionKnown(node corev1.Node) bool {
 	for _, c := range node.Status.Conditions {
-		if c.Type == v1.NodeReady && c.Status != v1.ConditionUnknown {
+		if c.Type == corev1.NodeReady && c.Status != corev1.ConditionUnknown {
 			return true
 		}
 	}
@@ -286,7 +301,7 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 			Ready: ptr.To(true),
 		},
 		NodeName: ptr.To(na.name),
-		TargetRef: &v1.ObjectReference{
+		TargetRef: &corev1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
 			UID:        na.uid,
@@ -295,11 +310,11 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 	}
 }
 
-func (na *nodeAddress) v1EndpointAddress() v1.EndpointAddress {
-	return v1.EndpointAddress{
+func (na *nodeAddress) v1EndpointAddress() corev1.EndpointAddress {
+	return corev1.EndpointAddress{
 		IP:       na.ipAddress,
 		NodeName: ptr.To(na.name),
-		TargetRef: &v1.ObjectReference{
+		TargetRef: &corev1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
 			UID:        na.uid,
@@ -308,7 +323,7 @@ func (na *nodeAddress) v1EndpointAddress() v1.EndpointAddress {
 	}
 }
 
-func (c *Controller) getNodeAddresses(nodes []v1.Node) ([]nodeAddress, []error) {
+func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []error) {
 	var (
 		addresses         = make([]nodeAddress, 0, len(nodes))
 		readyKnownNodes   = map[string]string{}
@@ -379,7 +394,7 @@ func (c *Controller) sync(ctx context.Context) {
 
 	// Sort the nodes slice by their name.
 	nodes := nodeList.Items
-	slices.SortStableFunc(nodes, func(a, b v1.Node) int {
+	slices.SortStableFunc(nodes, func(a, b corev1.Node) int {
 		return strings.Compare(a.Name, b.Name)
 	})
 	c.logger.Debug("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes))
@@ -419,7 +434,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 	c.logger.Debug("Sync endpoints")
 
 	//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-	eps := &v1.Endpoints{
+	eps := &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
@@ -430,23 +445,10 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 			}),
 		},
 		//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
-		Subsets: []v1.EndpointSubset{
+		Subsets: []corev1.EndpointSubset{
 			{
-				Addresses: make([]v1.EndpointAddress, len(addresses)),
-				Ports: []v1.EndpointPort{
-					{
-						Name: httpsPortName,
-						Port: httpsPort,
-					},
-					{
-						Name: httpPortName,
-						Port: httpPort,
-					},
-					{
-						Name: cAdvisorPortName,
-						Port: cAdvisorPort,
-					},
-				},
+				Addresses: make([]corev1.EndpointAddress, len(addresses)),
+				Ports:     c.endpointPorts(),
 			},
 		},
 	}
@@ -462,7 +464,7 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 	}
 
 	c.logger.Debug("Updating Kubernetes endpoint")
-	err := k8sutil.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
+	err := k8s.CreateOrUpdateEndpoints(ctx, c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace), eps)
 	if err != nil {
 		return err
 	}
@@ -470,10 +472,10 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 	return nil
 }
 
-func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
+func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 	c.logger.Debug("Sync service")
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
 			Annotations: c.annotations,
@@ -483,31 +485,18 @@ func (c *Controller) syncService(ctx context.Context) (*v1.Service, error) {
 				operator.ManagedByLabelKey:       operator.ManagedByLabelValue,
 			}),
 		},
-		Spec: v1.ServiceSpec{
-			Type:      v1.ServiceTypeClusterIP,
-			ClusterIP: v1.ClusterIPNone,
-			Ports: []v1.ServicePort{
-				{
-					Name: httpsPortName,
-					Port: httpsPort,
-				},
-				{
-					Name: httpPortName,
-					Port: httpPort,
-				},
-				{
-					Name: cAdvisorPortName,
-					Port: cAdvisorPort,
-				},
-			},
+		Spec: corev1.ServiceSpec{
+			Type:      corev1.ServiceTypeClusterIP,
+			ClusterIP: corev1.ClusterIPNone,
+			Ports:     c.servicePorts(),
 		},
 	}
 
 	c.logger.Debug("Updating Kubernetes service", "service", c.kubeletObjectName)
-	return k8sutil.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
+	return k8s.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(c.kubeletObjectNamespace), svc)
 }
 
-func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, addresses []nodeAddress) error {
+func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpointslice")
 
 	// Get the list of endpointslice objects associated to the service.
@@ -626,20 +615,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 					},
 					},
 				},
-				Ports: []discoveryv1.EndpointPort{
-					{
-						Name: ptr.To(httpsPortName),
-						Port: ptr.To(httpsPort),
-					},
-					{
-						Name: ptr.To(httpPortName),
-						Port: ptr.To(httpPort),
-					},
-					{
-						Name: ptr.To(cAdvisorPortName),
-						Port: ptr.To(cAdvisorPort),
-					},
-				},
+				Ports: c.endpointSlicePorts(),
 			}
 
 			if a.ipv4 {
@@ -676,7 +652,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 		}
 
 		c.logger.Debug("Updating endpointslice object", "name", eps.Name)
-		err := k8sutil.CreateOrUpdateEndpointSlice(ctx, client, &eps)
+		err := k8s.CreateOrUpdateEndpointSlice(ctx, client, &eps)
 		if err != nil {
 			return fmt.Errorf("failed to update endpoinslice: %w", err)
 		}
@@ -687,4 +663,76 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *v1.Service, add
 
 func (c *Controller) fullCapacity(eps []discoveryv1.Endpoint) bool {
 	return len(eps) >= c.maxEndpointsPerSlice
+}
+
+// servicePorts returns the list of ServicePort for the kubelet Service.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) servicePorts() []corev1.ServicePort {
+	ports := []corev1.ServicePort{
+		{
+			Name: httpsPortName,
+			Port: httpsPort,
+		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, corev1.ServicePort{
+			Name: httpPortName,
+			Port: httpPort,
+		})
+	}
+
+	return ports
+}
+
+// endpointPorts returns the list of EndpointPort for the kubelet Endpoints.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) endpointPorts() []corev1.EndpointPort {
+	ports := []corev1.EndpointPort{
+		{
+			Name: httpsPortName,
+			Port: httpsPort,
+		},
+		{
+			Name: cAdvisorPortName,
+			Port: cAdvisorPort,
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, corev1.EndpointPort{
+			Name: httpPortName,
+			Port: httpPort,
+		})
+	}
+
+	return ports
+}
+
+// endpointSlicePorts returns the list of EndpointPort for the kubelet EndpointSlice.
+// If httpMetricsEnabled is false, the insecure HTTP port (10255) is excluded.
+func (c *Controller) endpointSlicePorts() []discoveryv1.EndpointPort {
+	ports := []discoveryv1.EndpointPort{
+		{
+			Name: ptr.To(httpsPortName),
+			Port: ptr.To(httpsPort),
+		},
+		{
+			Name: ptr.To(cAdvisorPortName),
+			Port: ptr.To(cAdvisorPort),
+		},
+	}
+
+	if c.httpMetricsEnabled {
+		ports = append(ports, discoveryv1.EndpointPort{
+			Name: ptr.To(httpPortName),
+			Port: ptr.To(httpPort),
+		})
+	}
+
+	return ports
 }

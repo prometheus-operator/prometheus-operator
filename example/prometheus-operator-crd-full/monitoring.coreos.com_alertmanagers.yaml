@@ -4,6 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
+    operator.prometheus.io/version: 0.89.0
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -2071,6 +2072,14 @@ spec:
                               LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate
                               to the SMTP server.
                             type: string
+                          forceImplicitTLS:
+                            description: |-
+                              forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+                              true: force use of implicit TLS (direct TLS connection on any port)
+                              false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+                              nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+                              It requires Alertmanager >= v0.31.0.
+                            type: boolean
                           from:
                             description: from defines the default SMTP From header
                               field.
@@ -3763,7 +3772,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -5455,7 +5466,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -6780,7 +6793,7 @@ spec:
                               resources:
                                 description: |-
                                   resources represents the minimum resources the volume should have.
-                                  If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                  Users are allowed to specify resource requirements
                                   that are lower than previous value but must still be higher than capacity recorded in the
                                   status field of the claim.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -7035,7 +7048,7 @@ spec:
                           resources:
                             description: |-
                               resources represents the minimum resources the volume should have.
-                              If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                              Users are allowed to specify resource requirements
                               that are lower than previous value but must still be higher than capacity recorded in the
                               status field of the claim.
                               More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -7191,9 +7204,7 @@ spec:
                               ignore the update for the purpose it was designed. For
                               example - a controller that\nonly is responsible for
                               resizing capacity of the volume, should ignore PVC updates
-                              that change other valid\nresources associated with PVC.\n\nThis
-                              is an alpha field and requires enabling RecoverVolumeExpansionFailure
-                              feature."
+                              that change other valid\nresources associated with PVC."
                             type: object
                             x-kubernetes-map-type: granular
                           allocatedResources:
@@ -7225,9 +7236,7 @@ spec:
                               ignore the update for the purpose it was designed. For
                               example - a controller that\nonly is responsible for
                               resizing capacity of the volume, should ignore PVC updates
-                              that change other valid\nresources associated with PVC.\n\nThis
-                              is an alpha field and requires enabling RecoverVolumeExpansionFailure
-                              feature."
+                              that change other valid\nresources associated with PVC."
                             type: object
                           capacity:
                             additionalProperties:
@@ -7360,9 +7369,10 @@ spec:
                     operator:
                       description: |-
                         Operator represents a key's relationship to the value.
-                        Valid operators are Exists and Equal. Defaults to Equal.
+                        Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
                         Exists is equivalent to wildcard for value, so that a pod can
                         tolerate all taints of a particular category.
+                        Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
                       type: string
                     tolerationSeconds:
                       description: |-
@@ -8254,7 +8264,7 @@ spec:
                                 resources:
                                   description: |-
                                     resources represents the minimum resources the volume should have.
-                                    If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                    Users are allowed to specify resource requirements
                                     that are lower than previous value but must still be higher than capacity recorded in the
                                     status field of the claim.
                                     More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -9133,6 +9143,24 @@ spec:
                                     description: Kubelet's generated CSRs will be
                                       addressed to this signer.
                                     type: string
+                                  userAnnotations:
+                                    additionalProperties:
+                                      type: string
+                                    description: |-
+                                      userAnnotations allow pod authors to pass additional information to
+                                      the signer implementation.  Kubernetes does not restrict or validate this
+                                      metadata in any way.
+
+                                      These values are copied verbatim into the `spec.unverifiedUserAnnotations` field of
+                                      the PodCertificateRequest objects that Kubelet creates.
+
+                                      Entries are subject to the same validation as object metadata annotations,
+                                      with the addition that all keys must be domain-prefixed. No restrictions
+                                      are placed on values, except an overall size limitation on the entire field.
+
+                                      Signers should document the keys and values they support. Signers should
+                                      deny requests that contain keys they do not recognize.
+                                    type: object
                                 required:
                                 - keyType
                                 - signerName

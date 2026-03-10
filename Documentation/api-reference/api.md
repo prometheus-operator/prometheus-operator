@@ -11427,6 +11427,22 @@ SafeTLSConfig
 <p>tlsConfig defines the default TLS configuration for SMTP receivers</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
@@ -12713,7 +12729,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
 </p>
 <div>
 <p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -26169,7 +26185,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the DigitalOcean API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26278,7 +26294,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the DigitalOcean API.</p>
 </td>
 </tr>
 <tr>
@@ -26459,7 +26475,7 @@ string
 </em>
 </td>
 <td>
-<p>host defines the address of the docker daemon</p>
+<p>host defines the address of the docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26528,7 +26544,8 @@ SafeTLSConfig
 </em>
 </td>
 <td>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration to connect to the Docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26623,7 +26640,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker daemon.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26778,7 +26795,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker Swarm API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26864,7 +26881,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.</p>
 </td>
 </tr>
 <tr>
@@ -27079,7 +27096,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.
+<p>tlsConfig defines the TLS configuration to connect to the EC2 API.
 It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
@@ -27319,6 +27336,22 @@ SafeTLSConfig
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig
@@ -27343,7 +27376,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27375,7 +27410,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Eureka server.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -27404,7 +27439,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Eureka server.</p>
 </td>
 </tr>
 <tr>
@@ -27913,7 +27948,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -28131,7 +28168,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Hetzner API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28240,7 +28277,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Hetzner API.</p>
 </td>
 </tr>
 <tr>
@@ -28415,7 +28452,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>authorization defines the  header configuration to authenticate against the IONOS.
+<p>authorization defines the header configuration to authenticate against the IONOS API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28486,7 +28523,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the IONOS API.</p>
 </td>
 </tr>
 <tr>
@@ -29029,7 +29066,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Kuma control plane.</p>
 </td>
 </tr>
 <tr>
@@ -29057,7 +29094,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Kuma control plane.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29236,7 +29273,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Lightsail API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29322,7 +29359,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Lightsail API.</p>
 </td>
 </tr>
 <tr>
@@ -29430,7 +29467,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Linode API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29528,7 +29565,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Linode API.</p>
 </td>
 </tr>
 <tr>
@@ -30553,7 +30590,9 @@ When specified, only resources within this region will be discovered.</p>
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30599,7 +30638,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Nomad API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -30628,7 +30667,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Nomad API.</p>
 </td>
 </tr>
 <tr>
@@ -30903,7 +30942,9 @@ string
 <td>
 <code>identityEndpoint</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33551,7 +33592,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33637,7 +33680,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the PuppetDB API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -33723,7 +33766,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the PuppetDB server.</p>
 </td>
 </tr>
 <tr>
@@ -34402,7 +34445,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -34416,7 +34461,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -34699,13 +34746,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -34713,13 +34761,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -34727,13 +34777,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -35070,7 +35122,9 @@ int32
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -35220,7 +35274,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Scaleway API.</p>
 </td>
 </tr>
 </tbody>
@@ -36519,6 +36573,20 @@ before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.SlackConfirmationField">SlackConfirmationField
@@ -36703,8 +36771,7 @@ map[string]string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape
-kubebuilder:validation:MinLength:=1</p>
+<p>Target represents a target for Prometheus to scrape</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
@@ -37009,7 +37076,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -38165,6 +38232,22 @@ SafeTLSConfig
 <em>(Optional)</em>
 <p>tlsConfig defines the TLS configuration for SMTP connections.
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -40612,7 +40695,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -40626,7 +40711,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -40909,13 +40996,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -40923,13 +41011,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -40937,13 +41027,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -41631,6 +41723,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>

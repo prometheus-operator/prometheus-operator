@@ -17,7 +17,7 @@ package framework
 import (
 	"context"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -56,13 +56,13 @@ func (f *Framework) createOrUpdateServiceAccount(ctx context.Context, namespace 
 	return finalizer, nil
 }
 
-func parseServiceAccountYaml(source string) (*v1.ServiceAccount, error) {
+func parseServiceAccountYaml(source string) (*corev1.ServiceAccount, error) {
 	manifest, err := SourceToIOReader(source)
 	if err != nil {
 		return nil, err
 	}
 
-	serviceAccount := v1.ServiceAccount{}
+	serviceAccount := corev1.ServiceAccount{}
 	if err := yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&serviceAccount); err != nil {
 		return nil, err
 	}

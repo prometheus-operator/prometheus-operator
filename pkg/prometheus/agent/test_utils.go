@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
@@ -43,14 +43,14 @@ func makeSpecForTestListenTLS() monitoringv1alpha1.PrometheusAgentSpec {
 			Web: &monitoringv1.PrometheusWebSpec{
 				WebConfigFileFields: monitoringv1.WebConfigFileFields{
 					TLSConfig: &monitoringv1.WebTLSConfig{
-						KeySecret: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						KeySecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "some-secret",
 							},
 						},
 						Cert: monitoringv1.SecretOrConfigMap{
-							ConfigMap: &v1.ConfigMapKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							ConfigMap: &corev1.ConfigMapKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "some-configmap",
 								},
 							},
@@ -62,7 +62,7 @@ func makeSpecForTestListenTLS() monitoringv1alpha1.PrometheusAgentSpec {
 	}
 }
 
-func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Container) {
+func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []corev1.Container) {
 	expectedConfigReloaderReloadURL := "--reload-url=https://localhost:9090/-/reload"
 	require.True(t, slices.Contains(actualArgs, expectedConfigReloaderReloadURL))
 
@@ -83,7 +83,7 @@ func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Co
 type testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels struct {
 	name string
 	spec monitoringv1alpha1.PrometheusAgentSpec
-	tsc  v1.TopologySpreadConstraint
+	tsc  corev1.TopologySpreadConstraint
 }
 
 func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []testcaseForTestPodTopologySpreadConstraintWithAdditionalLabels {
@@ -97,16 +97,16 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 							},
 						},
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 			},
 		},
 		{
@@ -118,7 +118,7 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
 										"app": "prometheus",
@@ -129,10 +129,10 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app": "prometheus",
@@ -150,7 +150,7 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 							CoreV1TopologySpreadConstraint: monitoringv1.CoreV1TopologySpreadConstraint{
 								MaxSkew:           1,
 								TopologyKey:       "kubernetes.io/hostname",
-								WhenUnsatisfiable: v1.DoNotSchedule,
+								WhenUnsatisfiable: corev1.DoNotSchedule,
 								LabelSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
 										"app": "prometheus",
@@ -161,10 +161,10 @@ func createTestCasesForTestPodTopologySpreadConstraintWithAdditionalLabels() []t
 					},
 				},
 			},
-			tsc: v1.TopologySpreadConstraint{
+			tsc: corev1.TopologySpreadConstraint{
 				MaxSkew:           1,
 				TopologyKey:       "kubernetes.io/hostname",
-				WhenUnsatisfiable: v1.DoNotSchedule,
+				WhenUnsatisfiable: corev1.DoNotSchedule,
 				LabelSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"app":                          "prometheus",

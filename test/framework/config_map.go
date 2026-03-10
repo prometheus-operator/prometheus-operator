@@ -20,16 +20,16 @@ import (
 	"fmt"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func MakeConfigMapWithCert(ns, name, keyKey, certKey, caKey string,
-	keyBytes, certBytes, caBytes []byte) *v1.ConfigMap {
+	keyBytes, certBytes, caBytes []byte) *corev1.ConfigMap {
 
-	cm := &v1.ConfigMap{
+	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
 		Data:       map[string]string{},
 	}
@@ -49,9 +49,9 @@ func MakeConfigMapWithCert(ns, name, keyKey, certKey, caKey string,
 	return cm
 }
 
-func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) (*v1.ConfigMap, error) {
+func (f *Framework) WaitForConfigMapExist(ctx context.Context, ns, name string) (*corev1.ConfigMap, error) {
 	var (
-		configMap *v1.ConfigMap
+		configMap *corev1.ConfigMap
 		getErr    error
 	)
 	err := wait.PollUntilContextTimeout(ctx, 2*time.Second, f.DefaultTimeout, true, func(ctx context.Context) (bool, error) {

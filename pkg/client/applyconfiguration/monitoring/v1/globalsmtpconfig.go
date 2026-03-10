@@ -23,15 +23,16 @@ import (
 // GlobalSMTPConfigApplyConfiguration represents a declarative configuration of the GlobalSMTPConfig type for use
 // with apply.
 type GlobalSMTPConfigApplyConfiguration struct {
-	From         *string                          `json:"from,omitempty"`
-	SmartHost    *HostPortApplyConfiguration      `json:"smartHost,omitempty"`
-	Hello        *string                          `json:"hello,omitempty"`
-	AuthUsername *string                          `json:"authUsername,omitempty"`
-	AuthPassword *corev1.SecretKeySelector        `json:"authPassword,omitempty"`
-	AuthIdentity *string                          `json:"authIdentity,omitempty"`
-	AuthSecret   *corev1.SecretKeySelector        `json:"authSecret,omitempty"`
-	RequireTLS   *bool                            `json:"requireTLS,omitempty"`
-	TLSConfig    *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	From             *string                          `json:"from,omitempty"`
+	SmartHost        *HostPortApplyConfiguration      `json:"smartHost,omitempty"`
+	Hello            *string                          `json:"hello,omitempty"`
+	AuthUsername     *string                          `json:"authUsername,omitempty"`
+	AuthPassword     *corev1.SecretKeySelector        `json:"authPassword,omitempty"`
+	AuthIdentity     *string                          `json:"authIdentity,omitempty"`
+	AuthSecret       *corev1.SecretKeySelector        `json:"authSecret,omitempty"`
+	RequireTLS       *bool                            `json:"requireTLS,omitempty"`
+	TLSConfig        *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	ForceImplicitTLS *bool                            `json:"forceImplicitTLS,omitempty"`
 }
 
 // GlobalSMTPConfigApplyConfiguration constructs a declarative configuration of the GlobalSMTPConfig type for use with
@@ -109,5 +110,13 @@ func (b *GlobalSMTPConfigApplyConfiguration) WithRequireTLS(value bool) *GlobalS
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *GlobalSMTPConfigApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *GlobalSMTPConfigApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithForceImplicitTLS sets the ForceImplicitTLS field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ForceImplicitTLS field is set to the value of the last call.
+func (b *GlobalSMTPConfigApplyConfiguration) WithForceImplicitTLS(value bool) *GlobalSMTPConfigApplyConfiguration {
+	b.ForceImplicitTLS = &value
 	return b
 }

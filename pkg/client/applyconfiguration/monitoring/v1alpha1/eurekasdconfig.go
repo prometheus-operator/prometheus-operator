@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -25,7 +26,7 @@ import (
 // EurekaSDConfigApplyConfiguration represents a declarative configuration of the EurekaSDConfig type for use
 // with apply.
 type EurekaSDConfigApplyConfiguration struct {
-	Server                           *string                                 `json:"server,omitempty"`
+	Server                           *monitoringv1alpha1.URL                 `json:"server,omitempty"`
 	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
 	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
@@ -45,7 +46,7 @@ func EurekaSDConfig() *EurekaSDConfigApplyConfiguration {
 // WithServer sets the Server field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Server field is set to the value of the last call.
-func (b *EurekaSDConfigApplyConfiguration) WithServer(value string) *EurekaSDConfigApplyConfiguration {
+func (b *EurekaSDConfigApplyConfiguration) WithServer(value monitoringv1alpha1.URL) *EurekaSDConfigApplyConfiguration {
 	b.Server = &value
 	return b
 }

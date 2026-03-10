@@ -22,7 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 const (
@@ -104,7 +104,7 @@ func (tr *TLSReferences) mountParamsForSecret(
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
-	vn := k8sutil.NewResourceNamerWithPrefix(volumePrefix)
+	vn := k8s.NewResourceNamerWithPrefix(volumePrefix)
 	volumeName, err := vn.UniqueDNS1123Label(secret.Name)
 	if err != nil {
 		return nil, nil, err
@@ -143,7 +143,7 @@ func (tr *TLSReferences) mountParamsForConfigmap(
 	volumePrefix string,
 	mountPath string,
 ) ([]corev1.Volume, []corev1.VolumeMount, error) {
-	vn := k8sutil.NewResourceNamerWithPrefix(volumePrefix)
+	vn := k8s.NewResourceNamerWithPrefix(volumePrefix)
 	volumeName, err := vn.UniqueDNS1123Label(configMap.Name)
 	if err != nil {
 		return nil, nil, err

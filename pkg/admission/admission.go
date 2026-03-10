@@ -87,7 +87,7 @@ func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admissio
 
 	return &Admission{
 		logger:           logger,
-		wh:               conversion.NewWebhookHandler(scheme),
+		wh:               conversion.NewWebhookHandler(scheme, conversion.NewRegistry()),
 		validationScheme: validationScheme,
 	}
 }
