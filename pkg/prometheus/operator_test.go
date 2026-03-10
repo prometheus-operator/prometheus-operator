@@ -489,6 +489,132 @@ func fakeReadyPod(sts string, ordinal int, ready bool) corev1.Pod {
 	}
 }
 
+func TestCombinedStatus(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		statuses []monitoringv1.ConditionStatus
+		exp      monitoringv1.ConditionStatus
+	}{
+		{
+			name:     "nil slice",
+			statuses: nil,
+			exp:      monitoringv1.ConditionTrue,
+		},
+		{
+			name:     "empty slice",
+			statuses: []monitoringv1.ConditionStatus{},
+			exp:      monitoringv1.ConditionTrue,
+		},
+		{
+			name:     "all True",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionTrue, monitoringv1.ConditionTrue},
+			exp:      monitoringv1.ConditionTrue,
+		},
+		{
+			name:     "single False",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionFalse},
+			exp:      monitoringv1.ConditionFalse,
+		},
+		{
+			name:     "False short-circuits remaining statuses",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionTrue, monitoringv1.ConditionFalse, monitoringv1.ConditionDegraded},
+			exp:      monitoringv1.ConditionFalse,
+		},
+		{
+			name:     "single Degraded",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionDegraded},
+			exp:      monitoringv1.ConditionDegraded,
+		},
+		{
+			name:     "Degraded with True",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionTrue, monitoringv1.ConditionDegraded},
+			exp:      monitoringv1.ConditionDegraded,
+		},
+		{
+			name:     "single Unknown",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionUnknown},
+			exp:      monitoringv1.ConditionUnknown,
+		},
+		{
+			name:     "Unknown with True",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionTrue, monitoringv1.ConditionUnknown},
+			exp:      monitoringv1.ConditionUnknown,
+		},
+		{
+			name:     "Degraded overrides Unknown",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionUnknown, monitoringv1.ConditionDegraded},
+			exp:      monitoringv1.ConditionDegraded,
+		},
+		{
+			name:     "Degraded then Unknown stays Degraded",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionDegraded, monitoringv1.ConditionUnknown},
+			exp:      monitoringv1.ConditionDegraded,
+		},
+		{
+			name:     "False takes priority over Degraded",
+			statuses: []monitoringv1.ConditionStatus{monitoringv1.ConditionDegraded, monitoringv1.ConditionFalse},
+			exp:      monitoringv1.ConditionFalse,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.exp, combinedStatus(tc.statuses))
+		})
+	}
+}
+
+func TestCombinedReason(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		reasons []string
+		exp     string
+	}{
+		{
+			name:    "nil slice",
+			reasons: nil,
+			exp:     "",
+		},
+		{
+			name:    "empty slice",
+			reasons: []string{},
+			exp:     "",
+		},
+		{
+			name:    "all empty strings",
+			reasons: []string{"", ""},
+			exp:     "",
+		},
+		{
+			name:    "single reason",
+			reasons: []string{"ReasonA"},
+			exp:     "ReasonA",
+		},
+		{
+			name:    "duplicate reasons",
+			reasons: []string{"ReasonA", "ReasonA"},
+			exp:     "ReasonA",
+		},
+		{
+			name:    "two distinct reasons joined alphabetically",
+			reasons: []string{"ReasonB", "ReasonA"},
+			exp:     "ReasonAAndReasonB",
+		},
+		{
+			name:    "empty strings are ignored",
+			reasons: []string{"", "ReasonA", ""},
+			exp:     "ReasonA",
+		},
+		{
+			name:    "distinct reasons with duplicates and empty strings",
+			reasons: []string{"ReasonB", "", "ReasonA", "ReasonB"},
+			exp:     "ReasonAAndReasonB",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.exp, combinedReason(tc.reasons))
+		})
+	}
+}
+
 func TestStatefulSetReporterProcess(t *testing.T) {
 	for _, tc := range []struct {
 		name  string
