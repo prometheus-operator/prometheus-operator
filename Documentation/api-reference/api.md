@@ -6438,6 +6438,36 @@ Kubernetes core/v1.SecretKeySelector
 </tr>
 <tr>
 <td>
+<code>slackAppToken</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>slackAppToken defines the default Slack App Token.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>slackAppUrl</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>slackAppUrl defines the default URL for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>opsGenieApiUrl</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
@@ -10632,7 +10662,7 @@ Kubernetes core/v1.VolumeResourceRequirements
 <td>
 <em>(Optional)</em>
 <p>resources represents the minimum resources the volume should have.
-If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+Users are allowed to specify resource requirements
 that are lower than previous value but must still be higher than capacity recorded in the
 status field of the claim.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources">https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources</a></p>
@@ -35777,6 +35807,38 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>appToken</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appToken defines the secret&rsquo;s key that contains the Slack app token.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>appURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appURL defines the URL used for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>channel</code><br/>
 <em>
 string
@@ -36545,7 +36607,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -40398,6 +40460,38 @@ object and accessible by the Prometheus Operator.</p>
 </tr>
 <tr>
 <td>
+<code>appToken</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.SecretKeySelector">
+SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appToken defines the secret&rsquo;s key that contains the Slack app token.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>appURL</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.URL">
+URL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>appURL defines the URL used for Slack App message posting API.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>channel</code><br/>
 <em>
 string
@@ -41157,7 +41251,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>

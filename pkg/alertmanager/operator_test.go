@@ -204,6 +204,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
+
 	c := fake.NewSimpleClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1366,6 +1369,135 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-app-token",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-app-token-old-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version29,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-missing-app-token-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "not-existing",
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-valid-app-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppURL: ptr.To(monitoringv1alpha1.URL("https://slack.com/api/chat.postMessage")),
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-app-url-old-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppURL: ptr.To(monitoringv1alpha1.URL("https://slack.com/api/chat.postMessage")),
+							},
+						},
+					}},
+				},
+			},
+			version: &version29,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-invalid-app-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								AppURL: ptr.To(monitoringv1alpha1.URL("http://::invalid")),
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "email-config-with-implicit-tls",
 					Namespace: "ns1",
 				},
@@ -1431,6 +1563,195 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 
 			t.Logf("err: %s", err)
 			require.Error(t, err)
+		})
+	}
+}
+
+// Test to exercise the function checkAlertmanagerResource
+// and validate that the operator correctly validates global configuration
+// fields for version compatibility.
+func TestCheckAlertmanagerResource(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []struct {
+		name      string
+		am        *monitoringv1.Alertmanager
+		version   string
+		secrets   []*corev1.Secret
+		expectErr bool
+	}{
+		{
+			name: "no global config",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{},
+			},
+			version:   "0.30.0",
+			expectErr: false,
+		},
+		{
+			name: "slackAppToken with version 0.30.0 and valid secret",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "slack-secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version: "0.30.0",
+			secrets: []*corev1.Secret{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "slack-secret",
+						Namespace: "ns1",
+					},
+					Data: map[string][]byte{
+						"token": []byte("xoxb-test-token"),
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "slackAppToken with version 0.29.0 should fail",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "slack-secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version:   "0.29.0",
+			expectErr: true,
+		},
+		{
+			name: "slackAppToken with version 0.30.0 but missing secret",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppToken: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "missing-secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version:   "0.30.0",
+			expectErr: true,
+		},
+		{
+			name: "slackAppUrl with version 0.30.0",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppURL: ptr.To(monitoringv1.URL("https://slack.com/api/chat.postMessage")),
+						},
+					},
+				},
+			},
+			version:   "0.30.0",
+			expectErr: false,
+		},
+		{
+			name: "slackAppUrl with version 0.29.0 should fail",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppURL: ptr.To(monitoringv1.URL("https://slack.com/api/chat.postMessage")),
+						},
+					},
+				},
+			},
+			version:   "0.29.0",
+			expectErr: true,
+		},
+		{
+			name: "slackAppUrl with invalid URL",
+			am: &monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					AlertmanagerConfiguration: &monitoringv1.AlertmanagerConfiguration{
+						Name: "global",
+						Global: &monitoringv1.AlertmanagerGlobalConfig{
+							SlackAppURL: ptr.To(monitoringv1.URL("http://::invalid")),
+						},
+					},
+				},
+			},
+			version:   "0.30.0",
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			objects := []runtime.Object{}
+			for _, secret := range tc.secrets {
+				objects = append(objects, secret)
+			}
+
+			c := fake.NewSimpleClientset(objects...)
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			version, err := semver.ParseTolerant(tc.version)
+			require.NoError(t, err)
+
+			err = checkAlertmanagerResource(ctx, tc.am, version, store)
+
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
