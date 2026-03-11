@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -44,70 +43,97 @@ var (
 	emptyQueryEndpoints = []string{""}
 )
 
-func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
-	labels := map[string]string{
-		"testlabel":                    "testlabelvalue",
+func TestStatefulSetLabelsAndAnnotations(t *testing.T) {
+	expectedStsLabels := map[string]string{
+		// operator managed labels.
 		"managed-by":                   "prometheus-operator",
 		"thanos-ruler":                 "test",
 		"app.kubernetes.io/instance":   "test",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/name":       "thanos-ruler",
+		// user-defined labels.
+		"thanosrulerlabel": "testlabelvalue",
+		"operatorlabel":    "operator-value",
+		"podlabel":         "test-label",
+	}
+	expectedSelectorLabels := map[string]string{
+		// operator managed labels.
+		"thanos-ruler":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "thanos-ruler",
+		// user-defined labels.
+		"operatorlabel": "operator-value",
+		"podlabel":      "test-label",
+	}
+	expectedPodLabels := map[string]string{
+		// operator managed labels.
+		"thanos-ruler":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "thanos-ruler",
+		// user-defined labels.
+		"operatorlabel": "operator-value",
+		"podlabel":      "test-label",
 	}
 
-	annotations := map[string]string{
-		"testannotation": "testannotationvalue",
-		"kubectl.kubernetes.io/last-applied-configuration": "something",
-		"kubectl.kubernetes.io/something":                  "something",
-	}
-
-	// kubectl annotations must not be on the statefulset so kubectl does
-	// not manage the generated object
-	expectedAnnotations := map[string]string{
+	// kubectl annotations from the ThanosRuler resource must not propagated to
+	// the statefulset and pods so kubectl does not manage the generated
+	// object.
+	expectedStsAnnotations := map[string]string{
 		"prometheus-operator-input-hash": "abc",
-		"testannotation":                 "testannotationvalue",
+		"operatorannotation":             "operator-value",
+		"thanosrulerannotation":          "testannotationvalue",
+	}
+	expectedPodAnnotations := map[string]string{
+		"kubectl.kubernetes.io/default-container": "thanos-ruler",
+		"podannotation": "test-annotation",
 	}
 
+	testConfig := Config{
+		ReloaderConfig:         operator.DefaultReloaderTestConfig.ReloaderConfig,
+		ThanosDefaultBaseImage: operator.DefaultThanosBaseImage,
+		Labels: map[string]string{
+			"operatorlabel": "operator-value",
+		},
+		Annotations: map[string]string{
+			"operatorannotation": "operator-value",
+		},
+	}
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "test",
-			Namespace:   "ns",
-			Labels:      labels,
-			Annotations: annotations,
+			Name:      "test",
+			Namespace: "ns",
+			Labels: map[string]string{
+				"thanosrulerlabel": "testlabelvalue",
+			},
+			Annotations: map[string]string{
+				"thanosrulerannotation":                            "testannotationvalue",
+				"kubectl.kubernetes.io/last-applied-configuration": "something",
+				"kubectl.kubernetes.io/something":                  "something",
+			},
 		},
-		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, defaultTestConfig, nil, "abc", &operator.ShardedSecret{})
-
-	require.NoError(t, err)
-
-	require.Equal(t, labels, sset.Labels, pretty.Compare(labels, sset.Labels))
-
-	require.Equal(t, expectedAnnotations, sset.Annotations, pretty.Compare(expectedAnnotations, sset.Annotations))
-}
-
-func TestPodLabelsAnnotations(t *testing.T) {
-	annotations := map[string]string{
-		"testannotation": "testvalue",
-	}
-	labels := map[string]string{
-		"testlabel": "testvalue",
-	}
-	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
-				Annotations: annotations,
-				Labels:      labels,
+				Labels: map[string]string{
+					"podlabel": "test-label",
+				},
+				Annotations: map[string]string{
+					"podannotation": "test-annotation",
+				},
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, testConfig, nil, "abc", &operator.ShardedSecret{})
+
 	require.NoError(t, err)
 
-	valLabel := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
-	require.Equal(t, "testvalue", valLabel)
+	require.Equal(t, expectedStsLabels, sset.Labels)
+	require.Equal(t, expectedSelectorLabels, sset.Spec.Selector.MatchLabels)
+	require.Equal(t, expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels)
 
-	valAnnotations := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]
-	require.Equal(t, "testvalue", valAnnotations)
+	require.Equal(t, expectedStsAnnotations, sset.Annotations)
+	require.Equal(t, expectedPodAnnotations, sset.Spec.Template.ObjectMeta.Annotations)
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
