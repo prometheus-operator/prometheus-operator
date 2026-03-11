@@ -6033,57 +6033,9 @@ func testStuckStatefulSetRollout(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	var loopError error
-	err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
-		ctx := context.Background()
-		current, err := framework.MonClientV1.Prometheuses(prom.Namespace).Get(ctx, prom.Name, metav1.GetOptions{})
-		if err != nil {
-			loopError = fmt.Errorf("failed to get object: %w", err)
-			return false, nil
-		}
-
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Reconciled, monitoringv1.ConditionTrue); err != nil {
-			loopError = err
-			return false, nil
-		}
-
-		if err := framework.AssertCondition(current.Status.Conditions, monitoringv1.Available, monitoringv1.ConditionDegraded); err != nil {
-			loopError = err
-			return false, nil
-		}
-
-		// The rollout should start from the highest pod ordinal.
-		pod, err := framework.KubeClient.CoreV1().Pods(prom.Namespace).Get(ctx, "prometheus-"+prom.Name+"-1", metav1.GetOptions{})
-		if err != nil {
-			loopError = err
-			return false, nil
-		}
-
-		// Ensure that the Prometheus container is stuck on ErrImagePull or ImagePullBackOff.
-		for _, cs := range pod.Status.ContainerStatuses {
-			if cs.Image != badImage {
-				continue
-			}
-
-			if cs.State.Waiting == nil {
-				loopError = fmt.Errorf("container not waiting")
-				return false, nil
-			}
-
-			if cs.State.Waiting.Reason != "ErrPullImage" && cs.State.Waiting.Reason != "ImagePullBackOff" {
-				loopError = fmt.Errorf("container waiting with reason %q", cs.State.Waiting.Reason)
-				return false, nil
-			}
-
-			return true, nil
-		}
-
-		loopError = fmt.Errorf("found no container with image %q", badImage)
-		return false, nil
-	})
-	if err != nil {
-		t.Fatalf("%v: %v", err, loopError)
-	}
+	// The rollout should start from the highest pod ordinal.
+	err = framework.WaitForContainerInErrPullImage(context.Background(), prom.Namespace, "prometheus-"+prom.Name+"-1", badImage)
+	require.NoError(t, err)
 
 	// Fix the bad image location and ensure that the resource goes back to ready.
 	prom, err = framework.PatchPrometheusAndWaitUntilReady(
