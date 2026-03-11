@@ -429,7 +429,7 @@ func TestSelectProbes(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset(
+			cs := fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -1106,7 +1106,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset(
+			cs := fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -1499,7 +1499,7 @@ func TestSelectPodMonitors(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset(
+			cs := fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
@@ -4568,7 +4568,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
-			cs := fake.NewSimpleClientset(
+			cs := fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "secret",
