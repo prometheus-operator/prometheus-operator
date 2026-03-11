@@ -72,6 +72,7 @@ func TestStatefulSetLabelsAndAnnotations(t *testing.T) {
 		"app.kubernetes.io/instance":   "test",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultThanosVersion, "v"),
 		// user-defined labels.
 		"operatorlabel": "operator-value",
 		"podlabel":      "test-label",
