@@ -398,6 +398,18 @@ func TestPromInstanceNs(t *testing.T) {
 	}
 }
 
+// TestRepairPolicy verifies that the operator can repair broken statefulsets when needed.
+func TestRepairPolicy(t *testing.T) {
+	skipPrometheusTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"RepairPolicy": testRepairPolicy,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given.
 func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
