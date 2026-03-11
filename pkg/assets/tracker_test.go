@@ -25,7 +25,7 @@ import (
 )
 
 func TestHasRefTo(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "pod",

@@ -65,7 +65,7 @@ hvBlhCknnq89u57O41ID6Mqxz3bRxNxpkqhfMyVWcVU=
 )
 
 func TestGetSecretKey(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -142,7 +142,7 @@ func TestGetSecretKey(t *testing.T) {
 }
 
 func TestAddBasicAuth(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -268,7 +268,7 @@ func TestAddBasicAuth(t *testing.T) {
 }
 
 func TestProxyCongfig(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -357,7 +357,7 @@ func TestProxyCongfig(t *testing.T) {
 }
 
 func TestAddTLSConfig(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "cm",
@@ -834,7 +834,7 @@ func TestAddTLSConfig(t *testing.T) {
 }
 
 func TestAddAuthorization(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -925,7 +925,7 @@ func TestAddAuthorization(t *testing.T) {
 }
 
 func TestAddAuthorizationNoCredentials(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -957,7 +957,7 @@ func TestAddSigV4(t *testing.T) {
 		accessKey = "accessKey"
 		secretKey = "secretKey"
 	)
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1087,7 +1087,7 @@ func TestAddAzureOAuth(t *testing.T) {
 	const (
 		clientSecret = "clientSecretKey"
 	)
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1172,7 +1172,7 @@ func TestAddAzureOAuth(t *testing.T) {
 }
 
 func TestUpdateObject(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1220,7 +1220,7 @@ func TestUpdateObject(t *testing.T) {
 }
 
 func TestDeleteObject(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1303,7 +1303,7 @@ func TestDeleteObject(t *testing.T) {
 }
 
 func TestGetObject(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1398,7 +1398,7 @@ func TestGetObject(t *testing.T) {
 }
 
 func TestAddObject(t *testing.T) {
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
