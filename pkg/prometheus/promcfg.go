@@ -3741,6 +3741,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.AzureSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
 		for i, config := range sc.Spec.AzureSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Environment != nil {
 				configs[i] = []yaml.MapItem{
 					{
