@@ -1991,7 +1991,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			tt.amVersion = &version
 		}
 
-		kclient := fake.NewSimpleClientset(
+		kclient := fake.NewClientset(
 			&corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "webhook-client-id",
@@ -2168,7 +2168,7 @@ func TestGenerateConfig(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:    "skeleton base, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2177,7 +2177,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					ResolveTimeout: ptr.To(model.Duration(time.Minute)),
@@ -2189,7 +2189,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPRequireTLS: ptr.To(false),
@@ -2201,7 +2201,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPRequireTLS: ptr.To(true),
@@ -2213,7 +2213,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with inhibit rules, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				InhibitRules: []*inhibitRule{
 					{
@@ -2228,7 +2228,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "base with sub route and matchers, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2246,7 +2246,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with mute time intervals, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2298,7 +2298,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with sns receiver, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{Receiver: "sns-test"},
 				Receivers: []*receiver{
@@ -2328,7 +2328,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "skeleton base with active_time_intervals, no CRs",
 			amVersion: &version24,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2359,7 +2359,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, simple CR",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2383,7 +2383,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with sub-routes",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2430,7 +2430,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2489,7 +2489,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, simple CR with namespaceMatcher disabled",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2516,7 +2516,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base in same namespace as alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2543,7 +2543,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base in different namespace to alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2570,7 +2570,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2610,7 +2610,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers are converted)",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2647,7 +2647,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2685,7 +2685,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "base with subroute - deprecated matching pattern, simple CR",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2711,7 +2711,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Pagerduty Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-pd-test-receiver",
@@ -2769,7 +2769,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Webhook Receiver and custom http config (oauth2)",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "webhook-client-id",
@@ -2842,7 +2842,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2887,7 +2887,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Team Responder",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2936,7 +2936,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2982,7 +2982,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with WeChat Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-wechat-test-receiver",
@@ -3028,7 +3028,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Pushover Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-pushover-test-receiver",
@@ -3092,7 +3092,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-telegram-test-receiver",
@@ -3140,7 +3140,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 
 			name:    "CR with Slack Receiver and global Slack URL",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
@@ -3188,7 +3188,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Slack Receiver with URL fields",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
@@ -3225,7 +3225,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Slack Receiver and global Slack URL File",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3273,7 +3273,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with Slack Receiver with MessageText",
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			amVersion: &semver.Version{Major: 0, Minor: 31},
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
@@ -3307,7 +3307,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with SNS Receiver with Access and Key",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-sns-test",
@@ -3365,7 +3365,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with SNS Receiver with roleARN",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-sns-test",
@@ -3412,7 +3412,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Mute Time Intervals",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3492,7 +3492,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Active Time Intervals",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3574,7 +3574,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver",
 			amVersion: &version26,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3626,7 +3626,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver with Summary",
 			amVersion: &version27,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3679,7 +3679,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver with Partial Conf",
 			amVersion: &version26,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3729,7 +3729,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeamsV2 Receiver",
 			amVersion: &version28,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3781,7 +3781,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeamsV2 Receiver with Partial Conf",
 			amVersion: &version28,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -4044,7 +4044,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4081,7 +4081,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing SmartHost Field",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4117,7 +4117,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing SMTP From Field",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4153,7 +4153,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPSmarthost: config.HostPort{
@@ -4195,7 +4195,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig with ForceImplicitTLS",
 			amVersion: &version31,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4233,7 +4233,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with WebhookConfig with Timeout Setup",
 			amVersion: &version28,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4269,7 +4269,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with WebhookConfig with Timeout Setup Older Version",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",

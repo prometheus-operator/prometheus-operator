@@ -204,7 +204,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
-	c := fake.NewSimpleClientset(
+	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "secret",
@@ -1667,11 +1667,11 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 		},
 	} {
 		t.Run(tc.am.Name, func(t *testing.T) {
-			c := fake.NewSimpleClientset(tc.objects...)
+			c := fake.NewClientset(tc.objects...)
 
 			o := &Operator{
 				kclient:          c,
-				mclient:          monitoringfake.NewSimpleClientset(),
+				mclient:          monitoringfake.NewClientset(),
 				ssarClient:       &alwaysAllowed{},
 				logger:           slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 				metrics:          operator.NewMetrics(prometheus.NewRegistry()),

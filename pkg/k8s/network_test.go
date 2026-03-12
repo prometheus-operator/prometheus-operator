@@ -95,7 +95,7 @@ func TestMergeMetadata_CreateOrUpdateService(t *testing.T) {
 				Status: corev1.ServiceStatus{},
 			}
 
-			svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
+			svcClient := fake.NewClientset(service).CoreV1().Services(namespace)
 
 			modifiedSvc := service.DeepCopy()
 			maps.Copy(modifiedSvc.Labels, tc.modifiedLabels)
@@ -183,7 +183,7 @@ func TestMergeMetadata_CreateOrUpdateEndpoints(t *testing.T) {
 				},
 			}
 
-			endpointsClient := fake.NewSimpleClientset(endpoints).CoreV1().Endpoints(namespace)
+			endpointsClient := fake.NewClientset(endpoints).CoreV1().Endpoints(namespace)
 
 			modifiedEndpoints := endpoints.DeepCopy()
 			maps.Copy(modifiedEndpoints.Labels, tc.modifiedLabels)
@@ -241,7 +241,7 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 			Status: corev1.ServiceStatus{},
 		}
 
-		svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
+		svcClient := fake.NewClientset(service).CoreV1().Services(namespace)
 
 		modifiedSvc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -374,7 +374,7 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			p := makeBarebonesPrometheus(name, ns)
 			p.Spec.ServiceName = &serviceName
 
-			clientSet := fake.NewSimpleClientset(&tc.service)
+			clientSet := fake.NewClientset(&tc.service)
 			svcClient := clientSet.CoreV1().Services(ns)
 
 			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)

@@ -411,7 +411,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	shardedSecret, err := operator.ReconcileShardedSecret(
 		context.Background(),
 		map[string][]byte{},
-		fake.NewSimpleClientset(),
+		fake.NewClientset(),
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      prompkg.TLSAssetsSecretName(&p),
