@@ -35,6 +35,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	ProbeNamespaceSelector               *metav1.LabelSelectorApplyConfiguration                 `json:"probeNamespaceSelector,omitempty"`
 	ScrapeConfigSelector                 *metav1.LabelSelectorApplyConfiguration                 `json:"scrapeConfigSelector,omitempty"`
 	ScrapeConfigNamespaceSelector        *metav1.LabelSelectorApplyConfiguration                 `json:"scrapeConfigNamespaceSelector,omitempty"`
+	RemoteWriteSelector                  *metav1.LabelSelectorApplyConfiguration                 `json:"remoteWriteSelector,omitempty"`
+	RemoteWriteNamespaceSelector         *metav1.LabelSelectorApplyConfiguration                 `json:"remoteWriteNamespaceSelector,omitempty"`
 	Version                              *string                                                 `json:"version,omitempty"`
 	Paused                               *bool                                                   `json:"paused,omitempty"`
 	Image                                *string                                                 `json:"image,omitempty"`
@@ -204,6 +206,22 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(valu
 // If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ScrapeConfigNamespaceSelector = value
+	return b
+}
+
+// WithRemoteWriteSelector sets the RemoteWriteSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RemoteWriteSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithRemoteWriteSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.RemoteWriteSelector = value
+	return b
+}
+
+// WithRemoteWriteNamespaceSelector sets the RemoteWriteNamespaceSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RemoteWriteNamespaceSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithRemoteWriteNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	b.RemoteWriteNamespaceSelector = value
 	return b
 }
 
