@@ -249,6 +249,7 @@ type Receiver struct {
 	RocketChatConfigs []RocketChatConfig `json:"rocketchatConfigs,omitempty"`
 	// mattermostConfigs defines the list of Mattermost configurations.
 	// It requires Alertmanager >= 0.30.0.
+	// +listType=atomic
 	// +optional
 	MattermostConfigs []MattermostConfig `json:"mattermostConfigs,omitempty"`
 }
@@ -1362,6 +1363,7 @@ type MattermostConfig struct {
 	// +optional
 	Text *string `json:"text,omitempty"`
 	// iconURL overrides the profile picture the message posts with.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	IconURL *string `json:"iconURL,omitempty"`
 	// iconEmoji overrides the profile picture and icon_url parameter.
@@ -1371,6 +1373,7 @@ type MattermostConfig struct {
 	// attachments define the message attachments used for richer formatting options.
 	// It is for compatibility with Slack.
 	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
 	// +optional
 	Attachments []MattermostAttachmentConfig `json:"attachments,omitempty"`
 	// props defines the extra information to be sent to Mattermost.
@@ -1416,9 +1419,11 @@ type MattermostAttachmentConfig struct {
 	AuthorName *string `json:"authorName,omitempty"`
 	// authorLink defines optional URL used to hyperlink the author_name.
 	// If no author_name is specified, this field does nothing.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	AuthorLink *string `json:"authorLink,omitempty"`
 	// authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	AuthorIcon *string `json:"authorIcon,omitempty"`
 	// title defines an optional title displayed below the author information in the attachment.
@@ -1427,6 +1432,7 @@ type MattermostAttachmentConfig struct {
 	Title *string `json:"title,omitempty"`
 	// titleLink defines an optional URL used to hyperlink the title.
 	// If no title is specified, this field does nothing.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TitleLink *string `json:"titleLink,omitempty"`
 	// fields defines a list of fields that are sent with each notification
@@ -1438,6 +1444,7 @@ type MattermostAttachmentConfig struct {
 	// thumbURL defines an optional URL to an image file
 	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
 	// on the right side of an attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ThumbURL *string `json:"thumbURL,omitempty"`
 	// footer defines an optional line of text that will be displayed at the bottom of the attachment.
@@ -1446,10 +1453,12 @@ type MattermostAttachmentConfig struct {
 	Footer *string `json:"footer,omitempty"`
 	// footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
 	// that is displayed as a 16x16 pixel thumbnail before the footer text.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	FooterIcon *string `json:"footerIcon,omitempty"`
 	// imageURL defines an optional URL to an image file
 	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ImageURL *string `json:"imageURL,omitempty"`
 }
@@ -1478,6 +1487,7 @@ type MattermostPropsConfig struct {
 	// card allows for extra information (Markdown-formatted text)
 	// to be sent to Mattermost that will only be displayed in the RHS panel
 	// after a user selects the info icon displayed alongside the post.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Card *string `json:"card,omitempty"`
 }
