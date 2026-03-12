@@ -1104,10 +1104,12 @@
                               properties: {
                                 authorIcon: {
                                   description: "authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.",
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 authorLink: {
                                   description: 'authorLink defines optional URL used to hyperlink the author_name.\nIf no author_name is specified, this field does nothing.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 authorName: {
@@ -1162,10 +1164,12 @@
                                 },
                                 footerIcon: {
                                   description: 'footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)\nthat is displayed as a 16x16 pixel thumbnail before the footer text.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 imageURL: {
                                   description: 'imageURL defines an optional URL to an image file\n(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 pretext: {
@@ -1180,6 +1184,7 @@
                                 },
                                 thumbURL: {
                                   description: 'thumbURL defines an optional URL to an image file\n(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail\non the right side of an attachment.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                                 title: {
@@ -1189,6 +1194,7 @@
                                 },
                                 titleLink: {
                                   description: 'titleLink defines an optional URL used to hyperlink the title.\nIf no title is specified, this field does nothing.',
+                                  minLength: 1,
                                   type: 'string',
                                 },
                               },
@@ -1196,6 +1202,7 @@
                             },
                             minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           channel: {
                             description: 'channel overrides the channel the message posts in.\nUse the channel’s name and not the display name, e.g. use town-square, not Town Square.',
@@ -1847,6 +1854,7 @@
                           },
                           iconURL: {
                             description: 'iconURL overrides the profile picture the message posts with.',
+                            minLength: 1,
                             type: 'string',
                           },
                           priority: {
@@ -1880,6 +1888,7 @@
                             properties: {
                               card: {
                                 description: 'card allows for extra information (Markdown-formatted text)\nto be sent to Mattermost that will only be displayed in the RHS panel\nafter a user selects the info icon displayed alongside the post.',
+                                minLength: 1,
                                 type: 'string',
                               },
                             },

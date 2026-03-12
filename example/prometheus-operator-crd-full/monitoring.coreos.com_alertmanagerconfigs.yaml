@@ -1354,11 +1354,13 @@ spec:
                                   description: authorIcon defines an optional URL
                                     used to display a 16x16 pixel icon beside the
                                     author's name.
+                                  minLength: 1
                                   type: string
                                 authorLink:
                                   description: |-
                                     authorLink defines optional URL used to hyperlink the author_name.
                                     If no author_name is specified, this field does nothing.
+                                  minLength: 1
                                   type: string
                                 authorName:
                                   description: |-
@@ -1423,11 +1425,13 @@ spec:
                                   description: |-
                                     footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
                                     that is displayed as a 16x16 pixel thumbnail before the footer text.
+                                  minLength: 1
                                   type: string
                                 imageURL:
                                   description: |-
                                     imageURL defines an optional URL to an image file
                                     (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+                                  minLength: 1
                                   type: string
                                 pretext:
                                   description: pretext defines an optional line of
@@ -1447,6 +1451,7 @@ spec:
                                     thumbURL defines an optional URL to an image file
                                     (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
                                     on the right side of an attachment.
+                                  minLength: 1
                                   type: string
                                 title:
                                   description: title defines an optional title displayed
@@ -1457,10 +1462,12 @@ spec:
                                   description: |-
                                     titleLink defines an optional URL used to hyperlink the title.
                                     If no title is specified, this field does nothing.
+                                  minLength: 1
                                   type: string
                               type: object
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: atomic
                           channel:
                             description: |-
                               channel overrides the channel the message posts in.
@@ -2181,6 +2188,7 @@ spec:
                           iconURL:
                             description: iconURL overrides the profile picture the
                               message posts with.
+                            minLength: 1
                             type: string
                           priority:
                             description: priority defines the priority parameters
@@ -2228,6 +2236,7 @@ spec:
                                   card allows for extra information (Markdown-formatted text)
                                   to be sent to Mattermost that will only be displayed in the RHS panel
                                   after a user selects the info icon displayed alongside the post.
+                                minLength: 1
                                 type: string
                             type: object
                           sendResolved:
@@ -2275,6 +2284,7 @@ spec:
                         - webhookURL
                         type: object
                       type: array
+                      x-kubernetes-list-type: atomic
                     msteamsConfigs:
                       description: |-
                         msteamsConfigs defines the list of MSTeams configurations.
@@ -14483,11 +14493,13 @@ spec:
                                   description: authorIcon defines an optional URL
                                     used to display a 16x16 pixel icon beside the
                                     author's name.
+                                  minLength: 1
                                   type: string
                                 authorLink:
                                   description: |-
                                     authorLink defines optional URL used to hyperlink the author_name.
                                     If no author_name is specified, this field does nothing.
+                                  minLength: 1
                                   type: string
                                 authorName:
                                   description: |-
@@ -14552,11 +14564,13 @@ spec:
                                   description: |-
                                     footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
                                     that is displayed as a 16x16 pixel thumbnail before the footer text.
+                                  minLength: 1
                                   type: string
                                 imageURL:
                                   description: |-
                                     imageURL defines an optional URL to an image file
                                     (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+                                  minLength: 1
                                   type: string
                                 pretext:
                                   description: pretext defines an optional line of
@@ -14576,6 +14590,7 @@ spec:
                                     thumbURL defines an optional URL to an image file
                                     (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
                                     on the right side of an attachment.
+                                  minLength: 1
                                   type: string
                                 title:
                                   description: title defines an optional title displayed
@@ -14586,10 +14601,12 @@ spec:
                                   description: |-
                                     titleLink defines an optional URL used to hyperlink the title.
                                     If no title is specified, this field does nothing.
+                                  minLength: 1
                                   type: string
                               type: object
                             minItems: 1
                             type: array
+                            x-kubernetes-list-type: atomic
                           channel:
                             description: |-
                               channel overrides the channel the message posts in.
@@ -15303,6 +15320,7 @@ spec:
                           iconURL:
                             description: iconURL overrides the profile picture the
                               message posts with.
+                            minLength: 1
                             type: string
                           priority:
                             description: priority defines the priority parameters
@@ -15350,6 +15368,7 @@ spec:
                                   card allows for extra information (Markdown-formatted text)
                                   to be sent to Mattermost that will only be displayed in the RHS panel
                                   after a user selects the info icon displayed alongside the post.
+                                minLength: 1
                                 type: string
                             type: object
                           sendResolved:
