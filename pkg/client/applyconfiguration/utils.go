@@ -294,6 +294,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.HTTPConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPSDConfig"):
 		return &monitoringv1alpha1.HTTPSDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("IncidentioConfig"):
+		return &monitoringv1alpha1.IncidentioConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1alpha1.InhibitRuleApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("IonosSDConfig"):
@@ -400,6 +402,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.EmailConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1beta1.HTTPConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("IncidentioConfig"):
+		return &monitoringv1beta1.IncidentioConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1beta1.InhibitRuleApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("KeyValue"):
