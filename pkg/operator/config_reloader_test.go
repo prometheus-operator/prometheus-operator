@@ -195,7 +195,7 @@ func TestCreateConfigReloader(t *testing.T) {
 		t.Errorf("Expected '--log-format=%s' not found in %s", logFormat, container.Args)
 	}
 	if !slices.Contains(container.Args, "--config-file=configFile") {
-		t.Errorf("Expected '--config-file=%s' not found in %s", configFile, container.Args)
+		t.Errorf("'--config-file=%s' not found in %s", configFile, container.Args)
 	}
 	if !slices.Contains(container.Args, "--config-envsubst-file=configEnvsubstFile") {
 		t.Errorf("Expected '--config-envsubst-file=%s' not found in %s", configEnvsubstFile, container.Args)
@@ -203,7 +203,7 @@ func TestCreateConfigReloader(t *testing.T) {
 	if !slices.Contains(container.Args, "--web-config-file=webConfigFile") {
 		t.Errorf("Expected '--web-config-file=%s' not found in %s", webConfigFile, container.Args)
 	}
-	for _, dir := range watchedDirectories {
+	for _, dir := range append(watchedDirectories, ".") {
 		if !slices.Contains(container.Args, fmt.Sprintf("--watched-dir=%s", dir)) {
 			t.Errorf("Expected '--watched-dir=%s' not found in %s", dir, container.Args)
 		}
