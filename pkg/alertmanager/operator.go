@@ -85,6 +85,7 @@ type Operator struct {
 	ssarClient typedauthv1.SelfSubjectAccessReviewInterface
 
 	controllerID string
+	repairPolicy operator.RepairPolicy
 
 	logger   *slog.Logger
 	accessor *operator.Accessor
@@ -166,6 +167,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		newEventRecorder: c.EventRecorderFactory(client, controllerName),
 
 		controllerID: c.ControllerID,
+		repairPolicy: c.RepairPolicy,
 
 		config: Config{
 			LocalHost:                    c.LocalHost,
@@ -757,6 +759,12 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	reconciledCondition := c.reconciliations.GetCondition(key, a.Generation)
 	a.Status.Conditions = operator.UpdateConditions(a.Status.Conditions, availableCondition, reconciledCondition)
 	a.Status.Paused = a.Spec.Paused
+
+	if availableCondition.Status != monitoringv1.ConditionTrue {
+		if err := stsReporter.Repair(ctx, c.logger, c.repairPolicy); err != nil {
+			c.logger.Warn("failed to repair statefulset", "err", err)
+		}
+	}
 
 	if _, err = c.mclient.MonitoringV1().Alertmanagers(a.Namespace).ApplyStatus(ctx, ApplyConfigurationFromAlertmanager(a, true), metav1.ApplyOptions{FieldManager: k8s.PrometheusOperatorFieldManager, Force: true}); err != nil {
 		c.logger.Info("failed to apply alertmanager status subresource, trying again without scale fields", "err", err)

@@ -13,6 +13,7 @@ declare SHOW_USAGE=false
 declare SKIP_OPERATOR_RUN_CHECK=false
 declare USE_DEFAULT_CONTEXT=false
 declare API_SERVER=""
+declare REPAIR_POLICY="${REPAIR_POLICY:-}"
 declare IMPERSONATE_USER="${IMPERSONATE_USER:-}"
 declare FEATURE_GATES="${FEATURE_GATES:-}"
 declare LOG_LEVEL="${LOG_LEVEL:-info}"
@@ -131,6 +132,7 @@ run_operator() {
 	echo "──────────────────────────────────────────────────────────────────"
 
 	run ./operator \
+		--repair-policy-for-statefulsets="$REPAIR_POLICY" \
 		--as="$IMPERSONATE_USER" \
 		--apiserver="$API_SERVER" \
 		--ca-file="$CA_FILE" \

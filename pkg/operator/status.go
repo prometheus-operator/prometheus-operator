@@ -64,7 +64,7 @@ type StatusReconciler interface {
 // It can also be that the updated/available replica fields aren't updated as
 // they should be due to races in the controller logic.
 func StatusPoller(ctx context.Context, sr StatusReconciler) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
