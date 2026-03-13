@@ -106,6 +106,10 @@ type SafeTLSConfig struct {
 	// +optional
 	ServerName *string `json:"serverName,omitempty"`
 
+	// serviceName is the service name of the target.
+	// +optional
+	ServiceName *string `json:"serviceName,omitempty"`
+
 	// insecureSkipVerify defines how to disable target certificate validation.
 	// +optional
 	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"` // nolint:kubeapilinter
