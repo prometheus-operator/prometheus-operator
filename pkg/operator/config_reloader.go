@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"path/filepath"
+	"slices"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
@@ -274,10 +276,19 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		args = append(args, fmt.Sprintf("--config-envsubst-file=%s", configReloader.configEnvsubstFile))
 	}
 
-	if len(configReloader.watchedDirectories) > 0 {
-		for _, directory := range configReloader.watchedDirectories {
-			args = append(args, fmt.Sprintf("--watched-dir=%s", directory))
+	var watchedDirectories []string
+	for _, file := range []string{configReloader.configFile, configReloader.webConfigFile} {
+		if file == "" {
+			continue
 		}
+		// Append directory containing the configuration file.
+		confDir := filepath.Dir(file)
+		if !slices.Contains(configReloader.watchedDirectories, confDir) {
+			watchedDirectories = append(watchedDirectories, confDir)
+		}
+	}
+	for _, directory := range append(watchedDirectories, configReloader.watchedDirectories...) {
+		args = append(args, fmt.Sprintf("--watched-dir=%s", directory))
 	}
 
 	if configReloader.logLevel != "" && configReloader.logLevel != "info" {
