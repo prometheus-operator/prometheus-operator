@@ -31,6 +31,7 @@
                         type: 'string',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'set',
                     },
                     sourceMatch: {
                       description: "sourceMatch defines matchers for which one or more alerts have to exist for the inhibition\nto take effect. The operator enforces that the alert matches the resource's namespace.\nThese are the \"trigger\" alerts that cause other alerts to be inhibited.",
@@ -63,6 +64,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     targetMatch: {
                       description: "targetMatch defines matchers that have to be fulfilled in the alerts to be muted.\nThe operator enforces that the alert matches the resource's namespace.\nWhen these conditions are met, matching alerts will be inhibited (silenced).",
@@ -95,11 +97,13 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                   },
                   type: 'object',
                 },
                 type: 'array',
+                'x-kubernetes-list-type': 'atomic',
               },
               receivers: {
                 description: 'receivers defines the list of receivers.',
@@ -806,6 +810,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     emailConfigs: {
                       description: 'emailConfigs defines the list of Email configurations.',
@@ -893,6 +898,7 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           hello: {
                             description: 'hello defines the hostname to identify to the SMTP server.\nThis is used in the SMTP HELO/EHLO command during the connection handshake.',
@@ -1091,6 +1097,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     msteamsConfigs: {
                       description: 'msteamsConfigs defines the list of MSTeams configurations.\nIt requires Alertmanager >= 0.26.0.',
@@ -1781,6 +1788,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     msteamsv2Configs: {
                       description: 'msteamsv2Configs defines the list of MSTeamsV2 configurations.\nIt requires Alertmanager >= 0.28.0.',
@@ -2466,6 +2474,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     name: {
                       description: 'name defines the name of the receiver. Must be unique across all items from the list.',
@@ -2534,6 +2543,7 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           entity: {
                             description: 'entity defines an optional field that can be used to specify which domain alert is related to.\nThis helps group related alerts together in OpsGenie.',
@@ -3232,6 +3242,7 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           sendResolved: {
                             description: 'sendResolved defines whether or not to notify about resolved alerts.',
@@ -3251,6 +3262,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     pagerdutyConfigs: {
                       description: 'pagerdutyConfigs defines the List of PagerDuty configurations.',
@@ -4061,6 +4073,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     pushoverConfigs: {
                       description: 'pushoverConfigs defines the list of Pushover configurations.',
@@ -4818,6 +4831,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     rocketchatConfigs: {
                       description: 'rocketchatConfigs defines the list of RocketChat configurations.\nIt requires Alertmanager >= 0.28.0.',
@@ -4848,6 +4862,7 @@
                             },
                             minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           apiURL: {
                             description: 'apiURL defines the API URL for RocketChat.\nDefaults to https://open.rocket.chat/ if not specified.',
@@ -4893,6 +4908,7 @@
                             },
                             minItems: 1,
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           httpConfig: {
                             description: 'httpConfig defines the HTTP client configuration for RocketChat API requests.',
@@ -5625,6 +5641,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     slackConfigs: {
                       description: 'slackConfigs defines the list of Slack configurations.',
@@ -6495,6 +6512,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     snsConfigs: {
                       description: 'snsConfigs defines the list of SNS configurations',
@@ -7251,6 +7269,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     telegramConfigs: {
                       description: 'telegramConfigs defines the list of Telegram configurations.',
@@ -7962,6 +7981,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     victoropsConfigs: {
                       description: 'victoropsConfigs defines the list of VictorOps configurations.',
@@ -8691,6 +8711,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     webexConfigs: {
                       description: 'webexConfigs defines the list of Webex configurations.',
@@ -9360,6 +9381,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     webhookConfigs: {
                       description: 'webhookConfigs defines the List of webhook configurations.',
@@ -10047,6 +10069,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                     wechatConfigs: {
                       description: 'wechatConfigs defines the list of WeChat configurations.',
@@ -10759,6 +10782,7 @@
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                   },
                   required: [
@@ -10767,6 +10791,10 @@
                   type: 'object',
                 },
                 type: 'array',
+                'x-kubernetes-list-map-keys': [
+                  'name',
+                ],
+                'x-kubernetes-list-type': 'map',
               },
               route: {
                 description: "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
@@ -10777,6 +10805,7 @@
                       type: 'string',
                     },
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   continue: {
                     description: 'continue defines the boolean indicating whether an alert should continue matching subsequent\nsibling nodes. It will always be overridden to true for the first-level\nroute by the Prometheus operator.',
@@ -10788,6 +10817,7 @@
                       type: 'string',
                     },
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   groupInterval: {
                     description: 'groupInterval defines how long to wait before sending an updated notification.\nMust be greater than 0.\nExample: "5m"',
@@ -10832,6 +10862,7 @@
                       type: 'object',
                     },
                     type: 'array',
+                    'x-kubernetes-list-type': 'atomic',
                   },
                   muteTimeIntervals: {
                     description: 'muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,',
@@ -10839,6 +10870,7 @@
                       type: 'string',
                     },
                     type: 'array',
+                    'x-kubernetes-list-type': 'set',
                   },
                   receiver: {
                     description: 'receiver defines the name of the receiver for this route. If not empty, it should be listed in\nthe `receivers` field.',
@@ -10856,6 +10888,7 @@
                       'x-kubernetes-preserve-unknown-fields': true,
                     },
                     type: 'array',
+                    'x-kubernetes-list-type': 'atomic',
                   },
                 },
                 type: 'object',
@@ -10895,6 +10928,7 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           months: {
                             description: 'months defines a list of MonthRange',
@@ -10904,6 +10938,7 @@
                               type: 'string',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           times: {
                             description: 'times defines a list of TimeRange',
@@ -10924,6 +10959,7 @@
                               type: 'object',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           weekdays: {
                             description: 'weekdays defines a list of WeekdayRange',
@@ -10933,6 +10969,7 @@
                               type: 'string',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                           years: {
                             description: 'years defines a list of YearRange',
@@ -10942,11 +10979,13 @@
                               type: 'string',
                             },
                             type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
                           },
                         },
                         type: 'object',
                       },
                       type: 'array',
+                      'x-kubernetes-list-type': 'atomic',
                     },
                   },
                   required: [
@@ -10955,6 +10994,7 @@
                   type: 'object',
                 },
                 type: 'array',
+                'x-kubernetes-list-type': 'atomic',
               },
             },
             type: 'object',
