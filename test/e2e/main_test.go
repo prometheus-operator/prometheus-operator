@@ -441,6 +441,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
 		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
 		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
+		"PrometheusAgentDaemonSetWithVolumes":                  testPrometheusAgentDaemonSetWithVolumes,
 		"ServiceMonitorStatusSubresource":                      testServiceMonitorStatusSubresource,
 		"ServiceMonitorStatusWithMultipleWorkloads":            testServiceMonitorStatusWithMultipleWorkloads,
 		"GarbageCollectionOfServiceMonitorBinding":             testGarbageCollectionOfServiceMonitorBinding,
