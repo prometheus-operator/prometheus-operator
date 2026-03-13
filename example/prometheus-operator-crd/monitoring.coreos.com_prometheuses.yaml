@@ -3764,6 +3764,17 @@ spec:
                   When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
                   disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
                 type: boolean
+              disableScrapeFailureLogFile:
+                description: |-
+                  disableScrapeFailureLogFile when set to true prevents ScrapeConfig resources
+                  from enabling per-job scrape failure log files via `spec.scrapeFailureLogFile`.
+                  This is useful in environments where a platform team manages the Prometheus
+                  workload and wants to prevent application teams from writing arbitrary log files
+                  to the Prometheus pod filesystem.
+
+                  When set to true, the `/var/log/prometheus` emptyDir volume is not mounted
+                  (unless `spec.scrapeFailureLogFile` is also set).
+                type: boolean
               dnsConfig:
                 description: dnsConfig defines the DNS configuration for the pods.
                 properties:

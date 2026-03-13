@@ -985,6 +985,18 @@ type CommonPrometheusFields struct {
 	// +optional
 	ScrapeFailureLogFile *string `json:"scrapeFailureLogFile,omitempty"`
 
+	// disableScrapeFailureLogFile when set to true prevents ScrapeConfig resources
+	// from enabling per-job scrape failure log files via `spec.scrapeFailureLogFile`.
+	// This is useful in environments where a platform team manages the Prometheus
+	// workload and wants to prevent application teams from writing arbitrary log files
+	// to the Prometheus pod filesystem.
+	//
+	// When set to true, the `/var/log/prometheus` emptyDir volume is not mounted
+	// (unless `spec.scrapeFailureLogFile` is also set).
+	//
+	// +optional
+	DisableScrapeFailureLogFile *bool `json:"disableScrapeFailureLogFile,omitempty"`
+
 	// serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
 	// If defined, the Service  must be created before the Prometheus/PrometheusAgent resource in the same namespace and it must define a selector that matches the pod labels.
 	// If empty, the operator will create and manage a headless service named `prometheus-operated` for Prometheus resources,

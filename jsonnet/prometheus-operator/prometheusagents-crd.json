@@ -2581,6 +2581,10 @@
                     "description": "convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native\nhistogram with custom buckets.\n\nIt requires Prometheus >= v3.4.0.",
                     "type": "boolean"
                   },
+                  "disableScrapeFailureLogFile": {
+                    "description": "disableScrapeFailureLogFile when set to true prevents ScrapeConfig resources\nfrom enabling per-job scrape failure log files via `spec.scrapeFailureLogFile`.\nThis is useful in environments where a platform team manages the Prometheus\nworkload and wants to prevent application teams from writing arbitrary log files\nto the Prometheus pod filesystem.\n\nWhen set to true, the `/var/log/prometheus` emptyDir volume is not mounted\n(unless `spec.scrapeFailureLogFile` is also set).",
+                    "type": "boolean"
+                  },
                   "dnsConfig": {
                     "description": "dnsConfig defines the DNS configuration for the pods.",
                     "properties": {
