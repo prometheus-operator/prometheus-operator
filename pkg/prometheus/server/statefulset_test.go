@@ -411,7 +411,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 	shardedSecret, err := operator.ReconcileShardedSecret(
 		context.Background(),
 		map[string][]byte{},
-		fake.NewSimpleClientset(),
+		fake.NewClientset(),
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      prompkg.TLSAssetsSecretName(&p),
@@ -2510,6 +2510,41 @@ func TestPrometheusAdditionalNoPrefixArgsDuplicate(t *testing.T) {
 	require.Error(t, err)
 
 	require.Contains(t, err.Error(), expectedErrorMsg, "expected the following text to be present in the error msg: %s", expectedErrorMsg)
+}
+
+func TestThanosGrpcArguments(t *testing.T) {
+	expectedThanosArgs := []string{
+		"sidecar",
+		"--prometheus.url=http://localhost:9090/",
+		"--grpc-address=:10901",
+		"--http-address=:10902",
+		"--grpc-server-tls-cert=/tmp/cert",
+		"--grpc-server-tls-key=/tmp/key",
+		"--grpc-server-tls-client-ca=/tmp/ca",
+		"--grpc-server-tls-min-version=1.3",
+		"--prometheus.http-client-file=/etc/thanos/config/prometheus.http-client-file.yaml",
+	}
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				GRPCServerTLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						MinVersion: ptr.To(monitoringv1.TLSVersion13),
+					},
+					TLSFilesConfig: monitoringv1.TLSFilesConfig{
+						CAFile:   "/tmp/ca",
+						CertFile: "/tmp/cert",
+						KeyFile:  "/tmp/key",
+					},
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	ssetContainerArgs := sset.Spec.Template.Spec.Containers[2].Args
+	require.Equal(t, expectedThanosArgs, ssetContainerArgs)
 }
 
 func TestThanosAdditionalArgsNoError(t *testing.T) {

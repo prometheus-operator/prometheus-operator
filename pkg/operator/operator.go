@@ -506,6 +506,22 @@ func (i *instrumentedListerWatcher) List(options metav1.ListOptions) (runtime.Ob
 	return ret, err
 }
 
+// IsWatchListSemanticsUnSupported calls the wrapped ListerWatcher if it
+// implements the function. Otherwise it returns false.
+// It is only required for the unpriviliged namespace ListerWatcher which
+// doesn't support the new ListWatch semantics.
+func (i *instrumentedListerWatcher) IsWatchListSemanticsUnSupported() bool {
+	type unSupportedWatchListSemantics interface {
+		IsWatchListSemanticsUnSupported() bool
+	}
+
+	lw, ok := i.next.(unSupportedWatchListSemantics)
+	if !ok {
+		return false
+	}
+	return lw.IsWatchListSemanticsUnSupported()
+}
+
 // Watch implements the cache.ListerWatcher interface.
 func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	i.watchTotal.Inc()

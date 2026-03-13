@@ -93,7 +93,7 @@ type Operator struct {
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
-	statusReporter  prompkg.StatusReporter
+	statusReporter  *prompkg.StatusReporter
 
 	endpointSliceSupported        bool
 	scrapeConfigSupported         bool
@@ -419,12 +419,12 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
-	o.statusReporter = prompkg.StatusReporter{
-		Kclient:         o.kclient,
-		Reconciliations: o.reconciliations,
-		SsetInfs:        o.ssetInfs,
-		Rr:              o.rr,
-	}
+	o.statusReporter = prompkg.NewStatusReporter(
+		o.kclient,
+		o.reconciliations,
+		o.ssetInfs,
+		o.rr,
+	)
 
 	return o, nil
 }

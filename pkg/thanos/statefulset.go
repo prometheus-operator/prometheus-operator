@@ -319,6 +319,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if tls.CAFile != "" {
 			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
+
+		if tlsMinVersion := operator.TLSVersionForThanos(ptr.Deref(tls.MinVersion, "")); tlsMinVersion != "" && version.GTE(semver.MustParse("0.37.0")) {
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-min-version", Value: tlsMinVersion})
+		}
 	}
 
 	if tr.Spec.ExternalPrefix != "" {
@@ -409,15 +413,17 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		maps.Copy(podLabels, tr.Spec.PodMetadata.Labels)
 		maps.Copy(podAnnotations, tr.Spec.PodMetadata.Annotations)
 	}
-	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
-	// We should try to avoid removing such immutable fields whenever possible since doing
-	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// In cases where an existing selector label is modified, or a new one is
+	// added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible
+	// since doing so forces us to enter the 'recreate cycle' and can
+	// potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	selectorLabels := makeSelectorLabels(tr.Name)
+	podLabels = config.Labels.Merge(podLabels)
+	maps.Copy(podLabels, makeSelectorLabels(tr.Name))
+	selectorLabels := maps.Clone(podLabels)
 
-	finalLabels := config.Labels.Merge(podLabels)
-	maps.Copy(finalLabels, selectorLabels)
-
+	podLabels[operator.ApplicationVersionLabelKey] = version.String()
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "thanos-ruler"
 
 	storageVolName := volumeName(tr.Name)
@@ -491,11 +497,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
 		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(tr.Spec.UpdateStrategy),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: finalLabels,
+			MatchLabels: selectorLabels,
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      finalLabels,
+				Labels:      podLabels,
 				Annotations: podAnnotations,
 			},
 			Spec: corev1.PodSpec{

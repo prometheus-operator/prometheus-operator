@@ -90,7 +90,7 @@ func TestMergeMetadata_CreateOrUpdateSecret(t *testing.T) {
 				},
 			}
 
-			sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
+			sClient := fake.NewClientset(secret).CoreV1().Secrets(namespace)
 
 			modifiedSecret := secret.DeepCopy()
 			maps.Copy(modifiedSecret.Labels, tc.modifiedLabels)

@@ -12483,6 +12483,39 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_IonosSD_withTLSConfig.golden",
 		},
+		{
+			name: "ionos_sd_config_with_oauth2",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+					{
+						DataCenterID: "11111111-1111-1111-1111-111111111111",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_id",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "oauth2",
+								},
+								Key: "client_secret",
+							},
+							TokenURL: "http://test.url",
+							Scopes:   []string{"scope 1", "scope 2"},
+							EndpointParams: map[string]string{
+								"param1": "value1",
+								"param2": "value2",
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_IonosSD_withOAuth2.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(

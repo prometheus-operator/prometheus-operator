@@ -366,22 +366,29 @@ type ThanosRulerSpec struct {
 	// +optional
 	Retention Duration `json:"retention,omitempty"`
 
-	// containers allows injecting additional containers or modifying operator generated
-	// containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-	// to change the behavior of an operator generated container. Containers described here modify
-	// an operator generated container if they share the same name and modifications are done via a
-	// strategic merge patch. The current container names are: `thanos-ruler` and `config-reloader`.
-	// Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-	// so, you accept that this behaviour may break at any time without notice.
+	// containers allows injecting additional containers or modifying operator
+	// generated containers. This can be used to allow adding an authentication
+	// proxy to the Pods or to change the behavior of an operator generated
+	// container. Containers described here modify an operator generated
+	// container if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of containers managed by the operator are:
+	// * `thanos-ruler`
+	// * `config-reloader`
+	//
+	// Overriding containers which are managed by the operator require careful
+	// testing, especially when upgrading to a new version of the operator.
+	//
 	// +optional
 	Containers []v1.Container `json:"containers,omitempty"`
-	// initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-	// fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-	// errors during the execution of an initContainer will lead to a restart of the Pod.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// Using initContainers for any use case other then secret fetching is entirely outside the scope
-	// of what the maintainers will support and by doing so, you accept that this behaviour may break
-	// at any time without notice.
+
+	// initContainers allows injecting initContainers to the Pod definition.
+	// Those can be used to e.g. fetch secrets for injection into the
+	// configuration from external sources. Any errors during the execution of
+	// an initContainer will lead to a restart of the Pod. More info:
+	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	//
 	// +optional
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
@@ -440,8 +447,9 @@ type ThanosRulerSpec struct {
 
 	// grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
 	// recorded rule data.
-	// Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-	// Maps to the '--grpc-server-tls-*' CLI args.
+	//
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
+	//
 	// +optional
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`
 

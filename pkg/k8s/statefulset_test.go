@@ -123,7 +123,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 				},
 			}
 
-			ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+			ssetClient := fake.NewClientset(sset).AppsV1().StatefulSets(namespace)
 
 			modifiedSset := sset.DeepCopy()
 			modifiedSset.Spec.Template.Annotations = tc.new
@@ -205,7 +205,7 @@ func TestMergeMetadata_UpdateStatefulSet(t *testing.T) {
 				},
 			}
 
-			ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+			ssetClient := fake.NewClientset(sset).AppsV1().StatefulSets(namespace)
 
 			modifiedSset := sset.DeepCopy()
 			maps.Copy(modifiedSset.Labels, tc.modifiedLabels)
