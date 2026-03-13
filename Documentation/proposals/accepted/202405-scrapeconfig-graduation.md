@@ -17,7 +17,7 @@ draft: false
 * Related Tickets:
   * [Graduate The `ScrapeConfig` CRD To `v1beta1`](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
 * Other docs:
-  * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+  * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/implemented/202212-scrape-config.md)
   * [Kubernetes API versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning)
 
 ## Why
