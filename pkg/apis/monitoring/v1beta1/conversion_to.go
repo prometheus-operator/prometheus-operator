@@ -446,6 +446,14 @@ func convertEmailConfigTo(in EmailConfig) v1alpha1.EmailConfig {
 		RequireTLS:       in.RequireTLS,
 		TLSConfig:        in.TLSConfig,
 		ForceImplicitTLS: in.ForceImplicitTLS,
+		Threading:        convertEmailThreadingConfigTo(in.Threading),
+	}
+}
+
+func convertEmailThreadingConfigTo(in *EmailThreadingConfig) *v1alpha1.EmailThreadingConfig {
+	return &v1alpha1.EmailThreadingConfig{
+		Enabled:      in.Enabled,
+		ThreadByDate: in.ThreadByDate,
 	}
 }
 
