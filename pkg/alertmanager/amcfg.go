@@ -731,25 +731,27 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 
 	var msTeamsConfigs []*msTeamsConfig
 	if l := len(in.MSTeamsConfigs); l > 0 {
-		msTeamsConfigs = make([]*msTeamsConfig, l)
 		for i := range in.MSTeamsConfigs {
 			receiver, err := cb.convertMSTeamsConfig(ctx, in.MSTeamsConfigs[i], crKey)
 			if err != nil {
 				return nil, fmt.Errorf("MSTeamsConfig[%d]: %w", i, err)
 			}
-			msTeamsConfigs[i] = receiver
+			if receiver != nil {
+				msTeamsConfigs = append(msTeamsConfigs, receiver)
+			}
 		}
 	}
 
 	var msTeamsV2Configs []*msTeamsV2Config
 	if l := len(in.MSTeamsV2Configs); l > 0 {
-		msTeamsV2Configs = make([]*msTeamsV2Config, l)
 		for i := range in.MSTeamsV2Configs {
 			receiver, err := cb.convertMSTeamsV2Config(ctx, in.MSTeamsV2Configs[i], crKey)
 			if err != nil {
 				return nil, fmt.Errorf("MSTeamsConfigV2[%d]: %w", i, err)
 			}
-			msTeamsV2Configs[i] = receiver
+			if receiver != nil {
+				msTeamsV2Configs = append(msTeamsV2Configs, receiver)
+			}
 		}
 	}
 
@@ -1575,6 +1577,9 @@ func (cb *ConfigBuilder) convertMSTeamsConfig(
 	if err != nil {
 		return nil, err
 	}
+	if webHookURL == "" && ptr.Deref(in.WebhookURL.Optional, false) {
+		return nil, nil
+	}
 
 	out.WebhookURL = webHookURL
 
@@ -1606,6 +1611,9 @@ func (cb *ConfigBuilder) convertMSTeamsV2Config(
 		webHookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
 		if err != nil {
 			return nil, err
+		}
+		if webHookURL == "" && ptr.Deref(in.WebhookURL.Optional, false) {
+			return nil, nil
 		}
 
 		out.WebhookURL = webHookURL
