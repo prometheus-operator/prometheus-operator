@@ -18,7 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/client-go/tools/cache"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var (
@@ -50,12 +50,12 @@ func (c *thanosRulerCollector) Describe(ch chan<- *prometheus.Desc) {
 func (c *thanosRulerCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, s := range c.stores {
 		for _, tr := range s.List() {
-			c.collectThanos(ch, tr.(*v1.ThanosRuler))
+			c.collectThanos(ch, tr.(*monitoringv1.ThanosRuler))
 		}
 	}
 }
 
-func (c *thanosRulerCollector) collectThanos(ch chan<- prometheus.Metric, tr *v1.ThanosRuler) {
+func (c *thanosRulerCollector) collectThanos(ch chan<- prometheus.Metric, tr *monitoringv1.ThanosRuler) {
 	replicas := float64(minReplicas)
 	if tr.Spec.Replicas != nil {
 		replicas = float64(*tr.Spec.Replicas)

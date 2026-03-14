@@ -86,6 +86,12 @@ func (l *Prometheus) GetStatus() PrometheusStatus {
 	return l.Status
 }
 
+func (p *Prometheus) ExpectedReplicas() int { return p.Spec.CommonPrometheusFields.ExpectedReplicas() }
+
+func (p *Prometheus) GetAvailableReplicas() int  { return int(p.Status.AvailableReplicas) }
+func (p *Prometheus) GetUpdatedReplicas() int    { return int(p.Status.UpdatedReplicas) }
+func (p *Prometheus) GetConditions() []Condition { return p.Status.Conditions }
+
 // +kubebuilder:validation:Enum=OnResource;OnShard
 type AdditionalLabelSelectors string
 
@@ -538,13 +544,14 @@ type CommonPrometheusFields struct {
 	// * `config-reloader`
 	// * `thanos-sidecar`
 	//
-	// Overriding containers is entirely outside the scope of what the
-	// maintainers will support and by doing so, you accept that this behaviour
-	// may break at any time without notice.
+	// Overriding containers which are managed by the operator require careful
+	// testing, especially when upgrading to a new version of the operator.
+	//
 	// +optional
 	Containers []v1.Container `json:"containers,omitempty"`
+
 	// initContainers allows injecting initContainers to the Pod definition. Those
-	// can be used to e.g.  fetch secrets for injection into the Prometheus
+	// can be used to e.g. fetch secrets for injection into the Prometheus
 	// configuration from external sources. Any errors during the execution of
 	// an initContainer will lead to a restart of the Pod. More info:
 	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
@@ -555,9 +562,10 @@ type CommonPrometheusFields struct {
 	// The names of init container name managed by the operator are:
 	// * `init-config-reloader`.
 	//
-	// Overriding init containers is entirely outside the scope of what the
-	// maintainers will support and by doing so, you accept that this behaviour
-	// may break at any time without notice.
+	// Overriding init containers which are managed by the operator require
+	// careful testing, especially when upgrading to a new version of the
+	// operator.
+	//
 	// +optional
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
 
@@ -1011,6 +1019,18 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	HostUsers *bool `json:"hostUsers,omitempty"` // nolint:kubeapilinter
+}
+
+func (cpf CommonPrometheusFields) ExpectedReplicas() int {
+	replicas := 1
+	if cpf.Replicas != nil {
+		replicas = int(*cpf.Replicas)
+	}
+	shards := 1
+	if cpf.Shards != nil {
+		shards = int(*cpf.Shards)
+	}
+	return replicas * shards
 }
 
 // Specifies the validation scheme for metric and label names.
@@ -1554,7 +1574,7 @@ type ThanosSpec struct {
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
 	//
 	// +optional
 	GRPCServerTLSConfig *TLSConfig `json:"grpcServerTlsConfig,omitempty"`

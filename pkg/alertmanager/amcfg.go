@@ -30,7 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
@@ -408,14 +408,14 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
-func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector corev1.SecretKeySelector) (string, error) {
 	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
 		_, err := validation.ValidateURL(url)
 		return err
 	})
 }
 
-func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector corev1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
@@ -973,6 +973,7 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		IconEmoji:     ptr.Deref(in.IconEmoji, ""),
 		LinkNames:     ptr.Deref(in.LinkNames, false),
 		MrkdwnIn:      in.MrkdwnIn,
+		MessageText:   ptr.Deref(in.MessageText, ""),
 	}
 
 	if in.APIURL != nil {
@@ -1094,9 +1095,9 @@ func (cb *ConfigBuilder) convertPagerdutyConfig(ctx context.Context, in monitori
 		out.ServiceKey = serviceKey
 	}
 
-	var details map[string]string
+	var details map[string]any
 	if l := len(in.Details); l > 0 {
-		details = make(map[string]string, l)
+		details = make(map[string]any, l)
 		for _, d := range in.Details {
 			details[d.Key] = d.Value
 		}
@@ -1268,15 +1269,16 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
-		VSendResolved: in.SendResolved,
-		To:            ptr.Deref(in.To, ""),
-		From:          ptr.Deref(in.From, ""),
-		Hello:         ptr.Deref(in.Hello, ""),
-		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
-		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
-		HTML:          in.HTML,
-		Text:          in.Text,
-		RequireTLS:    in.RequireTLS,
+		VSendResolved:    in.SendResolved,
+		To:               ptr.Deref(in.To, ""),
+		From:             ptr.Deref(in.From, ""),
+		Hello:            ptr.Deref(in.Hello, ""),
+		AuthUsername:     ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:     ptr.Deref(in.AuthIdentity, ""),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 
 	if ptr.Deref(in.Smarthost, "") == "" {
@@ -1756,6 +1758,9 @@ func (cb *ConfigBuilder) convertSMTPConfig(ctx context.Context, out *globalConfi
 	}
 	if in.AuthIdentity != nil {
 		out.SMTPAuthIdentity = *in.AuthIdentity
+	}
+	if in.ForceImplicitTLS != nil {
+		out.SMTPForceImplicitTLS = in.ForceImplicitTLS
 	}
 	out.SMTPRequireTLS = in.RequireTLS
 
@@ -2272,6 +2277,12 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.SMTPAuthSecretFile = ""
 	}
 
+	if gc.SMTPForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'smtp_force_implicit_tls' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.SMTPForceImplicitTLS = nil
+	}
+
 	return nil
 }
 
@@ -2546,6 +2557,12 @@ func (r *receiver) sanitize(amVersion semver.Version, logger *slog.Logger) error
 		}
 	}
 
+	for _, conf := range r.PagerdutyConfigs {
+		if err := conf.sanitize(amVersion, withLogger); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -2561,10 +2578,10 @@ func (ec *emailConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		ec.AuthPasswordFile = ""
 	}
 
-	if ec.ImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-		msg := "'implicit_tls' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
+	if ec.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
+		msg := "'force_implicit_tls' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
-		ec.ImplicitTLS = nil
+		ec.ForceImplicitTLS = nil
 	}
 
 	if ec.AuthSecretFile != "" && amVersion.LT(semver.MustParse("0.31.0")) {
@@ -2679,6 +2696,14 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'timeout' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		pdc.Timeout = nil
+	}
+
+	if lessThanV0_30 {
+		for _, v := range pdc.Details {
+			if _, ok := v.(string); !ok {
+				return fmt.Errorf("'details' value in non-string format is supported in Alertmanager >= 0.30.0 only")
+			}
+		}
 	}
 
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
@@ -3378,6 +3403,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
+	if err := cb.checkGlobalSMTPConfig(gc.SMTPConfig); err != nil {
+		return err
+	}
+
 	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
 		return err
 	}
@@ -3400,6 +3429,18 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 
 	if err := cb.checkGlobalWeChatConfig(ctx, gc.WeChatConfig, namespace); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalSMTPConfig(sc *monitoringv1.GlobalSMTPConfig) error {
+	if sc == nil {
+		return nil
+	}
+
+	if sc.ForceImplicitTLS != nil && cb.amVersion.LT(semver.MustParse("0.31.0")) {
+		return fmt.Errorf(`'forceImplicitTLS' integration requires Alertmanager >= 0.31.0 - current %s`, cb.amVersion)
 	}
 
 	return nil

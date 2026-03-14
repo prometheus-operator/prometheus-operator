@@ -21,7 +21,7 @@ import (
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
@@ -30,34 +30,35 @@ import (
 )
 
 // Pod is an alias for the Kubernetes v1.Pod type.
-type Pod v1.Pod
+type Pod corev1.Pod
 
 // Ready returns true if the pod is ready.
 func (p *Pod) Ready() bool {
-	if p.Status.Phase != v1.PodRunning {
+	if p.Status.Phase != corev1.PodRunning {
 		return false
 	}
 
 	for _, cond := range p.Status.Conditions {
-		if cond.Type != v1.PodReady {
+		if cond.Type != corev1.PodReady {
 			continue
 		}
-		return cond.Status == v1.ConditionTrue
+		return cond.Status == corev1.ConditionTrue
 	}
 
 	return false
 }
 
 // Message returns a human-readable and terse message about the state of the pod.
+// If the pod is ready, it returns an empty string.
 func (p *Pod) Message() string {
-	for _, condType := range []v1.PodConditionType{
-		v1.PodScheduled,    // Check first that the pod is scheduled.
-		v1.PodInitialized,  // Then that init containers have been started successfully.
-		v1.ContainersReady, // Then that all containers are ready.
-		v1.PodReady,        // And finally that the pod is ready.
+	for _, condType := range []corev1.PodConditionType{
+		corev1.PodScheduled,    // Check first that the pod is scheduled.
+		corev1.PodInitialized,  // Then that init containers have been started successfully.
+		corev1.ContainersReady, // Then that all containers are ready.
+		corev1.PodReady,        // And finally that the pod is ready.
 	} {
 		for _, cond := range p.Status.Conditions {
-			if cond.Type == condType && cond.Status == v1.ConditionFalse {
+			if cond.Type == condType && cond.Status == corev1.ConditionFalse {
 				return cond.Message
 			}
 		}
@@ -111,6 +112,9 @@ type GoverningObject interface {
 	SetUnavailableReplicas(int)
 }
 
+// Update updates the status replica fields of the resource governing the
+// statefulset (e.g.  the Prometheus operator's workload resource) and returns
+// the Available status condition.
 func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Condition {
 	condition := monitoringv1.Condition{
 		Type:   monitoringv1.Available,
@@ -122,29 +126,15 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 	}
 
 	var (
-		ready     = len(sr.ReadyPods())
-		updated   = len(sr.UpdatedPods())
-		available = len(sr.ReadyPods())
+		ready   = len(sr.ReadyPods())
+		updated = len(sr.UpdatedPods())
 	)
 	gObj.SetReplicas(len(sr.Pods))
 	gObj.SetUpdatedReplicas(updated)
 	gObj.SetAvailableReplicas(ready)
 	gObj.SetUnavailableReplicas(len(sr.Pods) - ready)
 
-	switch {
-	case sr.sset == nil:
-		condition.Reason = "StatefulSetNotFound"
-		condition.Status = monitoringv1.ConditionFalse
-	case ready < gObj.ExpectedReplicas():
-		switch available {
-		case 0:
-			condition.Reason = "NoPodReady"
-			condition.Status = monitoringv1.ConditionFalse
-		default:
-			condition.Reason = "SomePodsNotReady"
-			condition.Status = monitoringv1.ConditionDegraded
-		}
-	}
+	condition.Status, condition.Reason = sr.StatusAndReasonForAvailableCondition(gObj.ExpectedReplicas())
 
 	var messages []string
 	for _, p := range sr.Pods {
@@ -152,10 +142,36 @@ func (sr *StatefulSetReporter) Update(gObj GoverningObject) monitoringv1.Conditi
 			messages = append(messages, fmt.Sprintf("pod %s: %s", p.Name, m))
 		}
 	}
-
 	condition.Message = strings.Join(messages, "\n")
 
 	return condition
+}
+
+// StatusAndReasonForAvailableCondition computes the status and reason for the
+// resource governing the statefulset based on the expected number of replicas
+// and the state of the pods.
+func (sr *StatefulSetReporter) StatusAndReasonForAvailableCondition(expectedReplicas int) (monitoringv1.ConditionStatus, string) {
+	var (
+		status = monitoringv1.ConditionTrue
+		reason string
+		ready  = len(sr.ReadyPods())
+	)
+	switch {
+	case sr.sset == nil:
+		reason = "StatefulSetNotFound"
+		status = monitoringv1.ConditionFalse
+	case ready < expectedReplicas:
+		switch ready {
+		case 0:
+			reason = "NoPodReady"
+			status = monitoringv1.ConditionFalse
+		default:
+			reason = "SomePodsNotReady"
+			status = monitoringv1.ConditionDegraded
+		}
+	}
+
+	return status, reason
 }
 
 // NewStatefulSetReporter returns a statefulset's reporter.

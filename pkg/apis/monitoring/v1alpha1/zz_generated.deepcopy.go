@@ -756,6 +756,11 @@ func (in *EmailConfig) DeepCopyInto(out *EmailConfig) {
 		*out = new(v1.SafeTLSConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ForceImplicitTLS != nil {
+		in, out := &in.ForceImplicitTLS, &out.ForceImplicitTLS
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Threading != nil {
 		in, out := &in.Threading, &out.Threading
 		*out = new(EmailThreadingConfig)
@@ -1752,7 +1757,7 @@ func (in *OpenStackSDConfig) DeepCopyInto(out *OpenStackSDConfig) {
 	*out = *in
 	if in.IdentityEndpoint != nil {
 		in, out := &in.IdentityEndpoint, &out.IdentityEndpoint
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Username != nil {
@@ -2764,7 +2769,7 @@ func (in *ScalewaySDConfig) DeepCopyInto(out *ScalewaySDConfig) {
 	}
 	if in.ApiURL != nil {
 		in, out := &in.ApiURL, &out.ApiURL
-		*out = new(string)
+		*out = new(URL)
 		**out = **in
 	}
 	if in.Zone != nil {
@@ -3331,6 +3336,11 @@ func (in *SlackConfig) DeepCopyInto(out *SlackConfig) {
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
 		*out = new(v1.Duration)
+		**out = **in
+	}
+	if in.MessageText != nil {
+		in, out := &in.MessageText, &out.MessageText
+		*out = new(string)
 		**out = **in
 	}
 }

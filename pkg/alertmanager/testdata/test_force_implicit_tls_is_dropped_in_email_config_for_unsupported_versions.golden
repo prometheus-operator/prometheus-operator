@@ -1,5 +1,5 @@
 receivers:
 - name: ""
   email_configs:
-  - implicit_tls: true
+  - {}
 templates: []

@@ -392,6 +392,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Actions:      convertSlackActionsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		Timeout:      in.Timeout,
+		MessageText:  in.MessageText,
 	}
 }
 
@@ -434,21 +435,22 @@ func convertWeChatConfigFrom(in v1alpha1.WeChatConfig) WeChatConfig {
 
 func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 	return EmailConfig{
-		SendResolved: in.SendResolved,
-		To:           in.To,
-		From:         in.From,
-		Hello:        in.Hello,
-		Smarthost:    in.Smarthost,
-		AuthUsername: in.AuthUsername,
-		AuthPassword: convertSecretKeySelectorFrom(in.AuthPassword),
-		AuthSecret:   convertSecretKeySelectorFrom(in.AuthSecret),
-		AuthIdentity: in.AuthIdentity,
-		Headers:      convertKeyValuesFrom(in.Headers),
-		HTML:         in.HTML,
-		Text:         in.Text,
-		RequireTLS:   in.RequireTLS,
-		TLSConfig:    in.TLSConfig,
-		Threading:    convertEmailThreadingConfigFrom(in.Threading),
+		SendResolved:     in.SendResolved,
+		To:               in.To,
+		From:             in.From,
+		Hello:            in.Hello,
+		Smarthost:        in.Smarthost,
+		AuthUsername:     in.AuthUsername,
+		AuthPassword:     convertSecretKeySelectorFrom(in.AuthPassword),
+		AuthSecret:       convertSecretKeySelectorFrom(in.AuthSecret),
+		AuthIdentity:     in.AuthIdentity,
+		Headers:          convertKeyValuesFrom(in.Headers),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		TLSConfig:        in.TLSConfig,
+		ForceImplicitTLS: in.ForceImplicitTLS,
+		Threading:        convertEmailThreadingConfigFrom(in.Threading),
 	}
 }
 

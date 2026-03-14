@@ -18,16 +18,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 // MergePatchContainers adds patches to base using a strategic merge patch and
 // iterating by container name, failing on the first error.
-func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) {
-	var out []v1.Container
+func MergePatchContainers(base, patches []corev1.Container) ([]corev1.Container, error) {
+	var out []corev1.Container
 
-	containersByName := make(map[string]v1.Container)
+	containersByName := make(map[string]corev1.Container)
 	for _, c := range patches {
 		containersByName[c.Name] = c
 	}
@@ -52,12 +52,12 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 		}
 
 		// Calculate the patch result.
-		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, v1.Container{})
+		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, corev1.Container{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate merge patch for container %s: %w", container.Name, err)
 		}
 
-		var patchResult v1.Container
+		var patchResult corev1.Container
 		if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal merged container %s: %w", container.Name, err)
 		}
