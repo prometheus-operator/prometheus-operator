@@ -8090,6 +8090,8 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionOpsGenieAllowed := semver.Version{Major: 0, Minor: 25}
 
+	versionActionsAllowed := semver.Version
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -8130,6 +8132,24 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 				},
 			},
 			golden: "opsgenie_valid_url_passes.golden",
+		},
+		{
+			name:           "opsgenie api_key takes precedence over api_key_file",
+			againstVersion: versionOpsGenieAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKey:     "test-key",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_api_key_takes_precedence_over_api_key_file.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
