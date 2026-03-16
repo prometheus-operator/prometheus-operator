@@ -8089,7 +8089,7 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 func TestSanitizeOpsGenieConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	version23 := semver.Version{Major: 0, Minor: 23}
-	version25 := semver.Version{Major: 0, Minor: 25}
+	version24 := semver.Version{Major: 0, Minor: 24}
 
 	for _, tc := range []struct {
 		name           string
@@ -8100,7 +8100,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	}{
 		{
 			name:           "opsgenie invalid api_url returns error",
-			againstVersion: version25,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8117,7 +8117,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie valid api_url passes validation",
-			againstVersion: version25,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8134,7 +8134,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie api_key takes precedence over api_key_file",
-			againstVersion: version25,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
