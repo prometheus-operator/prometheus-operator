@@ -37,7 +37,7 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 	}
 
-	sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets("ns")
+	sClient := fake.NewClientset(secret).CoreV1().Secrets("ns")
 	logger := slog.New(slog.DiscardHandler)
 
 	for _, tc := range []struct {
