@@ -1129,6 +1129,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 	imagePullPolicy := corev1.PullAlways
+	schedulerName := "my-scheduler"
 	hostUsers := true
 	hostNetwork := false
 
@@ -1144,6 +1145,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
+			SchedulerName:      schedulerName,
 			HostUsers:          ptr.To(true),
 			HostNetwork:        hostNetwork,
 		},
@@ -1156,6 +1158,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, *sset.Spec.Template.Spec.SecurityContext, securityContext, "expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
 	require.Equal(t, sset.Spec.Template.Spec.PriorityClassName, priorityClassName, "expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, sset.Spec.Template.Spec.ServiceAccountName, serviceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, sset.Spec.Template.Spec.SchedulerName, schedulerName, "expected scheduler name to match, want %s, got %s", schedulerName, sset.Spec.Template.Spec.SchedulerName)
 	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	require.Equal(t, *sset.Spec.Template.Spec.HostUsers, hostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)

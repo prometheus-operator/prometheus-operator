@@ -6701,6 +6701,10 @@ spec:
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling
+                  if specified.
+                type: string
               scrapeClasses:
                 description: |-
                   scrapeClasses defines the list of scrape classes to expose to scraping objects such as

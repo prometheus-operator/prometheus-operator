@@ -438,6 +438,9 @@ type CommonPrometheusFields struct {
 	// +optional
 	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// schedulerName defines the scheduler to use for Pod scheduling if specified.
+	// +optional
+	SchedulerName string `json:"schedulerName,omitempty"`
 
 	// serviceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.

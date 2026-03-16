@@ -5586,6 +5586,10 @@
                     "description": "routePrefix Alertmanager registers HTTP handlers for. This is useful,\nif using ExternalURL and a proxy is rewriting HTTP routes of a request,\nand the actual ExternalURL is still true, but the server serves requests\nunder a different route prefix. For example for use with `kubectl proxy`.",
                     "type": "string"
                   },
+                  "schedulerName": {
+                    "description": "schedulerName defines the scheduler to use for Pod scheduling if specified.",
+                    "type": "string"
+                  },
                   "secrets": {
                     "description": "secrets is a list of Secrets in the same namespace as the Alertmanager\nobject, which shall be mounted into the Alertmanager Pods.\nEach Secret is added to the StatefulSet definition as a volume named `secret-<secret-name>`.\nThe Secrets are mounted into `/etc/alertmanager/secrets/<secret-name>` in the 'alertmanager' container.",
                     "items": {

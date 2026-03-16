@@ -63,6 +63,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	Web                                  *PrometheusWebSpecApplyConfiguration                    `json:"web,omitempty"`
 	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
 	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
+	SchedulerName                        *string                                                 `json:"schedulerName,omitempty"`
 	ServiceAccountName                   *string                                                 `json:"serviceAccountName,omitempty"`
 	AutomountServiceAccountToken         *bool                                                   `json:"automountServiceAccountToken,omitempty"`
 	Secrets                              []string                                                `json:"secrets,omitempty"`
@@ -452,6 +453,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithNodeSelector(entries map[
 	for k, v := range entries {
 		b.NodeSelector[k] = v
 	}
+	return b
+}
+
+// WithSchedulerName sets the SchedulerName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SchedulerName field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithSchedulerName(value string) *CommonPrometheusFieldsApplyConfiguration {
+	b.SchedulerName = &value
 	return b
 }
 
