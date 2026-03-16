@@ -8088,9 +8088,8 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 
 func TestSanitizeOpsGenieConfig(t *testing.T) {
 	logger := newNopLogger(t)
-	versionOpsGenieAllowed := semver.Version{Major: 0, Minor: 25}
-
-	versionActionsAllowed := semver.Version
+	version23 := semver.Version{Major: 0, Minor: 23}
+	version25 := semver.Version{Major: 0, Minor: 25}
 
 	for _, tc := range []struct {
 		name           string
@@ -8101,7 +8100,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	}{
 		{
 			name:           "opsgenie invalid api_url returns error",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version25,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8118,7 +8117,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie valid api_url passes validation",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version25,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8135,7 +8134,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie api_key takes precedence over api_key_file",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version25,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8150,6 +8149,44 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 				},
 			},
 			golden: "opsgenie_api_key_takes_precedence_over_api_key_file.golden",
+		},
+		{
+			name:           "opsgenie api_key_file unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "opsgenie responder type teams unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL: "https://api.opsgenie.com/v2/alerts",
+								Responders: []opsgenieResponder{
+									{
+										Type: "teams",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
