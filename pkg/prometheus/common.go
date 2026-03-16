@@ -312,8 +312,11 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		})
 	}
 
-	// scrape failure log file
-	if cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile) {
+	// Mount the log directory when the global scrape failure log file uses it,
+	// or when per-ScrapeConfig scrape failure log files are not disabled.
+	needsLogVolume := (cpf.ScrapeFailureLogFile != nil && UsesDefaultFileVolume(*cpf.ScrapeFailureLogFile)) ||
+		!ptr.Deref(cpf.DisableScrapeFailureLogFile, false)
+	if needsLogVolume {
 		volumes = append(volumes, corev1.Volume{
 			Name: DefaultLogFileVolume,
 			VolumeSource: corev1.VolumeSource{

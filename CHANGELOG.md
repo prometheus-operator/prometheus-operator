@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* [FEATURE] Add `scrapeFailureLogFile` to the `ScrapeConfig` CRD to enable per-job scrape failure logging with an operator-generated deterministic path. Add `disableScrapeFailureLogFile` to the `Prometheus` and `PrometheusAgent` CRDs to allow platform teams to opt out of the feature. #8426
 * [ENHANCEMENT] Add `--web.tls-curves` CLI argument to the operator and admission-webhook binaries. #8385
 
 ## 0.89.0 / 2026-02-05

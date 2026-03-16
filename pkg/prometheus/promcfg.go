@@ -3004,6 +3004,21 @@ func (cg *ConfigGenerator) appendScrapeFailureLogFile(slice yaml.MapSlice, scrap
 	return cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", logFilePath(*scrapeFailureLogFile))
 }
 
+// appendScrapeConfigFailureLogFile emits scrape_failure_log_file for a ScrapeConfig job.
+// The path is deterministically generated from the namespace and name to prevent
+// application teams from specifying arbitrary paths in the Prometheus pod filesystem.
+// The feature is skipped when disabled at the Prometheus level via DisableScrapeFailureLogFile.
+func (cg *ConfigGenerator) appendScrapeConfigFailureLogFile(slice yaml.MapSlice, namespace, name string, enabled *bool) yaml.MapSlice {
+	if !ptr.Deref(enabled, false) {
+		return slice
+	}
+	if ptr.Deref(cg.prom.GetCommonPrometheusFields().DisableScrapeFailureLogFile, false) {
+		return slice
+	}
+	logFile := fmt.Sprintf("scrapeconfig-%s-%s.log", namespace, name)
+	return cg.WithMinimumVersion("2.55.0").AppendMapItem(slice, "scrape_failure_log_file", filepath.Join(DefaultLogDirectory, logFile))
+}
+
 func (cg *ConfigGenerator) appendRuleFiles(slice yaml.MapSlice, ruleFiles []string, ruleSelector *metav1.LabelSelector) yaml.MapSlice {
 	if ruleSelector != nil {
 		ruleFilePaths := []string{}
@@ -4834,6 +4849,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "metric_relabel_configs", Value: generateRelabelConfig(metricRelabelings)})
 	}
 
+	cfg = cg.appendScrapeConfigFailureLogFile(cfg, sc.Namespace, sc.Name, sc.Spec.ScrapeFailureLogFile)
 	cfg = cg.appendNameValidationScheme(cfg, sc.Spec.NameValidationScheme)
 	cfg = cg.appendNameEscapingScheme(cfg, sc.Spec.NameEscapingScheme)
 

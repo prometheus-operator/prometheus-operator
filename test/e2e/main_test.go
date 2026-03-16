@@ -309,6 +309,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
 		"ScrapeConfigCreation":                      testScrapeConfigCreation,
+		"ScrapeConfigScrapeFailureLogFile":          testScrapeConfigScrapeFailureLogFile,
 		"CreatePrometheusAgent":                     testCreatePrometheusAgent,
 		"PrometheusAgentAndServerNameColision":      testAgentAndServerNameColision,
 		"ScrapeConfigKubeNode":                      testScrapeConfigKubernetesNodeRole,

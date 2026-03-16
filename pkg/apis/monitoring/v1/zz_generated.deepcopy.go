@@ -1213,6 +1213,11 @@ func (in *CommonPrometheusFields) DeepCopyInto(out *CommonPrometheusFields) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.DisableScrapeFailureLogFile != nil {
+		in, out := &in.DisableScrapeFailureLogFile, &out.DisableScrapeFailureLogFile
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ServiceName != nil {
 		in, out := &in.ServiceName, &out.ServiceName
 		*out = new(string)
