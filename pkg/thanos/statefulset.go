@@ -506,6 +506,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			},
 			Spec: corev1.PodSpec{
 				NodeSelector:                  tr.Spec.NodeSelector,
+				SchedulerName:                 tr.Spec.SchedulerName,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
 				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(tr.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),

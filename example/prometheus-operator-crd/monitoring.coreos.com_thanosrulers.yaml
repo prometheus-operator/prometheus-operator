@@ -6137,6 +6137,11 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               securityContext:
                 description: |-
                   securityContext defines the pod-level security attributes and common container settings.

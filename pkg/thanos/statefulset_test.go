@@ -793,6 +793,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		{Name: "additional.arg", Value: "additional-arg-value"},
 	}
 
+	schedulerName := "my-scheduler"
 	hostUsers := true
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -809,6 +810,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
+			SchedulerName:      schedulerName,
 			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
@@ -820,6 +822,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, securityContext, *sset.Spec.Template.Spec.SecurityContext)
 	require.Equal(t, priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, schedulerName, sset.Spec.Template.Spec.SchedulerName)
 	require.Equal(t, len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers)

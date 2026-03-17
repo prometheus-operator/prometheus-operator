@@ -5587,7 +5587,8 @@
                     "type": "string"
                   },
                   "schedulerName": {
-                    "description": "schedulerName defines the scheduler to use for Pod scheduling if specified.",
+                    "description": "schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.",
+                    "minLength": 1,
                     "type": "string"
                   },
                   "secrets": {
