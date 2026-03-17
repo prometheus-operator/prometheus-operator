@@ -403,6 +403,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.reconciliations,
 		o.ssetInfs,
 		o.rr,
+		c.RepairPolicy,
 	)
 
 	return o, nil
@@ -1027,7 +1028,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
-	pStatus, err := c.statusReporter.Process(ctx, p, key)
+	pStatus, err := c.statusReporter.Process(ctx, c.logger, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)
 	}

@@ -5992,6 +5992,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 		name           string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		expectErr      bool
 		golden         string
 	}{
 		{
@@ -6016,7 +6017,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 			golden: "test_smtp_auth_password_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test smtp_auth_password takes precedence in email config",
+			name:           "Test auth_password takes precedence in email config",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -6030,10 +6031,10 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_smtp_auth_password_takes_precedence_in_email_config.golden",
+			golden: "test_auth_password_takes_precedence_in_email_config.golden",
 		},
 		{
-			name:           "Test smtp_auth_password_file is dropped in email config for unsupported versions",
+			name:           "Test auth_password_file is dropped in email config for unsupported versions",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -6046,7 +6047,23 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_smtp_auth_password_file_is_dropped_in_email_config_for_unsupported_versions.golden",
+			golden: "test_auth_password_file_is_dropped_in_email_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test auth_password_file is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPasswordFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_password_file_is_added_in_email_config_for_supported_versions.golden",
 		},
 		{
 			name:           "Test force_implicit_tls is dropped in email config for unsupported versions",
@@ -6112,9 +6129,87 @@ func TestSanitizeEmailConfig(t *testing.T) {
 			},
 			golden: "test_auth_secret_file_is_dropped_in_email_config_for_unsupported_versions.golden",
 		},
+		{
+			name:           "Test auth_secret_file is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 31},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthSecret:     "emailconfigauthsecret123",
+								AuthSecretFile: "/auth/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_secret_takes_higher_precedence.golden",
+		},
+		{
+			name:           "Test threading is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "daily",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_threading_is_dropped_in_email_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test threading is added in email config for supported version",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "daily",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_threading_is_added_in_email_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test email config empty thread_by_date",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)

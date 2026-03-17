@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* [FEATURE] Add `--repair-policy-for-statefulsets` CLI argument to the operator. It defines how the operator manages StatefulSet's pods stuck at an incorrect revision. #8443
 * [ENHANCEMENT] Add `--web.tls-curves` CLI argument to the operator and admission-webhook binaries. #8385
 
 ## 0.89.0 / 2026-02-05
