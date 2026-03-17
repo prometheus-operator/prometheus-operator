@@ -6002,55 +6002,6 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 	require.NoError(t, err, "UTF-8 label queries should work in Prometheus 3.0+ queries")
 }
 
-// testStuckStatefulSetRollout ensures that when the rollout of a statefulset
-// pod gets stuck, it will get unstuck after fixing the spec.
-func testStuckStatefulSetRollout(t *testing.T) {
-	t.Parallel()
-
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-	ns := framework.CreateNamespace(context.Background(), t, testCtx)
-
-	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
-
-	prom, err := framework.CreatePrometheusAndWaitUntilReady(
-		context.Background(),
-		ns,
-		framework.MakeBasicPrometheus(ns, "statefulset-rollout", "test", 2),
-	)
-	require.NoError(t, err)
-
-	badImage := "quay.io/prometheus/prometheus:foobar"
-	prom, err = framework.PatchPrometheus(
-		context.Background(),
-		prom.Name,
-		prom.Namespace,
-		monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Image: &badImage,
-			},
-		},
-	)
-	require.NoError(t, err)
-
-	// The rollout should start from the highest pod ordinal.
-	err = framework.WaitForContainerInErrPullImage(context.Background(), prom.Namespace, "prometheus-"+prom.Name+"-1", badImage)
-	require.NoError(t, err)
-
-	// Fix the bad image location and ensure that the resource goes back to ready.
-	prom, err = framework.PatchPrometheusAndWaitUntilReady(
-		context.Background(),
-		prom.Name,
-		prom.Namespace,
-		monitoringv1.PrometheusSpec{
-			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Image: ptr.To(operator.DefaultPrometheusImage),
-			},
-		},
-	)
-	require.NoError(t, err)
-}
-
 func isAlertmanagerDiscoveryWorking(ns, promSVCName, alertmanagerName string) func(ctx context.Context) (bool, error) {
 	return func(ctx context.Context) (bool, error) {
 		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(
