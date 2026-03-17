@@ -1325,6 +1325,13 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
+	if t := in.Threading; t != nil {
+		out.Threading = &emailThreadingConfig{
+			Enabled:      t.Enabled,
+			ThreadByDate: t.ThreadByDate,
+		}
+	}
+
 	return out, nil
 }
 

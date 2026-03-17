@@ -930,10 +930,16 @@
                               },
                               threadByDate: {
                                 description: 'threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.\n(none means group by alert group key, no date).',
-                                minLength: 1,
+                                enum: [
+                                  'daily',
+                                  'none',
+                                ],
                                 type: 'string',
                               },
                             },
+                            required: [
+                              'threadByDate',
+                            ],
                             type: 'object',
                           },
                           tlsConfig: {

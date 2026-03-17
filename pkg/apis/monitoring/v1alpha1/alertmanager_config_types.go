@@ -922,9 +922,9 @@ type EmailThreadingConfig struct {
 	Enabled *bool `json:"enabled,omitempty"` // nolint:kubeapilinter
 	// threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
 	// (none means group by alert group key, no date).
-	// +kubebuilder:validation:MinLength=1
-	// +optional
-	ThreadByDate *string `json:"threadByDate,omitempty"`
+	// +kubebuilder:validation:Enum=daily;none
+	// +required
+	ThreadByDate string `json:"threadByDate,omitempty"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
