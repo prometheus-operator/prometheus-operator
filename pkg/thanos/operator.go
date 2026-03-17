@@ -73,6 +73,7 @@ type Operator struct {
 	accessor *operator.Accessor
 
 	controllerID string
+	repairPolicy operator.RepairPolicy
 
 	thanosRulerInfs *informers.ForResource
 	cmapInfs        *informers.ForResource
@@ -164,6 +165,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		newEventRecorder: c.EventRecorderFactory(client, controllerName),
 		reconciliations:  &operator.ReconciliationTracker{},
 		controllerID:     c.ControllerID,
+		repairPolicy:     c.RepairPolicy,
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
@@ -718,6 +720,12 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 	}
 
 	availableCondition := stsReporter.Update(tr)
+	if availableCondition.Status != monitoringv1.ConditionTrue {
+		if err := stsReporter.Repair(ctx, o.logger, o.repairPolicy); err != nil {
+			o.logger.Warn("failed to repair statefulset", "err", err)
+		}
+	}
+
 	reconciledCondition := o.reconciliations.GetCondition(key, tr.Generation)
 	tr.Status.Conditions = operator.UpdateConditions(tr.Status.Conditions, availableCondition, reconciledCondition)
 	tr.Status.Paused = tr.Spec.Paused

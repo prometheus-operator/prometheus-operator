@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -32,6 +33,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestKeyToStatefulSetKey(t *testing.T) {
@@ -470,7 +472,7 @@ func fakeReadyPod(sts string, ordinal int, ready bool) corev1.Pod {
 			Namespace:  "ns",
 			Generation: 47,
 			Labels: map[string]string{
-				"controller-revision-hash": sts + "-ffffffff",
+				appsv1.ControllerRevisionHashLabelKey: sts + "-ffffffff",
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
@@ -1009,9 +1011,11 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 				&fakeReconciledConditionGetter{},
 				fakeStatefulSetGetter(tc.ssets),
 				&fakeDeletionChecker{},
+				operator.NoneRepairPolicy,
 			)
 
-			status, err := sr.Process(context.Background(), &tc.p, fmt.Sprintf("%s/%s", tc.p.Namespace, tc.p.Name))
+			logger := slog.New(slog.DiscardHandler)
+			status, err := sr.Process(context.Background(), logger, &tc.p, fmt.Sprintf("%s/%s", tc.p.Namespace, tc.p.Name))
 			if tc.exp == nil {
 				require.Error(t, err)
 				return

@@ -15,19 +15,49 @@
 package operator
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"log/slog"
+	"slices"
+	"strconv"
 	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
+
+type RepairPolicy string
+
+const (
+	NoneRepairPolicy   RepairPolicy = "none"
+	EvictRepairPolicy  RepairPolicy = "evict"
+	DeleteRepairPolicy RepairPolicy = "delete"
+)
+
+// Set implements the flag.Value interface.
+func (p *RepairPolicy) Set(value string) error {
+	*p = RepairPolicy(value)
+
+	switch *p {
+	case NoneRepairPolicy:
+	case EvictRepairPolicy:
+	case DeleteRepairPolicy:
+	default:
+		return fmt.Errorf("invalid value: %s", value)
+	}
+
+	return nil
+}
+
+func (p *RepairPolicy) String() string { return string(*p) }
 
 // Pod is an alias for the Kubernetes v1.Pod type.
 type Pod corev1.Pod
@@ -68,31 +98,121 @@ func (p *Pod) Message() string {
 }
 
 type StatefulSetReporter struct {
-	Pods []*Pod
-	sset *appsv1.StatefulSet
+	kclient        kubernetes.Interface
+	Pods           []Pod
+	sset           *appsv1.StatefulSet
+	allowedRepairs int
+}
+
+// NewStatefulSetReporter returns a statefulset's reporter.
+func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (*StatefulSetReporter, error) {
+	if sset == nil {
+		// sset is nil when the controller couldn't create the statefulset
+		// (incompatible spec fields for instance).
+		return &StatefulSetReporter{}, nil
+	}
+
+	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
+	if err != nil {
+		// Something is really broken if the statefulset's selector isn't valid.
+		panic(err)
+	}
+
+	podList, err := kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{LabelSelector: ls.String()})
+	if err != nil {
+		return nil, err
+	}
+
+	pods := make([]Pod, 0, len(podList.Items))
+	for _, p := range podList.Items {
+		var found bool
+		for _, owner := range p.OwnerReferences {
+			if owner.Kind == "StatefulSet" && owner.Name == sset.Name {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			continue
+		}
+
+		pods = append(pods, Pod(p))
+	}
+
+	if err := sortByOrdinalAsc(pods); err != nil {
+		return nil, err
+	}
+
+	return &StatefulSetReporter{
+		kclient: kclient,
+		sset:    sset,
+		Pods:    pods,
+		// Allow at most 1 repair operation per reporter.
+		// The expectation is that if additional repairs are needed, they
+		// happen in a future reconciliation loop which will create a new
+		// reporter (otherwise the information about statefulset and pods will
+		// be stale).
+		allowedRepairs: 1,
+	}, nil
+}
+
+func sortByOrdinalAsc(pods []Pod) error {
+	var sortErr error
+	slices.SortStableFunc(pods, func(i, j Pod) int {
+		oi, err := i.getOrdinal()
+		if sortErr == nil {
+			sortErr = err
+		}
+
+		oj, err := j.getOrdinal()
+		if sortErr == nil {
+			sortErr = err
+		}
+
+		return cmp.Compare(oi, oj)
+	})
+
+	return sortErr
+}
+
+func (p *Pod) getOrdinal() (int, error) {
+	// Preferred solution if the PodIndexLabel feature gate is enabled (GA
+	// since 1.32).
+	if idx, found := p.Labels[appsv1.PodIndexLabel]; found {
+		return strconv.Atoi(idx)
+	}
+
+	// Otherwise try to guess from the pod name.
+	dash := strings.LastIndex(p.Name, "-")
+	if dash == -1 {
+		return 0, fmt.Errorf("no dash found in pod name %s", p.Name)
+	}
+
+	return strconv.Atoi(p.Name[dash+1:])
 }
 
 // UpdatedPods returns the list of pods that match with the statefulset's revision.
-func (sr *StatefulSetReporter) UpdatedPods() []*Pod {
-	return sr.filterPods(func(p *Pod) bool {
+func (sr *StatefulSetReporter) UpdatedPods() []Pod {
+	return sr.filterPods(func(p Pod) bool {
 		return sr.IsUpdated(p)
 	})
 }
 
 // IsUpdated returns true if the given pod matches with the statefulset's revision.
-func (sr *StatefulSetReporter) IsUpdated(p *Pod) bool {
-	return sr.sset.Status.UpdateRevision == p.Labels["controller-revision-hash"]
+func (sr *StatefulSetReporter) IsUpdated(p Pod) bool {
+	return sr.sset.Status.UpdateRevision == p.Labels[appsv1.ControllerRevisionHashLabelKey]
 }
 
 // ReadyPods returns the list of pods that are ready.
-func (sr *StatefulSetReporter) ReadyPods() []*Pod {
-	return sr.filterPods(func(p *Pod) bool {
+func (sr *StatefulSetReporter) ReadyPods() []Pod {
+	return sr.filterPods(func(p Pod) bool {
 		return p.Ready()
 	})
 }
 
-func (sr *StatefulSetReporter) filterPods(f func(*Pod) bool) []*Pod {
-	pods := make([]*Pod, 0, len(sr.Pods))
+func (sr *StatefulSetReporter) filterPods(f func(Pod) bool) []Pod {
+	pods := make([]Pod, 0, len(sr.Pods))
 
 	for _, p := range sr.Pods {
 		if f(p) {
@@ -174,46 +294,85 @@ func (sr *StatefulSetReporter) StatusAndReasonForAvailableCondition(expectedRepl
 	return status, reason
 }
 
-// NewStatefulSetReporter returns a statefulset's reporter.
-func NewStatefulSetReporter(ctx context.Context, kclient kubernetes.Interface, sset *appsv1.StatefulSet) (*StatefulSetReporter, error) {
+// Repair checks if the statefulset is stuck and if yes, evicts/deletes the
+// first pod which isn't ready.
+// The function will update at most one pod to avoid further disruption.
+func (sr *StatefulSetReporter) Repair(ctx context.Context, logger *slog.Logger, policy RepairPolicy) error {
+	sset := sr.sset
+	logger = logger.With("policy", policy)
 	if sset == nil {
-		// sset is nil when the controller couldn't create the statefulset
-		// (incompatible spec fields for instance).
-		return &StatefulSetReporter{
-			Pods: []*Pod{},
-		}, nil
+		logger.Warn("skipping because the statefulset couldn't be found")
+		return nil
 	}
 
-	ls, err := metav1.LabelSelectorAsSelector(sset.Spec.Selector)
-	if err != nil {
-		// Something is really broken if the statefulset's selector isn't valid.
-		panic(err)
+	if sr.allowedRepairs <= 0 {
+		logger.Warn("skipping because no more repairs are allowed")
+		return nil
 	}
 
-	pods, err := kclient.CoreV1().Pods(sset.Namespace).List(ctx, metav1.ListOptions{LabelSelector: ls.String()})
-	if err != nil {
-		return nil, err
+	logger = logger.With("statefulset", fmt.Sprintf("%s/%s", sset.Namespace, sset.Name))
+
+	if policy == NoneRepairPolicy {
+		logger.Debug("skipping because repair policy is none")
+		return nil
 	}
 
-	stsReporter := &StatefulSetReporter{
-		sset: sset,
-		Pods: make([]*Pod, 0, len(pods.Items)),
+	if sset.Generation != sset.Status.ObservedGeneration {
+		logger.Info("skipping because statefulset is not yet reconciled")
+		return nil
 	}
-	for _, p := range pods.Items {
-		var found bool
-		for _, owner := range p.OwnerReferences {
-			if owner.Kind == "StatefulSet" && owner.Name == sset.Name {
-				found = true
-				break
-			}
-		}
 
-		if !found {
+	// Iterate pods in reverse ordinal order.
+	for _, pod := range slices.Backward(sr.Pods) {
+		if pod.Ready() {
+			logger.Debug("pod is ready", "pod", pod.Name)
 			continue
 		}
 
-		stsReporter.Pods = append(stsReporter.Pods, ptr.To(Pod(p)))
+		revision := pod.Labels[appsv1.ControllerRevisionHashLabelKey]
+		// The pod should not be repaired if its revision matches either the
+		// current or the updated revision.
+		if revision == sset.Status.CurrentRevision {
+			logger.Debug("pod revision == current revision", "pod", pod.Name)
+			continue
+		}
+
+		if revision == sset.Status.UpdateRevision {
+			logger.Debug("pod revision == update revision", "pod", pod.Name)
+			continue
+		}
+
+		if pod.DeletionTimestamp != nil {
+			logger.Debug("pod deletion in progress", "pod", pod.Name)
+			continue
+		}
+
+		logger.Info("found pod which needs to be repaired, applying repair policy", "pod", pod.Name)
+		deleteOpts := metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationBackground)}
+		switch policy {
+		case EvictRepairPolicy:
+			err := sr.kclient.CoreV1().Pods(pod.Namespace).EvictV1(ctx, &policyv1.Eviction{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      pod.Name,
+					Namespace: pod.Namespace,
+				},
+				DeleteOptions: &deleteOpts,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to evict pod %s/%s: %w", pod.Namespace, pod.Name, err)
+			}
+		case DeleteRepairPolicy:
+			err := sr.kclient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, deleteOpts)
+			if err != nil {
+				return fmt.Errorf("failed to delete pod %s/%s: %w", pod.Namespace, pod.Name, err)
+			}
+		}
+
+		// Repair only one pod per invocation.
+		sr.allowedRepairs--
+		return nil
 	}
 
-	return stsReporter, nil
+	logger.Debug("all pods are ok")
+	return nil
 }

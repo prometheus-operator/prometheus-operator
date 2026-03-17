@@ -68,6 +68,9 @@ type Config struct {
 	// Controller id for pod ownership.
 	ControllerID string
 
+	// Repair policy
+	RepairPolicy RepairPolicy
+
 	// Event recorder factory.
 	EventRecorderFactory EventRecorderFactory
 
@@ -116,6 +119,7 @@ func DefaultConfig(cpu, memory string) Config {
 				enabled:     false,
 			},
 		},
+		RepairPolicy: NoneRepairPolicy,
 	}
 }
 
