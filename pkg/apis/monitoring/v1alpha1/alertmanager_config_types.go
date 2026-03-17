@@ -924,7 +924,7 @@ type EmailThreadingConfig struct {
 	// (none means group by alert group key, no date).
 	// +kubebuilder:validation:Enum=daily;none
 	// +required
-	ThreadByDate string `json:"threadByDate,omitempty"`
+	ThreadByDate string `json:"threadByDate"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
