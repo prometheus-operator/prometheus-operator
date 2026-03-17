@@ -201,7 +201,7 @@ func (sr *StatefulSetReporter) UpdatedPods() []Pod {
 
 // IsUpdated returns true if the given pod matches with the statefulset's revision.
 func (sr *StatefulSetReporter) IsUpdated(p Pod) bool {
-	return sr.sset.Status.UpdateRevision == p.Labels["controller-revision-hash"]
+	return sr.sset.Status.UpdateRevision == p.Labels[appsv1.ControllerRevisionHashLabelKey]
 }
 
 // ReadyPods returns the list of pods that are ready.

@@ -472,7 +472,7 @@ func fakeReadyPod(sts string, ordinal int, ready bool) corev1.Pod {
 			Namespace:  "ns",
 			Generation: 47,
 			Labels: map[string]string{
-				"controller-revision-hash": sts + "-ffffffff",
+				appsv1.ControllerRevisionHashLabelKey: sts + "-ffffffff",
 			},
 			OwnerReferences: []metav1.OwnerReference{
 				{
