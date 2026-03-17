@@ -5676,6 +5676,11 @@
                     "format": "int64",
                     "type": "integer"
                   },
+                  "schedulerName": {
+                    "description": "schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "scrapeClasses": {
                     "description": "scrapeClasses defines the list of scrape classes to expose to scraping objects such as\nPodMonitors, ServiceMonitors, Probes and ScrapeConfigs.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                     "items": {

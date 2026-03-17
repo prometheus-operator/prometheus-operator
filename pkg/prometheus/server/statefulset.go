@@ -353,6 +353,7 @@ func makeStatefulSetSpec(
 				ServiceAccountName:            cpf.ServiceAccountName,
 				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                  cpf.NodeSelector,
+				SchedulerName:                 cpf.SchedulerName,
 				PriorityClassName:             cpf.PriorityClassName,
 				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 				Volumes:                       volumes,

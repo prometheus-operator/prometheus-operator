@@ -209,6 +209,20 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 	}
 }
 
+func TestSchedulerName(t *testing.T) {
+	schedulerName := "my-scheduler"
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				SchedulerName: schedulerName,
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, schedulerName, sset.Spec.Template.Spec.SchedulerName)
+}
+
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	// Monitoring DNS settings
 	monitoringDNSPolicy := corev1.DNSClusterFirst

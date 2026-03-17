@@ -6370,6 +6370,11 @@ spec:
                   and the actual ExternalURL is still true, but the server serves requests
                   under a different route prefix. For example for use with `kubectl proxy`.
                 type: string
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               secrets:
                 description: |-
                   secrets is a list of Secrets in the same namespace as the Alertmanager

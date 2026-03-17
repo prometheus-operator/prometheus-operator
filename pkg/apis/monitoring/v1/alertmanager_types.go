@@ -203,6 +203,10 @@ type AlertmanagerSpec struct {
 	// +optional
 	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
