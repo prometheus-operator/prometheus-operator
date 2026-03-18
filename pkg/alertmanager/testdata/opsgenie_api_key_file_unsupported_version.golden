@@ -1,0 +1,6 @@
+receivers:
+- name: ""
+  opsgenie_configs:
+  - api_key_file: /opsgenie/api/key
+    api_url: https://api.opsgenie.com/v2/alerts
+templates: []

@@ -8165,7 +8165,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			golden: "opsgenie_api_key_file_unsupported_version.golden",
 		},
 		{
 			name:           "opsgenie responder type teams unsupported version",
