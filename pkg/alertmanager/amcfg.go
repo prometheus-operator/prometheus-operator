@@ -1327,8 +1327,13 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 
 	if t := in.Threading; t != nil {
 		out.Threading = &emailThreadingConfig{
-			Enabled:      t.Enabled,
-			ThreadByDate: t.ThreadByDate,
+			Enabled: t.Enabled,
+		}
+		switch t.ThreadByDate {
+		case "Daily":
+			out.Threading.ThreadByDate = "daily"
+		case "None":
+			out.Threading.ThreadByDate = "none"
 		}
 	}
 
