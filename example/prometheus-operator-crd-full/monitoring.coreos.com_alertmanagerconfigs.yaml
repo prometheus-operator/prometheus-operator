@@ -1155,8 +1155,9 @@ spec:
                             minLength: 1
                             type: string
                           threading:
-                            description: threading defines the threading configuration
-                              for email receiver.
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
                             properties:
                               enabled:
                                 description: |-
@@ -1165,11 +1166,11 @@ spec:
                                 type: boolean
                               threadByDate:
                                 description: |-
-                                  threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
-                                  (none means group by alert group key, no date).
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
                                 enum:
-                                - daily
-                                - none
+                                - Daily
+                                - None
                                 type: string
                             required:
                             - threadByDate
@@ -13362,8 +13363,9 @@ spec:
                             minLength: 1
                             type: string
                           threading:
-                            description: threading defines the threading configuration
-                              for email receiver.
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
                             properties:
                               enabled:
                                 description: |-
@@ -13372,11 +13374,11 @@ spec:
                                 type: boolean
                               threadByDate:
                                 description: |-
-                                  threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
-                                  (none means group by alert group key, no date).
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
                                 enum:
-                                - daily
-                                - none
+                                - Daily
+                                - None
                                 type: string
                             required:
                             - threadByDate

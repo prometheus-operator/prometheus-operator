@@ -457,7 +457,7 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 func convertEmailThreadingConfigFrom(in *v1alpha1.EmailThreadingConfig) *EmailThreadingConfig {
 	return &EmailThreadingConfig{
 		Enabled:      in.Enabled,
-		ThreadByDate: in.ThreadByDate,
+		ThreadByDate: ThreadByDateType(in.ThreadByDate),
 	}
 }
 

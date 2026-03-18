@@ -16,11 +16,15 @@
 
 package v1alpha1
 
+import (
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
+)
+
 // EmailThreadingConfigApplyConfiguration represents a declarative configuration of the EmailThreadingConfig type for use
 // with apply.
 type EmailThreadingConfigApplyConfiguration struct {
-	Enabled      *bool   `json:"enabled,omitempty"`
-	ThreadByDate *string `json:"threadByDate,omitempty"`
+	Enabled      *bool                                `json:"enabled,omitempty"`
+	ThreadByDate *monitoringv1alpha1.ThreadByDateType `json:"threadByDate,omitempty"`
 }
 
 // EmailThreadingConfigApplyConfiguration constructs a declarative configuration of the EmailThreadingConfig type for use with
@@ -40,7 +44,7 @@ func (b *EmailThreadingConfigApplyConfiguration) WithEnabled(value bool) *EmailT
 // WithThreadByDate sets the ThreadByDate field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ThreadByDate field is set to the value of the last call.
-func (b *EmailThreadingConfigApplyConfiguration) WithThreadByDate(value string) *EmailThreadingConfigApplyConfiguration {
+func (b *EmailThreadingConfigApplyConfiguration) WithThreadByDate(value monitoringv1alpha1.ThreadByDateType) *EmailThreadingConfigApplyConfiguration {
 	b.ThreadByDate = &value
 	return b
 }

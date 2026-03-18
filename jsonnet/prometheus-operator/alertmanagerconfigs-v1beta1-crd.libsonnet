@@ -922,17 +922,17 @@
                             type: 'string',
                           },
                           threading: {
-                            description: 'threading defines the threading configuration for email receiver.',
+                            description: 'threading defines the threading configuration for email receiver.\nIt requires Alertmanager >= v0.30.0.',
                             properties: {
                               enabled: {
                                 description: 'enabled defines whether to enable threading, which makes alert notifications in the same\nalert group show up in the same email thread.',
                                 type: 'boolean',
                               },
                               threadByDate: {
-                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.\n(none means group by alert group key, no date).',
+                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.\n(None means group by alert group key, no date).',
                                 enum: [
-                                  'daily',
-                                  'none',
+                                  'Daily',
+                                  'None',
                                 ],
                                 type: 'string',
                               },
