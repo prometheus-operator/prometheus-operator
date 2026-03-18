@@ -4810,6 +4810,21 @@ func testPrometheusCRDValidation(t *testing.T) {
 			expectedError: true,
 		},
 		{
+			prometheusSpec: monitoringv1.PrometheusSpec{
+				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+					Replicas:           &replicas,
+					Version:            operator.DefaultPrometheusVersion,
+					ServiceAccountName: "prometheus",
+					RemoteWrite: []monitoringv1.RemoteWriteSpec{
+						{
+							URL: "/example.com/write",
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name: "valid-remote-write-receiver-message-versions",
 			prometheusSpec: monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{

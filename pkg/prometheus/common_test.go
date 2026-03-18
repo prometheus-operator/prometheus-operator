@@ -142,7 +142,7 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 						Version: tc.version,
 						RemoteWrite: []monitoringv1.RemoteWriteSpec{
 							{
-								URL:            "http://example.com",
+								URL:            monitoringv1.URL("http://example.com"),
 								MessageVersion: tc.messageVersion,
 							},
 						},

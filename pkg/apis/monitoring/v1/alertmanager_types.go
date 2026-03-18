@@ -810,7 +810,3 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
-
-// URL represents a valid URL
-// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
-type URL string

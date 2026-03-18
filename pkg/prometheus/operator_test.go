@@ -114,7 +114,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_no_azure_managed_identity_and_no_azure_oAuth_and_no_azure_sdk",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 				},
@@ -124,7 +124,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_azure_managed_identity_and_azure_oAuth",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
@@ -147,7 +147,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_azure_managed_identity_and_azure_sdk",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
@@ -163,7 +163,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_azure_managed_identity_empty_client_id",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
@@ -177,7 +177,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_azure_managed_identity_empty_client_id_v3.5.0",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
@@ -190,7 +190,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_azure_sdk_and_azure_oAuth",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
@@ -213,7 +213,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_invalid_azure_oAuth_clientID",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
@@ -233,7 +233,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "rw_azuread_with_workload_identity",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
@@ -246,7 +246,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_invalid_workload_identity_clientID",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
@@ -260,7 +260,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_invalid_workload_identity_tenantID",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
@@ -274,7 +274,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_workload_identity_and_managed_identity",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
@@ -291,7 +291,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_workload_identity_and_oauth",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
@@ -315,7 +315,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_workload_identity_and_sdk",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
@@ -332,7 +332,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 		{
 			name: "with_no_azure_auth_method_including_workload_identity",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 				},
@@ -343,7 +343,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			name:    "with_workload_identity_unsupported_version",
 			version: "v3.6.0",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
@@ -358,7 +358,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			name:    "with_oauth_unsupported_version",
 			version: "v2.47.0",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
@@ -379,7 +379,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			name:    "with_sdk_unsupported_version",
 			version: "v2.51.0",
 			spec: monitoringv1.RemoteWriteSpec{
-				URL: "http://example.com",
+				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
 					Cloud: ptr.To("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{

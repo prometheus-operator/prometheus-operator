@@ -221,7 +221,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 // AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
 func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL:            url,
+		URL:            monitoringv1.URL(url),
 		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
 			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
