@@ -30,7 +30,7 @@
 * [BUGFIX] Fix missing OAuth2 field in IonosSDConfig generation. #8433
 * [BUGFIX] Fix missing fields in AzureSDConfig. #8444
 * [BUGFIX] Validate Microsoft Teams V2 URL in `AlertmanagerConfig` CRD. #8227
-* [BUGFIX] Fix `labelmap` relabel action rejecting valid replacement values with template variables. #8337
+* [BUGFIX] Fix `labelmap` relabel action rejecting valid replacement values with template variables for Prometheus 2.x. #8337
 
 ## 0.89.0 / 2026-02-05
 
