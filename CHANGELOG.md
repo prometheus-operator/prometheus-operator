@@ -1,7 +1,36 @@
-## UNRELEASED
+## 0.90.0 / 2026-03-19
 
-* [FEATURE] Add `--repair-policy-for-statefulsets` CLI argument to the operator. It defines how the operator manages StatefulSet's pods stuck at an incorrect revision. #8443
+* [CHANGE/BUGFIX] Validate that the remote-write URL scheme is either `http` or `https`. #8455
+* [FEATURE] Add `--repair-policy-for-statefulsets` CLI argument to the operator. It defines how the operator manages StatefulSet's pods stuck at an incorrect revision. Users running Kubernetes v1.35+ are encouraged to enable this feature (see [troubleshooting guide](https://prometheus-operator.dev/docs/platform/troubleshooting/#statefulset-rollout-stuck-after-a-bad-update)). #8443
+* [FEATURE] Add `schedulerName` support to the `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8451
 * [ENHANCEMENT] Add `--web.tls-curves` CLI argument to the operator and admission-webhook binaries. #8385
+* [ENHANCEMENT] Support minimum TLS version for Thanos gRPC servers. #8438
+* [ENHANCEMENT] Add version label to `ThanosRuler` pods. #8441
+* [ENHANCEMENT] Add `messageText` support for Slack receiver in `AlertmanagerConfig` CRD. #8374
+* [ENHANCEMENT] Add `messageText` support for Slack receiver in Alertmanager secret config. #8375
+* [ENHANCEMENT] Add `forceImplicitTLS` support for SMTP email config in Alertmanager secret config. #8384 #8404
+* [ENHANCEMENT] Add `forceImplicitTLS` support for SMTP email config in `AlertmanagerConfig` CRD. #8386
+* [ENHANCEMENT] Add `forceImplicitTLS` support for SMTP global config in Alertmanager secret config. #8405
+* [ENHANCEMENT] Add `forceImplicitTLS` support for SMTP global config in `Alertmanager` CRD. #8406
+* [ENHANCEMENT] Add support for global Telegram bot token in `Alertmanager` CRD. #8372
+* [ENHANCEMENT] Add `chatIDFile` support for Telegram receiver in Alertmanager secret config. #8376
+* [ENHANCEMENT] Add `wechatAPISecretFile` support in Alertmanager global config. #8377
+* [ENHANCEMENT] Add `authSecretFile` support for email config in Alertmanager secret config. #8396
+* [ENHANCEMENT] Add nested field support for PagerDuty description in Alertmanager secret config. #8402
+* [ENHANCEMENT] Add email threading support in Alertmanager secret config. #8388
+* [ENHANCEMENT] Add field and label selectors for ConfigMap watches. #8368
+* [ENHANCEMENT] Improve ScrapeConfig API consistency and validation. #8422
+* [BUGFIX] Fix `ThanosRuler` config resource status not being updated on initial StatefulSet creation. #8358
+* [BUGFIX] Preserve `LastTransitionTime` in Prometheus status conditions. #8346
+* [BUGFIX] Make Mattermost `text` field optional in `AlertmanagerConfig` CRD. #8363
+* [BUGFIX] Remove nil error wrapping in v1alpha1 duplicate receiver validation. #8379
+* [BUGFIX] Aggregate `Available` condition across Prometheus shards. #8434
+* [BUGFIX] Reconcile resources with inconsistent status. #8397
+* [BUGFIX] Fix namespace lister/watcher compatibility with Kubernetes v1.35 client-go. #8431
+* [BUGFIX] Fix missing OAuth2 field in IonosSDConfig generation. #8433
+* [BUGFIX] Fix missing fields in AzureSDConfig. #8444
+* [BUGFIX] Validate Microsoft Teams V2 URL in `AlertmanagerConfig` CRD. #8227
+* [BUGFIX] Fix `labelmap` relabel action rejecting valid replacement values with template variables for Prometheus 2.x. #8337
 
 ## 0.89.0 / 2026-02-05
 
