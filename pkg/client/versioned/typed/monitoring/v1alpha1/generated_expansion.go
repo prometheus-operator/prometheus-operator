@@ -20,4 +20,6 @@ type AlertmanagerConfigExpansion interface{}
 
 type PrometheusAgentExpansion interface{}
 
+type RemoteWriteExpansion interface{}
+
 type ScrapeConfigExpansion interface{}
