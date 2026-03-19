@@ -1645,9 +1645,10 @@ type ThanosSpec struct {
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// url defines the URL of the endpoint to send samples to.
-	// +kubebuilder:validation:MinLength=1
+	//
+	// It must use the HTTP or HTTPS scheme.
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 
 	// name of the remote write queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate queues.

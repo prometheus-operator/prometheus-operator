@@ -5490,8 +5490,8 @@
                           "type": "object"
                         },
                         "url": {
-                          "description": "url defines the URL of the endpoint to send samples to.",
-                          "minLength": 1,
+                          "description": "url defines the URL of the endpoint to send samples to.\n\nIt must use the HTTP or HTTPS scheme.",
+                          "pattern": "^(http|https)://.+$",
                           "type": "string"
                         },
                         "writeRelabelConfigs": {
