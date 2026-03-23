@@ -1664,6 +1664,10 @@ func checkTelegramConfigs(
 	}
 
 	for _, config := range configs {
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.BotTokenFile != nil {
+			return fmt.Errorf(`botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		}
+
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
