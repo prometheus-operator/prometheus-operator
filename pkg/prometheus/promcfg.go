@@ -1662,6 +1662,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &m.Spec.HTTPConfig, scrapeClass)
+
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
 	// checks for m.Spec.Targets.StaticConfig.
@@ -1806,8 +1808,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	relabelings = appendShardingRelabelingForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
