@@ -821,7 +821,7 @@ func (c *Operator) Sync(ctx context.Context, key string) error {
 
 	closure, err := c.sync(ctx, key)
 	if err != nil {
-		closure(ctx)
+		_ = closure(ctx)
 	} else {
 		err = closure(ctx)
 	}
