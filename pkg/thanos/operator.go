@@ -466,22 +466,31 @@ func (o *Operator) handleNamespaceUpdate(oldo, curo any) {
 // Sync implements the operator.Syncer interface.
 func (o *Operator) Sync(ctx context.Context, key string) error {
 	o.reconciliations.ResetStatus(key)
-	err := o.sync(ctx, key)
+
+	closure, err := o.sync(ctx, key)
+	if err != nil {
+		closure(ctx)
+	} else {
+		err = closure(ctx)
+	}
+
 	o.reconciliations.SetStatus(key, err)
 
 	return err
 }
 
-func (o *Operator) sync(ctx context.Context, key string) error {
+func (o *Operator) sync(ctx context.Context, key string) (func(context.Context) error, error) {
+	closure := func(context.Context) error { return nil }
+
 	tr, err := operator.GetObjectFromKey[*monitoringv1.ThanosRuler](o.thanosRulerInfs, key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if tr == nil {
 		o.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return closure, nil
 	}
 
 	logger := o.logger.With("key", key)
@@ -491,35 +500,41 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		return o.configResStatusCleanup(ctx, tr)
 	})
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if finalizerAdded {
 		// Since the finalizer has been added to the object, let's trigger another sync.
 		o.rr.EnqueueForReconciliation(tr)
-		return nil
+		return closure, nil
 	}
 
 	// Check if the Thanos instance is marked for deletion.
 	if o.rr.DeletionInProgress(tr) {
 		o.reconciliations.ForgetObject(key)
-		return nil
+		return closure, nil
 	}
 
 	if tr.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
-		return nil
+		return closure, nil
 	}
 
 	o.recordDeprecatedFields(key, logger, tr)
 
 	if err := operator.CheckStorageClass(ctx, o.canReadStorageClass, o.kclient, tr.Spec.Storage); err != nil {
-		return err
+		return closure, err
 	}
 
 	selectedRules, err := o.selectPrometheusRules(tr, logger)
 	if err != nil {
-		return err
+		return closure, err
+	}
+
+	// Returns updateConfigResourcesStatus as the closure
+	// so that we can call it at the end of each sync.
+	closure = func(ctx context.Context) error {
+		return o.updateConfigResourcesStatus(ctx, tr, selectedRules)
 	}
 
 	if selectedRules.SelectedLen() == 0 {
@@ -528,41 +543,41 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 
 	ruleConfigMapNames, err := o.createOrUpdateRuleConfigMaps(ctx, tr, selectedRules, logger)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	assetStore := assets.NewStoreBuilder(o.kclient.CoreV1(), o.kclient.CoreV1())
 
 	if err := o.createOrUpdateRulerConfigSecret(ctx, assetStore, tr); err != nil {
-		return fmt.Errorf("failed to synchronize ruler config secret: %w", err)
+		return closure, fmt.Errorf("failed to synchronize ruler config secret: %w", err)
 	}
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), o.kclient, newTLSAssetSecret(tr, o.config))
 	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := o.createOrUpdateWebConfigSecret(ctx, tr); err != nil {
-		return fmt.Errorf("failed to synchronize web config secret: %w", err)
+		return closure, fmt.Errorf("failed to synchronize web config secret: %w", err)
 	}
 
 	svcClient := o.kclient.CoreV1().Services(tr.Namespace)
 	if tr.Spec.ServiceName != nil {
 		selectorLabels := makeSelectorLabels(tr.Name)
 		if err := k8s.EnsureCustomGoverningService(ctx, tr.Namespace, *tr.Spec.ServiceName, svcClient, selectorLabels); err != nil {
-			return err
+			return closure, err
 		}
 	} else {
 		// Create governing service if it doesn't exist.
 		if _, err = k8s.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(tr, o.config)); err != nil {
-			return fmt.Errorf("synchronizing governing service failed: %w", err)
+			return closure, fmt.Errorf("synchronizing governing service failed: %w", err)
 		}
 	}
 
 	// Ensure we have a StatefulSet running Thanos deployed.
 	existingStatefulSet, err := o.getStatefulSetFromThanosRulerKey(key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	shouldCreate := false
@@ -572,41 +587,34 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if o.rr.DeletionInProgress(existingStatefulSet) {
-		return nil
+		return closure, nil
 	}
 
 	newSSetInputHash, err := createSSetInputHash(*tr, o.config, tlsAssets, ruleConfigMapNames, existingStatefulSet.Spec)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	sset, err := makeStatefulSet(tr, o.config, ruleConfigMapNames, newSSetInputHash, tlsAssets)
 	if err != nil {
-		return fmt.Errorf("failed to generate statefulset: %w", err)
+		return closure, fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 
 	operator.SanitizeSTS(sset)
-
-	// Update the status of selected configuration resources (PrometheusRules).
-	// This must be called before the StatefulSet creation/update to ensure
-	// config resource bindings are updated on first reconciliation.
-	if err = o.updateConfigResourcesStatus(ctx, tr, selectedRules); err != nil {
-		return err
-	}
 
 	ssetClient := o.kclient.AppsV1().StatefulSets(tr.Namespace)
 	if shouldCreate {
 		logger.Debug("creating statefulset")
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
-			return fmt.Errorf("failed to create thanos statefulset: %w", err)
+			return closure, fmt.Errorf("failed to create thanos statefulset: %w", err)
 		}
 
-		return nil
+		return closure, nil
 	}
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
-		return nil
+		return closure, nil
 	}
 
 	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
@@ -614,10 +622,10 @@ func (o *Operator) sync(ctx context.Context, key string) error {
 		o.metrics.StsDeleteCreateCounter().Inc()
 		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 	}); err != nil {
-		return err
+		return closure, err
 	}
 
-	return nil
+	return closure, nil
 }
 
 func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *monitoringv1.ThanosRuler) {
