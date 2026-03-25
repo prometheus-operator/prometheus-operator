@@ -866,6 +866,33 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 	golden.Assert(t, string(cfg), "ProbeIngressSDConfigGenerationWithLabelEnforce.golden")
 }
 
+func TestProbeWithHttp2Disabled(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.EnforcedNamespaceLabel = "namespace"
+
+	probe := defaultProbe()
+	enableHTTP2 := false
+	probe.Spec.HTTPConfig.EnableHTTP2 = &enableHTTP2
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		p,
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": probe,
+		},
+		nil,
+		&assets.StoreBuilder{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "ProbeWithHttp2Disabled.golden")
+}
+
 func TestK8SSDConfigGeneration(t *testing.T) {
 	sm := &monitoringv1.ServiceMonitor{
 		ObjectMeta: metav1.ObjectMeta{
