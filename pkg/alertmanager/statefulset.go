@@ -800,6 +800,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			Spec: corev1.PodSpec{
 				AutomountServiceAccountToken:  a.Spec.AutomountServiceAccountToken,
 				NodeSelector:                  a.Spec.NodeSelector,
+				SchedulerName:                 a.Spec.SchedulerName,
 				PriorityClassName:             a.Spec.PriorityClassName,
 				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(a.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
 				InitContainers:                initContainers,

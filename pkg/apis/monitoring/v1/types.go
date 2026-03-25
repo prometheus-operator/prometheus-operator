@@ -34,6 +34,10 @@ const (
 	Version = "v1"
 )
 
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string
+
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 // Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"

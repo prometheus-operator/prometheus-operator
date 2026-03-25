@@ -439,6 +439,11 @@ type CommonPrometheusFields struct {
 	//nolint:kubeapilinter
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
+	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	SchedulerName string `json:"schedulerName,omitempty"`
+
 	// serviceAccountName is the name of the ServiceAccount to use to run the
 	// Prometheus Pods.
 	// +optional
@@ -1640,9 +1645,10 @@ type ThanosSpec struct {
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// url defines the URL of the endpoint to send samples to.
-	// +kubebuilder:validation:MinLength=1
+	//
+	// It must use the HTTP or HTTPS scheme.
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 
 	// name of the remote write queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate queues.

@@ -8224,7 +8224,8 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 
 func TestSanitizeOpsGenieConfig(t *testing.T) {
 	logger := newNopLogger(t)
-	versionOpsGenieAllowed := semver.Version{Major: 0, Minor: 25}
+	version23 := semver.Version{Major: 0, Minor: 23}
+	version24 := semver.Version{Major: 0, Minor: 24}
 
 	for _, tc := range []struct {
 		name           string
@@ -8235,7 +8236,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	}{
 		{
 			name:           "opsgenie invalid api_url returns error",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8252,7 +8253,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie valid api_url passes validation",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8266,6 +8267,98 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 				},
 			},
 			golden: "opsgenie_valid_url_passes.golden",
+		},
+		{
+			name:           "opsgenie api_key takes precedence over api_key_file",
+			againstVersion: version24,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKey:     "test-key",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_api_key_takes_precedence_over_api_key_file.golden",
+		},
+		{
+			name:           "opsgenie api_key_file unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_api_key_file_unsupported_version.golden",
+		},
+		{
+			name:           "opsgenie responder type teams unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL: "https://api.opsgenie.com/v2/alerts",
+								Responders: []opsgenieResponder{
+									{
+										Type: "teams",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "opsgenie actions supported version",
+			againstVersion: version24,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:  "https://api.opsgenie.com/v2/alerts",
+								APIKey:  "test-key",
+								Actions: "close",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_actions_supported_version.golden",
+		},
+		{
+			name:           "opsgenie actions unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:  "https://api.opsgenie.com/v2/alerts",
+								APIKey:  "test-key",
+								Actions: "close",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_actions_unsupported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

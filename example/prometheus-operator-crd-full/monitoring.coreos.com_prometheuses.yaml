@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    operator.prometheus.io/version: 0.90.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -8074,9 +8074,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to send samples
-                        to.
-                      minLength: 1
+                      description: |-
+                        url defines the URL of the endpoint to send samples to.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                     writeRelabelConfigs:
                       description: writeRelabelConfigs defines the list of remote
@@ -8436,6 +8438,11 @@ spec:
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               scrapeClasses:
                 description: |-
                   scrapeClasses defines the list of scrape classes to expose to scraping objects such as

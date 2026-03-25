@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    operator.prometheus.io/version: 0.90.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -5832,9 +5832,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to send samples
-                        to.
-                      minLength: 1
+                      description: |-
+                        url defines the URL of the endpoint to send samples to.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                     writeRelabelConfigs:
                       description: writeRelabelConfigs defines the list of remote
@@ -6137,6 +6139,11 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               securityContext:
                 description: |-
                   securityContext defines the pod-level security attributes and common container settings.

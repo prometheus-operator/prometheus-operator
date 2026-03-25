@@ -1470,8 +1470,9 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		VSendResolved:        in.SendResolved,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
-		DisableNotifications: false,
+		DisableNotifications: ptr.Deref(in.DisableNotifications, false),
 		ParseMode:            in.ParseMode,
+		BotTokenFile:         ptr.Deref(in.BotTokenFile, ""),
 	}
 
 	if in.APIURL != nil {

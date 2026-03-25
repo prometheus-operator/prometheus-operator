@@ -605,7 +605,7 @@ func testThanosRulerStateless(t *testing.T) {
 	thanos.Spec.EvaluationInterval = "1s"
 	thanos.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{
 		{
-			URL: fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
+			URL: monitoringv1.URL(fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
 			// Ensure that samples are sent ASAP to the remote write receiver.
 			QueueConfig: &monitoringv1.QueueConfig{
 				MaxSamplesPerSend: 1,

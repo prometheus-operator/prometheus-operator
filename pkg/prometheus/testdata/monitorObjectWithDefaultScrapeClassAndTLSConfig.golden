@@ -149,6 +149,10 @@ scrape_configs:
   params:
     module:
     - http_2xx
+  tls_config:
+    ca_file: /etc/prometheus/secrets/default/ca.crt
+    cert_file: /etc/prometheus/secrets/default/tls.crt
+    key_file: /etc/prometheus/secrets/default/tls.key
   static_configs:
   - targets:
     - prometheus.io
@@ -185,10 +189,6 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(SHARD);|.+;.+
     action: keep
-  tls_config:
-    ca_file: /etc/prometheus/secrets/default/ca.crt
-    cert_file: /etc/prometheus/secrets/default/tls.crt
-    key_file: /etc/prometheus/secrets/default/tls.key
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
