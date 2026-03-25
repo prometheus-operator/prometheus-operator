@@ -1,0 +1,16 @@
+global:
+  telegram_bot_token: telegrambottoken12345abc
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  telegram_configs:
+  - api_url: https://api.telegram.org
+    chat_id: 12345
+templates: []

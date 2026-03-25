@@ -3228,6 +3228,41 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Telegram_Receiver.golden",
 		},
 		{
+			name:      "CR with Telegram Receiver using global botToken",
+			amVersion: &version24,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotToken: "telegrambottoken12345abc",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
+								ChatID: 12345,
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Telegram_Receiver_using_global_botToken.golden",
+		},
+		{
 
 			name:    "CR with Slack Receiver and global Slack URL",
 			kclient: fake.NewClientset(),
