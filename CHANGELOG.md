@@ -1,3 +1,7 @@
+## 0.90.1 / 2026-03-25
+
+* [BUGFIX] Fix Probe ignoring HTTP client settings in scrape configuration. #8461
+
 ## 0.90.0 / 2026-03-19
 
 * [CHANGE/BUGFIX] Validate that the remote-write URL scheme is either `http` or `https`. #8455
