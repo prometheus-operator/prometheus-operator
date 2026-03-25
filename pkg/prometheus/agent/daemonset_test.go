@@ -134,6 +134,20 @@ func TestAutomountServiceAccountTokenForDaemonSet(t *testing.T) {
 	}
 }
 
+func TestSchedulerNameForDaemonSet(t *testing.T) {
+	schedulerName := "my-scheduler"
+
+	dset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				SchedulerName: schedulerName,
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, schedulerName, dset.Spec.Template.Spec.SchedulerName)
+}
+
 func TestDaemonSetLabelingAndAnnotations(t *testing.T) {
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",

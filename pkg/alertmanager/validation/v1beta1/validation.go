@@ -334,6 +334,14 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	for i, config := range configs {
+		if config.BotToken == nil && config.BotTokenFile == nil {
+			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
+		}
+
+		if config.BotToken != nil && config.BotTokenFile != nil {
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
+		}
+
 		if config.ChatID == 0 {
 			return fmt.Errorf("[%d]: mandatory field %q is empty", i, "chatID")
 		}

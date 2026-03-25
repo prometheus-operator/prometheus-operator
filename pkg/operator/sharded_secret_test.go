@@ -17,7 +17,7 @@ package operator
 import (
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -70,7 +70,7 @@ func TestShardedSecret(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 
-			template := &v1.Secret{
+			template := &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: namePrefix,
 				},

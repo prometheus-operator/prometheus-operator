@@ -203,6 +203,10 @@ type AlertmanagerSpec struct {
 	// +optional
 	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
@@ -270,27 +274,43 @@ type AlertmanagerSpec struct {
 	// +optional
 	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
-	// containers allows injecting additional containers. This is meant to
-	// allow adding an authentication proxy to an Alertmanager pod.
-	// Containers described here modify an operator generated container if they
-	// share the same name and modifications are done via a strategic merge
-	// patch. The current container names are: `alertmanager` and
-	// `config-reloader`. Overriding containers is entirely outside the scope
-	// of what the maintainers will support and by doing so, you accept that
-	// this behaviour may break at any time without notice.
+	// containers allows injecting additional containers or modifying operator
+	// generated containers. This can be used to allow adding an authentication
+	// proxy to the Pods or to change the behavior of an operator generated
+	// container. Containers described here modify an operator generated
+	// container if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of containers managed by the operator are:
+	// * `alertmanager`
+	// * `config-reloader`
+	// * `thanos-sidecar`
+	//
+	// Overriding containers which are managed by the operator require careful
+	// testing, especially when upgrading to a new version of the operator.
+	//
 	// +optional
 	Containers []v1.Container `json:"containers,omitempty"`
-	// initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-	// fetch secrets for injection into the Alertmanager configuration from external sources. Any
-	// errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// InitContainers described here modify an operator
-	// generated init containers if they share the same name and modifications are
-	// done via a strategic merge patch. The current init container name is:
-	// `init-config-reloader`. Overriding init containers is entirely outside the
-	// scope of what the maintainers will support and by doing so, you accept that
-	// this behaviour may break at any time without notice.
+
+	// initContainers allows injecting initContainers to the Pod definition. Those
+	// can be used to e.g.  fetch secrets for injection into the Prometheus
+	// configuration from external sources. Any errors during the execution of
+	// an initContainer will lead to a restart of the Pod. More info:
+	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	// InitContainers described here modify an operator generated init
+	// containers if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of init container name managed by the operator are:
+	// * `init-config-reloader`.
+	//
+	// Overriding init containers which are managed by the operator require
+	// careful testing, especially when upgrading to a new version of the
+	// operator.
+	//
 	// +optional
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
+
 	// priorityClassName assigned to the Pods
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
@@ -804,7 +824,3 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
-
-// URL represents a valid URL
-// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
-type URL string

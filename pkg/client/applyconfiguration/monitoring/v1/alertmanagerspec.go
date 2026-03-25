@@ -49,6 +49,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	RoutePrefix                          *string                                                 `json:"routePrefix,omitempty"`
 	Paused                               *bool                                                   `json:"paused,omitempty"`
 	NodeSelector                         map[string]string                                       `json:"nodeSelector,omitempty"`
+	SchedulerName                        *string                                                 `json:"schedulerName,omitempty"`
 	Resources                            *corev1.ResourceRequirements                            `json:"resources,omitempty"`
 	Affinity                             *corev1.Affinity                                        `json:"affinity,omitempty"`
 	Tolerations                          []corev1.Toleration                                     `json:"tolerations,omitempty"`
@@ -293,6 +294,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithNodeSelector(entries map[string
 	for k, v := range entries {
 		b.NodeSelector[k] = v
 	}
+	return b
+}
+
+// WithSchedulerName sets the SchedulerName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SchedulerName field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithSchedulerName(value string) *AlertmanagerSpecApplyConfiguration {
+	b.SchedulerName = &value
 	return b
 }
 

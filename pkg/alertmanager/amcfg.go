@@ -30,7 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
@@ -408,14 +408,14 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
-func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector corev1.SecretKeySelector) (string, error) {
 	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
 		_, err := validation.ValidateURL(url)
 		return err
 	})
 }
 
-func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector corev1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
@@ -1269,15 +1269,16 @@ func (cb *ConfigBuilder) convertWebexConfig(ctx context.Context, in monitoringv1
 
 func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1alpha1.EmailConfig, crKey types.NamespacedName) (*emailConfig, error) {
 	out := &emailConfig{
-		VSendResolved: in.SendResolved,
-		To:            ptr.Deref(in.To, ""),
-		From:          ptr.Deref(in.From, ""),
-		Hello:         ptr.Deref(in.Hello, ""),
-		AuthUsername:  ptr.Deref(in.AuthUsername, ""),
-		AuthIdentity:  ptr.Deref(in.AuthIdentity, ""),
-		HTML:          in.HTML,
-		Text:          in.Text,
-		RequireTLS:    in.RequireTLS,
+		VSendResolved:    in.SendResolved,
+		To:               ptr.Deref(in.To, ""),
+		From:             ptr.Deref(in.From, ""),
+		Hello:            ptr.Deref(in.Hello, ""),
+		AuthUsername:     ptr.Deref(in.AuthUsername, ""),
+		AuthIdentity:     ptr.Deref(in.AuthIdentity, ""),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 
 	if ptr.Deref(in.Smarthost, "") == "" {
@@ -1457,8 +1458,9 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		VSendResolved:        in.SendResolved,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
-		DisableNotifications: false,
+		DisableNotifications: ptr.Deref(in.DisableNotifications, false),
 		ParseMode:            in.ParseMode,
+		BotTokenFile:         ptr.Deref(in.BotTokenFile, ""),
 	}
 
 	if in.APIURL != nil {
@@ -2608,6 +2610,18 @@ func (ec *emailConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	if ec.AuthSecret != "" && ec.AuthSecretFile != "" {
 		logger.Warn("'auth_secret' and 'auth_secret_file' are mutually exclusive for email receiver config - 'auth_secret' has taken precedence")
 		ec.AuthSecretFile = ""
+	}
+
+	if ec.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'threading' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		ec.Threading = nil
+	}
+
+	if t := ec.Threading; t != nil {
+		if t.ThreadByDate != "daily" && t.ThreadByDate != "none" {
+			return fmt.Errorf("invalid 'thread_by_date': the value must be empty, 'daily' or 'none'")
+		}
 	}
 
 	return nil

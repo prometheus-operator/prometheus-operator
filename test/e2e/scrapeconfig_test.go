@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -136,8 +136,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -156,8 +156,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -176,8 +176,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -461,8 +461,8 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.Scheme = ptr.To(monitoringv1.SchemeHTTPS)
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
-		Credentials: &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		Credentials: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "prometheus-sa-secret",
 			},
 			Key: "token",
@@ -472,23 +472,23 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 		// since we cannot validate server name in cert
 		InsecureSkipVerify: ptr.To(true),
 		CA: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			Secret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: "ca.crt",
 			},
 		},
 		Cert: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			Secret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: "cert.pem",
 			},
 		},
-		KeySecret: &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		KeySecret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: secretName,
 			},
 			Key: "key.pem",
@@ -2427,8 +2427,8 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
 					ClientID:             ptr.To("33333333-3333-3333-3333-333333333333"),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
-					ClientSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					ClientSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "azure-client-secret",
 						},
 						Key: "clientSecret",
@@ -2521,8 +2521,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 					Endpoint:          ptr.To("https://api.ovh.com/endpoint"),
 					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
@@ -2537,8 +2537,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 				},
 			},
@@ -2551,8 +2551,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2565,8 +2565,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2578,8 +2578,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2592,8 +2592,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2606,8 +2606,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 				},
 			},
@@ -2620,8 +2620,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           "InvalidService",
 				},
 			},
@@ -2634,8 +2634,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 				},
 			},
 		},
@@ -2647,8 +2647,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2661,8 +2661,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 					Endpoint:          ptr.To(""),
 				},
@@ -2676,8 +2676,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 					RefreshInterval:   ptr.To(monitoringv1.Duration("")),
 				},
@@ -2691,8 +2691,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
 				},
@@ -2813,7 +2813,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("http://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://example.com")),
 				},
 			},
 		},
@@ -2826,7 +2826,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("https://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("https://example.com")),
 				},
 			},
 		},
@@ -2839,7 +2839,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("ftp://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},
@@ -2852,7 +2852,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To(""),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("")),
 				},
 			},
 		},
@@ -3397,8 +3397,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3416,8 +3416,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3434,8 +3434,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3453,8 +3453,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3472,8 +3472,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3490,8 +3490,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3509,8 +3509,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3528,8 +3528,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3547,8 +3547,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      "Invalid Role",
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3565,8 +3565,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					ProjectID: "1",
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3584,13 +3584,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("https://api.scaleway.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
 				},
 			},
 		},
@@ -3604,13 +3604,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("ftp://example.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},
@@ -3624,8 +3624,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3644,8 +3644,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3664,8 +3664,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3684,8 +3684,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3704,8 +3704,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3724,8 +3724,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3744,8 +3744,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3764,8 +3764,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3784,8 +3784,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3804,8 +3804,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3824,8 +3824,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3844,8 +3844,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3864,7 +3864,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 				},
 			},
 		},
@@ -3882,11 +3882,22 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid Port",
+		name: "Invalid Host without scheme",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
 					Host: "127.0.0.1",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "unix:///var/run/docker.sock",
 					Port: ptr.To(int32(80)),
 				},
 			},
@@ -3898,7 +3909,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Port: ptr.To(int32(-1)),
 				},
 			},
@@ -3910,7 +3921,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
+					Host:               "unix:///var/run/docker.sock",
 					HostNetworkingHost: ptr.To("localhost"),
 				},
 			},
@@ -3922,7 +3933,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
+					Host:               "unix:///var/run/docker.sock",
 					HostNetworkingHost: ptr.To(""),
 				},
 			},
@@ -3934,7 +3945,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
+					Host:              "unix:///var/run/docker.sock",
 					MatchFirstNetwork: ptr.To(true),
 				},
 			},
@@ -3946,7 +3957,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
+					Host:              "unix:///var/run/docker.sock",
 					MatchFirstNetwork: ptr.To(false),
 				},
 			},
@@ -3958,7 +3969,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3975,7 +3986,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3992,7 +4003,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4009,7 +4020,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4026,7 +4037,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4038,7 +4049,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4050,7 +4061,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -4062,7 +4073,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					FollowRedirects: ptr.To(false),
 				},
 			},
@@ -4074,7 +4085,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
+					Host:        "unix:///var/run/docker.sock",
 					EnableHTTP2: ptr.To(true),
 				},
 			},
@@ -4086,7 +4097,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
+					Host:        "unix:///var/run/docker.sock",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
@@ -4560,7 +4571,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:4646",
 				},
 			},
 		},
@@ -4578,11 +4589,22 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Invalid Server without scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "AllowStale True",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
+					Server:     "http://localhost:4646",
 					AllowStale: ptr.To(true),
 				},
 			},
@@ -4594,7 +4616,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
+					Server:     "http://localhost:4646",
 					AllowStale: ptr.To(false),
 				},
 			},
@@ -4606,7 +4628,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:    "localhost",
+					Server:    "http://localhost:4646",
 					Namespace: ptr.To("default"),
 				},
 			},
@@ -4618,7 +4640,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4630,7 +4652,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4642,7 +4664,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:4646",
 					Region: ptr.To("us-east"),
 				},
 			},
@@ -4654,7 +4676,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:       "localhost",
+					Server:       "http://localhost:4646",
 					TagSeparator: ptr.To(","),
 				},
 			},
@@ -4666,7 +4688,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					FollowRedirects: ptr.To(true),
 				},
 			},
@@ -4678,7 +4700,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					FollowRedirects: ptr.To(false),
 				},
 			},
@@ -4690,7 +4712,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:4646",
 					EnableHTTP2: ptr.To(true),
 				},
 			},
@@ -4702,7 +4724,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
+					Server:      "http://localhost:4646",
 					EnableHTTP2: ptr.To(false),
 				},
 			},
