@@ -1077,7 +1077,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	require.NoError(t, err)
 
 	msteamsWebhookURL := "https://msteams.webhook.url"
-	msteamsSecret := &v1.Secret{
+	msteamsSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "msteams",
 		},
@@ -1252,8 +1252,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
-					WebhookURL: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					WebhookURL: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "msteams",
 						},
 						Key: "webhook-url",
@@ -1991,8 +1991,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
-				APISecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				APISecret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "wechat",
 					},
 					Key: "apisecret",
@@ -2001,8 +2001,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
-				APIKey: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				APIKey: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "victorops",
 					},
 					Key: "apikey",
@@ -2013,14 +2013,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			},
 			RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://rocketchat.api.url")),
-				Token: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Token: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "rocketchat",
 					},
 					Key: "token",
 				},
-				TokenID: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				TokenID: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "rocketchat",
 					},
 					Key: "tokenid",
@@ -2094,7 +2094,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"template2.tmpl": "template2",
 		},
 	}
-	victorops := v1.Secret{
+	victorops := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "victorops",
 		},
@@ -2102,7 +2102,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"apikey": []byte(`abcdef1234567890`),
 		},
 	}
-	wechat := v1.Secret{
+	wechat := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "wechat",
 		},
@@ -2110,7 +2110,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"apisecret": []byte(`abcdef1234567890`),
 		},
 	}
-	rocketchat := v1.Secret{
+	rocketchat := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "rocketchat",
 		},
