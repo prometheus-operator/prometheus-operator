@@ -2324,6 +2324,7 @@ spec:
                               It is mutually exclusive with `botToken`.
                               Either `botToken` or `botTokenFile` is required.
                               It requires Alertmanager >= v0.31.0.
+                            minLength: 1
                             type: string
                         type: object
                       victorops:

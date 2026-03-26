@@ -2056,6 +2056,7 @@
                               },
                               "botTokenFile": {
                                 "description": "botTokenFile defines the file to read the Telegram bot token from.\nIt is mutually exclusive with `botToken`.\nEither `botToken` or `botTokenFile` is required.\nIt requires Alertmanager >= v0.31.0.",
+                                "minLength": 1,
                                 "type": "string"
                               }
                             },

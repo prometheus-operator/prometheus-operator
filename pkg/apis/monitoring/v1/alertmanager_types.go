@@ -709,6 +709,7 @@ type GlobalTelegramConfig struct {
 	// It is mutually exclusive with `botToken`.
 	// Either `botToken` or `botTokenFile` is required.
 	// It requires Alertmanager >= v0.31.0.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	BotTokenFile *string `json:"botTokenFile,omitempty"`
 }
