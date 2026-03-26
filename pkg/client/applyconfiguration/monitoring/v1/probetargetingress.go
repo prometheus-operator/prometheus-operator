@@ -22,10 +22,22 @@ import (
 
 // ProbeTargetIngressApplyConfiguration represents a declarative configuration of the ProbeTargetIngress type for use
 // with apply.
+//
+// ProbeTargetIngress defines the set of Ingress objects considered for probing.
+// The operator configures a target for each host/path combination of each ingress object.
 type ProbeTargetIngressApplyConfiguration struct {
-	Selector          *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
-	NamespaceSelector *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	RelabelConfigs    []RelabelConfigApplyConfiguration       `json:"relabelingConfigs,omitempty"`
+	// selector to select the Ingress objects.
+	Selector *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	// namespaceSelector defines from which namespaces to select Ingress objects.
+	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
+	// relabelingConfigs to apply to the label set of the target before it gets
+	// scraped.
+	// The original ingress address is available via the
+	// `__tmp_prometheus_ingress_address` label. It can be used to customize the
+	// probed URL.
+	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelingConfigs,omitempty"`
 }
 
 // ProbeTargetIngressApplyConfiguration constructs a declarative configuration of the ProbeTargetIngress type for use with

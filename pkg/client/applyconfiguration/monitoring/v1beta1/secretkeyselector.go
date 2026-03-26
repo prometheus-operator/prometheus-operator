@@ -18,9 +18,13 @@ package v1beta1
 
 // SecretKeySelectorApplyConfiguration represents a declarative configuration of the SecretKeySelector type for use
 // with apply.
+//
+// SecretKeySelector selects a key of a Secret.
 type SecretKeySelectorApplyConfiguration struct {
+	// name defines the name of the secret in the object's namespace to select from.
 	Name *string `json:"name,omitempty"`
-	Key  *string `json:"key,omitempty"`
+	// key defines the key of the secret to select from.  Must be a valid secret key.
+	Key *string `json:"key,omitempty"`
 }
 
 // SecretKeySelectorApplyConfiguration constructs a declarative configuration of the SecretKeySelector type for use with

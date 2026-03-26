@@ -22,6 +22,10 @@ import (
 
 // HTTPConfigWithProxyAndTLSFilesApplyConfiguration represents a declarative configuration of the HTTPConfigWithProxyAndTLSFiles type for use
 // with apply.
+//
+// HTTPConfigWithProxyAndTLSFiles defines the configuration for the HTTP client
+// with proxy configuration and TLS configuration. It is used for
+// ServiceMonitor endpoints.
 type HTTPConfigWithProxyAndTLSFilesApplyConfiguration struct {
 	HTTPConfigWithTLSFilesApplyConfiguration `json:",inline"`
 	ProxyConfigApplyConfiguration            `json:",inline"`
