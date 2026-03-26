@@ -24,11 +24,28 @@ import (
 
 // ProbeApplyConfiguration represents a declarative configuration of the Probe type for use
 // with apply.
+//
+// The `Probe` custom resource definition (CRD) defines how to scrape metrics from prober exporters such as the [blackbox exporter](https://github.com/prometheus/blackbox_exporter).
+//
+// The `Probe` resource needs 2 pieces of information:
+// * The list of probed addresses which can be defined statically or by discovering Kubernetes Ingress objects.
+// * The prober which exposes the availability of probed endpoints (over various protocols such HTTP, TCP, ICMP, ...) as Prometheus metrics.
+//
+// `Prometheus` and `PrometheusAgent` objects select `Probe` objects using label and namespace selectors.
 type ProbeApplyConfiguration struct {
-	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *ProbeSpecApplyConfiguration            `json:"spec,omitempty"`
-	Status                               *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of desired Ingress selection for target discovery by Prometheus.
+	Spec *ProbeSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the Probe. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // Probe constructs a declarative configuration of the Probe type for use with
@@ -41,6 +58,7 @@ func Probe(name, namespace string) *ProbeApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+
 func (b ProbeApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value
