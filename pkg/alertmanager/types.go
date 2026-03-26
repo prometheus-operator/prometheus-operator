@@ -50,9 +50,11 @@ type globalConfig struct {
 	SMTPAuthPassword      string          `yaml:"smtp_auth_password,omitempty"`
 	SMTPAuthPasswordFile  string          `yaml:"smtp_auth_password_file,omitempty"`
 	SMTPAuthSecret        string          `yaml:"smtp_auth_secret,omitempty"`
+	SMTPAuthSecretFile    string          `yaml:"smtp_auth_secret_file,omitempty"`
 	SMTPAuthIdentity      string          `yaml:"smtp_auth_identity,omitempty"`
 	SMTPRequireTLS        *bool           `yaml:"smtp_require_tls,omitempty"`
 	SMTPTLSConfig         *tlsConfig      `yaml:"smtp_tls_config,omitempty"`
+	SMTPForceImplicitTLS  *bool           `yaml:"smtp_force_implicit_tls,omitempty"`
 	SlackAPIURL           *config.URL     `yaml:"slack_api_url,omitempty"`
 	SlackAPIURLFile       string          `yaml:"slack_api_url_file,omitempty"`
 	PagerdutyURL          *config.URL     `yaml:"pagerduty_url,omitempty"`
@@ -150,7 +152,7 @@ type pagerdutyConfig struct {
 	Client         string            `yaml:"client,omitempty"`
 	ClientURL      string            `yaml:"client_url,omitempty"`
 	Description    string            `yaml:"description,omitempty"`
-	Details        map[string]string `yaml:"details,omitempty"`
+	Details        map[string]any    `yaml:"details,omitempty"`
 	Images         []pagerdutyImage  `yaml:"images,omitempty"`
 	Links          []pagerdutyLink   `yaml:"links,omitempty"`
 	Severity       string            `yaml:"severity,omitempty"`
@@ -322,22 +324,29 @@ type slackConfirmationField struct {
 }
 
 type emailConfig struct {
-	VSendResolved    *bool             `yaml:"send_resolved,omitempty"`
-	To               string            `yaml:"to,omitempty"`
-	From             string            `yaml:"from,omitempty"`
-	Hello            string            `yaml:"hello,omitempty"`
-	Smarthost        config.HostPort   `yaml:"smarthost,omitempty"`
-	AuthUsername     string            `yaml:"auth_username,omitempty"`
-	AuthPassword     string            `yaml:"auth_password,omitempty"`
-	AuthPasswordFile string            `yaml:"auth_password_file,omitempty"`
-	AuthSecret       string            `yaml:"auth_secret,omitempty"`
-	AuthIdentity     string            `yaml:"auth_identity,omitempty"`
-	Headers          map[string]string `yaml:"headers,omitempty"`
-	HTML             *string           `yaml:"html,omitempty"`
-	Text             *string           `yaml:"text,omitempty"`
-	RequireTLS       *bool             `yaml:"require_tls,omitempty"`
-	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty"`
-	ImplicitTLS      *bool             `yaml:"implicit_tls,omitempty"`
+	VSendResolved    *bool                 `yaml:"send_resolved,omitempty"`
+	To               string                `yaml:"to,omitempty"`
+	From             string                `yaml:"from,omitempty"`
+	Hello            string                `yaml:"hello,omitempty"`
+	Smarthost        config.HostPort       `yaml:"smarthost,omitempty"`
+	AuthUsername     string                `yaml:"auth_username,omitempty"`
+	AuthPassword     string                `yaml:"auth_password,omitempty"`
+	AuthPasswordFile string                `yaml:"auth_password_file,omitempty"`
+	AuthSecret       string                `yaml:"auth_secret,omitempty"`
+	AuthSecretFile   string                `yaml:"auth_secret_file,omitempty"`
+	AuthIdentity     string                `yaml:"auth_identity,omitempty"`
+	Headers          map[string]string     `yaml:"headers,omitempty"`
+	HTML             *string               `yaml:"html,omitempty"`
+	Text             *string               `yaml:"text,omitempty"`
+	RequireTLS       *bool                 `yaml:"require_tls,omitempty"`
+	TLSConfig        *tlsConfig            `yaml:"tls_config,omitempty"`
+	ForceImplicitTLS *bool                 `yaml:"force_implicit_tls,omitempty"`
+	Threading        *emailThreadingConfig `yaml:"threading,omitempty"`
+}
+
+type emailThreadingConfig struct {
+	Enabled      *bool  `yaml:"enabled,omitempty"`
+	ThreadByDate string `yaml:"thread_by_date,omitempty"`
 }
 
 type pushoverConfig struct {
@@ -513,7 +522,7 @@ type mattermostConfig struct {
 	WebhookURLFile string                        `yaml:"webhook_url_file,omitempty" json:"webhook_url_file,omitempty"`
 	Channel        string                        `yaml:"channel,omitempty" json:"channel,omitempty"`
 	Username       string                        `yaml:"username,omitempty" json:"username,omitempty"`
-	Text           string                        `yaml:"text" json:"text"`
+	Text           string                        `yaml:"text,omitempty" json:"text,omitempty"`
 	IconURL        string                        `yaml:"icon_url,omitempty" json:"icon_url,omitempty"`
 	IconEmoji      string                        `yaml:"icon_emoji,omitempty" json:"icon_emoji,omitempty"`
 	Attachments    []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`

@@ -24,7 +24,7 @@ import (
 // RemoteWriteSpecApplyConfiguration represents a declarative configuration of the RemoteWriteSpec type for use
 // with apply.
 type RemoteWriteSpecApplyConfiguration struct {
-	URL                           *string                                 `json:"url,omitempty"`
+	URL                           *monitoringv1.URL                       `json:"url,omitempty"`
 	Name                          *string                                 `json:"name,omitempty"`
 	MessageVersion                *monitoringv1.RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
 	SendExemplars                 *bool                                   `json:"sendExemplars,omitempty"`
@@ -57,7 +57,7 @@ func RemoteWriteSpec() *RemoteWriteSpecApplyConfiguration {
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *RemoteWriteSpecApplyConfiguration) WithURL(value string) *RemoteWriteSpecApplyConfiguration {
+func (b *RemoteWriteSpecApplyConfiguration) WithURL(value monitoringv1.URL) *RemoteWriteSpecApplyConfiguration {
 	b.URL = &value
 	return b
 }

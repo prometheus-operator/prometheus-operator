@@ -378,6 +378,14 @@ func (b *PrometheusSpecApplyConfiguration) WithNodeSelector(entries map[string]s
 	return b
 }
 
+// WithSchedulerName sets the SchedulerName field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SchedulerName field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithSchedulerName(value string) *PrometheusSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.SchedulerName = &value
+	return b
+}
+
 // WithServiceAccountName sets the ServiceAccountName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceAccountName field is set to the value of the last call.

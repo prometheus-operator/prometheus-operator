@@ -304,6 +304,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromQueryLogFile":                          testPromQueryLogFile,
 		"PromDegradedCondition":                     testPromDegradedConditionStatus,
 		"PromUnavailableCondition":                  testPromUnavailableConditionStatus,
+		"PromStatusConditionLastTransitionTime":     testPromStatusConditionLastTransitionTime,
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
@@ -322,7 +323,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusReconciliationOnSecretChanges":   testPrometheusReconciliationOnSecretChanges,
 		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
-		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
 		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
 	}
 
@@ -345,6 +345,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerServiceName":                        testThanosRulerServiceName,
 		"ThanosRulerStateless":                          testThanosRulerStateless,
 		"ThanosRulerScaleUpWithoutLabels":               testThanosRulerScaleUpWithoutLabels,
+		"ThanosRulerStatusUpdatedReplicasRollback":      testThanosRulerStatusUpdatedReplicasRollback,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
@@ -389,6 +390,18 @@ func TestPromInstanceNs(t *testing.T) {
 		"ScrapeConfigLifecycle":              testScrapeConfigLifecycle,
 		"ScrapeConfigLifecycleInDifferentNs": testScrapeConfigLifecycleInDifferentNS,
 		"ConfigReloaderResources":            testConfigReloaderResources,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
+// TestRepairPolicy verifies that the operator can repair broken statefulsets when needed.
+func TestRepairPolicy(t *testing.T) {
+	skipPrometheusTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"RepairPolicy": testRepairPolicy,
 	}
 
 	for name, f := range testFuncs {
