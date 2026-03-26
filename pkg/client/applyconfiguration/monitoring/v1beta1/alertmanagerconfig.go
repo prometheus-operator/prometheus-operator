@@ -25,11 +25,24 @@ import (
 
 // AlertmanagerConfigApplyConfiguration represents a declarative configuration of the AlertmanagerConfig type for use
 // with apply.
+//
+// The `AlertmanagerConfig` custom resource definition (CRD) defines how `Alertmanager` objects process Prometheus alerts. It allows to specify alert grouping and routing, notification receivers and inhibition rules.
+//
+// `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
 type AlertmanagerConfigApplyConfiguration struct {
-	v1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	v1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                             *AlertmanagerConfigSpecApplyConfiguration            `json:"spec,omitempty"`
-	Status                           *monitoringv1.ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of AlertmanagerConfigSpec
+	Spec *AlertmanagerConfigSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the status subresource. It is under active development and is updated only when the
+	// "StatusForConfigurationResources" feature gate is enabled.
+	//
+	// Most recent observed status of the ServiceMonitor. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *monitoringv1.ConfigResourceStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // AlertmanagerConfig constructs a declarative configuration of the AlertmanagerConfig type for use with
@@ -42,6 +55,7 @@ func AlertmanagerConfig(name, namespace string) *AlertmanagerConfigApplyConfigur
 	b.WithAPIVersion("monitoring.coreos.com/v1beta1")
 	return b
 }
+
 func (b AlertmanagerConfigApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

@@ -22,12 +22,21 @@ import (
 
 // WebexConfigApplyConfiguration represents a declarative configuration of the WebexConfig type for use
 // with apply.
+//
+// WebexConfig configures notification via Cisco Webex
+// See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
 type WebexConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	APIURL       *monitoringv1beta1.URL        `json:"apiURL,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	RoomID       *string                       `json:"roomID,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the Webex Teams API URL i.e. https://webexapis.com/v1/messages
+	APIURL *monitoringv1beta1.URL `json:"apiURL,omitempty"`
+	// httpConfig defines the HTTP client's configuration.
+	// You must use this configuration to supply the bot token as part of the HTTP `Authorization` header.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// message defines the message template
+	Message *string `json:"message,omitempty"`
+	// roomID defines the ID of the Webex Teams room where to send the messages.
+	RoomID *string `json:"roomID,omitempty"`
 }
 
 // WebexConfigApplyConfiguration constructs a declarative configuration of the WebexConfig type for use with

@@ -22,8 +22,18 @@ import (
 
 // SafeAuthorizationApplyConfiguration represents a declarative configuration of the SafeAuthorization type for use
 // with apply.
+//
+// SafeAuthorization specifies a subset of the Authorization struct, that is
+// safe for use because it doesn't provide access to the Prometheus container's
+// filesystem.
 type SafeAuthorizationApplyConfiguration struct {
-	Type        *string                   `json:"type,omitempty"`
+	// type defines the authentication type. The value is case-insensitive.
+	//
+	// "Basic" is not a supported value.
+	//
+	// Default: "Bearer"
+	Type *string `json:"type,omitempty"`
+	// credentials defines a key of a Secret in the namespace that contains the credentials for authentication.
 	Credentials *corev1.SecretKeySelector `json:"credentials,omitempty"`
 }
 

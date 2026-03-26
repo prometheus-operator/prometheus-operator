@@ -23,10 +23,23 @@ import (
 
 // GlobalTelegramConfigApplyConfiguration represents a declarative configuration of the GlobalTelegramConfig type for use
 // with apply.
+//
+// GlobalTelegramConfig configures global Telegram parameters.
 type GlobalTelegramConfigApplyConfiguration struct {
-	APIURL       *monitoringv1.URL         `json:"apiURL,omitempty"`
-	BotToken     *corev1.SecretKeySelector `json:"botToken,omitempty"`
-	BotTokenFile *string                   `json:"botTokenFile,omitempty"`
+	// apiURL defines he default Telegram API URL.
+	//
+	// It requires Alertmanager >= v0.24.0.
+	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
+	// botToken represents the bot token configuration for Telegram.
+	// It is mutually exclusive with `botTokenFile`.
+	// Either `botToken` or `botTokenFile` is required.
+	// It requires Alertmanager >= v0.31.0.
+	BotToken *corev1.SecretKeySelector `json:"botToken,omitempty"`
+	// botTokenFile defines the file to read the Telegram bot token from.
+	// It is mutually exclusive with `botToken`.
+	// Either `botToken` or `botTokenFile` is required.
+	// It requires Alertmanager >= v0.31.0.
+	BotTokenFile *string `json:"botTokenFile,omitempty"`
 }
 
 // GlobalTelegramConfigApplyConfiguration constructs a declarative configuration of the GlobalTelegramConfig type for use with

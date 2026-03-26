@@ -18,11 +18,18 @@ package v1
 
 // WorkloadBindingApplyConfiguration represents a declarative configuration of the WorkloadBinding type for use
 // with apply.
+//
+// WorkloadBinding is a link between a configuration resource and a workload resource.
 type WorkloadBindingApplyConfiguration struct {
-	Group      *string                                     `json:"group,omitempty"`
-	Resource   *string                                     `json:"resource,omitempty"`
-	Name       *string                                     `json:"name,omitempty"`
-	Namespace  *string                                     `json:"namespace,omitempty"`
+	// group defines the group of the referenced resource.
+	Group *string `json:"group,omitempty"`
+	// resource defines the type of resource being referenced (e.g. Prometheus, PrometheusAgent, ThanosRuler or Alertmanager).
+	Resource *string `json:"resource,omitempty"`
+	// name defines the name of the referenced object.
+	Name *string `json:"name,omitempty"`
+	// namespace defines the namespace of the referenced object.
+	Namespace *string `json:"namespace,omitempty"`
+	// conditions defines the current state of the configuration resource when bound to the referenced Workload object.
 	Conditions []ConfigResourceConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
