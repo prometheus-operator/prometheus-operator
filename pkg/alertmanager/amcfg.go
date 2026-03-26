@@ -3031,6 +3031,10 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		tc.BotTokenFile = ""
 	}
 
+	if tc.BotToken == "" && tc.BotTokenFile == "" && lessThanV0_31 {
+		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
+	}
+
 	if tc.MessageThreadID != 0 && lessThanV0_26 {
 		msg := "'message_thread_id' supported in Alertmanager >= 0.26.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
