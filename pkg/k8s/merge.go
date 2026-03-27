@@ -61,7 +61,7 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 		if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal merged container %s: %w", container.Name, err)
 		}
-		sanitizeProbeHandlers(&patchResult)
+		sanitizeProbeHandlers(&patchResult, &patchContainer)
 
 		// Add the patch result and remove the corresponding key from the to do list.
 		out = append(out, patchResult)
@@ -72,7 +72,6 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 	// Iterate over patches to preserve the order.
 	for _, c := range patches {
 		if container, found := containersByName[c.Name]; found {
-			sanitizeProbeHandlers(&container)
 			out = append(out, container)
 		}
 	}
@@ -80,9 +79,11 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 	return out, nil
 }
 
-// sanitizeProbeHandlers ensures each probe has at most one handler type.
-// Strategic merge can leave multiple handler types set (e.g. HTTPGet from base + TCPSocket from patch),
+// sanitizeProbeHandlers fixes probe handlers in a merged container where a strategic merge
+// has left multiple handler types set (e.g. HTTPGet from base + TCPSocket from patch),
 // which causes Kubernetes "may not specify more than 1 handler type" validation error.
+// When multiple handlers are detected the patch's probe handler takes precedence, discarding
+// the base handler.
 //
 // Note: Using a TCPSocket or Exec probe as an override means the readiness probe
 // bypasses the Prometheus /-/ready endpoint. Consequently, it will not account for
@@ -90,34 +91,38 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 // 'Ready' by Kubernetes before Prometheus is actually capable of serving queries.
 // This is a known trade-off when prioritizing security (avoiding plaintext credentials)
 // over granular readiness checks.
-func sanitizeProbeHandlers(c *v1.Container) {
-	for _, p := range []*v1.Probe{c.StartupProbe, c.ReadinessProbe, c.LivenessProbe} {
-		if p == nil {
+func sanitizeProbeHandlers(merged, patch *v1.Container) {
+	type probePair struct {
+		merged *v1.Probe
+		patch  *v1.Probe
+	}
+	for _, pp := range []probePair{
+		{merged.StartupProbe, patch.StartupProbe},
+		{merged.ReadinessProbe, patch.ReadinessProbe},
+		{merged.LivenessProbe, patch.LivenessProbe},
+	} {
+		if pp.merged == nil || pp.patch == nil {
 			continue
 		}
-		p.ProbeHandler = sanitizeProbeHandler(p.ProbeHandler)
+		if probeHandlerCount(pp.merged.ProbeHandler) > 1 {
+			pp.merged.ProbeHandler = pp.patch.ProbeHandler
+		}
 	}
 }
 
-func sanitizeProbeHandler(h v1.ProbeHandler) v1.ProbeHandler {
-	out := v1.ProbeHandler{}
-	// Keep exactly one handler. Prefer patch-friendly types (TCPSocket, Exec) over default HTTPGet
-	// so user override to tcpSocket/exec is respected after merge.
-	if h.GRPC != nil {
-		out.GRPC = h.GRPC
-		return out
+func probeHandlerCount(h v1.ProbeHandler) int {
+	count := 0
+	if h.HTTPGet != nil {
+		count++
 	}
 	if h.TCPSocket != nil {
-		out.TCPSocket = h.TCPSocket
-		return out
+		count++
 	}
 	if h.Exec != nil {
-		out.Exec = h.Exec
-		return out
+		count++
 	}
-	if h.HTTPGet != nil {
-		out.HTTPGet = h.HTTPGet
-		return out
+	if h.GRPC != nil {
+		count++
 	}
-	return out
+	return count
 }
