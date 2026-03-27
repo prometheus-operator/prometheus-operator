@@ -3048,7 +3048,7 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 	}
 
 	if tc.BotToken == "" && tc.BotTokenFile == "" && lessThanV0_31 {
-		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
+		return fmt.Errorf("missing mandatory field botToken or botTokenFile, current version: %s", amVersion.String())
 	}
 
 	if tc.MessageThreadID != 0 && lessThanV0_26 {
