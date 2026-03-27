@@ -213,7 +213,7 @@ func fixFile(path, header string, numberOfLinesToSkip int) error {
 	}
 	tmpPath := tmpFile.Name()
 	defer func() {
-		tmpFile.Close() //nolint:errcheck
+		tmpFile.Close()    //nolint:errcheck
 		os.Remove(tmpPath) //nolint:errcheck
 	}()
 
