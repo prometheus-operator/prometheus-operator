@@ -23,7 +23,6 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -89,7 +88,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	// Create a first service monitor to check that the operator only updates the binding when needed.
 	sm1 := framework.MakeBasicServiceMonitor("smon1")
 	sm1.Labels["group"] = name
-	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm1, v1.CreateOptions{})
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -105,7 +104,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	// Create a second service monitor to check that the operator updates the binding when the condition changes.
 	sm2 := framework.MakeBasicServiceMonitor("smon2")
 	sm2.Labels["group"] = name
-	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm2, v1.CreateOptions{})
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -115,7 +114,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	// change the status of the service monitor and the observed timetstamp
 	// should be the same as before.
 	sm1.Labels["test"] = "test"
-	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm1, v1.UpdateOptions{})
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second service monitor to reference an non-existing Secret.
@@ -127,7 +126,7 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm2, v1.UpdateOptions{})
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second ServiceMonitor should change to Accepted=False.
@@ -169,7 +168,7 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 
 	sm := framework.MakeBasicServiceMonitor(name)
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, v1.CreateOptions{})
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -177,7 +176,7 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 
 	// Update the ServiceMonitor's labels, Prometheus doesn't select the resource anymore.
 	sm.Labels = map[string]string{}
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, v1.UpdateOptions{})
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
@@ -214,7 +213,7 @@ func testServiceMonitorStatusWithMultipleWorkloads(t *testing.T) {
 
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints[0].BearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, v1.CreateOptions{})
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// The ServiceMonitor should be accepted by the Prometheus "server1" resource.
@@ -251,7 +250,7 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err, "failed to create Prometheus")
 	smon := framework.MakeBasicServiceMonitor(name)
 
-	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, v1.CreateOptions{})
+	sm, err := framework.MonClientV1.ServiceMonitors(ns).Create(ctx, smon, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -292,7 +291,7 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	// Create a first podmonitor to check that the operator only updates the binding when needed.
 	pm1 := framework.MakeBasicPodMonitor("pmon1")
 	pm1.Labels["group"] = name
-	pm1, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm1, v1.CreateOptions{})
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -308,7 +307,7 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	// Create a second podmonitor to check that the operator updates the binding when the condition changes.
 	pm2 := framework.MakeBasicPodMonitor("pmon2")
 	pm2.Labels["group"] = name
-	pm2, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm2, v1.CreateOptions{})
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -318,7 +317,7 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	// change the status of the podmonitor and the observed timetstamp
 	// should be the same as before.
 	pm1.Labels["test"] = "test"
-	pm1, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm1, v1.UpdateOptions{})
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second podmonitor to reference an non-existing Secret.
@@ -330,7 +329,7 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	pm2, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm2, v1.UpdateOptions{})
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second PodMonitor should change to Accepted=False.
@@ -414,7 +413,7 @@ func testProbeStatusSubresource(t *testing.T) {
 	// change the status of the probe and the observed timetstamp
 	// should be the same as before.
 	probe1.Labels["test"] = "test"
-	probe1, err = framework.MonClientV1.Probes(ns).Update(ctx, probe1, v1.UpdateOptions{})
+	probe1, err = framework.MonClientV1.Probes(ns).Update(ctx, probe1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second probe to reference an non-existing Secret.
@@ -426,7 +425,7 @@ func testProbeStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	probe2, err = framework.MonClientV1.Probes(ns).Update(ctx, probe2, v1.UpdateOptions{})
+	probe2, err = framework.MonClientV1.Probes(ns).Update(ctx, probe2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second Probe should change to Accepted=False.
@@ -468,7 +467,7 @@ func testGarbageCollectionOfPodMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 
 	pm := framework.MakeBasicPodMonitor(name)
-	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, v1.CreateOptions{})
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -476,7 +475,7 @@ func testGarbageCollectionOfPodMonitorBinding(t *testing.T) {
 
 	// Update the PodMonitor's labels, Prometheus doesn't select the resource anymore.
 	pm.Labels = map[string]string{}
-	pm, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm, v1.UpdateOptions{})
+	pm, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
@@ -508,7 +507,7 @@ func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err, "failed to create Prometheus")
 	pmon := framework.MakeBasicPodMonitor(name)
 
-	pm, err := framework.MonClientV1.PodMonitors(ns).Create(ctx, pmon, v1.CreateOptions{})
+	pm, err := framework.MonClientV1.PodMonitors(ns).Create(ctx, pmon, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -554,7 +553,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	// Create a first scrapeConfig to check that the operator only updates the binding when needed.
 	sc1 := framework.MakeBasicScrapeConfig(ns, "sc1")
 	sc1.Labels["group"] = name
-	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc1, v1.CreateOptions{})
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -570,7 +569,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	// Create a second scrapeConfig to check that the operator updates the binding when the condition changes.
 	sc2 := framework.MakeBasicScrapeConfig(ns, "sc2")
 	sc2.Labels["group"] = name
-	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc2, v1.CreateOptions{})
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sc2, err = framework.WaitForScrapeConfigCondition(ctx, sc2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -580,7 +579,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	// change the status of the scrapeConfig and the observed timetstamp
 	// should be the same as before.
 	sc1.Labels["test"] = "test"
-	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, v1.UpdateOptions{})
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second scrapeConfig to reference an non-existing Secret.
@@ -592,7 +591,7 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 			},
 		},
 	}
-	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc2, v1.UpdateOptions{})
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second ScrapeConfig should change to Accepted=False.
@@ -642,7 +641,7 @@ func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
 	sc := framework.MakeBasicScrapeConfig(ns, name)
 	sc.Labels["group"] = name
 
-	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -650,7 +649,7 @@ func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
 
 	// Update the ScrapeConfig's labels, Prometheus doesn't select the resource anymore.
 	sc.Labels = map[string]string{}
-	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc, v1.UpdateOptions{})
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForScrapeConfigWorkloadBindingCleanup(ctx, sc, p, monitoringv1.PrometheusName, 1*time.Minute)
@@ -689,7 +688,7 @@ func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
 	sc := framework.MakeBasicScrapeConfig(ns, name)
 	sc.Labels["group"] = name
 
-	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, v1.CreateOptions{})
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -783,7 +782,7 @@ func testGarbageCollectionOfProbeBinding(t *testing.T) {
 
 	// Update the Probe's labels, Prometheus doesn't select the resource anymore.
 	probe.Labels = map[string]string{}
-	probe, err = framework.MonClientV1.Probes(ns).Update(ctx, probe, v1.UpdateOptions{})
+	probe, err = framework.MonClientV1.Probes(ns).Update(ctx, probe, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForProbeWorkloadBindingCleanup(ctx, probe, p, monitoringv1.PrometheusName, 1*time.Minute)
@@ -888,7 +887,7 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 		},
 	})
 	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -914,7 +913,7 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 		},
 	})
 	pr2.Labels["group"] = name
-	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr2, err = framework.WaitForRuleCondition(ctx, pr2, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -924,7 +923,7 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 	// change the status of the PrometheusRule and the observed timestamp
 	// should be the same as before.
 	pr1.Labels["test"] = "test"
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second PrometheusRule to have an invalid rule expression.
@@ -932,7 +931,7 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 		Record: "test:invalid",
 		Expr:   intstr.FromString("invalid_expr{"),
 	})
-	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, v1.UpdateOptions{})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second PrometheusRule should change to Accepted=False.
@@ -991,11 +990,11 @@ func testGarbageCollectionOfPrometheusRuleBinding(t *testing.T) {
 		},
 	})
 	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr1.Labels = map[string]string{}
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, p, monitoringv1.PrometheusName, 1*time.Minute)
@@ -1044,7 +1043,7 @@ func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
 		},
 	})
 	pr.Labels["group"] = name
-	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, v1.CreateOptions{})
+	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr, err = framework.WaitForRuleCondition(ctx, pr, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -1081,7 +1080,7 @@ func testFinalizerForThanosRulerWhenStatusForConfigResEnabled(t *testing.T) {
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
 	require.NoError(t, err)
 
-	ruler, err := framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, v1.GetOptions{})
+	ruler, err := framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
 	require.NoError(t, err)
 
 	finalizers := ruler.GetFinalizers()
@@ -1134,7 +1133,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 		},
 	})
 	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Record the lastTransitionTime value.
@@ -1160,7 +1159,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 		},
 	})
 	pr2.Labels["group"] = name
-	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, v1.CreateOptions{})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr2, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr2, err = framework.WaitForRuleCondition(ctx, pr2, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
@@ -1170,7 +1169,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 	// change the status of the PrometheusRule and the observed timestamp
 	// should be the same as before.
 	pr1.Labels["test"] = "test"
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// Update the second PrometheusRule to have an invalid rule expression.
@@ -1178,7 +1177,7 @@ func testPrometheusRuleStatusSubresourceForThanosRuler(t *testing.T) {
 		Record: "test:invalid",
 		Expr:   intstr.FromString("invalid_expr{"),
 	})
-	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, v1.UpdateOptions{})
+	pr2, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr2, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	// The second PrometheusRule should change to Accepted=False.
@@ -1237,14 +1236,14 @@ func testGarbageCollectionOfPromRuleBindingForThanosRuler(t *testing.T) {
 		},
 	})
 	pr1.Labels["group"] = name
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, v1.CreateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr1, err = framework.WaitForRuleCondition(ctx, pr1, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 
 	pr1.Labels = map[string]string{}
-	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, v1.UpdateOptions{})
+	pr1, err = framework.MonClientV1.PrometheusRules(ns).Update(ctx, pr1, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr1, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
@@ -1293,7 +1292,7 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 		},
 	})
 	pr.Labels["group"] = name
-	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, v1.CreateOptions{})
+	pr, err = framework.MonClientV1.PrometheusRules(ns).Create(ctx, pr, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	pr, err = framework.WaitForRuleCondition(ctx, pr, tr, monitoringv1.ThanosRulerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)

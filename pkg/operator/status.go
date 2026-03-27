@@ -75,6 +75,7 @@ func StatusPoller(ctx context.Context, sr StatusReconciler) {
 				replicas := resource.ExpectedReplicas()
 				if replicas != resource.GetUpdatedReplicas() || replicas != resource.GetAvailableReplicas() {
 					sr.RefreshStatusFor(resource)
+					return
 				}
 
 				for _, cond := range resource.GetConditions() {

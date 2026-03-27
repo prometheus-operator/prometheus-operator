@@ -30,7 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 
@@ -408,14 +408,14 @@ func (cb *ConfigBuilder) AddAlertmanagerConfigs(ctx context.Context, amConfigs m
 	return cb.cfg.sanitize(cb.amVersion, cb.logger)
 }
 
-func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector v1.SecretKeySelector) (string, error) {
+func (cb *ConfigBuilder) getValidURLFromSecret(ctx context.Context, namespace string, selector corev1.SecretKeySelector) (string, error) {
 	return cb.getFromSecretWithValidation(ctx, namespace, selector, func(url string) error {
 		_, err := validation.ValidateURL(url)
 		return err
 	})
 }
 
-func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector v1.SecretKeySelector, validFn func(string) error) (string, error) {
+func (cb *ConfigBuilder) getFromSecretWithValidation(ctx context.Context, namespace string, selector corev1.SecretKeySelector, validFn func(string) error) (string, error) {
 	url, err := cb.store.GetSecretKey(ctx, namespace, selector)
 	if err != nil {
 		return "", fmt.Errorf("failed to get URL: %w", err)
@@ -1458,8 +1458,9 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		VSendResolved:        in.SendResolved,
 		ChatID:               in.ChatID,
 		Message:              in.Message,
-		DisableNotifications: false,
+		DisableNotifications: ptr.Deref(in.DisableNotifications, false),
 		ParseMode:            in.ParseMode,
+		BotTokenFile:         ptr.Deref(in.BotTokenFile, ""),
 	}
 
 	if in.APIURL != nil {
@@ -2595,6 +2596,18 @@ func (ec *emailConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		ec.AuthSecretFile = ""
 	}
 
+	if ec.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'threading' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		ec.Threading = nil
+	}
+
+	if t := ec.Threading; t != nil {
+		if t.ThreadByDate != "daily" && t.ThreadByDate != "none" {
+			return fmt.Errorf("invalid 'thread_by_date': the value must be empty, 'daily' or 'none'")
+		}
+	}
+
 	return nil
 }
 
@@ -3012,14 +3025,14 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		tc.BotTokenFile = ""
 	}
 
-	if tc.BotToken == "" && tc.BotTokenFile == "" {
-		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
-	}
-
 	if tc.BotToken != "" && tc.BotTokenFile != "" {
 		msg := "'bot_token' and 'bot_token_file' are mutually exclusive for telegram receiver config - 'bot_token' has taken precedence"
 		logger.Warn(msg)
 		tc.BotTokenFile = ""
+	}
+
+	if tc.BotToken == "" && tc.BotTokenFile == "" && lessThanV0_31 {
+		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
 	}
 
 	if tc.MessageThreadID != 0 && lessThanV0_26 {

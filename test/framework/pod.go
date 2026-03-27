@@ -22,9 +22,11 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	kscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
@@ -53,7 +55,7 @@ func (f *Framework) WritePodLogs(ctx context.Context, w io.Writer, ns, pod strin
 		containers = append(containers, c.Name)
 	}
 
-	plo := v1.PodLogOptions{}
+	plo := corev1.PodLogOptions{}
 	if opts.TailLines > 0 {
 		plo.TailLines = &opts.TailLines
 	}
@@ -122,7 +124,7 @@ func (f *Framework) ExecWithOptions(ctx context.Context, options ExecOptions) (s
 		Namespace(options.Namespace).
 		SubResource("exec").
 		Param("container", options.ContainerName)
-	req.VersionedParams(&v1.PodExecOptions{
+	req.VersionedParams(&corev1.PodExecOptions{
 		Container: options.ContainerName,
 		Command:   options.Command,
 		Stdin:     options.Stdin != nil,
@@ -195,4 +197,45 @@ func StartPortForward(ctx context.Context, config *rest.Config, scheme string, n
 		}
 		return nil, fmt.Errorf("%v: %v", ctx.Err(), err)
 	}
+}
+
+// WaitForContainerInErrPullImage waits for the container in the pod using
+// `image` to be in waiting state with ErrPullImage or ImagePullBackOff reason.
+func (f *Framework) WaitForContainerInErrPullImage(ctx context.Context, namespace, pod, image string) error {
+	var loopError error
+	err := wait.PollUntilContextTimeout(ctx, time.Second, f.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		pod, err := f.KubeClient.CoreV1().Pods(namespace).Get(ctx, pod, metav1.GetOptions{})
+		if err != nil {
+			loopError = err
+			return false, nil
+		}
+
+		// Ensure that the container is stuck on ErrImagePull or ImagePullBackOff.
+		for _, cs := range pod.Status.ContainerStatuses {
+			if cs.Image != image {
+				continue
+			}
+
+			if cs.State.Waiting == nil {
+				loopError = fmt.Errorf("container not waiting")
+				return false, nil
+			}
+
+			if cs.State.Waiting.Reason != "ErrPullImage" && cs.State.Waiting.Reason != "ImagePullBackOff" {
+				loopError = fmt.Errorf("container waiting with reason %q", cs.State.Waiting.Reason)
+				return false, nil
+			}
+
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("found no container with image %q", image)
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("%w: %w", err, loopError)
+	}
+
+	return nil
 }

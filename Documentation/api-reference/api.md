@@ -645,14 +645,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -666,15 +670,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -2911,9 +2919,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -2928,7 +2935,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -2937,9 +2944,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -5383,13 +5390,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -5403,13 +5414,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -7174,14 +7183,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -7195,15 +7208,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -9136,9 +9153,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -9153,7 +9169,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -9162,9 +9178,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -15676,9 +15692,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -15693,7 +15708,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -15702,9 +15717,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -20747,13 +20762,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -20767,13 +20786,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -23497,9 +23514,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -23514,7 +23530,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -23523,9 +23539,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -26185,7 +26201,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the DigitalOcean API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26294,7 +26310,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the DigitalOcean API.</p>
 </td>
 </tr>
 <tr>
@@ -26475,7 +26491,7 @@ string
 </em>
 </td>
 <td>
-<p>host defines the address of the docker daemon</p>
+<p>host defines the address of the docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26544,7 +26560,8 @@ SafeTLSConfig
 </em>
 </td>
 <td>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration to connect to the Docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26639,7 +26656,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker daemon.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26794,7 +26811,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker Swarm API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26880,7 +26897,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.</p>
 </td>
 </tr>
 <tr>
@@ -27095,7 +27112,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.
+<p>tlsConfig defines the TLS configuration to connect to the EC2 API.
 It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
@@ -27375,7 +27392,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27407,7 +27426,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Eureka server.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -27436,7 +27455,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Eureka server.</p>
 </td>
 </tr>
 <tr>
@@ -27945,7 +27964,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -28163,7 +28184,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Hetzner API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28272,7 +28293,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Hetzner API.</p>
 </td>
 </tr>
 <tr>
@@ -28447,7 +28468,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>authorization defines the  header configuration to authenticate against the IONOS.
+<p>authorization defines the header configuration to authenticate against the IONOS API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28518,7 +28539,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the IONOS API.</p>
 </td>
 </tr>
 <tr>
@@ -29061,7 +29082,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Kuma control plane.</p>
 </td>
 </tr>
 <tr>
@@ -29089,7 +29110,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Kuma control plane.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29268,7 +29289,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Lightsail API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29354,7 +29375,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Lightsail API.</p>
 </td>
 </tr>
 <tr>
@@ -29462,7 +29483,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Linode API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29560,7 +29581,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Linode API.</p>
 </td>
 </tr>
 <tr>
@@ -30069,7 +30090,9 @@ When specified, only resources within this region will be discovered.</p>
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30115,7 +30138,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Nomad API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -30144,7 +30167,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Nomad API.</p>
 </td>
 </tr>
 <tr>
@@ -30419,7 +30442,9 @@ string
 <td>
 <code>identityEndpoint</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -32240,9 +32265,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -32257,7 +32281,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -32266,9 +32290,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -33067,7 +33091,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33153,7 +33179,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the PuppetDB API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -33239,7 +33265,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the PuppetDB server.</p>
 </td>
 </tr>
 <tr>
@@ -34580,7 +34606,9 @@ int32
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34730,7 +34758,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Scaleway API.</p>
 </td>
 </tr>
 </tbody>
@@ -36227,8 +36255,7 @@ map[string]string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape
-kubebuilder:validation:MinLength:=1</p>
+<p>Target represents a target for Prometheus to scrape</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
@@ -36533,7 +36560,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
