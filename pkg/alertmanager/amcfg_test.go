@@ -3229,7 +3229,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with Telegram Receiver using global botToken",
-			amVersion: &version24,
+			amVersion: &version31,
 			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
