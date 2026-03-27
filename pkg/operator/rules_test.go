@@ -530,6 +530,142 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with LegacyValidation")
 }
 
+func TestValidateRuleWithExpressionLanguage(t *testing.T) {
+	// share_eq_over_time is a MetricsQL-specific function that PromQL rejects.
+	metricsQLExpr := intstr.FromString(`share_eq_over_time(up[5m], 1)`)
+	// vector() is valid in both PromQL and MetricsQL (MetricsQL is a superset).
+	promQLExpr := intstr.FromString(`vector(1)`)
+
+	makeRecordingSpec := func(expr intstr.IntOrString) monitoringv1.PrometheusRuleSpec {
+		return monitoringv1.PrometheusRuleSpec{
+			Groups: []monitoringv1.RuleGroup{{
+				Name: "group",
+				Rules: []monitoringv1.Rule{{
+					Record: "slo:sli_error:ratio_rate5m",
+					Expr:   expr,
+				}},
+			}},
+		}
+	}
+
+	tests := []struct {
+		name             string
+		spec             monitoringv1.PrometheusRuleSpec
+		validationScheme model.ValidationScheme
+		exprLang         ExpressionLanguage
+		wantErrs         bool
+	}{
+		// PromQL expression × PromQL parser
+		{
+			name:             "promql_expr/promql_lang/legacy",
+			spec:             makeRecordingSpec(promQLExpr),
+			validationScheme: model.LegacyValidation,
+			exprLang:         PromQLLanguage,
+			wantErrs:         false,
+		},
+		{
+			name:             "promql_expr/promql_lang/utf8",
+			spec:             makeRecordingSpec(promQLExpr),
+			validationScheme: model.UTF8Validation,
+			exprLang:         PromQLLanguage,
+			wantErrs:         false,
+		},
+		// PromQL expression × MetricsQL parser (MetricsQL is a superset — must pass)
+		{
+			name:             "promql_expr/metricsql_lang/legacy",
+			spec:             makeRecordingSpec(promQLExpr),
+			validationScheme: model.LegacyValidation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         false,
+		},
+		{
+			name:             "promql_expr/metricsql_lang/utf8",
+			spec:             makeRecordingSpec(promQLExpr),
+			validationScheme: model.UTF8Validation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         false,
+		},
+		// MetricsQL expression × PromQL parser (must be rejected)
+		{
+			name:             "metricsql_expr/promql_lang/legacy",
+			spec:             makeRecordingSpec(metricsQLExpr),
+			validationScheme: model.LegacyValidation,
+			exprLang:         PromQLLanguage,
+			wantErrs:         true,
+		},
+		{
+			name:             "metricsql_expr/promql_lang/utf8",
+			spec:             makeRecordingSpec(metricsQLExpr),
+			validationScheme: model.UTF8Validation,
+			exprLang:         PromQLLanguage,
+			wantErrs:         true,
+		},
+		// MetricsQL expression × MetricsQL parser (must pass)
+		{
+			name:             "metricsql_expr/metricsql_lang/legacy",
+			spec:             makeRecordingSpec(metricsQLExpr),
+			validationScheme: model.LegacyValidation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         false,
+		},
+		{
+			name:             "metricsql_expr/metricsql_lang/utf8",
+			spec:             makeRecordingSpec(metricsQLExpr),
+			validationScheme: model.UTF8Validation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         false,
+		},
+		// Structural errors are caught regardless of expression language or validation scheme.
+		{
+			name: "missing_record_and_alert/promql_lang/legacy",
+			spec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{{
+					Name:  "group",
+					Rules: []monitoringv1.Rule{{Expr: promQLExpr}},
+				}},
+			},
+			validationScheme: model.LegacyValidation,
+			exprLang:         PromQLLanguage,
+			wantErrs:         true,
+		},
+		{
+			name: "missing_record_and_alert/metricsql_lang/legacy",
+			spec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{{
+					Name:  "group",
+					Rules: []monitoringv1.Rule{{Expr: metricsQLExpr}},
+				}},
+			},
+			validationScheme: model.LegacyValidation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         true,
+		},
+		{
+			name: "missing_record_and_alert/metricsql_lang/utf8",
+			spec: monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{{
+					Name:  "group",
+					Rules: []monitoringv1.Rule{{Expr: metricsQLExpr}},
+				}},
+			},
+			validationScheme: model.UTF8Validation,
+			exprLang:         MetricsQLLanguage,
+			wantErrs:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			errs := ValidateRuleWithExpressionLanguage(tc.spec, tc.validationScheme, tc.exprLang)
+			if tc.wantErrs {
+				require.NotEmpty(t, errs)
+			} else {
+				require.Empty(t, errs, "unexpected errors: %v", errs)
+			}
+		})
+	}
+}
+
 func shouldDropGroupLabelsForUnsupportedThanosVersion(t *testing.T) {
 	labels := map[string]string{
 		"key": "value",

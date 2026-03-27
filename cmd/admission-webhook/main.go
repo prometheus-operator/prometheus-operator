@@ -31,12 +31,14 @@ import (
 	logging "github.com/prometheus-operator/prometheus-operator/internal/log"
 	"github.com/prometheus-operator/prometheus-operator/internal/metrics"
 	"github.com/prometheus-operator/prometheus-operator/pkg/admission"
+	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/server"
 	"github.com/prometheus-operator/prometheus-operator/pkg/versionutil"
 )
 
 const defaultGOMemlimitRatio = 0.0
 const defaultValidationScheme = "legacy"
+const defaultRuleQueryLanguage = "promql"
 
 func main() {
 	var (
@@ -45,6 +47,7 @@ func main() {
 		logConfig            logging.Config
 		memlimitRatio        float64
 		nameValidationScheme string
+		ruleQueryLanguage    string
 	)
 
 	server.RegisterFlags(flagset, &serverConfig)
@@ -53,6 +56,7 @@ func main() {
 
 	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	flagset.StringVar(&nameValidationScheme, "name-validation-scheme", defaultValidationScheme, "The name validation scheme to use ('legacy' or 'utf8').")
+	flagset.StringVar(&ruleQueryLanguage, "rule-query-language", defaultRuleQueryLanguage, "The query language to use for rule expression validation ('promql' or 'metricsql'). Use 'metricsql' for VictoriaMetrics targets.")
 
 	_ = flagset.Parse(os.Args[1:])
 
@@ -81,12 +85,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Parse and validate the rule query language
+	var exprLanguage promoperator.ExpressionLanguage
+	switch ruleQueryLanguage {
+	case "promql":
+		exprLanguage = promoperator.PromQLLanguage
+	case "metricsql":
+		exprLanguage = promoperator.MetricsQLLanguage
+	default:
+		logger.Error("invalid rule query language", "language", ruleQueryLanguage, "supported", []string{"promql", "metricsql"})
+		os.Exit(1)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), validationScheme)
+	admit := admission.New(logger.With("component", "admissionwebhook"), validationScheme, exprLanguage)
 	admit.Register(mux)
 
 	r := metrics.NewRegistry("prometheus_operator_admission_webhook")
