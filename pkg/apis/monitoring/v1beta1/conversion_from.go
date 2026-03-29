@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -392,6 +392,7 @@ func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 		Actions:      convertSlackActionsFrom(in.Actions),
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		Timeout:      in.Timeout,
+		MessageText:  in.MessageText,
 	}
 }
 
@@ -434,20 +435,21 @@ func convertWeChatConfigFrom(in v1alpha1.WeChatConfig) WeChatConfig {
 
 func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 	return EmailConfig{
-		SendResolved: in.SendResolved,
-		To:           in.To,
-		From:         in.From,
-		Hello:        in.Hello,
-		Smarthost:    in.Smarthost,
-		AuthUsername: in.AuthUsername,
-		AuthPassword: convertSecretKeySelectorFrom(in.AuthPassword),
-		AuthSecret:   convertSecretKeySelectorFrom(in.AuthSecret),
-		AuthIdentity: in.AuthIdentity,
-		Headers:      convertKeyValuesFrom(in.Headers),
-		HTML:         in.HTML,
-		Text:         in.Text,
-		RequireTLS:   in.RequireTLS,
-		TLSConfig:    in.TLSConfig,
+		SendResolved:     in.SendResolved,
+		To:               in.To,
+		From:             in.From,
+		Hello:            in.Hello,
+		Smarthost:        in.Smarthost,
+		AuthUsername:     in.AuthUsername,
+		AuthPassword:     convertSecretKeySelectorFrom(in.AuthPassword),
+		AuthSecret:       convertSecretKeySelectorFrom(in.AuthSecret),
+		AuthIdentity:     in.AuthIdentity,
+		Headers:          convertKeyValuesFrom(in.Headers),
+		HTML:             in.HTML,
+		Text:             in.Text,
+		RequireTLS:       in.RequireTLS,
+		TLSConfig:        in.TLSConfig,
+		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 }
 

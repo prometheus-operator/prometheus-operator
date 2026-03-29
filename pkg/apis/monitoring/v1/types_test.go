@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 package v1
 
 import (
-	"reflect"
 	"testing"
 
 	v1 "k8s.io/api/core/v1"
@@ -520,14 +519,6 @@ func TestValidateOAuth2(t *testing.T) {
 				t.Fatalf("expected no error but got: %s", err)
 			}
 		})
-	}
-}
-
-func TestDurationPointer(t *testing.T) {
-	oneMinuteDuration := Duration("1m")
-	got := DurationPointer("1m")
-	if !reflect.DeepEqual(got, &oneMinuteDuration) {
-		t.Fatalf("wanted %v, but got %v", &oneMinuteDuration, got)
 	}
 }
 

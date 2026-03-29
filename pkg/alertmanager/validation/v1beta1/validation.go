@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"regexp"
 	"strings"
 
 	"k8s.io/utils/ptr"
@@ -26,8 +25,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
-
-var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
@@ -341,6 +338,10 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
 		}
 
+		if config.BotToken != nil && config.BotTokenFile != nil {
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
+		}
+
 		if config.ChatID == 0 {
 			return fmt.Errorf("[%d]: mandatory field %q is empty", i, "chatID")
 		}
@@ -385,6 +386,24 @@ func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) err
 	for i, config := range configs {
 		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
 			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'iconURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ImageURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'imageURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ThumbURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'thumbURL': %w", i, err)
+		}
+
+		for j, a := range config.Actions {
+			if err := validation.ValidateTemplateURLPtr(a.URL); err != nil {
+				return fmt.Errorf("%d: actions[%d]: invalid 'url': %w", i, j, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -457,18 +476,6 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		if _, found := timeIntervals[namedTimeInterval]; !found {
 			return fmt.Errorf("time interval %q not found", namedTimeInterval)
 		}
-	}
-
-	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
-		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
-
-	}
-	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
-	}
-
-	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
 	for i, v := range r.Matchers {

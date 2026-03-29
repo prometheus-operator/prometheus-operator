@@ -862,6 +862,10 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          forceImplicitTLS: {
+                            description: 'forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.\ntrue: force use of implicit TLS (direct TLS connection on any port)\nfalse: force disable implicit TLS (use explicit TLS/STARTTLS if required)\nnil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility\nIt requires Alertmanager >= v0.31.0.',
+                            type: 'boolean',
+                          },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
                             minLength: 1,
@@ -5568,7 +5572,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.',
+                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5591,7 +5595,7 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           tokenID: {
-                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.',
+                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -6430,6 +6434,11 @@
                           linkNames: {
                             description: 'linkNames enables automatic linking of channel names and usernames in the message.\nWhen true, @channel and @username will be converted to clickable links.',
                             type: 'boolean',
+                          },
+                          messageText: {
+                            description: "messageText defines text content of the Slack message.\nIf set, this is sent as the top-level 'text' field in the Slack payload.\nIt requires Alertmanager >= v0.31.0.",
+                            minLength: 1,
+                            type: 'string',
                           },
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
@@ -10781,11 +10790,15 @@
                     type: 'array',
                   },
                   groupInterval: {
-                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "5m"',
+                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust be greater than 0.\nExample: "5m"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   groupWait: {
-                    description: 'groupWait defines how long to wait before sending the initial notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "30s"',
+                    description: 'groupWait defines how long to wait before sending the initial notification.\nExample: "30s"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   matchers: {
@@ -10832,7 +10845,9 @@
                     type: 'string',
                   },
                   repeatInterval: {
-                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "4h"',
+                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust be greater than 0.\nExample: "4h"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   routes: {

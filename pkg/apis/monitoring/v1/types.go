@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,10 @@ const (
 	Version = "v1"
 )
 
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string
+
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 // Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
@@ -48,12 +52,6 @@ func (bs *ByteSize) IsEmpty() bool {
 // Examples: `30s`, `1m`, `1h20m15s`, `15d`
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 type Duration string
-
-// DurationPointer is a helper function to parse a Duration string into a *Duration.
-func DurationPointer(s string) *Duration {
-	d := Duration(s)
-	return &d
-}
 
 // NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
 // Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.

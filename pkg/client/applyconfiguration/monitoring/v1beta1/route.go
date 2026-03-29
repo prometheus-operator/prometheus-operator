@@ -17,22 +17,48 @@
 package v1beta1
 
 import (
-	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
 // RouteApplyConfiguration represents a declarative configuration of the Route type for use
 // with apply.
+//
+// Route defines a node in the routing tree.
 type RouteApplyConfiguration struct {
-	Receiver            *string                     `json:"receiver,omitempty"`
-	GroupBy             []string                    `json:"groupBy,omitempty"`
-	GroupWait           *string                     `json:"groupWait,omitempty"`
-	GroupInterval       *string                     `json:"groupInterval,omitempty"`
-	RepeatInterval      *string                     `json:"repeatInterval,omitempty"`
-	Matchers            []MatcherApplyConfiguration `json:"matchers,omitempty"`
-	Continue            *bool                       `json:"continue,omitempty"`
-	Routes              []v1.JSON                   `json:"routes,omitempty"`
-	MuteTimeIntervals   []string                    `json:"muteTimeIntervals,omitempty"`
-	ActiveTimeIntervals []string                    `json:"activeTimeIntervals,omitempty"`
+	// receiver defines the name of the receiver for this route. If not empty, it should be listed in
+	// the `receivers` field.
+	Receiver *string `json:"receiver,omitempty"`
+	// groupBy defines the list of labels to group by.
+	// Labels must not be repeated (unique list).
+	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
+	GroupBy []string `json:"groupBy,omitempty"`
+	// groupWait defines how long to wait before sending the initial notification.
+	// Example: "30s"
+	GroupWait *v1.NonEmptyDuration `json:"groupWait,omitempty"`
+	// groupInterval defines how long to wait before sending an updated notification.
+	// Must be greater than 0.
+	// Example: "5m"
+	GroupInterval *v1.NonEmptyDuration `json:"groupInterval,omitempty"`
+	// repeatInterval defines how long to wait before repeating the last notification.
+	// Must be greater than 0.
+	// Example: "4h"
+	RepeatInterval *v1.NonEmptyDuration `json:"repeatInterval,omitempty"`
+	// matchers defines the list of matchers that the alert's labels should match. For the first
+	// level route, the operator removes any existing equality and regexp
+	// matcher on the `namespace` label and adds a `namespace: <object
+	// namespace>` matcher.
+	Matchers []MatcherApplyConfiguration `json:"matchers,omitempty"`
+	// continue defines the boolean indicating whether an alert should continue matching subsequent
+	// sibling nodes. It will always be overridden to true for the first-level
+	// route by the Prometheus operator.
+	Continue *bool `json:"continue,omitempty"`
+	// routes defines the child routes.
+	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
+	// muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
+	// activeTimeIntervals is a list of TimeInterval names when this route should be active.
+	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
 // RouteApplyConfiguration constructs a declarative configuration of the Route type for use with
@@ -62,7 +88,7 @@ func (b *RouteApplyConfiguration) WithGroupBy(values ...string) *RouteApplyConfi
 // WithGroupWait sets the GroupWait field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GroupWait field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithGroupWait(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithGroupWait(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.GroupWait = &value
 	return b
 }
@@ -70,7 +96,7 @@ func (b *RouteApplyConfiguration) WithGroupWait(value string) *RouteApplyConfigu
 // WithGroupInterval sets the GroupInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GroupInterval field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithGroupInterval(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithGroupInterval(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.GroupInterval = &value
 	return b
 }
@@ -78,7 +104,7 @@ func (b *RouteApplyConfiguration) WithGroupInterval(value string) *RouteApplyCon
 // WithRepeatInterval sets the RepeatInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the RepeatInterval field is set to the value of the last call.
-func (b *RouteApplyConfiguration) WithRepeatInterval(value string) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithRepeatInterval(value v1.NonEmptyDuration) *RouteApplyConfiguration {
 	b.RepeatInterval = &value
 	return b
 }
@@ -107,7 +133,7 @@ func (b *RouteApplyConfiguration) WithContinue(value bool) *RouteApplyConfigurat
 // WithRoutes adds the given value to the Routes field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Routes field.
-func (b *RouteApplyConfiguration) WithRoutes(values ...v1.JSON) *RouteApplyConfiguration {
+func (b *RouteApplyConfiguration) WithRoutes(values ...apiextensionsv1.JSON) *RouteApplyConfiguration {
 	for i := range values {
 		b.Routes = append(b.Routes, values[i])
 	}

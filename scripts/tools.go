@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	_ "github.com/google/go-jsonnet/cmd/jsonnet"
 	_ "github.com/google/go-jsonnet/cmd/jsonnetfmt"
 	_ "github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb"
+	_ "github.com/prometheus/prometheus/cmd/promtool"
 	_ "github.com/yeya24/promlinter/cmd/promlinter"
 	_ "k8s.io/code-generator/cmd/applyconfiguration-gen"
 	_ "k8s.io/code-generator/cmd/client-gen"

@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ func ValidateURLPtr(url *string) error {
 	})
 }
 
-// ValidateURL validates a URL string against the config.URL.
+// ValidateURL against the config.URL
 // This could potentially become a regex and be validated via OpenAPI
 // but right now, since we know we need to unmarshal into an upstream type
 // after conversion, we validate we don't error when doing so.

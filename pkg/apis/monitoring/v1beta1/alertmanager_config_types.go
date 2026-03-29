@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,20 +108,19 @@ type Route struct {
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "30s"
 	// +optional
-	GroupWait string `json:"groupWait,omitempty"`
+	GroupWait *monitoringv1.NonEmptyDuration `json:"groupWait,omitempty"`
 	// groupInterval defines how long to wait before sending an updated notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Must be greater than 0.
 	// Example: "5m"
 	// +optional
-	GroupInterval string `json:"groupInterval,omitempty"`
+	GroupInterval *monitoringv1.NonEmptyDuration `json:"groupInterval,omitempty"`
 	// repeatInterval defines how long to wait before repeating the last notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Must be greater than 0.
 	// Example: "4h"
 	// +optional
-	RepeatInterval string `json:"repeatInterval,omitempty"`
+	RepeatInterval *monitoringv1.NonEmptyDuration `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
 	// matcher on the `namespace` label and adds a `namespace: <object
@@ -454,6 +453,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.30.0.
 	// +optional
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// messageText defines text content of the Slack message.
+	// If set, this is sent as the top-level 'text' field in the Slack payload.
+	// It requires Alertmanager >= v0.31.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -866,6 +871,13 @@ type EmailConfig struct {
 	// This includes settings for certificates, CA validation, and TLS protocol options.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+	// true: force use of implicit TLS (direct TLS connection on any port)
+	// false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
@@ -1180,10 +1192,14 @@ type RocketChatConfig struct {
 	Channel *string `json:"channel,omitempty"`
 	// token defines the sender token for RocketChat authentication.
 	// This is the personal access token or bot token used to authenticate API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	Token v1.SecretKeySelector `json:"token,omitempty"`
 	// tokenID defines the sender token ID for RocketChat authentication.
 	// This is the user ID associated with the token used for API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// color defines the message color displayed in RocketChat.

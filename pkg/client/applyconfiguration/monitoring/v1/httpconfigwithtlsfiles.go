@@ -22,9 +22,13 @@ import (
 
 // HTTPConfigWithTLSFilesApplyConfiguration represents a declarative configuration of the HTTPConfigWithTLSFiles type for use
 // with apply.
+//
+// HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
+// (from secret/configmap references as well as files).
 type HTTPConfigWithTLSFilesApplyConfiguration struct {
 	HTTPConfigWithoutTLSApplyConfiguration `json:",inline"`
-	TLSConfig                              *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// tlsConfig defines TLS configuration used by the client.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // HTTPConfigWithTLSFilesApplyConfiguration constructs a declarative configuration of the HTTPConfigWithTLSFiles type for use with

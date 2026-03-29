@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,14 @@ func (l *PrometheusAgent) SetCommonPrometheusFields(f monitoringv1.CommonPrometh
 func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 	return l.Status
 }
+
+func (p *PrometheusAgent) ExpectedReplicas() int {
+	return p.Spec.CommonPrometheusFields.ExpectedReplicas()
+}
+
+func (p *PrometheusAgent) GetAvailableReplicas() int               { return int(p.Status.AvailableReplicas) }
+func (p *PrometheusAgent) GetUpdatedReplicas() int                 { return int(p.Status.UpdatedReplicas) }
+func (p *PrometheusAgent) GetConditions() []monitoringv1.Condition { return p.Status.Conditions }
 
 // +genclient
 // +k8s:openapi-gen=true

@@ -1,0 +1,13 @@
+global:
+  smtp_force_implicit_tls: true
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    matchers:
+    - mykey="myvalue"
+    - mykey1="myvalue1"
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+templates: []
