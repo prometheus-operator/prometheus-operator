@@ -72,6 +72,7 @@ func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []v1.Co
 		"--reload-url=https://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 	for _, c := range actualContainers {
 		if c.Name == "config-reloader" {
