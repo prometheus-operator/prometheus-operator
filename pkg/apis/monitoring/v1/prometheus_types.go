@@ -118,6 +118,7 @@ type EnableFeature string
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
+// +kubebuilder:validation:XValidation:rule="!has(self.shardingStrategy) || !has(self.shardingStrategy.mode) || self.shardingStrategy.mode != 'Topology' || !has(self.shardingStrategy.topology) || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size() == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()",message="shards must be greater than or equal to the number of topology values when sharding strategy mode is Topology"
 type CommonPrometheusFields struct {
 	// podMetadata defines labels and annotations which are propagated to the Prometheus pods.
 	//
@@ -1410,6 +1411,7 @@ type TopologyShardingStrategy struct {
 }
 
 // ShardingStrategy defines the sharding strategy for Prometheus.
+// +kubebuilder:validation:XValidation:rule="!has(self.topology) || (has(self.mode) && self.mode == 'Topology')",message="topology can only be defined when mode is set to 'Topology'"
 type ShardingStrategy struct {
 	// mode defines the sharding mode. Can be 'Address' or 'Topology'.
 	//

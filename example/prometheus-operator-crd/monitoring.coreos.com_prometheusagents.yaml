@@ -7779,6 +7779,9 @@ spec:
                         x-kubernetes-list-type: atomic
                     type: object
                 type: object
+                x-kubernetes-validations:
+                - message: topology can only be defined when mode is set to 'Topology'
+                  rule: '!has(self.topology) || (has(self.mode) && self.mode == ''Topology'')'
               shards:
                 description: |-
                   shards defines the number of shards to distribute the scraped targets onto.
@@ -11352,6 +11355,14 @@ spec:
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.serviceMonitorNamespaceSelector))'
             - message: additionalScrapeConfigs cannot be set when mode is DaemonSet
               rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.additionalScrapeConfigs))'
+            - message: shardingStrategy cannot be set when mode is DaemonSet
+              rule: '!(has(self.mode) && self.mode == ''DaemonSet'' && has(self.shardingStrategy))'
+            - message: shards must be greater than or equal to the number of topology
+                values when sharding strategy mode is Topology
+              rule: '!has(self.shardingStrategy) || !has(self.shardingStrategy.mode)
+                || self.shardingStrategy.mode != ''Topology'' || !has(self.shardingStrategy.topology)
+                || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size()
+                == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()'
           status:
             description: |-
               status defines the most recent observed status of the Prometheus cluster. Read-only.
