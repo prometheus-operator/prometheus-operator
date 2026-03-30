@@ -36,7 +36,7 @@ jobs:
           go-version: '${{ env.golang-version }}'
           check-latest: true
       - name: Install cosign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@v4.1.1
       - name: Check the Docker version
         run: docker version
       - name: Check the cosign version
