@@ -615,6 +615,7 @@ func TestListenTLS(t *testing.T) {
 		"--reload-url=https://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1805,6 +1806,7 @@ func TestConfigReloader(t *testing.T) {
 		"--reload-url=http://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1821,6 +1823,7 @@ func TestConfigReloader(t *testing.T) {
 		"--listen-address=:8080",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1864,6 +1867,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		"--runtimeinfo-url=http://localhost:9090/api/v1/status/runtimeinfo",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1886,6 +1890,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		"--listen-address=:8081",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.InitContainers {
