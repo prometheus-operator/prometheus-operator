@@ -236,8 +236,8 @@ func TestMergePatchContainersProbeHandlerSanitization(t *testing.T) {
 			// Sanitization applies to all probe types, not just ReadinessProbe.
 			name: "liveness and startup probes are also sanitized",
 			base: []corev1.Container{{
-				Name:         "c1",
-				StartupProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+				Name:          "c1",
+				StartupProbe:  probe(corev1.ProbeHandler{HTTPGet: httpGet}),
 				LivenessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
 			}},
 			patches: []corev1.Container{{
