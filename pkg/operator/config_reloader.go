@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"path/filepath"
+	"slices"
 	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
@@ -268,6 +270,19 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 
 	if len(configReloader.configFile) > 0 {
 		args = append(args, fmt.Sprintf("--config-file=%s", configReloader.configFile))
+		// HACK: Watch the config file's parent directory to speed up config reloads.
+		// Without this, reloads are gated on the reloader's defaultWatchInterval (every ~3 minutes).
+		// By watching the directory, reloads are instead driven by kubelet's config sync frequency only.
+		//
+		// Note: watching the directory rather than the file directly is also the fsnotify recommended
+		// approach, as atomic file writes (used by kubelet) can silently break file watchers:
+		// https://github.com/fsnotify/fsnotify/blob/a9bc2e01792f868516acf80817f7d7d7b3315409/README.md?plain=1#L128
+		//
+		// Hack applied here as all reloader configurations should flow through this path.
+		confDir := filepath.Dir(configReloader.configFile)
+		if !slices.Contains(configReloader.watchedDirectories, confDir) {
+			configReloader.watchedDirectories = append(configReloader.watchedDirectories, confDir)
+		}
 	}
 
 	if len(configReloader.configEnvsubstFile) > 0 {
