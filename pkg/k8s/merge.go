@@ -84,10 +84,10 @@ func MergePatchContainers(base, patches []corev1.Container) ([]corev1.Container,
 // which causes Kubernetes "may not specify more than 1 handler type" validation error.
 // When multiple handlers are detected the patch's probe handler takes precedence, discarding
 // the base handler.
-func sanitizeProbeHandlers(merged, patch *v1.Container) {
+func sanitizeProbeHandlers(merged, patch *corev1.Container) {
 	type probePair struct {
-		merged *v1.Probe
-		patch  *v1.Probe
+		merged *corev1.Probe
+		patch  *corev1.Probe
 	}
 	for _, pp := range []probePair{
 		{merged.StartupProbe, patch.StartupProbe},
@@ -103,7 +103,7 @@ func sanitizeProbeHandlers(merged, patch *v1.Container) {
 	}
 }
 
-func probeHandlerCount(h v1.ProbeHandler) int {
+func probeHandlerCount(h corev1.ProbeHandler) int {
 	count := 0
 	if h.HTTPGet != nil {
 		count++
