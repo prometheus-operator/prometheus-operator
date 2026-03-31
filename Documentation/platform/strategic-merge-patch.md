@@ -230,3 +230,34 @@ spec:
           type: RuntimeDefault
 
 ```
+
+## How to override probe handlers when TLS and web.config are enabled
+
+When Prometheus is configured with `spec.web.tlsConfig` and a custom `web.config`
+(e.g. to enable Basic Auth), the operator generates HTTPS probes that embed
+credentials in plaintext in the Pod spec. To avoid credential exposure, override
+the probe handler type via a strategic merge patch.
+
+The following example replaces the readiness and liveness probes of the `prometheus`
+container with TCP socket probes:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-tls-tcp-probes
+spec:
+  containers:
+  - name: prometheus
+    readinessProbe:
+      tcpSocket:
+        port: 9090
+    livenessProbe:
+      tcpSocket:
+        port: 9090
+```
+
+> **Note:** Using a `tcpSocket` or `exec` probe means the probe no longer calls
+> the Prometheus `/-/ready` endpoint. The Pod may be marked Ready before
+> Prometheus finishes WAL replay or TSDB initialization. This is a known
+> trade-off when prioritizing credential security over granular readiness checks.

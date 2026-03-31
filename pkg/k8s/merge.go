@@ -84,13 +84,6 @@ func MergePatchContainers(base, patches []corev1.Container) ([]corev1.Container,
 // which causes Kubernetes "may not specify more than 1 handler type" validation error.
 // When multiple handlers are detected the patch's probe handler takes precedence, discarding
 // the base handler.
-//
-// Note: Using a TCPSocket or Exec probe as an override means the readiness probe
-// bypasses the Prometheus /-/ready endpoint. Consequently, it will not account for
-// internal state such as WAL replay or TSDB initialization. The Pod may be marked
-// 'Ready' by Kubernetes before Prometheus is actually capable of serving queries.
-// This is a known trade-off when prioritizing security (avoiding plaintext credentials)
-// over granular readiness checks.
 func sanitizeProbeHandlers(merged, patch *v1.Container) {
 	type probePair struct {
 		merged *v1.Probe
