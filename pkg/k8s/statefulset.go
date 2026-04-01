@@ -72,7 +72,7 @@ func CreateStatefulSetOrPatchLabels(ctx context.Context, ssetClient clientappsv1
 func ForceUpdateStatefulSet(ctx context.Context, ssetClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet, onDeleteFunc func(string)) error {
 	err := updateStatefulSet(ctx, ssetClient, sset)
 	if err == nil {
-		return err
+		return nil
 	}
 
 	// When trying to update immutable fields, the API server returns a 422 status code.
