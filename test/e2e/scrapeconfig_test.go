@@ -653,6 +653,37 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EurekaSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
 	})
+	t.Run("AuthMutualExclusion", func(t *testing.T) {
+		runAuthMutualExclusionValidation(t, AuthMutualExclusionTestCases)
+	})
+}
+
+func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCase) {
+	const authMutualExclusionMsg = "at most one of basicAuth, authorization, or oauth2 can be configured"
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			sc := &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: ns,
+				},
+				Spec: test.scrapeConfigSpec,
+			}
+
+			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+			if test.expectedError {
+				require.True(t, apierrors.IsInvalid(err))
+				require.Contains(t, err.Error(), authMutualExclusionMsg)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -1841,6 +1872,61 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 			FallbackScrapeProtocol: nil,
 		},
 		expectedError: false,
+	},
+}
+
+var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
+	{
+		name: "single auth method",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+		},
+		expectedError: false,
+	},
+	{
+		name: "basicAuth and authorization",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+		},
+		expectedError: true,
+	},
+	{
+		name: "basicAuth and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "all three set",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
 	},
 }
 
