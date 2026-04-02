@@ -853,8 +853,8 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 		}
 
 		logger.Debug("updating current statefulset because of hash divergence",
-			"new_hash", newSSetInputHash,
-			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
+			"newHash", newSSetInputHash,
+			"existingHash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)
 
 		if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
