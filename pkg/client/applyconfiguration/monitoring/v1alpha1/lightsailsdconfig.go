@@ -27,7 +27,6 @@ import (
 //
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfigApplyConfiguration struct {
 	// region defines the AWS region.
 	Region *string `json:"region,omitempty"`

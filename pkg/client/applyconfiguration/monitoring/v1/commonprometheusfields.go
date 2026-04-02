@@ -100,13 +100,15 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	//
-	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
+	// and will be graduated to Beta in a future release.
 	ScrapeConfigSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigSelector,omitempty"`
 	// scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	//
-	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
+	// and will be graduated to Beta in a future release.
 	ScrapeConfigNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// version of Prometheus being deployed. The operator uses this information
 	// to generate the Prometheus StatefulSet + configuration files.

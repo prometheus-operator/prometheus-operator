@@ -202,7 +202,8 @@ type CommonPrometheusFields struct {
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
 	//
-	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
+	// and will be graduated to Beta in a future release.
 	//
 	// +optional
 	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
@@ -210,7 +211,8 @@ type CommonPrometheusFields struct {
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	//
-	// Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
+	// and will be graduated to Beta in a future release.
 	//
 	// +optional
 	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`

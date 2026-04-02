@@ -7595,7 +7595,7 @@
                     "type": "boolean"
                   },
                   "scrapeConfigNamespaceSelector": {
-                    "description": "scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level.",
+                    "description": "scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level\nand will be graduated to Beta in a future release.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -7640,7 +7640,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "scrapeConfigSelector": {
-                    "description": "scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label\nselector matches all objects. A null label selector matches no objects.\n\nIf `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`\nand `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.\nThe Prometheus operator will ensure that the Prometheus configuration's\nSecret exists, but it is the responsibility of the user to provide the raw\ngzipped Prometheus configuration under the `prometheus.yaml.gz` key.\nThis behavior is *deprecated* and will be removed in the next major version\nof the custom resource definition. It is recommended to use\n`spec.additionalScrapeConfigs` instead.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level.",
+                    "description": "scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label\nselector matches all objects. A null label selector matches no objects.\n\nIf `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`\nand `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.\nThe Prometheus operator will ensure that the Prometheus configuration's\nSecret exists, but it is the responsibility of the user to provide the raw\ngzipped Prometheus configuration under the `prometheus.yaml.gz` key.\nThis behavior is *deprecated* and will be removed in the next major version\nof the custom resource definition. It is recommended to use\n`spec.additionalScrapeConfigs` instead.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level\nand will be graduated to Beta in a future release.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
