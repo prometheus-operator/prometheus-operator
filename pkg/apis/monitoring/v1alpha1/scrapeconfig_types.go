@@ -163,6 +163,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ScrapeConfigSpec struct {
 	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
 	//
