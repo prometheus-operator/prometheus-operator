@@ -2158,6 +2158,28 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+	{
+		name: "Valid RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: ptr.To("arn:aws:iam::123456789012:role/MyRole"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RoleARN with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
 }
 
 var GCESDTestCases = []scrapeCRDTestCase{
@@ -3064,7 +3086,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "All Tenants True",
@@ -4636,6 +4658,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "Invalid Namespace with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:    "http://localhost:4646",
+					Namespace: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid RefreshInterval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
@@ -4672,6 +4706,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "Invalid Region with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "http://localhost:4646",
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid TagSeparator",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
@@ -4682,6 +4728,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid TagSeparator with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:       "http://localhost:4646",
+					TagSeparator: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
 	},
 	{
 		name: "FollowRedirects True",

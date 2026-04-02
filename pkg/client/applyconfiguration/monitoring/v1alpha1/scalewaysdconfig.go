@@ -28,7 +28,9 @@ import (
 //
 // ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
+//
+// Note: The `_file` variants of credential fields (e.g. `secret_key_file`)
+// from the Prometheus configuration are not supported. Use Kubernetes secrets via `secretKey` instead.
 type ScalewaySDConfigApplyConfiguration struct {
 	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
 	AccessKey *string `json:"accessKey,omitempty"`

@@ -68,7 +68,7 @@ type AzureSDConfigApplyConfiguration struct {
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
-	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
