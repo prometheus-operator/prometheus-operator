@@ -182,6 +182,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithShards(value int32) *Prometh
 	return b
 }
 
+// WithShardingStrategy sets the ShardingStrategy field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ShardingStrategy field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithShardingStrategy(value *v1.ShardingStrategyApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.ShardingStrategy = value
+	return b
+}
+
 // WithReplicaExternalLabelName sets the ReplicaExternalLabelName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ReplicaExternalLabelName field is set to the value of the last call.

@@ -118,6 +118,7 @@ type EnableFeature string
 
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
+// +kubebuilder:validation:XValidation:rule="!has(self.shardingStrategy) || !has(self.shardingStrategy.mode) || self.shardingStrategy.mode != 'Topology' || !has(self.shardingStrategy.topology) || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size() == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()",message="shards must be greater than or equal to the number of topology values when sharding strategy mode is Topology"
 type CommonPrometheusFields struct {
 	// podMetadata defines labels and annotations which are propagated to the Prometheus pods.
 	//
@@ -290,6 +291,14 @@ type CommonPrometheusFields struct {
 	// the label value isn't empty, all Prometheus shards will scrape the target.
 	// +optional
 	Shards *int32 `json:"shards,omitempty"`
+
+	// shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.
+	//
+	// When not defined, the operator defaults to the 'Address' mode which distributes
+	// targets based on a hash of the target address.
+	//
+	// +optional
+	ShardingStrategy *ShardingStrategy `json:"shardingStrategy,omitempty"`
 
 	// replicaExternalLabelName defines the name of Prometheus external label used to denote the replica name.
 	// The external label will _not_ be added when the field is set to the
@@ -1365,6 +1374,62 @@ type ShardRetentionPolicy struct {
 	// This field is ineffective as of now.
 	// +optional
 	Retain *RetainConfig `json:"retain,omitempty"`
+}
+
+// ShardingStrategyMode defines the sharding mode for Prometheus.
+// +kubebuilder:validation:Enum=Address;Topology
+type ShardingStrategyMode string
+
+const (
+	// AddressShardingStrategyMode is the default sharding mode.
+	// Targets are distributed across shards based on a hash of the target address.
+	AddressShardingStrategyMode ShardingStrategyMode = "Address"
+
+	// TopologyShardingStrategyMode enables zone-aware sharding.
+	// Each shard is assigned to a specific topology zone and only scrapes targets in that zone.
+	// (Alpha) Using this mode requires the `PrometheusTopologySharding` feature gate to be enabled.
+	TopologyShardingStrategyMode ShardingStrategyMode = "Topology"
+)
+
+// TopologyShardingStrategy defines the configuration for topology-aware sharding.
+type TopologyShardingStrategy struct {
+	// externalLabelName defines the name of the Prometheus external label used
+	// to communicate the topology zone assigned to the Prometheus instance.
+	// If not defined, it defaults to "zone".
+	// If set to the empty string, no external label is added to the Prometheus configuration.
+	//
+	// +optional
+	ExternalLabelName *string `json:"externalLabelName,omitempty"`
+
+	// values defines the list of topology values (e.g. zone names) to be used
+	// for sharding. The configured number of shards must be greater than or
+	// equal to the number of values.
+	//
+	// +listType=atomic
+	// +optional
+	Values []string `json:"values,omitempty"`
+}
+
+// ShardingStrategy defines the sharding strategy for Prometheus.
+// +kubebuilder:validation:XValidation:rule="!has(self.topology) || (has(self.mode) && self.mode == 'Topology')",message="topology can only be defined when mode is set to 'Topology'"
+type ShardingStrategy struct {
+	// mode defines the sharding mode. Can be 'Address' or 'Topology'.
+	//
+	// 'Address' is the default mode and distributes targets across shards
+	// based on a hash of the target address.
+	//
+	// 'Topology' enables zone-aware sharding where each shard is assigned to a
+	// specific topology zone and only scrapes targets in that zone.
+	// (Alpha) Using the 'Topology' mode requires the `PrometheusTopologySharding`
+	// feature gate to be enabled.
+	//
+	// +optional
+	Mode *ShardingStrategyMode `json:"mode,omitempty"`
+
+	// topology defines the configuration for topology-aware sharding.
+	// This field is only valid when mode is set to 'Topology'.
+	// +optional
+	Topology *TopologyShardingStrategy `json:"topology,omitempty"`
 }
 
 // PrometheusStatus is the most recent observed status of the Prometheus cluster.
