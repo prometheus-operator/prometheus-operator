@@ -1362,6 +1362,34 @@ var K8STestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+	{
+		name: "AttachMetadata with node",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:           "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{Node: ptr.To(true)},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector with invalid role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role: "Invalid",
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
 }
 
 var DNSSDTestCases = []scrapeCRDTestCase{
