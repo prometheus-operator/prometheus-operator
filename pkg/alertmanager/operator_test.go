@@ -1495,8 +1495,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 								From:      ptr.To("admin@example.com"),
 								To:        ptr.To("customers@example.com"),
 								Threading: &monitoringv1alpha1.EmailThreadingConfig{
-									Enabled:      ptr.To(true),
-									ThreadByDate: "daily",
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
 								},
 							},
 						},
@@ -1524,8 +1523,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 								From:      ptr.To("admin@example.com"),
 								To:        ptr.To("customers@example.com"),
 								Threading: &monitoringv1alpha1.EmailThreadingConfig{
-									Enabled:      ptr.To(true),
-									ThreadByDate: "daily",
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
 								},
 							},
 						},

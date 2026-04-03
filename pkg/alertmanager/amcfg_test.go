@@ -4043,7 +4043,6 @@ func TestGenerateConfig(t *testing.T) {
 										From:      ptr.To("admin@example.com"),
 										To:        ptr.To("customers@example.com"),
 										Threading: &monitoringv1alpha1.EmailThreadingConfig{
-											Enabled:      ptr.To(true),
 											ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
 										},
 									},
