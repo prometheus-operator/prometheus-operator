@@ -23,6 +23,11 @@ import (
 // AlertmanagerConfigMatcherStrategyApplyConfiguration represents a declarative configuration of the AlertmanagerConfigMatcherStrategy type for use
 // with apply.
 type AlertmanagerConfigMatcherStrategyApplyConfiguration struct {
+	// type defines the strategy used by
+	// AlertmanagerConfig objects to match alerts in the routes and inhibition
+	// rules.
+	//
+	// The default value is `OnNamespace`.
 	Type *monitoringv1.AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
 

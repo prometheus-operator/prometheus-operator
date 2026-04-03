@@ -212,6 +212,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ServiceMonitorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ServiceMonitorSpec"):
 		return &monitoringv1.ServiceMonitorSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ShardingStrategy"):
+		return &monitoringv1.ShardingStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardRetentionPolicy"):
 		return &monitoringv1.ShardRetentionPolicyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ShardStatus"):
@@ -236,6 +238,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.TLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TLSFilesConfig"):
 		return &monitoringv1.TLSFilesConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("TopologyShardingStrategy"):
+		return &monitoringv1.TopologyShardingStrategyApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TopologySpreadConstraint"):
 		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TracingConfig"):

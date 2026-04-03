@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -653,6 +653,37 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EurekaSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
 	})
+	t.Run("AuthMutualExclusion", func(t *testing.T) {
+		runAuthMutualExclusionValidation(t, AuthMutualExclusionTestCases)
+	})
+}
+
+func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCase) {
+	const authMutualExclusionMsg = "at most one of basicAuth, authorization, or oauth2 can be configured"
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			sc := &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: ns,
+				},
+				Spec: test.scrapeConfigSpec,
+			}
+
+			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+			if test.expectedError {
+				require.True(t, apierrors.IsInvalid(err))
+				require.Contains(t, err.Error(), authMutualExclusionMsg)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -1362,6 +1393,34 @@ var K8STestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+	{
+		name: "AttachMetadata with node",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:           "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{Node: ptr.To(true)},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector with invalid role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role: "Invalid",
+						},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
 }
 
 var DNSSDTestCases = []scrapeCRDTestCase{
@@ -1844,6 +1903,61 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 	},
 }
 
+var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
+	{
+		name: "single auth method",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+		},
+		expectedError: false,
+	},
+	{
+		name: "basicAuth and authorization",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+		},
+		expectedError: true,
+	},
+	{
+		name: "basicAuth and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "all three set",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+}
+
 var staticConfigTestCases = []scrapeCRDTestCase{
 	{
 		name: "Valid targets",
@@ -2153,6 +2267,28 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
 					Port: ptr.To(int32(65536)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: ptr.To("arn:aws:iam::123456789012:role/MyRole"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RoleARN with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: ptr.To(""),
 				},
 			},
 		},
@@ -3064,7 +3200,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "All Tenants True",
@@ -4636,6 +4772,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "Invalid Namespace with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:    "http://localhost:4646",
+					Namespace: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid RefreshInterval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
@@ -4672,6 +4820,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "Invalid Region with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "http://localhost:4646",
+					Region: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid TagSeparator",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
@@ -4682,6 +4842,18 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid TagSeparator with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:       "http://localhost:4646",
+					TagSeparator: ptr.To(""),
+				},
+			},
+		},
+		expectedError: true,
 	},
 	{
 		name: "FollowRedirects True",

@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -7843,6 +7843,9 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionTelegramExampleAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versionWithGlobalTelegramBotToken := semver.Version{Major: 0, Minor: 31}
+	versionWithoutGlobalTelegramBotToken := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -7885,6 +7888,40 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 				},
 			},
 			golden: "telegram_valid_url_passes.golden",
+		},
+		{
+			name:           "telegram no bot token specified",
+			againstVersion: versionWithoutGlobalTelegramBotToken,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl: "http://example.com",
+								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "telegram no bot token specified with global bot token version",
+			againstVersion: versionWithGlobalTelegramBotToken,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl: "http://example.com",
+								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_no_bot_token_specified_with_global_bot_token_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

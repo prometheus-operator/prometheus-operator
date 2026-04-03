@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestPodLabelsAnnotations(t *testing.T) {
@@ -115,6 +116,150 @@ func TestPodLabelsAnnotations(t *testing.T) {
 		require.NoError(t, err)
 		diff := pretty.Compare(result, tc.result)
 		require.Equal(t, "", diff, "Test %s: patch result did not match. diff: %s.", tc.name, diff)
+	}
+}
+
+func TestMergePatchContainersProbeHandlerSanitization(t *testing.T) {
+	port := intstr.FromInt32(8080)
+
+	httpGet := &corev1.HTTPGetAction{Path: "/health", Port: port}
+	tcpSocket := &corev1.TCPSocketAction{Port: port}
+	exec := &corev1.ExecAction{Command: []string{"cat", "/tmp/healthy"}}
+	grpc := &corev1.GRPCAction{Port: 8080}
+
+	probe := func(h corev1.ProbeHandler) *corev1.Probe {
+		return &corev1.Probe{ProbeHandler: h}
+	}
+
+	testCases := []struct {
+		name    string
+		base    []corev1.Container
+		patches []corev1.Container
+		result  []corev1.Container
+	}{
+		{
+			// Strategic merge leaves both HTTPGet (from base) and TCPSocket (from patch) set;
+			// sanitization must keep only the patch handler.
+			name: "readiness probe: patch overrides HTTPGet with TCPSocket",
+			base: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			patches: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{TCPSocket: tcpSocket}),
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{TCPSocket: tcpSocket}),
+			}},
+		},
+		{
+			name: "readiness probe: patch overrides HTTPGet with Exec",
+			base: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			patches: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{Exec: exec}),
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{Exec: exec}),
+			}},
+		},
+		{
+			name: "readiness probe: patch overrides HTTPGet with GRPC",
+			base: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			patches: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{GRPC: grpc}),
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{GRPC: grpc}),
+			}},
+		},
+		{
+			// Same handler type in base and patch: no conflict, no change needed.
+			name: "readiness probe: same handler type in base and patch",
+			base: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: &corev1.HTTPGetAction{Path: "/old", Port: port}}),
+			}},
+			patches: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+		},
+		{
+			// Patch does not touch the probe: base probe is preserved, no sanitization needed.
+			name: "patch does not override probe",
+			base: []corev1.Container{{
+				Name:           "c1",
+				Image:          "image:A",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			patches: []corev1.Container{{
+				Name:  "c1",
+				Image: "image:B",
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				Image:          "image:B",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+		},
+		{
+			// A brand-new container supplied entirely by the user via patches has no base to
+			// merge with. Even if it contains a malformed probe (multiple handlers), we leave
+			// it untouched — it is the user's responsibility to supply a valid spec.
+			name: "new container from patch with multiple probe handlers is not sanitized",
+			patches: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet, TCPSocket: tcpSocket}),
+			}},
+			result: []corev1.Container{{
+				Name:           "c1",
+				ReadinessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet, TCPSocket: tcpSocket}),
+			}},
+		},
+		{
+			// Sanitization applies to all probe types, not just ReadinessProbe.
+			name: "liveness and startup probes are also sanitized",
+			base: []corev1.Container{{
+				Name:          "c1",
+				StartupProbe:  probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+				LivenessProbe: probe(corev1.ProbeHandler{HTTPGet: httpGet}),
+			}},
+			patches: []corev1.Container{{
+				Name:          "c1",
+				StartupProbe:  probe(corev1.ProbeHandler{TCPSocket: tcpSocket}),
+				LivenessProbe: probe(corev1.ProbeHandler{Exec: exec}),
+			}},
+			result: []corev1.Container{{
+				Name:          "c1",
+				StartupProbe:  probe(corev1.ProbeHandler{TCPSocket: tcpSocket}),
+				LivenessProbe: probe(corev1.ProbeHandler{Exec: exec}),
+			}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := MergePatchContainers(tc.base, tc.patches)
+			require.NoError(t, err)
+			diff := pretty.Compare(result, tc.result)
+			require.Equal(t, "", diff, "patch result did not match. diff:\n%s", diff)
+		})
 	}
 }
 

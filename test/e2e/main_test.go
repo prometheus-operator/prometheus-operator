@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -451,6 +451,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusAgentDaemonSetSelectPodMonitor":             testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
 		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
+		"ShardingStrategyCELValidations":                       testPrometheusShardingStrategyCELValidations,
 		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
 		"ServiceMonitorStatusSubresource":                      testServiceMonitorStatusSubresource,
 		"ServiceMonitorStatusWithMultipleWorkloads":            testServiceMonitorStatusWithMultipleWorkloads,

@@ -23,7 +23,11 @@ import (
 // EmailThreadingConfigApplyConfiguration represents a declarative configuration of the EmailThreadingConfig type for use
 // with apply.
 type EmailThreadingConfigApplyConfiguration struct {
-	Enabled      *bool                               `json:"enabled,omitempty"`
+	// enabled defines whether to enable threading, which makes alert notifications in the same
+	// alert group show up in the same email thread.
+	Enabled *bool `json:"enabled,omitempty"`
+	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+	// (None means group by alert group key, no date).
 	ThreadByDate *monitoringv1beta1.ThreadByDateType `json:"threadByDate,omitempty"`
 }
 

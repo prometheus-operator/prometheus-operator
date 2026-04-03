@@ -24,11 +24,26 @@ import (
 
 // PrometheusApplyConfiguration represents a declarative configuration of the Prometheus type for use
 // with apply.
+//
+// The `Prometheus` custom resource definition (CRD) defines a desired [Prometheus](https://prometheus.io/docs/prometheus) setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage, and Alertmanagers where firing alerts should be sent and many more.
+//
+// For each `Prometheus` resource, the Operator deploys one or several `StatefulSet` objects in the same namespace. The number of StatefulSets is equal to the number of shards which is 1 by default.
+//
+// The resource defines via label and namespace selectors which `ServiceMonitor`, `PodMonitor`, `Probe` and `PrometheusRule` objects should be associated to the deployed Prometheus instances.
+//
+// The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.
 type PrometheusApplyConfiguration struct {
-	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *PrometheusSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                               *PrometheusStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of the desired behavior of the Prometheus cluster. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Spec *PrometheusSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the most recent observed status of the Prometheus cluster. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *PrometheusStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // Prometheus constructs a declarative configuration of the Prometheus type for use with
@@ -41,6 +56,7 @@ func Prometheus(name, namespace string) *PrometheusApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+
 func (b PrometheusApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

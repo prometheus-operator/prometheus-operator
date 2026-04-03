@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -3037,14 +3037,14 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		tc.BotTokenFile = ""
 	}
 
-	if tc.BotToken == "" && tc.BotTokenFile == "" {
-		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
-	}
-
 	if tc.BotToken != "" && tc.BotTokenFile != "" {
 		msg := "'bot_token' and 'bot_token_file' are mutually exclusive for telegram receiver config - 'bot_token' has taken precedence"
 		logger.Warn(msg)
 		tc.BotTokenFile = ""
+	}
+
+	if tc.BotToken == "" && tc.BotTokenFile == "" && lessThanV0_31 {
+		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
 	}
 
 	if tc.MessageThreadID != 0 && lessThanV0_26 {

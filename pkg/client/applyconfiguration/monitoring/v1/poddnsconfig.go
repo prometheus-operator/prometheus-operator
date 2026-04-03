@@ -18,10 +18,21 @@ package v1
 
 // PodDNSConfigApplyConfiguration represents a declarative configuration of the PodDNSConfig type for use
 // with apply.
+//
+// PodDNSConfig defines the DNS parameters of a pod in addition to
+// those generated from DNSPolicy.
 type PodDNSConfigApplyConfiguration struct {
-	Nameservers []string                               `json:"nameservers,omitempty"`
-	Searches    []string                               `json:"searches,omitempty"`
-	Options     []PodDNSConfigOptionApplyConfiguration `json:"options,omitempty"`
+	// nameservers defines the list of DNS name server IP addresses.
+	// This will be appended to the base nameservers generated from DNSPolicy.
+	Nameservers []string `json:"nameservers,omitempty"`
+	// searches defines the list of DNS search domains for host-name lookup.
+	// This will be appended to the base search paths generated from DNSPolicy.
+	Searches []string `json:"searches,omitempty"`
+	// options defines the list of DNS resolver options.
+	// This will be merged with the base options generated from DNSPolicy.
+	// Resolution options given in Options
+	// will override those that appear in the base DNSPolicy.
+	Options []PodDNSConfigOptionApplyConfiguration `json:"options,omitempty"`
 }
 
 // PodDNSConfigApplyConfiguration constructs a declarative configuration of the PodDNSConfig type for use with
