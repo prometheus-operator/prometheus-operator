@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,7 +90,7 @@ func TestMergeMetadata_CreateOrUpdateSecret(t *testing.T) {
 				},
 			}
 
-			sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
+			sClient := fake.NewClientset(secret).CoreV1().Secrets(namespace)
 
 			modifiedSecret := secret.DeepCopy()
 			maps.Copy(modifiedSecret.Labels, tc.modifiedLabels)

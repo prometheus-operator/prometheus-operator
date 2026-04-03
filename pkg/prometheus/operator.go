@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strconv"
 	"strings"
@@ -24,14 +25,15 @@ import (
 
 	"github.com/google/uuid"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
@@ -47,11 +49,43 @@ type Config struct {
 	Labels                     operator.Map
 }
 
+// StatefulSetGetter returns a statefulset object identified by
+// <namespace>/<name>.
+type StatefulSetGetter interface {
+	Get(string) (runtime.Object, error)
+}
+
+// ReconciledConditionGetter returns the Reconciled condition for the
+// workload resource identified by <namespace>/<name>. The second argument is
+// the observed generation.
+type ReconciledConditionGetter interface {
+	GetCondition(string, int64) monitoringv1.Condition
+}
+
+// DeletionChecker returns true if the given object is being deleted.
+type DeletionChecker interface {
+	DeletionInProgress(o metav1.Object) bool
+}
+
+// StatusReporter reports the status for Prometheus and PrometheusAgent
+// resources based on the state of the statefulsets and pods.
 type StatusReporter struct {
-	Kclient         kubernetes.Interface
-	Reconciliations *operator.ReconciliationTracker
-	SsetInfs        *informers.ForResource
-	Rr              *operator.ResourceReconciler
+	client       kubernetes.Interface
+	rcg          ReconciledConditionGetter
+	ssg          StatefulSetGetter
+	dc           DeletionChecker
+	repairPolicy operator.RepairPolicy
+}
+
+// NewStatusReporter returns a new StatusReporter.
+func NewStatusReporter(client kubernetes.Interface, rcg ReconciledConditionGetter, ssg StatefulSetGetter, dc DeletionChecker, repairPolicy operator.RepairPolicy) *StatusReporter {
+	return &StatusReporter{
+		client:       client,
+		rcg:          rcg,
+		ssg:          ssg,
+		dc:           dc,
+		repairPolicy: repairPolicy,
+	}
 }
 
 func KeyToStatefulSetKey(p monitoringv1.PrometheusInterface, key string, shard int) string {
@@ -66,8 +100,8 @@ func statefulSetNameFromPrometheusName(p monitoringv1.PrometheusInterface, name 
 	return fmt.Sprintf("%s-%s-shard-%d", Prefix(p), name, shard)
 }
 
-func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *v1.Secret {
-	s := &v1.Secret{
+func NewTLSAssetSecret(p monitoringv1.PrometheusInterface, config Config) *corev1.Secret {
+	s := &corev1.Secret{
 		Data: map[string][]byte{},
 	}
 
@@ -190,24 +224,51 @@ func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.Managed
 	return nil
 }
 
-// Process will determine the Status of a Prometheus resource (server or agent) depending on its current state in the cluster.
-func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
+func combinedStatus(statuses []monitoringv1.ConditionStatus) monitoringv1.ConditionStatus {
+	var status monitoringv1.ConditionStatus
+	for _, s := range statuses {
+		switch s {
+		case monitoringv1.ConditionFalse:
+			return monitoringv1.ConditionFalse
+		case monitoringv1.ConditionDegraded:
+			status = monitoringv1.ConditionDegraded
+		case monitoringv1.ConditionUnknown:
+			if status == "" {
+				status = monitoringv1.ConditionUnknown
+			}
+		}
+	}
 
+	if status == "" {
+		return monitoringv1.ConditionTrue
+	}
+
+	return status
+}
+
+func combinedReason(reasons []string) string {
+	uniqReasons := sets.New[string]()
+	for _, r := range reasons {
+		if r != "" {
+			uniqReasons.Insert(r)
+		}
+	}
+
+	return strings.Join(sets.List(uniqReasons), "And")
+}
+
+// Process will determine the Status of a Prometheus or PrometheusAgent
+// resource depending on the current state of the underlying workload resources
+// (including pods).
+func (sr *StatusReporter) Process(ctx context.Context, logger *slog.Logger, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 	commonFields := p.GetCommonPrometheusFields()
 	pStatus := monitoringv1.PrometheusStatus{
 		Paused: commonFields.Paused,
 	}
 
 	var (
-		availableStatus    = monitoringv1.ConditionTrue
-		availableReason    string
-		availableCondition = monitoringv1.Condition{
-			Type: monitoringv1.Available,
-			LastTransitionTime: metav1.Time{
-				Time: time.Now().UTC(),
-			},
-			ObservedGeneration: p.GetObjectMeta().GetGeneration(),
-		}
+		statuses []monitoringv1.ConditionStatus
+		reasons  []string
 		messages []string
 		replicas = 1
 	)
@@ -219,12 +280,11 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 	for shard := range ExpectedStatefulSetShardNames(p) {
 		ssetName := KeyToStatefulSetKey(p, key, shard)
 
-		obj, err := sr.SsetInfs.Get(ssetName)
+		obj, err := sr.ssg.Get(ssetName)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				// Statefulset hasn't been created or is already deleted.
-				availableStatus = monitoringv1.ConditionFalse
-				availableReason = "StatefulSetNotFound"
+				statuses, reasons = append(statuses, monitoringv1.ConditionFalse), append(reasons, "StatefulSetNotFound")
 				messages = append(messages, fmt.Sprintf("shard %d: statefulset %s not found", shard, ssetName))
 				pStatus.ShardStatuses = append(
 					pStatus.ShardStatuses,
@@ -239,11 +299,11 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 		}
 
 		sset := obj.(*appsv1.StatefulSet).DeepCopy()
-		if sr.Rr.DeletionInProgress(sset) {
+		if sr.dc.DeletionInProgress(sset) {
 			continue
 		}
 
-		stsReporter, err := operator.NewStatefulSetReporter(ctx, sr.Kclient, sset)
+		stsReporter, err := operator.NewStatefulSetReporter(ctx, sr.client, sset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve statefulset state: %w", err)
 		}
@@ -264,18 +324,10 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 			},
 		)
 
-		if len(stsReporter.ReadyPods()) >= replicas {
-			// All pods are ready (or the desired number of replicas is zero).
+		status, reason := stsReporter.StatusAndReasonForAvailableCondition(replicas)
+		statuses, reasons = append(statuses, status), append(reasons, reason)
+		if status == monitoringv1.ConditionTrue {
 			continue
-		}
-
-		switch {
-		case len(stsReporter.ReadyPods()) == 0:
-			availableReason = "NoPodReady"
-			availableStatus = monitoringv1.ConditionFalse
-		case availableCondition.Status != monitoringv1.ConditionFalse:
-			availableReason = "SomePodsNotReady"
-			availableStatus = monitoringv1.ConditionDegraded
 		}
 
 		for _, p := range stsReporter.Pods {
@@ -283,21 +335,25 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
 			}
 		}
+
+		if err := stsReporter.Repair(ctx, logger, sr.repairPolicy); err != nil {
+			logger.Warn("failed to repair statefulset", "err", err)
+		}
 	}
 
 	pStatus.Conditions = operator.UpdateConditions(
 		p.GetStatus().Conditions,
 		monitoringv1.Condition{
 			Type:    monitoringv1.Available,
-			Status:  availableStatus,
-			Reason:  availableReason,
+			Status:  combinedStatus(statuses),
+			Reason:  combinedReason(reasons),
 			Message: strings.Join(messages, "\n"),
 			LastTransitionTime: metav1.Time{
 				Time: time.Now().UTC(),
 			},
 			ObservedGeneration: p.GetObjectMeta().GetGeneration(),
 		},
-		sr.Reconciliations.GetCondition(key, p.GetObjectMeta().GetGeneration()),
+		sr.rcg.GetCondition(key, p.GetObjectMeta().GetGeneration()),
 	)
 
 	return &pStatus, nil

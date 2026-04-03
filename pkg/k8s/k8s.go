@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +33,8 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/discovery"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	clientauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
@@ -127,7 +127,7 @@ type ResourceAttribute struct {
 // the requirements aren't met.
 func IsAllowed(
 	ctx context.Context,
-	ssarClient clientauthv1.SelfSubjectAccessReviewInterface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	namespaces []string,
 	attributes ...ResourceAttribute,
 ) (bool, []error, error) {
@@ -136,7 +136,7 @@ func IsAllowed(
 	}
 
 	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+		namespaces = []string{corev1.NamespaceAll}
 	}
 
 	var missingPermissions []error
@@ -182,7 +182,7 @@ func IsAllowed(
 					}
 
 					switch ns {
-					case v1.NamespaceAll:
+					case corev1.NamespaceAll:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for all namespaces", verb, resource, ra.Group)
 					default:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for namespace %q", verb, resource, ra.Group, ns)
@@ -216,7 +216,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
-func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
+func CreateOrUpdateSecret(ctx context.Context, secretClient typedcorev1.SecretInterface, desired *corev1.Secret) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -229,7 +229,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			return err
 		}
 
-		mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+		mutated := existingSecret.DeepCopyObject().(*corev1.Secret)
 		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 		if apiequality.Semantic.DeepEqual(existingSecret, desired) {
 			return nil
@@ -240,7 +240,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 }
 
 // CreateOrUpdateConfigMap merges metadata of existing ConfigMap with new one and updates it.
-func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInterface, desired *v1.ConfigMap) error {
+func CreateOrUpdateConfigMap(ctx context.Context, cmClient typedcorev1.ConfigMapInterface, desired *corev1.ConfigMap) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingCM, err := cmClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -253,7 +253,7 @@ func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInt
 			return err
 		}
 
-		mutated := existingCM.DeepCopyObject().(*v1.ConfigMap)
+		mutated := existingCM.DeepCopyObject().(*corev1.ConfigMap)
 		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 		if apiequality.Semantic.DeepEqual(existingCM, desired) {
 			return nil

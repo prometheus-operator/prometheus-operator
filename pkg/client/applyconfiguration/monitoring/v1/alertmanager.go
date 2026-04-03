@@ -24,11 +24,24 @@ import (
 
 // AlertmanagerApplyConfiguration represents a declarative configuration of the Alertmanager type for use
 // with apply.
+//
+// The `Alertmanager` custom resource definition (CRD) defines a desired [Alertmanager](https://prometheus.io/docs/alerting) setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.
+//
+// For each `Alertmanager` resource, the Operator deploys a `StatefulSet` in the same namespace. When there are two or more configured replicas, the Operator runs the Alertmanager instances in high-availability mode.
+//
+// The resource defines via label and namespace selectors which `AlertmanagerConfig` objects should be associated to the deployed Alertmanager instances.
 type AlertmanagerApplyConfiguration struct {
-	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *AlertmanagerSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                               *AlertmanagerStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of the desired behavior of the Alertmanager cluster. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Spec *AlertmanagerSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the most recent observed status of the Alertmanager cluster. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *AlertmanagerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // Alertmanager constructs a declarative configuration of the Alertmanager type for use with
@@ -41,6 +54,7 @@ func Alertmanager(name, namespace string) *AlertmanagerApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+
 func (b AlertmanagerApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value

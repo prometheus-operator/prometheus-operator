@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 				},
 			}
 
-			ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+			ssetClient := fake.NewClientset(sset).AppsV1().StatefulSets(namespace)
 
 			modifiedSset := sset.DeepCopy()
 			modifiedSset.Spec.Template.Annotations = tc.new
@@ -205,7 +205,7 @@ func TestMergeMetadata_UpdateStatefulSet(t *testing.T) {
 				},
 			}
 
-			ssetClient := fake.NewSimpleClientset(sset).AppsV1().StatefulSets(namespace)
+			ssetClient := fake.NewClientset(sset).AppsV1().StatefulSets(namespace)
 
 			modifiedSset := sset.DeepCopy()
 			maps.Copy(modifiedSset.Labels, tc.modifiedLabels)

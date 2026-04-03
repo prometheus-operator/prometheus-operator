@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver/v4"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -67,6 +67,9 @@ type Config struct {
 
 	// Controller id for pod ownership.
 	ControllerID string
+
+	// Repair policy
+	RepairPolicy RepairPolicy
 
 	// Event recorder factory.
 	EventRecorderFactory EventRecorderFactory
@@ -116,6 +119,7 @@ func DefaultConfig(cpu, memory string) Config {
 				enabled:     false,
 			},
 		},
+		RepairPolicy: NoneRepairPolicy,
 	}
 }
 
@@ -142,23 +146,23 @@ type ContainerConfig struct {
 	EnableProbes   bool
 }
 
-func (cc ContainerConfig) ResourceRequirements() v1.ResourceRequirements {
-	resources := v1.ResourceRequirements{
-		Limits:   v1.ResourceList{},
-		Requests: v1.ResourceList{},
+func (cc ContainerConfig) ResourceRequirements() corev1.ResourceRequirements {
+	resources := corev1.ResourceRequirements{
+		Limits:   corev1.ResourceList{},
+		Requests: corev1.ResourceList{},
 	}
 
 	if cc.CPURequests.String() != "0" {
-		resources.Requests[v1.ResourceCPU] = cc.CPURequests.q
+		resources.Requests[corev1.ResourceCPU] = cc.CPURequests.q
 	}
 	if cc.CPULimits.String() != "0" {
-		resources.Limits[v1.ResourceCPU] = cc.CPULimits.q
+		resources.Limits[corev1.ResourceCPU] = cc.CPULimits.q
 	}
 	if cc.MemoryRequests.String() != "0" {
-		resources.Requests[v1.ResourceMemory] = cc.MemoryRequests.q
+		resources.Requests[corev1.ResourceMemory] = cc.MemoryRequests.q
 	}
 	if cc.MemoryLimits.String() != "0" {
-		resources.Limits[v1.ResourceMemory] = cc.MemoryLimits.q
+		resources.Limits[corev1.ResourceMemory] = cc.MemoryLimits.q
 	}
 
 	return resources
@@ -286,7 +290,7 @@ func (n *Namespaces) Finalize() error {
 	}
 
 	if len(n.AllowList) == 0 {
-		n.AllowList = StringSet{v1.NamespaceAll: struct{}{}}
+		n.AllowList = StringSet{corev1.NamespaceAll: struct{}{}}
 	}
 
 	if len(n.PrometheusAllowList) == 0 {
@@ -390,7 +394,7 @@ func (s StringSet) isAllNamespace() bool {
 		return false
 	}
 
-	_, found := s[v1.NamespaceAll]
+	_, found := s[corev1.NamespaceAll]
 	return found
 }
 

@@ -23,13 +23,25 @@ import (
 
 // ConfigResourceConditionApplyConfiguration represents a declarative configuration of the ConfigResourceCondition type for use
 // with apply.
+//
+// ConfigResourceCondition describes the status of configuration resources linked to Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 type ConfigResourceConditionApplyConfiguration struct {
-	Type               *monitoringv1.ConditionType   `json:"type,omitempty"`
-	Status             *monitoringv1.ConditionStatus `json:"status,omitempty"`
-	LastTransitionTime *metav1.Time                  `json:"lastTransitionTime,omitempty"`
-	Reason             *string                       `json:"reason,omitempty"`
-	Message            *string                       `json:"message,omitempty"`
-	ObservedGeneration *int64                        `json:"observedGeneration,omitempty"`
+	// type of the condition being reported.
+	// Currently, only "Accepted" is supported.
+	Type *monitoringv1.ConditionType `json:"type,omitempty"`
+	// status of the condition.
+	Status *monitoringv1.ConditionStatus `json:"status,omitempty"`
+	// lastTransitionTime defines the time of the last update to the current status property.
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	// reason for the condition's last transition.
+	Reason *string `json:"reason,omitempty"`
+	// message defines the human-readable message indicating details for the condition's last transition.
+	Message *string `json:"message,omitempty"`
+	// observedGeneration defines the .metadata.generation that the
+	// condition was set based upon. For instance, if `.metadata.generation` is
+	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+	// condition is out of date with respect to the current state of the object.
+	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
 
 // ConfigResourceConditionApplyConfiguration constructs a declarative configuration of the ConfigResourceCondition type for use with

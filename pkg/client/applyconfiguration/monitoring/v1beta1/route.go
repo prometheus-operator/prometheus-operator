@@ -23,17 +23,42 @@ import (
 
 // RouteApplyConfiguration represents a declarative configuration of the Route type for use
 // with apply.
+//
+// Route defines a node in the routing tree.
 type RouteApplyConfiguration struct {
-	Receiver            *string                     `json:"receiver,omitempty"`
-	GroupBy             []string                    `json:"groupBy,omitempty"`
-	GroupWait           *v1.NonEmptyDuration        `json:"groupWait,omitempty"`
-	GroupInterval       *v1.NonEmptyDuration        `json:"groupInterval,omitempty"`
-	RepeatInterval      *v1.NonEmptyDuration        `json:"repeatInterval,omitempty"`
-	Matchers            []MatcherApplyConfiguration `json:"matchers,omitempty"`
-	Continue            *bool                       `json:"continue,omitempty"`
-	Routes              []apiextensionsv1.JSON      `json:"routes,omitempty"`
-	MuteTimeIntervals   []string                    `json:"muteTimeIntervals,omitempty"`
-	ActiveTimeIntervals []string                    `json:"activeTimeIntervals,omitempty"`
+	// receiver defines the name of the receiver for this route. If not empty, it should be listed in
+	// the `receivers` field.
+	Receiver *string `json:"receiver,omitempty"`
+	// groupBy defines the list of labels to group by.
+	// Labels must not be repeated (unique list).
+	// Special label "..." (aggregate by all possible labels), if provided, must be the only element in the list.
+	GroupBy []string `json:"groupBy,omitempty"`
+	// groupWait defines how long to wait before sending the initial notification.
+	// Example: "30s"
+	GroupWait *v1.NonEmptyDuration `json:"groupWait,omitempty"`
+	// groupInterval defines how long to wait before sending an updated notification.
+	// Must be greater than 0.
+	// Example: "5m"
+	GroupInterval *v1.NonEmptyDuration `json:"groupInterval,omitempty"`
+	// repeatInterval defines how long to wait before repeating the last notification.
+	// Must be greater than 0.
+	// Example: "4h"
+	RepeatInterval *v1.NonEmptyDuration `json:"repeatInterval,omitempty"`
+	// matchers defines the list of matchers that the alert's labels should match. For the first
+	// level route, the operator removes any existing equality and regexp
+	// matcher on the `namespace` label and adds a `namespace: <object
+	// namespace>` matcher.
+	Matchers []MatcherApplyConfiguration `json:"matchers,omitempty"`
+	// continue defines the boolean indicating whether an alert should continue matching subsequent
+	// sibling nodes. It will always be overridden to true for the first-level
+	// route by the Prometheus operator.
+	Continue *bool `json:"continue,omitempty"`
+	// routes defines the child routes.
+	Routes []apiextensionsv1.JSON `json:"routes,omitempty"`
+	// muteTimeIntervals is a list of MuteTimeInterval names that will mute this route when matched,
+	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
+	// activeTimeIntervals is a list of TimeInterval names when this route should be active.
+	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
 }
 
 // RouteApplyConfiguration constructs a declarative configuration of the Route type for use with

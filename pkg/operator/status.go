@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,6 +75,7 @@ func StatusPoller(ctx context.Context, sr StatusReconciler) {
 				replicas := resource.ExpectedReplicas()
 				if replicas != resource.GetUpdatedReplicas() || replicas != resource.GetAvailableReplicas() {
 					sr.RefreshStatusFor(resource)
+					return
 				}
 
 				for _, cond := range resource.GetConditions() {

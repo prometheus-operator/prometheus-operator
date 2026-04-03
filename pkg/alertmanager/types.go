@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -324,23 +324,29 @@ type slackConfirmationField struct {
 }
 
 type emailConfig struct {
-	VSendResolved    *bool             `yaml:"send_resolved,omitempty"`
-	To               string            `yaml:"to,omitempty"`
-	From             string            `yaml:"from,omitempty"`
-	Hello            string            `yaml:"hello,omitempty"`
-	Smarthost        config.HostPort   `yaml:"smarthost,omitempty"`
-	AuthUsername     string            `yaml:"auth_username,omitempty"`
-	AuthPassword     string            `yaml:"auth_password,omitempty"`
-	AuthPasswordFile string            `yaml:"auth_password_file,omitempty"`
-	AuthSecret       string            `yaml:"auth_secret,omitempty"`
-	AuthSecretFile   string            `yaml:"auth_secret_file,omitempty"`
-	AuthIdentity     string            `yaml:"auth_identity,omitempty"`
-	Headers          map[string]string `yaml:"headers,omitempty"`
-	HTML             *string           `yaml:"html,omitempty"`
-	Text             *string           `yaml:"text,omitempty"`
-	RequireTLS       *bool             `yaml:"require_tls,omitempty"`
-	TLSConfig        *tlsConfig        `yaml:"tls_config,omitempty"`
-	ForceImplicitTLS *bool             `yaml:"force_implicit_tls,omitempty"`
+	VSendResolved    *bool                 `yaml:"send_resolved,omitempty"`
+	To               string                `yaml:"to,omitempty"`
+	From             string                `yaml:"from,omitempty"`
+	Hello            string                `yaml:"hello,omitempty"`
+	Smarthost        config.HostPort       `yaml:"smarthost,omitempty"`
+	AuthUsername     string                `yaml:"auth_username,omitempty"`
+	AuthPassword     string                `yaml:"auth_password,omitempty"`
+	AuthPasswordFile string                `yaml:"auth_password_file,omitempty"`
+	AuthSecret       string                `yaml:"auth_secret,omitempty"`
+	AuthSecretFile   string                `yaml:"auth_secret_file,omitempty"`
+	AuthIdentity     string                `yaml:"auth_identity,omitempty"`
+	Headers          map[string]string     `yaml:"headers,omitempty"`
+	HTML             *string               `yaml:"html,omitempty"`
+	Text             *string               `yaml:"text,omitempty"`
+	RequireTLS       *bool                 `yaml:"require_tls,omitempty"`
+	TLSConfig        *tlsConfig            `yaml:"tls_config,omitempty"`
+	ForceImplicitTLS *bool                 `yaml:"force_implicit_tls,omitempty"`
+	Threading        *emailThreadingConfig `yaml:"threading,omitempty"`
+}
+
+type emailThreadingConfig struct {
+	Enabled      *bool  `yaml:"enabled,omitempty"`
+	ThreadByDate string `yaml:"thread_by_date,omitempty"`
 }
 
 type pushoverConfig struct {

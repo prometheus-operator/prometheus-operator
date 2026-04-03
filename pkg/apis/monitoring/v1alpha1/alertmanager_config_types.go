@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -903,6 +903,13 @@ type EmailConfig struct {
 	// This includes settings for certificates, CA validation, and TLS protocol options.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+	// true: force use of implicit TLS (direct TLS connection on any port)
+	// false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
 }
 
 // VictorOpsConfig configures notifications via VictorOps.

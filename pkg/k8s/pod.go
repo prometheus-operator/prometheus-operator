@@ -1,4 +1,4 @@
-// Copyright 2026 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,23 +17,23 @@ package k8s
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 // PodRunningAndReady returns whether a pod is running and each container has
 // passed it's ready state.
-func PodRunningAndReady(pod v1.Pod) (bool, error) {
+func PodRunningAndReady(pod corev1.Pod) (bool, error) {
 	switch pod.Status.Phase {
-	case v1.PodFailed, v1.PodSucceeded:
+	case corev1.PodFailed, corev1.PodSucceeded:
 		return false, fmt.Errorf("pod completed with phase %s", pod.Status.Phase)
-	case v1.PodRunning:
+	case corev1.PodRunning:
 		for _, cond := range pod.Status.Conditions {
-			if cond.Type != v1.PodReady {
+			if cond.Type != corev1.PodReady {
 				continue
 			}
-			return cond.Status == v1.ConditionTrue, nil
+			return cond.Status == corev1.ConditionTrue, nil
 		}
 		return false, fmt.Errorf("pod ready condition not found")
 	}
@@ -41,18 +41,18 @@ func PodRunningAndReady(pod v1.Pod) (bool, error) {
 }
 
 // UpdateDNSConfig updates the DNS configuration in a Pod spec.
-func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
+func UpdateDNSConfig(podSpec *corev1.PodSpec, config *monitoringv1.PodDNSConfig) {
 	if config == nil {
 		return
 	}
 
-	dnsConfig := v1.PodDNSConfig{
+	dnsConfig := corev1.PodDNSConfig{
 		Nameservers: config.Nameservers,
 		Searches:    config.Searches,
 	}
 
 	for _, opt := range config.Options {
-		dnsConfig.Options = append(dnsConfig.Options, v1.PodDNSConfigOption{
+		dnsConfig.Options = append(dnsConfig.Options, corev1.PodDNSConfigOption{
 			Name:  opt.Name,
 			Value: opt.Value,
 		})
@@ -62,10 +62,10 @@ func UpdateDNSConfig(podSpec *v1.PodSpec, config *monitoringv1.PodDNSConfig) {
 }
 
 // UpdateDNSPolicy updates the DNS policy in a Pod spec.
-func UpdateDNSPolicy(podSpec *v1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
+func UpdateDNSPolicy(podSpec *corev1.PodSpec, dnsPolicy *monitoringv1.DNSPolicy) {
 	if dnsPolicy == nil {
 		return
 	}
 
-	podSpec.DNSPolicy = v1.DNSPolicy(*dnsPolicy)
+	podSpec.DNSPolicy = corev1.DNSPolicy(*dnsPolicy)
 }

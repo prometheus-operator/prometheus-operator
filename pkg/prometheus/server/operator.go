@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -93,7 +93,7 @@ type Operator struct {
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
-	statusReporter  prompkg.StatusReporter
+	statusReporter  *prompkg.StatusReporter
 
 	endpointSliceSupported        bool
 	scrapeConfigSupported         bool
@@ -343,7 +343,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = c.ConfigMapListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
@@ -361,7 +361,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = c.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceSecrets)),
 		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
@@ -401,7 +401,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
-			&v1.Namespace{}, resyncPeriod, cache.Indexers{},
+			&corev1.Namespace{}, resyncPeriod, cache.Indexers{},
 		), nil
 	}
 
@@ -419,12 +419,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
-	o.statusReporter = prompkg.StatusReporter{
-		Kclient:         o.kclient,
-		Reconciliations: o.reconciliations,
-		SsetInfs:        o.ssetInfs,
-		Rr:              o.rr,
-	}
+	o.statusReporter = prompkg.NewStatusReporter(
+		o.kclient,
+		o.reconciliations,
+		o.ssetInfs,
+		o.rr,
+		c.RepairPolicy,
+	)
 
 	return o, nil
 }
@@ -664,7 +665,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		)
 		return
 	}
-	ns := nsObject.(*v1.Namespace)
+	ns := nsObject.(*corev1.Namespace)
 
 	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus instances in the namespace.
@@ -761,8 +762,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
-	old := oldo.(*v1.Namespace)
-	cur := curo.(*v1.Namespace)
+	old := oldo.(*corev1.Namespace)
+	cur := curo.(*corev1.Namespace)
 
 	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
@@ -817,22 +818,31 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	c.reconciliations.ResetStatus(key)
-	err := c.sync(ctx, key)
+
+	closure, err := c.sync(ctx, key)
+	if err != nil {
+		_ = closure(ctx)
+	} else {
+		err = closure(ctx)
+	}
+
 	c.reconciliations.SetStatus(key, err)
 
 	return err
 }
 
-func (c *Operator) sync(ctx context.Context, key string) error {
+func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) error, error) {
+	closure := func(context.Context) error { return nil }
+
 	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if p == nil {
 		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return closure, nil
 	}
 
 	logger := c.logger.With("key", key)
@@ -842,29 +852,29 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return c.configResStatusCleanup(ctx, p)
 	})
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if finalizerAdded {
 		// Since the finalizer has been added to the object, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
-		return nil
+		return closure, nil
 	}
 
 	if c.rr.DeletionInProgress(p) {
 		c.reconciliations.ForgetObject(key)
-		return nil
+		return closure, nil
 	}
 
 	if p.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
-		return nil
+		return closure, nil
 	}
 
 	c.recordDeprecatedFields(key, logger, p)
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
-		return err
+		return closure, err
 	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
@@ -872,7 +882,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Select configuration resources.
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
-		return err
+		return closure, err
+	}
+
+	// Returns updateConfigResourcesStatus as the closure
+	// so that we can call it at the end of each sync.
+	closure = func(ctx context.Context) error {
+		return c.updateConfigResourcesStatus(ctx, p, *resources)
 	}
 
 	if resources.Len() == 0 {
@@ -881,7 +897,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	opts := []prompkg.ConfigGeneratorOption{}
@@ -890,25 +906,25 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore, resources); err != nil {
-		return fmt.Errorf("creating config failed: %w", err)
+		return closure, fmt.Errorf("creating config failed: %w", err)
 	}
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return closure, fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
 	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
+		return closure, fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
 	if p.Spec.ServiceName != nil {
@@ -916,7 +932,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		selectorLabels := makeSelectorLabels(p.Name)
 
 		if err := k8s.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
-			return err
+			return closure, err
 		}
 	} else {
 		// Reconcile the default governing service.
@@ -930,7 +946,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		)
 
 		if p.Spec.Thanos != nil {
-			svc.Spec.Ports = append(svc.Spec.Ports, v1.ServicePort{
+			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
 				Name:       "grpc",
 				Port:       10901,
 				TargetPort: intstr.FromString("grpc"),
@@ -938,7 +954,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		if _, err := k8s.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+			return closure, fmt.Errorf("synchronizing default governing service failed: %w", err)
 		}
 	}
 
@@ -955,7 +971,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if err != nil {
 			notFound = apierrors.IsNotFound(err)
 			if !notFound {
-				return fmt.Errorf("retrieving statefulset failed: %w", err)
+				return closure, fmt.Errorf("retrieving statefulset failed: %w", err)
 			}
 		}
 
@@ -976,7 +992,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, tlsAssets, existingStatefulSet.Spec)
 		if err != nil {
-			return err
+			return closure, err
 		}
 
 		sset, err := makeStatefulSet(
@@ -989,14 +1005,14 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			int32(shard),
 			tlsAssets)
 		if err != nil {
-			return fmt.Errorf("making statefulset failed: %w", err)
+			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
 
 		if notFound {
 			logger.Debug("creating statefulset")
 			if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
-				return fmt.Errorf("failed to create statefulset: %w", err)
+				return closure, fmt.Errorf("failed to create statefulset: %w", err)
 			}
 			continue
 		}
@@ -1016,7 +1032,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			c.metrics.StsDeleteCreateCounter().Inc()
 			logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 		}); err != nil {
-			return err
+			return closure, err
 		}
 	}
 
@@ -1055,15 +1071,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 	})
 	if err != nil {
-		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
+		return closure, fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 	if len(deleteErrs) > 0 {
-		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
+		return closure, fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
 
-	err = c.updateConfigResourcesStatus(ctx, p, *resources)
-
-	return err
+	return closure, err
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
@@ -1218,7 +1232,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
-	pStatus, err := c.statusReporter.Process(ctx, p, key)
+	pStatus, err := c.statusReporter.Process(ctx, c.logger, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus status: %w", err)
 	}
@@ -1495,7 +1509,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	s := &corev1.Secret{}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),

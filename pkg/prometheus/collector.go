@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/utils/ptr"
 
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var (
@@ -68,12 +68,12 @@ func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	for _, s := range c.stores {
 		for _, p := range s.List() {
-			c.collectPrometheus(ch, p.(v1.PrometheusInterface))
+			c.collectPrometheus(ch, p.(monitoringv1.PrometheusInterface))
 		}
 	}
 }
 
-func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p v1.PrometheusInterface) {
+func (c *Collector) collectPrometheus(ch chan<- prometheus.Metric, p monitoringv1.PrometheusInterface) {
 	namespace := p.GetObjectMeta().GetNamespace()
 	name := p.GetObjectMeta().GetName()
 	replicas := float64(*ReplicasNumberPtr(p))

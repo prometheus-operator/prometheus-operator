@@ -24,11 +24,24 @@ import (
 
 // ThanosRulerApplyConfiguration represents a declarative configuration of the ThanosRuler type for use
 // with apply.
+//
+// The `ThanosRuler` custom resource definition (CRD) defines a desired [Thanos Ruler](https://github.com/thanos-io/thanos/blob/main/docs/components/rule.md) setup to run in a Kubernetes cluster.
+//
+// A `ThanosRuler` instance requires at least one compatible Prometheus API endpoint (either Thanos Querier or Prometheus services).
+//
+// The resource defines via label and namespace selectors which `PrometheusRule` objects should be associated to the deployed Thanos Ruler instances.
 type ThanosRulerApplyConfiguration struct {
-	metav1.TypeMetaApplyConfiguration    `json:",inline"`
+	// TypeMeta defines the versioned schema of this representation of an object.
+	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
-	Spec                                 *ThanosRulerSpecApplyConfiguration   `json:"spec,omitempty"`
-	Status                               *ThanosRulerStatusApplyConfiguration `json:"status,omitempty"`
+	// spec defines the specification of the desired behavior of the ThanosRuler cluster. More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Spec *ThanosRulerSpecApplyConfiguration `json:"spec,omitempty"`
+	// status defines the most recent observed status of the ThanosRuler cluster. Read-only.
+	// More info:
+	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+	Status *ThanosRulerStatusApplyConfiguration `json:"status,omitempty"`
 }
 
 // ThanosRuler constructs a declarative configuration of the ThanosRuler type for use with
@@ -41,6 +54,7 @@ func ThanosRuler(name, namespace string) *ThanosRulerApplyConfiguration {
 	b.WithAPIVersion("monitoring.coreos.com/v1")
 	return b
 }
+
 func (b ThanosRulerApplyConfiguration) IsApplyConfiguration() {}
 
 // WithKind sets the Kind field in the declarative configuration to the given value
