@@ -893,10 +893,6 @@ const (
 )
 
 type EmailThreadingConfig struct {
-	// enabled defines whether to enable threading, which makes alert notifications in the same
-	// alert group show up in the same email thread.
-	// +optional
-	Enabled *bool `json:"enabled,omitempty"` // nolint:kubeapilinter
 	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
 	// (None means group by alert group key, no date).
 	// +required
