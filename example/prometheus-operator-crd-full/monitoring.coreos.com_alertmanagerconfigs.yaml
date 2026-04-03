@@ -1159,11 +1159,6 @@ spec:
                               threading defines the threading configuration for email receiver.
                               It requires Alertmanager >= v0.30.0.
                             properties:
-                              enabled:
-                                description: |-
-                                  enabled defines whether to enable threading, which makes alert notifications in the same
-                                  alert group show up in the same email thread.
-                                type: boolean
                               threadByDate:
                                 description: |-
                                   threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
@@ -13367,11 +13362,6 @@ spec:
                               threading defines the threading configuration for email receiver.
                               It requires Alertmanager >= v0.30.0.
                             properties:
-                              enabled:
-                                description: |-
-                                  enabled defines whether to enable threading, which makes alert notifications in the same
-                                  alert group show up in the same email thread.
-                                type: boolean
                               threadByDate:
                                 description: |-
                                   threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.

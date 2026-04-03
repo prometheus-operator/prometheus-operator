@@ -23,9 +23,6 @@ import (
 // EmailThreadingConfigApplyConfiguration represents a declarative configuration of the EmailThreadingConfig type for use
 // with apply.
 type EmailThreadingConfigApplyConfiguration struct {
-	// enabled defines whether to enable threading, which makes alert notifications in the same
-	// alert group show up in the same email thread.
-	Enabled *bool `json:"enabled,omitempty"`
 	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
 	// (None means group by alert group key, no date).
 	ThreadByDate *monitoringv1alpha1.ThreadByDateType `json:"threadByDate,omitempty"`
@@ -35,14 +32,6 @@ type EmailThreadingConfigApplyConfiguration struct {
 // apply.
 func EmailThreadingConfig() *EmailThreadingConfigApplyConfiguration {
 	return &EmailThreadingConfigApplyConfiguration{}
-}
-
-// WithEnabled sets the Enabled field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Enabled field is set to the value of the last call.
-func (b *EmailThreadingConfigApplyConfiguration) WithEnabled(value bool) *EmailThreadingConfigApplyConfiguration {
-	b.Enabled = &value
-	return b
 }
 
 // WithThreadByDate sets the ThreadByDate field in the declarative configuration to the given value
