@@ -54,6 +54,10 @@ Arguments:
     	Config Reloader memory limits. Value "0" disables it and causes no limit to be configured. (default 50Mi)
   -config-reloader-memory-request value
     	Config Reloader memory requests. Value "0" disables it and causes no request to be configured. (default 50Mi)
+  -configmap-field-selector value
+    	Field selector to filter ConfigMaps to watch
+  -configmap-label-selector value
+    	Label selector to filter ConfigMaps to watch
   -controller-id operator.prometheus.io/controller-id
     	Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an operator.prometheus.io/controller-id annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.
   -deny-namespaces value
@@ -68,6 +72,7 @@ Arguments:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  RemoteWriteCustomResourceDefinition: Enables the RemoteWrite CRD support (enabled: false)
     	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
@@ -138,6 +143,8 @@ Arguments:
     	Address on which to expose metrics and web interface. (default ":8080")
   -web.tls-cipher-suites value
     	Comma-separated list of cipher suites for the server. Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants).If omitted, the default Go cipher suites will be used. Note that TLS 1.3 ciphersuites are not configurable.
+  -web.tls-curves value
+    	Comma-separated list of TLS curves for the server. Supported values: CurveP256, CurveP384, CurveP521, X25519, X25519MLKEM768.
   -web.tls-min-version string
     	Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants. (default "VersionTLS13")
   -web.tls-reload-interval duration

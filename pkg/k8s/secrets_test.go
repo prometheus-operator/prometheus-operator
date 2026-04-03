@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8sutil
+package k8s
 
 import (
 	"context"
@@ -21,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
@@ -38,12 +37,12 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 	}
 
-	sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets("ns")
+	sClient := fake.NewClientset(secret).CoreV1().Secrets("ns")
 	logger := slog.New(slog.DiscardHandler)
 
 	for _, tc := range []struct {
 		name     string
-		ref      *v1.SecretKeySelector
+		ref      *corev1.SecretKeySelector
 		expected []byte
 		err      bool
 	}{
@@ -52,8 +51,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "valid ref",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key: "key1",
@@ -62,8 +61,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing secret",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret2",
 				},
 				Key: "key1",
@@ -72,8 +71,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing key",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key: "key2",
@@ -82,8 +81,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing optional secret",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret2",
 				},
 				Key:      "key1",
@@ -93,8 +92,8 @@ func TestLoadSecretRef(t *testing.T) {
 		},
 		{
 			name: "missing optional key",
-			ref: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ref: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "secret",
 				},
 				Key:      "key2",

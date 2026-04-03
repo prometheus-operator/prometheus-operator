@@ -23,17 +23,44 @@ import (
 
 // TelegramConfigApplyConfiguration represents a declarative configuration of the TelegramConfig type for use
 // with apply.
+//
+// TelegramConfig configures notifications via Telegram.
+// See https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
 type TelegramConfigApplyConfiguration struct {
-	SendResolved         *bool                         `json:"sendResolved,omitempty"`
-	APIURL               *monitoringv1alpha1.URL       `json:"apiURL,omitempty"`
-	BotToken             *v1.SecretKeySelector         `json:"botToken,omitempty"`
-	BotTokenFile         *string                       `json:"botTokenFile,omitempty"`
-	ChatID               *int64                        `json:"chatID,omitempty"`
-	MessageThreadID      *int64                        `json:"messageThreadID,omitempty"`
-	Message              *string                       `json:"message,omitempty"`
-	DisableNotifications *bool                         `json:"disableNotifications,omitempty"`
-	ParseMode            *string                       `json:"parseMode,omitempty"`
-	HTTPConfig           *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the Telegram API URL, e.g. https://api.telegram.org.
+	// If not specified, the default Telegram API URL will be used.
+	APIURL *monitoringv1alpha1.URL `json:"apiURL,omitempty"`
+	// botToken defines the Telegram bot token. It is mutually exclusive with `botTokenFile`.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// Either `botToken` or `botTokenFile` is required.
+	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
+	// botTokenFile defines the file to read the Telegram bot token from.
+	// It is mutually exclusive with `botToken`.
+	// Either `botToken` or `botTokenFile` is required.
+	// It requires Alertmanager >= v0.26.0.
+	BotTokenFile *string `json:"botTokenFile,omitempty"`
+	// chatID defines the Telegram chat ID where messages will be sent.
+	// This can be a user ID, group ID, or channel ID (with @ prefix for public channels).
+	ChatID *int64 `json:"chatID,omitempty"`
+	// messageThreadID defines the Telegram Group Topic ID for threaded messages.
+	// This allows sending messages to specific topics within Telegram groups.
+	// It requires Alertmanager >= 0.26.0.
+	MessageThreadID *int64 `json:"messageThreadID,omitempty"`
+	// message defines the message template for the Telegram notification.
+	// This is the content that will be sent to the specified chat.
+	Message *string `json:"message,omitempty"`
+	// disableNotifications controls whether Telegram notifications are sent silently.
+	// When true, users will receive the message without notification sounds.
+	DisableNotifications *bool `json:"disableNotifications,omitempty"`
+	// parseMode defines the parse mode for telegram message formatting.
+	// Valid values are "MarkdownV2", "Markdown", and "HTML".
+	// This determines how text formatting is interpreted in the message.
+	ParseMode *string `json:"parseMode,omitempty"`
+	// httpConfig defines the HTTP client configuration for Telegram API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // TelegramConfigApplyConfiguration constructs a declarative configuration of the TelegramConfig type for use with

@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8sutil
+package k8s
 
 import (
 	"encoding/json"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
 )
 
 // MergePatchContainers adds patches to base using a strategic merge patch and
 // iterating by container name, failing on the first error.
-func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) {
-	var out []v1.Container
+func MergePatchContainers(base, patches []corev1.Container) ([]corev1.Container, error) {
+	var out []corev1.Container
 
-	containersByName := make(map[string]v1.Container)
+	containersByName := make(map[string]corev1.Container)
 	for _, c := range patches {
 		containersByName[c.Name] = c
 	}
@@ -52,15 +52,16 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 		}
 
 		// Calculate the patch result.
-		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, v1.Container{})
+		jsonResult, err := strategicpatch.StrategicMergePatch(containerBytes, patchBytes, corev1.Container{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate merge patch for container %s: %w", container.Name, err)
 		}
 
-		var patchResult v1.Container
+		var patchResult corev1.Container
 		if err := json.Unmarshal(jsonResult, &patchResult); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal merged container %s: %w", container.Name, err)
 		}
+		sanitizeProbeHandlers(&patchResult, &patchContainer)
 
 		// Add the patch result and remove the corresponding key from the to do list.
 		out = append(out, patchResult)
@@ -76,4 +77,45 @@ func MergePatchContainers(base, patches []v1.Container) ([]v1.Container, error) 
 	}
 
 	return out, nil
+}
+
+// sanitizeProbeHandlers fixes probe handlers in a merged container where a strategic merge
+// has left multiple handler types set (e.g. HTTPGet from base + TCPSocket from patch),
+// which causes Kubernetes "may not specify more than 1 handler type" validation error.
+// When multiple handlers are detected the patch's probe handler takes precedence, discarding
+// the base handler.
+func sanitizeProbeHandlers(merged, patch *corev1.Container) {
+	type probePair struct {
+		merged *corev1.Probe
+		patch  *corev1.Probe
+	}
+	for _, pp := range []probePair{
+		{merged.StartupProbe, patch.StartupProbe},
+		{merged.ReadinessProbe, patch.ReadinessProbe},
+		{merged.LivenessProbe, patch.LivenessProbe},
+	} {
+		if pp.merged == nil || pp.patch == nil {
+			continue
+		}
+		if probeHandlerCount(pp.merged.ProbeHandler) > 1 {
+			pp.merged.ProbeHandler = pp.patch.ProbeHandler
+		}
+	}
+}
+
+func probeHandlerCount(h corev1.ProbeHandler) int {
+	count := 0
+	if h.HTTPGet != nil {
+		count++
+	}
+	if h.TCPSocket != nil {
+		count++
+	}
+	if h.Exec != nil {
+		count++
+	}
+	if h.GRPC != nil {
+		count++
+	}
+	return count
 }

@@ -23,22 +23,49 @@ import (
 
 // JiraConfigApplyConfiguration represents a declarative configuration of the JiraConfig type for use
 // with apply.
+//
+// JiraConfig configures notifications via Jira.
+// See https://prometheus.io/docs/alerting/latest/configuration/#Jira_config
+// It requires Alertmanager >= 0.28.0.
 type JiraConfigApplyConfiguration struct {
-	SendResolved      *bool                           `json:"sendResolved,omitempty"`
-	APIURL            *monitoringv1alpha1.URL         `json:"apiURL,omitempty"`
-	Project           *string                         `json:"project,omitempty"`
-	Summary           *string                         `json:"summary,omitempty"`
-	Description       *string                         `json:"description,omitempty"`
-	Labels            []string                        `json:"labels,omitempty"`
-	Priority          *string                         `json:"priority,omitempty"`
-	IssueType         *string                         `json:"issueType,omitempty"`
-	ResolveTransition *string                         `json:"resolveTransition,omitempty"`
-	ReopenTransition  *string                         `json:"reopenTransition,omitempty"`
-	WontFixResolution *string                         `json:"wontFixResolution,omitempty"`
-	ReopenDuration    *v1.Duration                    `json:"reopenDuration,omitempty"`
-	Fields            []JiraFieldApplyConfiguration   `json:"fields,omitempty"`
-	APIType           *monitoringv1alpha1.JiraAPIType `json:"apiType,omitempty"`
-	HTTPConfig        *HTTPConfigApplyConfiguration   `json:"httpConfig,omitempty"`
+	// sendResolved defines whether to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the Jira API URL i.e. https://company.atlassian.net/rest/api/2/
+	// The full API path must be included.
+	// If not specified, default API URL will be used.
+	APIURL *monitoringv1alpha1.URL `json:"apiURL,omitempty"`
+	// project defines the project key where issues are created.
+	Project *string `json:"project,omitempty"`
+	// summary defines the issue summary template.
+	Summary *string `json:"summary,omitempty"`
+	// description defines the issue description template.
+	Description *string `json:"description,omitempty"`
+	// labels defines labels to be added to the issue.
+	Labels []string `json:"labels,omitempty"`
+	// priority defines the priority of the issue.
+	Priority *string `json:"priority,omitempty"`
+	// issueType defines a type of the issue (e.g. Bug).
+	IssueType *string `json:"issueType,omitempty"`
+	// resolveTransition defines name of the workflow transition to resolve an issue.
+	// The target status must have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	ResolveTransition *string `json:"resolveTransition,omitempty"`
+	// reopenTransition defines name of the workflow transition to reopen an issue.
+	// The target status should not have the category "done".
+	// NOTE: The name of the transition can be localized and depends on the language setting of the service account.
+	ReopenTransition *string `json:"reopenTransition,omitempty"`
+	// wontFixResolution defines if reopenTransition is defined, ignore issues with that resolution.
+	WontFixResolution *string `json:"wontFixResolution,omitempty"`
+	// reopenDuration defines to reopen the issue when it is not older than this value (rounded down to the nearest minute).
+	// The 'resolutiondate' field in Jira is used to determine the age of the issue.
+	ReopenDuration *v1.Duration `json:"reopenDuration,omitempty"`
+	// fields defines other issue and custom fields.
+	Fields []JiraFieldApplyConfiguration `json:"fields,omitempty"`
+	// apiType defines type of Jira API. The acceptable value should be either Cloud, Datacenter or Auto.
+	// It requires Alertmanager >= 0.29.0.
+	APIType *monitoringv1alpha1.JiraAPIType `json:"apiType,omitempty"`
+	// httpConfig defines HTTP client configuration for Jira connection.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // JiraConfigApplyConfiguration constructs a declarative configuration of the JiraConfig type for use with

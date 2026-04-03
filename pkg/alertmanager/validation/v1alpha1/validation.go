@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 
 	for _, receiver := range receivers {
 		if _, found := receiverNames[receiver.Name]; found {
-			return nil, fmt.Errorf("%q receiver is not unique: %w", receiver.Name, err)
+			return nil, fmt.Errorf("%q receiver is not unique", receiver.Name)
 		}
 		receiverNames[receiver.Name] = struct{}{}
 
@@ -380,7 +380,11 @@ func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
 	for i, config := range configs {
 		if config.BotToken == nil && config.BotTokenFile == nil {
-			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
+			return fmt.Errorf("[%d]: mandatory field 'botToken' or 'botTokenfile' is empty", i)
+		}
+
+		if config.BotToken != nil && config.BotTokenFile != nil {
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
 		}
 
 		if config.ChatID == 0 {

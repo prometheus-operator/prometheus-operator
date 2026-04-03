@@ -22,8 +22,13 @@ import (
 
 // JiraFieldApplyConfiguration represents a declarative configuration of the JiraField type for use
 // with apply.
+//
+// JiraField defines a (key, value) tuple.
+// See: https://developer.atlassian.com/server/Jira/platform/Jira-rest-api-examples/#setting-custom-field-data-for-other-field-types
 type JiraFieldApplyConfiguration struct {
-	Key   *string  `json:"key,omitempty"`
+	// key defines the key of the tuple.
+	Key *string `json:"key,omitempty"`
+	// value defines the value of the tuple.
 	Value *v1.JSON `json:"value,omitempty"`
 }
 

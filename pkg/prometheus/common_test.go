@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 						Version: tc.version,
 						RemoteWrite: []monitoringv1.RemoteWriteSpec{
 							{
-								URL:            "http://example.com",
+								URL:            monitoringv1.URL("http://example.com"),
 								MessageVersion: tc.messageVersion,
 							},
 						},

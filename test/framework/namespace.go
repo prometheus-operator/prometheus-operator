@@ -1,4 +1,4 @@
-// Copyright 2017 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,22 +19,22 @@ import (
 	"maps"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 func (f *Framework) CreateNamespace(ctx context.Context, t *testing.T, testCtx *TestCtx) string {
 	name := testCtx.ID()
-	rn := k8sutil.ResourceNamer{}
+	rn := k8s.ResourceNamer{}
 	name, err := rn.UniqueDNS1123Label(name)
 	if err != nil {
 		t.Fatalf("failed to generate namespace %v: %v", name, err)
 	}
 
-	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+	_, err = f.KubeClient.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
 			Labels: map[string]string{"app.kubernetes.io/created-by": "e2e-test"},

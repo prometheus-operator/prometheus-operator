@@ -23,16 +23,36 @@ import (
 
 // HTTPConfigApplyConfiguration represents a declarative configuration of the HTTPConfig type for use
 // with apply.
+//
+// HTTPConfig defines a client HTTP configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_config
 type HTTPConfigApplyConfiguration struct {
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	BearerTokenSecret                *corev1.SecretKeySelector               `json:"bearerTokenSecret,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	ProxyURLOriginal                 *string                                 `json:"proxyURL,omitempty"`
+	// authorization defines the authorization header configuration for the client.
+	// This is mutually exclusive with BasicAuth and is only available starting from Alertmanager v0.22+.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// basicAuth defines the basic authentication credentials for the client.
+	// This is mutually exclusive with Authorization. If both are defined, BasicAuth takes precedence.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// oauth2 defines the OAuth2 client credentials used to fetch a token for the targets.
+	// This enables OAuth2 authentication flow for HTTP requests.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// bearerTokenSecret defines the secret's key that contains the bearer token to be used by the client
+	// for authentication.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	BearerTokenSecret *corev1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
+	// tlsConfig defines the TLS configuration for the client.
+	// This includes settings for certificates, CA validation, and TLS protocol options.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// proxyURL defines an optional proxy URL for HTTP requests.
+	// If defined, this field takes precedence over `proxyUrl`.
+	ProxyURLOriginal                 *string `json:"proxyURL,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool `json:"enableHttp2,omitempty"`
+	// followRedirects specifies whether the client should follow HTTP 3xx redirects.
+	// When true, the client will automatically follow redirect responses.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHttp2 can be used to disable HTTP2.
+	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
 // HTTPConfigApplyConfiguration constructs a declarative configuration of the HTTPConfig type for use with

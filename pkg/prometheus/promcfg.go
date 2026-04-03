@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -1262,25 +1262,25 @@ func (cg *ConfigGenerator) BuildPodMetadata() (map[string]string, map[string]str
 // Prometheus is effectively ready.
 // We don't want to use the /-/healthy handler here because it returns OK as
 // soon as the web server is started (irrespective of the WAL replay).
-func (cg *ConfigGenerator) BuildProbes() (*v1.Probe, *v1.Probe, *v1.Probe) {
+func (cg *ConfigGenerator) BuildProbes() (*corev1.Probe, *corev1.Probe, *corev1.Probe) {
 	readyProbeHandler := cg.buildProbeHandler("/-/ready")
 	startupPeriodSeconds, startupFailureThreshold := getStatupProbePeriodSecondsAndFailureThreshold(cg.prom.GetCommonPrometheusFields().MaximumStartupDurationSeconds)
 
-	startupProbe := &v1.Probe{
+	startupProbe := &corev1.Probe{
 		ProbeHandler:     readyProbeHandler,
 		TimeoutSeconds:   ProbeTimeoutSeconds,
 		PeriodSeconds:    startupPeriodSeconds,
 		FailureThreshold: startupFailureThreshold,
 	}
 
-	readinessProbe := &v1.Probe{
+	readinessProbe := &corev1.Probe{
 		ProbeHandler:     readyProbeHandler,
 		TimeoutSeconds:   ProbeTimeoutSeconds,
 		PeriodSeconds:    5,
 		FailureThreshold: 3,
 	}
 
-	livenessProbe := &v1.Probe{
+	livenessProbe := &corev1.Probe{
 		ProbeHandler:     cg.buildProbeHandler("/-/healthy"),
 		TimeoutSeconds:   ProbeTimeoutSeconds,
 		PeriodSeconds:    5,
@@ -1290,11 +1290,11 @@ func (cg *ConfigGenerator) BuildProbes() (*v1.Probe, *v1.Probe, *v1.Probe) {
 	return startupProbe, readinessProbe, livenessProbe
 }
 
-func (cg *ConfigGenerator) buildProbeHandler(probePath string) v1.ProbeHandler {
+func (cg *ConfigGenerator) buildProbeHandler(probePath string) corev1.ProbeHandler {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
 	probePath = path.Clean(cpf.WebRoutePrefix() + probePath)
-	handler := v1.ProbeHandler{}
+	handler := corev1.ProbeHandler{}
 	if cpf.ListenLocal {
 		probeURL := url.URL{
 			Scheme: "http",
@@ -1306,12 +1306,12 @@ func (cg *ConfigGenerator) buildProbeHandler(probePath string) v1.ProbeHandler {
 		return handler
 	}
 
-	handler.HTTPGet = &v1.HTTPGetAction{
+	handler.HTTPGet = &corev1.HTTPGetAction{
 		Path: probePath,
 		Port: intstr.FromString(cpf.PortName),
 	}
 	if cpf.Web != nil && cpf.Web.TLSConfig != nil && cg.IsCompatible() {
-		handler.HTTPGet.Scheme = v1.URISchemeHTTPS
+		handler.HTTPGet.Scheme = corev1.URISchemeHTTPS
 	}
 
 	return handler
@@ -1662,6 +1662,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &m.Spec.HTTPConfig, scrapeClass)
+
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
 	// checks for m.Spec.Targets.StaticConfig.
@@ -1806,8 +1808,6 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	relabelings = appendShardingRelabelingForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -3741,6 +3741,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.AzureSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
 		for i, config := range sc.Spec.AzureSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Environment != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -4762,7 +4767,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.IonosSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
 		for i, config := range sc.Spec.IonosSDConfigs {
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			if config.OAuth2 == nil {
+				configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			}
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
