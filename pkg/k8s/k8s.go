@@ -17,6 +17,8 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"iter"
+	"maps"
 	"net/url"
 	"os"
 	"strings"
@@ -208,7 +210,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 
 		mergeMetadata(&dset.ObjectMeta, existingDset.ObjectMeta)
 		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-		mergeKubectlAnnotations(&existingDset.Spec.Template.ObjectMeta, dset.Spec.Template.ObjectMeta)
+		copyKubectlAnnotations(&dset.Spec.Template.ObjectMeta, existingDset.Spec.Template.Annotations)
 
 		_, err = dmsClient.Update(ctx, dset, metav1.UpdateOptions{})
 		return err
@@ -312,32 +314,40 @@ func AddTypeInformationToObject(obj runtime.Object) error {
 func mergeMetadata(newObj *metav1.ObjectMeta, oldObj metav1.ObjectMeta) {
 	newObj.ResourceVersion = oldObj.ResourceVersion
 
-	newObj.SetLabels(mergeMaps(newObj.Labels, oldObj.Labels))
-	newObj.SetAnnotations(mergeMaps(newObj.Annotations, oldObj.Annotations))
+	newObj.SetLabels(mergeMap(oldObj.Labels, maps.All(newObj.Labels)))
+	newObj.SetAnnotations(mergeMap(oldObj.Annotations, maps.All(newObj.Annotations)))
 }
 
-func mergeMaps(newObj map[string]string, oldObj map[string]string) map[string]string {
-	return mergeMapsByPrefix(newObj, oldObj, "")
+// copyKubectlAnnotations copies the kubectl's annotations into the object
+// metadata.
+func copyKubectlAnnotations(objMeta *metav1.ObjectMeta, annotations map[string]string) {
+	objMeta.SetAnnotations(mergeMap(objMeta.Annotations, filterByPrefixSeq(annotations, "kubectl.kubernetes.io/")))
 }
 
-func mergeKubectlAnnotations(from *metav1.ObjectMeta, to metav1.ObjectMeta) {
-	from.SetAnnotations(mergeMapsByPrefix(from.Annotations, to.Annotations, "kubectl.kubernetes.io/"))
-}
-
-func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix string) map[string]string {
-	if to == nil {
-		to = make(map[string]string)
-	}
-
-	if from == nil {
-		from = make(map[string]string)
-	}
-
-	for k, v := range from {
-		if strings.HasPrefix(k, prefix) {
-			to[k] = v
+// filterByPrefixSeq returns a iterator over m for all keys matching the
+// prefix.
+func filterByPrefixSeq(m map[string]string, prefix string) iter.Seq2[string, string] {
+	return func(yield func(k, v string) bool) {
+		for k, v := range m {
+			if !strings.HasPrefix(k, prefix) {
+				continue
+			}
+			if !yield(k, v) {
+				return
+			}
 		}
 	}
+}
 
-	return to
+// mergeMap returns a clone of m for which key-value pairs from seq have been added.
+func mergeMap(m map[string]string, seq iter.Seq2[string, string]) map[string]string {
+	// Don't mutate the input maps.
+	m = maps.Clone(m)
+	if m == nil {
+		m = make(map[string]string)
+	}
+
+	maps.Insert(m, seq)
+
+	return m
 }
