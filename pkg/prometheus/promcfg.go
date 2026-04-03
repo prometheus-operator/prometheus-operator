@@ -4842,6 +4842,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
 			if config.AccessKey != nil && config.SecretKey != nil {
 
 				value, err := s.GetSecretKey(*config.AccessKey)
