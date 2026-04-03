@@ -32,6 +32,11 @@ func (in *AWSSDConfig) DeepCopyInto(out *AWSSDConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Endpoint != nil {
+		in, out := &in.Endpoint, &out.Endpoint
+		*out = new(string)
+		**out = **in
+	}
 	if in.AccessKey != nil {
 		in, out := &in.AccessKey, &out.AccessKey
 		*out = new(corev1.SecretKeySelector)

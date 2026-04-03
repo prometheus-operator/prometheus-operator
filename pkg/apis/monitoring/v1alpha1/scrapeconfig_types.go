@@ -1538,8 +1538,8 @@ type IonosSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }
 
-// Service of the targets to retrieve. Must be `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
-// +kubebuilder:validation:Enum=EC2;Lightsail;ECS;Elasticache;RDS
+// Service of the targets to retrieve. Must be `EC2`, `Lightsail`, `ECS`, `MSK`, `ElastiCache` or `RDS`.
+// +kubebuilder:validation:Enum=EC2;Lightsail;ECS;MSK;ElastiCache;RDS
 type AWSRole string
 
 const (
@@ -1547,23 +1547,28 @@ const (
 	AWSRoleLightsail   AWSRole = "Lightsail"
 	AWSRoleECS         AWSRole = "ECS"
 	AWSRoleMSK         AWSRole = "MSK"
-	AWSRoleElasticache AWSRole = "Elasticache"
+	AWSRoleElastiCache AWSRole = "ElastiCache"
 	AWSRoleRDS         AWSRole = "RDS"
 )
 
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
-// +kubebuilder:validation:XValidation:rule="!(self.role != 'ECS' && (has(self.clusters) && self.clusters.size() != 0))",message="clusters can only be set when role is ECS"
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.
-	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
+	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `ElastiCache` or `RDS`.
+	// MSK requires Prometheus >= 3.10.0.
+	// ElastiCache and RDS require Prometheus >= 3.11.0.
 	// +required
 	Role AWSRole `json:"role"`
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Region *string `json:"region,omitempty"`
+	// endpoint defines the custom endpoint to be used.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
 	// accessKey defines the AWS API key.
 	// +optional
 	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
@@ -1604,7 +1609,8 @@ type AWSSDConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Profile *string `json:"profile,omitempty"`
-	// clusters define the list of ECS cluster ARNs to discover.
+	// clusters define the list of ECS, ElastiCache, MSK, or RDS cluster ARNs to discover
+	// (for ECS, ElastiCache, MSK, and RDS roles only).
 	// If empty, all clusters in the region are discovered.
 	// This can significantly improve performance when you only need to monitor specific clusters.
 	// +kubebuilder:validation:MinItems=1

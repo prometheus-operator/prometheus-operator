@@ -4823,7 +4823,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			switch config.Role {
 			case monitoringv1alpha1.AWSRoleEC2,
 				monitoringv1alpha1.AWSRoleLightsail,
-				monitoringv1alpha1.AWSRoleECS:
+				monitoringv1alpha1.AWSRoleECS,
+				monitoringv1alpha1.AWSRoleMSK,
+				monitoringv1alpha1.AWSRoleElastiCache,
+				monitoringv1alpha1.AWSRoleRDS:
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "role",
 					Value: strings.ToLower(string(config.Role)),
@@ -4911,12 +4914,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if len(config.Clusters) > 0 {
-				if config.Role == monitoringv1alpha1.AWSRoleECS {
+				switch config.Role {
+				case monitoringv1alpha1.AWSRoleECS,
+					monitoringv1alpha1.AWSRoleMSK,
+					monitoringv1alpha1.AWSRoleElastiCache,
+					monitoringv1alpha1.AWSRoleRDS:
 					configs[i] = append(configs[i], yaml.MapItem{
 						Key:   "clusters",
 						Value: config.Clusters,
 					})
-				} else {
+				default:
 					cg.logger.Warn(fmt.Sprintf("ignoring clusters field not supported by role: %s", string(config.Role)))
 				}
 			}

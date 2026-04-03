@@ -106,7 +106,7 @@
                           "x-kubernetes-map-type": "atomic"
                         },
                         "clusters": {
-                          "description": "clusters define the list of ECS cluster ARNs to discover.\nIf empty, all clusters in the region are discovered.\nThis can significantly improve performance when you only need to monitor specific clusters.",
+                          "description": "clusters define the list of ECS, ElastiCache, MSK, or RDS cluster ARNs to discover\n(for ECS, ElastiCache, MSK, and RDS roles only).\nIf empty, all clusters in the region are discovered.\nThis can significantly improve performance when you only need to monitor specific clusters.",
                           "items": {
                             "minLength": 1,
                             "type": "string"
@@ -117,6 +117,11 @@
                         "enableHTTP2": {
                           "description": "enableHTTP2 defines whether to enable HTTP2.",
                           "type": "boolean"
+                        },
+                        "endpoint": {
+                          "description": "endpoint defines the custom endpoint to be used.",
+                          "minLength": 1,
+                          "type": "string"
                         },
                         "filters": {
                           "description": "filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
@@ -222,12 +227,13 @@
                           "type": "string"
                         },
                         "role": {
-                          "description": "role defines the AWS service to collect metrics from.\nSupport only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.",
+                          "description": "role defines the AWS service to collect metrics from.\nSupport only `EC2`, `Lightsail`, `ECS`, `MSK`, `ElastiCache` or `RDS`.\nMSK requires Prometheus >= 3.10.0.\nElastiCache and RDS require Prometheus >= 3.11.0.",
                           "enum": [
                             "EC2",
                             "Lightsail",
                             "ECS",
-                            "Elasticache",
+                            "MSK",
+                            "ElastiCache",
                             "RDS"
                           ],
                           "type": "string"
@@ -425,13 +431,7 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object",
-                      "x-kubernetes-validations": [
-                        {
-                          "message": "clusters can only be set when role is ECS",
-                          "rule": "!(self.role != 'ECS' && (has(self.clusters) && self.clusters.size() != 0))"
-                        }
-                      ]
+                      "type": "object"
                     },
                     "type": "array"
                   },

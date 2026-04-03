@@ -31,10 +31,14 @@ import (
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfigApplyConfiguration struct {
 	// role defines the AWS service to collect metrics from.
-	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
+	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `ElastiCache` or `RDS`.
+	// MSK requires Prometheus >= 3.10.0.
+	// ElastiCache and RDS require Prometheus >= 3.11.0.
 	Role *monitoringv1alpha1.AWSRole `json:"role,omitempty"`
 	// region defines the AWS region.
 	Region *string `json:"region,omitempty"`
+	// endpoint defines the custom endpoint to be used.
+	Endpoint *string `json:"endpoint,omitempty"`
 	// accessKey defines the AWS API key.
 	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
 	// secretKey defines the AWS API secret.
@@ -61,7 +65,8 @@ type AWSSDConfigApplyConfiguration struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// profile defines Named AWS profile used to authenticate.
 	Profile *string `json:"profile,omitempty"`
-	// clusters define the list of ECS cluster ARNs to discover.
+	// clusters define the list of ECS, ElastiCache, MSK, or RDS cluster ARNs to discover
+	// (for ECS, ElastiCache, MSK, and RDS roles only).
 	// If empty, all clusters in the region are discovered.
 	// This can significantly improve performance when you only need to monitor specific clusters.
 	Clusters []string `json:"clusters,omitempty"`
@@ -86,6 +91,14 @@ func (b *AWSSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.AWSRol
 // If called multiple times, the Region field is set to the value of the last call.
 func (b *AWSSDConfigApplyConfiguration) WithRegion(value string) *AWSSDConfigApplyConfiguration {
 	b.Region = &value
+	return b
+}
+
+// WithEndpoint sets the Endpoint field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Endpoint field is set to the value of the last call.
+func (b *AWSSDConfigApplyConfiguration) WithEndpoint(value string) *AWSSDConfigApplyConfiguration {
+	b.Endpoint = &value
 	return b
 }
 

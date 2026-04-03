@@ -1357,6 +1357,15 @@ func (rs *ResourceSelector) validateAWSSDConfigs(ctx context.Context, sc *monito
 	}
 
 	for i, config := range sc.Spec.AWSSDConfigs {
+		if config.Role == monitoringv1alpha1.AWSRoleMSK && rs.version.LT(semver.MustParse("3.10.0")) {
+			return fmt.Errorf("AWS SD Role MSK is only supported for Prometheus version >= 3.10.0")
+		}
+
+		if (config.Role == monitoringv1alpha1.AWSRoleElastiCache || config.Role == monitoringv1alpha1.AWSRoleRDS) &&
+			rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("AWS SD Role ElastiCache and RDS are only supported for Prometheus version >= 3.11.0")
+		}
+
 		if config.AccessKey != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)

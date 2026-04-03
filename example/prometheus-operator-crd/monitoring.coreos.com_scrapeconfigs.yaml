@@ -119,7 +119,8 @@ spec:
                       x-kubernetes-map-type: atomic
                     clusters:
                       description: |-
-                        clusters define the list of ECS cluster ARNs to discover.
+                        clusters define the list of ECS, ElastiCache, MSK, or RDS cluster ARNs to discover
+                        (for ECS, ElastiCache, MSK, and RDS roles only).
                         If empty, all clusters in the region are discovered.
                         This can significantly improve performance when you only need to monitor specific clusters.
                       items:
@@ -130,6 +131,10 @@ spec:
                     enableHTTP2:
                       description: enableHTTP2 defines whether to enable HTTP2.
                       type: boolean
+                    endpoint:
+                      description: endpoint defines the custom endpoint to be used.
+                      minLength: 1
+                      type: string
                     filters:
                       description: |-
                         filters can be used optionally to filter the instance list by other criteria.
@@ -241,12 +246,15 @@ spec:
                     role:
                       description: |-
                         role defines the AWS service to collect metrics from.
-                        Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
+                        Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `ElastiCache` or `RDS`.
+                        MSK requires Prometheus >= 3.10.0.
+                        ElastiCache and RDS require Prometheus >= 3.11.0.
                       enum:
                       - EC2
                       - Lightsail
                       - ECS
-                      - Elasticache
+                      - MSK
+                      - ElastiCache
                       - RDS
                       type: string
                     roleARN:
@@ -449,10 +457,6 @@ spec:
                   required:
                   - role
                   type: object
-                  x-kubernetes-validations:
-                  - message: clusters can only be set when role is ECS
-                    rule: '!(self.role != ''ECS'' && (has(self.clusters) && self.clusters.size()
-                      != 0))'
                 type: array
               azureSDConfigs:
                 description: azureSDConfigs defines a list of Azure service discovery
