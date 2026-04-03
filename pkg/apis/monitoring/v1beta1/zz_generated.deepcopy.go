@@ -19,7 +19,7 @@
 package v1beta1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
@@ -250,6 +250,11 @@ func (in *EmailConfig) DeepCopyInto(out *EmailConfig) {
 	if in.ForceImplicitTLS != nil {
 		in, out := &in.ForceImplicitTLS, &out.ForceImplicitTLS
 		*out = new(bool)
+		**out = **in
+	}
+	if in.Threading != nil {
+		in, out := &in.Threading, &out.Threading
+		*out = new(EmailThreadingConfig)
 		**out = **in
 	}
 }
