@@ -12607,7 +12607,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 	}
 }
 func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
-	sec := &v1.Secret{
+	sec := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "aws-access-api",
 			Namespace: "default",
@@ -12631,14 +12631,14 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					{
 						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aws-access-api",
 							},
 							Key: "accessKey",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aws-access-api",
 							},
 							Key: "secretKey",
@@ -12697,14 +12697,14 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 					{
 						Role:   monitoringv1alpha1.AWSRoleEC2,
 						Region: ptr.To("us-east-1"),
-						AccessKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong-secret-name",
 							},
 							Key: "accessKey",
 						},
-						SecretKey: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aws-access-api",
 							},
 							Key: "secretKey",
@@ -12725,10 +12725,10 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 							ProxyURL:             ptr.To("http://no-proxy.com"),
 							NoProxy:              ptr.To("0.0.0.0"),
 							ProxyFromEnvironment: ptr.To(true),
-							ProxyConnectHeader: map[string][]v1.SecretKeySelector{
+							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
-										LocalObjectReference: v1.LocalObjectReference{
+										LocalObjectReference: corev1.LocalObjectReference{
 											Name: "secret",
 										},
 										Key: "proxy-header",
@@ -12753,23 +12753,23 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 						Region: ptr.To("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "tls",
 									},
 									Key: "ca",
 								},
 							},
 							Cert: monitoringv1.SecretOrConfigMap{
-								Secret: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "tls",
 									},
 									Key: "cert",
 								},
 							},
-							KeySecret: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							KeySecret: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "tls",
 								},
 								Key: "private-key",
