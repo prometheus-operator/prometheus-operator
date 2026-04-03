@@ -39,7 +39,7 @@ The Prometheus Operator uses Kubernetes [custom resources](https://kubernetes.io
 
 ### kube-prometheus
 
-[kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
+[kube-prometheus](//github.com/prometheus-operator/kube-prometheus) provides example configurations for a complete cluster monitoring
 stack based on Prometheus and the Prometheus Operator. This includes deployment of multiple Prometheus and Alertmanager instances,
 metrics exporters such as the node_exporter for gathering node metrics, scrape target configuration linking Prometheus to various
 metrics endpoints, and example alerting rules for notification of potential issues in the cluster.
