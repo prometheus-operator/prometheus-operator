@@ -25,21 +25,46 @@ import (
 
 // AWSSDConfigApplyConfiguration represents a declarative configuration of the AWSSDConfig type for use
 // with apply.
+//
+// AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#aws_sd_config
+// TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfigApplyConfiguration struct {
-	Role                                                         *monitoringv1alpha1.AWSRole `json:"role,omitempty"`
-	Region                                                       *string                     `json:"region,omitempty"`
-	AccessKey                                                    *v1.SecretKeySelector       `json:"accessKey,omitempty"`
-	SecretKey                                                    *v1.SecretKeySelector       `json:"secretKey,omitempty"`
-	RoleARN                                                      *string                     `json:"roleARN,omitempty"`
-	Port                                                         *int32                      `json:"port,omitempty"`
-	RefreshInterval                                              *monitoringv1.Duration      `json:"refreshInterval,omitempty"`
+	// role defines the AWS service to collect metrics from.
+	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
+	Role *monitoringv1alpha1.AWSRole `json:"role,omitempty"`
+	// region defines the AWS region.
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the AWS API key.
+	AccessKey *v1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey defines the AWS API secret.
+	SecretKey *v1.SecretKeySelector `json:"secretKey,omitempty"`
+	// roleARN defines an alternative to using AWS API keys.
+	RoleARN *string `json:"roleARN,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	// instead be specified in the relabeling rule.
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// filters can be used optionally to filter the instance list by other criteria.
+	// Available filter criteria can be found here:
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	Filters                                                      *monitoringv1alpha1.Filters `json:"filters,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
-	TLSConfig                                                    *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	FollowRedirects                                              *bool                                                           `json:"followRedirects,omitempty"`
-	EnableHTTP2                                                  *bool                                                           `json:"enableHTTP2,omitempty"`
-	Profile                                                      *string                                                         `json:"profile,omitempty"`
-	Clusters                                                     []string                                                        `json:"clusters,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// profile defines Named AWS profile used to authenticate.
+	Profile *string `json:"profile,omitempty"`
+	// clusters define the list of ECS cluster ARNs to discover.
+	// If empty, all clusters in the region are discovered.
+	// This can significantly improve performance when you only need to monitor specific clusters.
+	Clusters []string `json:"clusters,omitempty"`
 }
 
 // AWSSDConfigApplyConfiguration constructs a declarative configuration of the AWSSDConfig type for use with

@@ -80,6 +80,9 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ScalewaySDConfigs []ScalewaySDConfigApplyConfiguration `json:"scalewaySDConfigs,omitempty"`
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
 	IonosSDConfigs []IonosSDConfigApplyConfiguration `json:"ionosSDConfigs,omitempty"`
+	// awsSDConfigs defines a list of AWS service discovery configurations.
+	// It requires Prometheus >= 3.8.0.
+	AWSSDConfigs []AWSSDConfigApplyConfiguration `json:"awsSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.

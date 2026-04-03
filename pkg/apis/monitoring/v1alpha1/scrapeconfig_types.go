@@ -1538,14 +1538,17 @@ type IonosSDConfig struct {
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }
 
-// Service of the targets to retrieve. Must be `EC2`, `Lightsail` or `ECS`.
-// +kubebuilder:validation:Enum=EC2;Lightsail;ECS
+// Service of the targets to retrieve. Must be `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
+// +kubebuilder:validation:Enum=EC2;Lightsail;ECS;Elasticache;RDS
 type AWSRole string
 
 const (
-	AWSRoleEC2       AWSRole = "EC2"
-	AWSRoleLightsail AWSRole = "Lightsail"
-	AWSRoleECS       AWSRole = "ECS"
+	AWSRoleEC2         AWSRole = "EC2"
+	AWSRoleLightsail   AWSRole = "Lightsail"
+	AWSRoleECS         AWSRole = "ECS"
+	AWSRoleMSK         AWSRole = "MSK"
+	AWSRoleElasticache AWSRole = "Elasticache"
+	AWSRoleRDS         AWSRole = "RDS"
 )
 
 // AWSSDConfig configurations allow retrieving scrape targets from AWS EC2, Lightsail and ECS resources.
@@ -1554,7 +1557,7 @@ const (
 // TODO: Need to document that we will not be supporting the `_file` fields.
 type AWSSDConfig struct {
 	// role defines the AWS service to collect metrics from.
-	// Support only `EC2`, `Lightsail` or `ECS`.
+	// Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
 	// +required
 	Role AWSRole `json:"role"`
 	// region defines the AWS region.

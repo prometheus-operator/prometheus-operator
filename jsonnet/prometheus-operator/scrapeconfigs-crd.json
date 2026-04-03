@@ -125,6 +125,7 @@
                             "properties": {
                               "name": {
                                 "description": "name of the Filter.",
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "values": {
@@ -221,11 +222,13 @@
                           "type": "string"
                         },
                         "role": {
-                          "description": "role defines the AWS service to collect metrics from.\nSupport only `EC2`, `Lightsail` or `ECS`.",
+                          "description": "role defines the AWS service to collect metrics from.\nSupport only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.",
                           "enum": [
                             "EC2",
                             "Lightsail",
-                            "ECS"
+                            "ECS",
+                            "Elasticache",
+                            "RDS"
                           ],
                           "type": "string"
                         },

@@ -142,6 +142,7 @@ spec:
                         properties:
                           name:
                             description: name of the Filter.
+                            minLength: 1
                             type: string
                           values:
                             description: values defines values to filter on.
@@ -240,11 +241,13 @@ spec:
                     role:
                       description: |-
                         role defines the AWS service to collect metrics from.
-                        Support only `EC2`, `Lightsail` or `ECS`.
+                        Support only `EC2`, `Lightsail`, `ECS`, `MSK`, `Elasticache` or `RDS`.
                       enum:
                       - EC2
                       - Lightsail
                       - ECS
+                      - Elasticache
+                      - RDS
                       type: string
                     roleARN:
                       description: roleARN defines an alternative to using AWS API
