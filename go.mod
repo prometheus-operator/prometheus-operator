@@ -24,7 +24,7 @@ require (
 	github.com/prometheus/alertmanager v0.31.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
-	github.com/prometheus/exporter-toolkit v0.15.1
+	github.com/prometheus/exporter-toolkit v0.16.0
 	// Since we needed the change added in https://github.com/prometheus/prometheus/pull/16928 and it's not released yet.
 	github.com/prometheus/prometheus v0.310.0
 	github.com/stretchr/testify v1.11.1
