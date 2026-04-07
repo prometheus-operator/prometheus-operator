@@ -4220,6 +4220,45 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_3.golden",
 		},
 		{
+			version: "v3.11.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile:    "profilename",
+					RoleArn:    "arn:aws:iam::123456789012:instance-profile/prometheus",
+					ExternalID: "abc",
+					AccessKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          1000,
+					MinShards:         1,
+					MaxShards:         10,
+					MaxSamplesPerSend: 100,
+					BatchSendDeadline: ptr.To(monitoringv1.Duration("20s")),
+					MaxRetries:        3,
+					MinBackoff:        ptr.To(monitoringv1.Duration("1s")),
+					MaxBackoff:        ptr.To(monitoringv1.Duration("10s")),
+				},
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         false,
+					SendInterval: "1m",
+				},
+			},
+			golden: "RemoteWriteConfig_3.11.0.golden",
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",

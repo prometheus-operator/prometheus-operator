@@ -670,6 +670,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
 
+	if sigv4.ExternalID != "" {
+		sigv4Cfg = cg.WithMinimumVersion("3.11.0").AppendMapItem(sigv4Cfg, "external_id", sigv4.ExternalID)
+	}
+
 	if sigv4.UseFIPSSTSEndpoint != nil {
 		sigv4Cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(sigv4Cfg, "use_fips_sts_endpoint", *sigv4.UseFIPSSTSEndpoint)
 	}

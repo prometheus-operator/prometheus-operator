@@ -38,6 +38,9 @@ type Sigv4ApplyConfiguration struct {
 	Profile *string `json:"profile,omitempty"`
 	// roleArn defines the named AWS profile used to authenticate.
 	RoleArn *string `json:"roleArn,omitempty"`
+	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+	// It requires Prometheus >= v3.11.0.
+	ExternalID *string `json:"externalId,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
 	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
@@ -86,6 +89,14 @@ func (b *Sigv4ApplyConfiguration) WithProfile(value string) *Sigv4ApplyConfigura
 // If called multiple times, the RoleArn field is set to the value of the last call.
 func (b *Sigv4ApplyConfiguration) WithRoleArn(value string) *Sigv4ApplyConfiguration {
 	b.RoleArn = &value
+	return b
+}
+
+// WithExternalID sets the ExternalID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExternalID field is set to the value of the last call.
+func (b *Sigv4ApplyConfiguration) WithExternalID(value string) *Sigv4ApplyConfiguration {
+	b.ExternalID = &value
 	return b
 }
 

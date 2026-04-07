@@ -7190,6 +7190,10 @@
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
+                              externalId: {
+                                description: 'externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0.',
+                                type: 'string',
+                              },
                               profile: {
                                 description: 'profile defines the named AWS profile used to authenticate.',
                                 type: 'string',
