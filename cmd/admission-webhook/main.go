@@ -66,7 +66,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	// Parse and validate the name validation scheme
