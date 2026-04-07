@@ -417,11 +417,12 @@ type webexConfig struct {
 }
 
 type sigV4Config struct {
-	Region    string `yaml:"region,omitempty"`
-	AccessKey string `yaml:"access_key,omitempty"`
-	SecretKey string `yaml:"secret_key,omitempty"`
-	Profile   string `yaml:"profile,omitempty"`
-	RoleARN   string `yaml:"role_arn,omitempty"`
+	Region     string `yaml:"region,omitempty"`
+	AccessKey  string `yaml:"access_key,omitempty"`
+	SecretKey  string `yaml:"secret_key,omitempty"`
+	Profile    string `yaml:"profile,omitempty"`
+	RoleARN    string `yaml:"role_arn,omitempty"`
+	ExternalID string `yaml:"external_id,omitempty"`
 }
 
 type victorOpsConfig struct {
