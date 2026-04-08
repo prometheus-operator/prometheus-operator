@@ -29,7 +29,6 @@ require (
 	github.com/prometheus/prometheus v0.310.0
 	github.com/stretchr/testify v1.11.1
 	github.com/thanos-io/thanos v0.41.0
-	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/net v0.52.0
 	golang.org/x/sync v0.20.0
 	google.golang.org/protobuf v1.36.11
