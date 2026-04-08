@@ -335,8 +335,7 @@ check-metrics: $(PROMLINTER_BINARY) ## Lint Prometheus metrics.
 	$(PROMLINTER_BINARY) lint .
 
 .PHONY: check
-check: ## Run all checks.
-	check-golang check-api
+check: check-golang check-api ## Run all checks.
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint checks.
