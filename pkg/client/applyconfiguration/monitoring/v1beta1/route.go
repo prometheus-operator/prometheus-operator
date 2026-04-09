@@ -46,8 +46,8 @@ type RouteApplyConfiguration struct {
 	RepeatInterval *v1.NonEmptyDuration `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
-	// matcher on the `namespace` label and adds a `namespace: <object
-	// namespace>` matcher.
+	// matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+	// unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	Matchers []MatcherApplyConfiguration `json:"matchers,omitempty"`
 	// continue defines the boolean indicating whether an alert should continue matching subsequent
 	// sibling nodes. It will always be overridden to true for the first-level
