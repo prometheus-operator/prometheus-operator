@@ -2284,6 +2284,24 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.SMTPForceImplicitTLS = nil
 	}
 
+	if gc.MattermostWebhookURL != "" && amVersion.LT(semver.MustParse("0.32.0")) {
+		msg := "'mattermost_webhook_url' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.MattermostWebhookURL = ""
+	}
+
+	if gc.MattermostWebhookURLFile != "" && amVersion.LT(semver.MustParse("0.32.0")) {
+		msg := "'mattermost_webhook_url_file' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.MattermostWebhookURLFile = ""
+	}
+
+	if gc.MattermostWebhookURL != "" && gc.MattermostWebhookURLFile != "" {
+		msg := "'mattermost_webhook_url' and 'mattermost_webhook_url_file' are mutually exclusive - 'mattermost_webhook_url' has taken precedence"
+		logger.Warn(msg)
+		gc.MattermostWebhookURLFile = ""
+	}
+
 	return nil
 }
 
