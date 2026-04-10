@@ -4191,6 +4191,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionGlobalSMTPForceImplicitTLSAllowed := semver.Version{Major: 0, Minor: 31}
 	versionGlobalSMTPForceImplicitTLSNotAllowed := semver.Version{Major: 0, Minor: 30}
 
+	versionGlobalMattermostWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionGlobalMattermostWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -5095,6 +5098,63 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_mattermos_text_is_optional.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url and mattermost_webhook_url_file are dropped for unsupported versions",
+			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "http",
+							Host:   "www.test.com",
+						},
+					},
+					MattermostWebhookURLFile: "/b",
+				},
+			},
+			golden: "test_mattermost_webhook_url_and_mattermost_webhook_url_file_are_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url preserved for supported versions",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "http",
+							Host:   "www.test.com",
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_webhook_url_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url_file preserved for supported versions",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURLFile: "/b",
+				},
+			},
+			golden: "test_mattermost_webhook_url_file_preserved_for_supported_versions.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url takes precedence over mattermost_webhook_url_file",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Scheme: "http",
+							Host:   "www.test.com",
+						},
+					},
+					MattermostWebhookURLFile: "/b",
+				},
+			},
+			golden: "test_mattermost_webhook_url_takes_precedence_over_mattermost_webhook_url_file.golden",
 		},
 		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
@@ -8534,6 +8594,67 @@ func TestSanitizeMSTeamsV2Config(t *testing.T) {
 	}
 }
 
+func TestSanitizeMattermostConfig(t *testing.T) {
+	logger := newNopLogger(t)
+
+	versionWithGlobalMattermostWebhookURL := semver.Version{Major: 0, Minor: 32}
+	versionWithoutGlobalMattermostWebhookURL := semver.Version{Major: 0, Minor: 31}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "mattermost no webhook url specified",
+			againstVersion: versionWithoutGlobalMattermostWebhookURL,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost no webhook url specified with global webhook url",
+			againstVersion: versionWithGlobalMattermostWebhookURL,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_no_webhook_url_specified_with_global_webhook_url.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.DiscardHandler)
