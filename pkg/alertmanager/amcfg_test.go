@@ -4348,7 +4348,7 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionGlobalMattermostWebhookURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "https://mattermost.example.com",
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
 				},
 			},
 			golden: "test_mattermost_webhook_url_file_supported_version.golden",
@@ -4358,7 +4358,7 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "https://mattermost.example.com",
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
 				},
 			},
 			golden: "test_mattermost_webhook_url_file_unsupported_version.golden",
