@@ -26,6 +26,8 @@ import (
 // GlobalMattermostConfig configures global Mattermost parameters.
 type GlobalMattermostConfigApplyConfiguration struct {
 	// webhookURL defines the default Mattermost Webhook URL.
+	//
+	// It requires Alertmanager >= v0.32.0.
 	WebookURL *monitoringv1.URL `json:"webhookURL,omitempty"`
 }
 

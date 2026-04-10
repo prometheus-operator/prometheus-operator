@@ -1634,7 +1634,7 @@
                             "description": "wechat defines the default WeChat Config",
                             "properties": {
                               "webhookURL": {
-                                "description": "webhookURL defines the default Mattermost Webhook URL.",
+                                "description": "webhookURL defines the default Mattermost Webhook URL.\n\nIt requires Alertmanager >= v0.32.0.",
                                 "pattern": "^(http|https)://.+$",
                                 "type": "string"
                               }

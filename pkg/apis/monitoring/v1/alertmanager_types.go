@@ -780,6 +780,8 @@ type GlobalVictorOpsConfig struct {
 type GlobalMattermostConfig struct {
 	// webhookURL defines the default Mattermost Webhook URL.
 	//
+	// It requires Alertmanager >= v0.32.0.
+	//
 	// +optional
 	WebookURL *URL `json:"webhookURL,omitempty"`
 }
