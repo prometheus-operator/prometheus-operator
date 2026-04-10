@@ -4191,6 +4191,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionGlobalSMTPForceImplicitTLSAllowed := semver.Version{Major: 0, Minor: 31}
 	versionGlobalSMTPForceImplicitTLSNotAllowed := semver.Version{Major: 0, Minor: 30}
 
+	versionGlobalMattermostWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionGlobalMattermostWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -4319,6 +4322,57 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_wechat_api_secret_takes_precedence_over_wechat_api_secret_file_in_global_config.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url supported version",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "https://mattermost.example.com",
+				},
+			},
+			golden: "test_mattermost_webhook_url_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url unsupported version",
+			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "https://mattermost.example.com",
+				},
+			},
+			golden: "test_mattermost_webhook_url_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url_file supported version",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "https://mattermost.example.com",
+				},
+			},
+			golden: "test_mattermost_webhook_url_file_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url_file unsupported version",
+			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "https://mattermost.example.com",
+				},
+			},
+			golden: "test_mattermost_webhook_url_file_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url takes precedence over mattermost_webhook_url_file in global config",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL:     "https://mattermost.example.com",
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
+				},
+			},
+			golden: "test_mattermost_webhook_url_takes_precedence_over_mattermost_webhook_url_file_in_global_config.golden",
 		},
 		{
 			name:           "Test api_url takes precedence in slack config",
