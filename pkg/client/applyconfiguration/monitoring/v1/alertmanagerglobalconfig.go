@@ -55,6 +55,8 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	WebexConfig *GlobalWebexConfigApplyConfiguration `json:"webex,omitempty"`
 	// wechat defines the default WeChat Config
 	WeChatConfig *GlobalWeChatConfigApplyConfiguration `json:"wechat,omitempty"`
+	// wechat defines the default WeChat Config
+	MattermostConfig *GlobalMattermostConfigApplyConfiguration `json:"mattermost,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -164,5 +166,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexConfig(value *Glob
 // If called multiple times, the WeChatConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *GlobalWeChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.WeChatConfig = value
+	return b
+}
+
+// WithMattermostConfig sets the MattermostConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MattermostConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithMattermostConfig(value *GlobalMattermostConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.MattermostConfig = value
 	return b
 }

@@ -1861,6 +1861,15 @@ spec:
                             pattern: ^(http|https)://.+$
                             type: string
                         type: object
+                      mattermost:
+                        description: wechat defines the default WeChat Config
+                        properties:
+                          webhookURL:
+                            description: webhookURL defines the default Mattermost
+                              Webhook URL.
+                            pattern: ^(http|https)://.+$
+                            type: string
+                        type: object
                       opsGenieApiKey:
                         description: opsGenieApiKey defines the default OpsGenie API
                           Key.
