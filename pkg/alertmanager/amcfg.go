@@ -2829,6 +2829,12 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		sc.MessageText = ""
 	}
 
+	if sc.UpdateMessage != nil && lessThanV0_32 {
+		msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg)
+		sc.UpdateMessage = nil
+	}
+
 	if sc.AppToken != "" && sc.AppTokenFile != "" {
 		msg := "'app_token' and 'app_token_file' are mutually exclusive for slack receiver config - 'app_token' has taken precedence"
 		logger.Warn(msg)
@@ -2855,12 +2861,6 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		msg := "'api_url' and 'api_url_file' are mutually exclusive for slack receiver config - 'api_url' has taken precedence"
 		logger.Warn(msg)
 		sc.APIURLFile = ""
-	}
-
-	if sc.UpdateMessage != nil && lessThanV0_32 {
-		msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
-		logger.Warn(msg)
-		sc.UpdateMessage = nil
 	}
 
 	return nil
