@@ -3168,11 +3168,12 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 
 func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	lessThanV0_32 := amVersion.LT(semver.MustParse("0.32.0"))
 	if !mattermostAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
 	}
 
-	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" && lessThanV0_32 {
 		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
 	}
 
