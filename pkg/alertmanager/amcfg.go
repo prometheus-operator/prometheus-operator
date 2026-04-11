@@ -3164,6 +3164,36 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		mc.WebhookURLFile = ""
 	}
 
+	// check the attachment top level fields and reject if below 0.32.0.
+	if amVersion.LT(semver.MustParse("0.32.0")) {
+		commonErrorMsg := " supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		fieldValueMapping := map[string]*string{
+			"fallback":    &mc.Fallback,
+			"color":       &mc.Color,
+			"pretext":     &mc.Pretext,
+			"author_name": &mc.AuthorName,
+			"author_link": &mc.AuthorLink,
+			"author_icon": &mc.AuthorIcon,
+			"title":       &mc.Title,
+			"title_link":  &mc.TitleLink,
+			"thumb_url":   &mc.ThumbURL,
+			"footer":      &mc.Footer,
+			"footer_icon": &mc.FooterIcon,
+			"image_urL":   &mc.ImageURL,
+		}
+		for f, v := range fieldValueMapping {
+			msg := fmt.Sprintf("'%s'"+commonErrorMsg, f)
+			logger.Warn(msg, "current_version", amVersion.String())
+			*v = ""
+		}
+
+		if len(mc.Fields) > 0 {
+			msg := "'fields'" + commonErrorMsg
+			logger.Warn(msg, "current_version", amVersion.String())
+			mc.Fields = nil
+		}
+	}
+
 	return mc.HTTPConfig.sanitize(amVersion, logger)
 }
 
