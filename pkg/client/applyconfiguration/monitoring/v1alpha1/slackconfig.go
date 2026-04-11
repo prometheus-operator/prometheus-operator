@@ -87,7 +87,7 @@ type SlackConfigApplyConfiguration struct {
 	// It requires Alertmanager >= v0.31.0.
 	MessageText *string `json:"messageText,omitempty"`
 	// updateMessage enables updating existing Slack messages instead of creating new ones
-	// when alert state changes. Plesae note that Webhook URLs do not support updates.
+	// when alert state changes. Please note that Webhook URLs do not support updates.
 	// It requires Alertmanager >= v0.32.0.
 	UpdateMessage *bool `json:"updateMessage,omitempty"`
 }

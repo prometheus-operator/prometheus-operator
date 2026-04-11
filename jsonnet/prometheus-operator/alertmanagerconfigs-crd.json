@@ -6693,7 +6693,7 @@
                                 "type": "string"
                               },
                               "updateMessage": {
-                                "description": "updateMessage enables updating existing Slack messages instead of creating new ones\nwhen alert state changes. Plesae note that Webhook URLs do not support updates.\nIt requires Alertmanager >= v0.32.0.",
+                                "description": "updateMessage enables updating existing Slack messages instead of creating new ones\nwhen alert state changes. Please note that Webhook URLs do not support updates.\nIt requires Alertmanager >= v0.32.0.",
                                 "type": "boolean"
                               },
                               "username": {
