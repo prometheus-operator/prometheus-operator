@@ -6509,6 +6509,54 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_webhook_valid_template_url_passes.golden",
 		},
+		{
+			name:           "Test payload supported version",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+								Payload: map[string]any{
+									"foo":  "bar",
+									"foo1": []string{"bar2", "bar3"},
+									"foo2": map[string]any{
+										"foo21": "bar21",
+										"foo22": "bar22",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_payload_supported_version.golden",
+		},
+		{
+			name:           "Test payload unsupported version",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+								Payload: map[string]any{
+									"foo":  "bar",
+									"foo1": []string{"bar2", "bar3"},
+									"foo2": map[string]any{
+										"foo21": "bar21",
+										"foo22": "bar22",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_payload_unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
