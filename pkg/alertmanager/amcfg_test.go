@@ -4167,6 +4167,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionMattermostEmptyWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostEmptyWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
@@ -5133,6 +5136,44 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
+		},
+		{
+			name:           "Test mattermost empty webhook_url supported version",
+			againstVersion: versionMattermostEmptyWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "www.test.com",
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_empty_webhook_url_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost empty webhook_url unsupported version",
+			againstVersion: versionMattermostEmptyWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: "www.test.com",
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 		{
 			name:           "Test text is optional in mattermost config",
