@@ -55,7 +55,7 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	WebexConfig *GlobalWebexConfigApplyConfiguration `json:"webex,omitempty"`
 	// wechat defines the default WeChat Config
 	WeChatConfig *GlobalWeChatConfigApplyConfiguration `json:"wechat,omitempty"`
-	// wechat defines the default WeChat Config
+	// mattermost defines the default Mattermost Config
 	MattermostConfig *GlobalMattermostConfigApplyConfiguration `json:"mattermost,omitempty"`
 }
 

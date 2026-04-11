@@ -1631,7 +1631,7 @@
                             "type": "object"
                           },
                           "mattermost": {
-                            "description": "wechat defines the default WeChat Config",
+                            "description": "mattermost defines the default Mattermost Config",
                             "properties": {
                               "webhookURL": {
                                 "description": "webhookURL defines the default Mattermost Webhook URL.\n\nIt requires Alertmanager >= v0.32.0.",

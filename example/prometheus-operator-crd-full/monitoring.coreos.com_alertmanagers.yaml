@@ -1862,7 +1862,7 @@ spec:
                             type: string
                         type: object
                       mattermost:
-                        description: wechat defines the default WeChat Config
+                        description: mattermost defines the default Mattermost Config
                         properties:
                           webhookURL:
                             description: |-

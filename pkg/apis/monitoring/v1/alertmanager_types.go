@@ -558,7 +558,7 @@ type AlertmanagerGlobalConfig struct {
 	// +optional
 	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
 
-	// wechat defines the default WeChat Config
+	// mattermost defines the default Mattermost Config
 	// +optional
 	MattermostConfig *GlobalMattermostConfig `json:"mattermost,omitempty"`
 }
