@@ -86,6 +86,10 @@ type SlackConfigApplyConfiguration struct {
 	// If set, this is sent as the top-level 'text' field in the Slack payload.
 	// It requires Alertmanager >= v0.31.0.
 	MessageText *string `json:"messageText,omitempty"`
+	// updateMessage enables updating existing Slack messages instead of creating new ones
+	// when alert state changes. Plesae note that Webhook URLs do not support updates.
+	// It requires Alertmanager >= v0.32.0.
+	UpdateMessage *bool `json:"updateMessage,omitempty"`
 }
 
 // SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with
@@ -295,5 +299,13 @@ func (b *SlackConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration)
 // If called multiple times, the MessageText field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithMessageText(value string) *SlackConfigApplyConfiguration {
 	b.MessageText = &value
+	return b
+}
+
+// WithUpdateMessage sets the UpdateMessage field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UpdateMessage field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithUpdateMessage(value bool) *SlackConfigApplyConfiguration {
+	b.UpdateMessage = &value
 	return b
 }

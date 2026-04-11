@@ -6486,6 +6486,10 @@
                             description: 'titleLink defines the URL that the title will link to when clicked.',
                             type: 'string',
                           },
+                          updateMessage: {
+                            description: 'updateMessage enables updating existing Slack messages instead of creating new ones\nwhen alert state changes. Plesae note that Webhook URLs do not support updates.\nIt requires Alertmanager >= v0.32.0.',
+                            type: 'boolean',
+                          },
                           username: {
                             description: 'username defines the slack bot user name.',
                             minLength: 1,
