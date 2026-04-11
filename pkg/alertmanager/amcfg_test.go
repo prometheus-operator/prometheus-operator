@@ -6500,7 +6500,7 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 		},
 		{
 			name:           "Test payload unsupported version",
-			againstVersion: semver.Version{Major: 0, Minor: 32},
+			againstVersion: semver.Version{Major: 0, Minor: 31},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
