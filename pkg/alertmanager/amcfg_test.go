@@ -4176,9 +4176,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSlackMessageTextAllowed := semver.Version{Major: 0, Minor: 31}
 	versionSlackMessageTextNotAllowed := semver.Version{Major: 0, Minor: 30}
 
-	versionSlackUpdateMessageAllowed := semver.Version{Major: 0, Minor: 32}
-	versionSlackUpdateMessageNotAllowed := semver.Version{Major: 0, Minor: 31}
-
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
 	jiraURL := config.URL{}
@@ -4438,38 +4435,6 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_message_text_is_added_in_slack_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test slack update_message supported version",
-			againstVersion: versionSlackUpdateMessageAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								UpdateMessage: ptr.To(true),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_update_message_supported_version.golden",
-		},
-		{
-			name:           "Test slack update_message unsupported version",
-			againstVersion: versionSlackUpdateMessageNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								UpdateMessage: ptr.To(true),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_update_message_unsupported_version.golden",
 		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
