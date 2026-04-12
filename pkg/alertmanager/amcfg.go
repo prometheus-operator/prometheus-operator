@@ -3167,7 +3167,7 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	// check the attachment top level fields and reject if below 0.32.0.
 	if amVersion.LT(semver.MustParse("0.32.0")) {
 		commonErrorMsg := " supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
-		fieldValueMapping := map[string]*string{
+		fieldNameMapping := map[string]*string{
 			"fallback":    &mc.Fallback,
 			"color":       &mc.Color,
 			"pretext":     &mc.Pretext,
@@ -3181,10 +3181,10 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			"footer_icon": &mc.FooterIcon,
 			"image_urL":   &mc.ImageURL,
 		}
-		for f, v := range fieldValueMapping {
-			msg := fmt.Sprintf("'%s'"+commonErrorMsg, f)
+		for fieldName, valuePtr := range fieldNameMapping {
+			msg := fmt.Sprintf("'%s'"+commonErrorMsg, fieldName)
 			logger.Warn(msg, "current_version", amVersion.String())
-			*v = ""
+			*valuePtr = ""
 		}
 
 		if len(mc.Fields) > 0 {
