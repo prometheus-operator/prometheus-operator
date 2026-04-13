@@ -141,6 +141,7 @@ type webhookConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
+	Payload       map[string]any    `yaml:"payload,omitempty"`
 }
 
 type pagerdutyConfig struct {
