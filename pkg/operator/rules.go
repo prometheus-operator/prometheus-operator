@@ -63,6 +63,16 @@ const (
 	MetricsQLLanguage
 )
 
+// String returns the string representation of the ExpressionLanguage.
+func (e ExpressionLanguage) String() string {
+	switch e {
+	case MetricsQLLanguage:
+		return "metricsql"
+	default:
+		return "promql"
+	}
+}
+
 const (
 	selectingPrometheusRuleResourcesAction = "SelectingPrometheusRuleResources"
 )

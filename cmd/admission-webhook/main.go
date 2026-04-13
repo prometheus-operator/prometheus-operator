@@ -38,7 +38,7 @@ import (
 
 const defaultGOMemlimitRatio = 0.0
 const defaultValidationScheme = "legacy"
-const defaultRuleQueryLanguage = "promql"
+const defaultRuleQueryLanguage = promoperator.PromQLLanguage
 
 func main() {
 	var (
@@ -56,7 +56,7 @@ func main() {
 
 	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	flagset.StringVar(&nameValidationScheme, "name-validation-scheme", defaultValidationScheme, "The name validation scheme to use ('legacy' or 'utf8').")
-	flagset.StringVar(&ruleQueryLanguage, "rule-query-language", defaultRuleQueryLanguage, "The query language to use for rule expression validation ('promql' or 'metricsql'). Use 'metricsql' for VictoriaMetrics targets.")
+	flagset.StringVar(&ruleQueryLanguage, "rule-query-language", defaultRuleQueryLanguage.String(), "The query language to use for rule expression validation ('promql' or 'metricsql'). Use 'metricsql' for VictoriaMetrics targets.")
 
 	_ = flagset.Parse(os.Args[1:])
 
