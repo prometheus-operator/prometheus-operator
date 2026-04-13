@@ -28,7 +28,7 @@ type GlobalMattermostConfigApplyConfiguration struct {
 	// webhookURL defines the default Mattermost Webhook URL.
 	//
 	// It requires Alertmanager >= v0.32.0.
-	WebookURL *monitoringv1.URL `json:"webhookURL,omitempty"`
+	WebhookURL *monitoringv1.URL `json:"webhookURL,omitempty"`
 }
 
 // GlobalMattermostConfigApplyConfiguration constructs a declarative configuration of the GlobalMattermostConfig type for use with
@@ -37,10 +37,10 @@ func GlobalMattermostConfig() *GlobalMattermostConfigApplyConfiguration {
 	return &GlobalMattermostConfigApplyConfiguration{}
 }
 
-// WithWebookURL sets the WebookURL field in the declarative configuration to the given value
+// WithWebhookURL sets the WebhookURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the WebookURL field is set to the value of the last call.
-func (b *GlobalMattermostConfigApplyConfiguration) WithWebookURL(value monitoringv1.URL) *GlobalMattermostConfigApplyConfiguration {
-	b.WebookURL = &value
+// If called multiple times, the WebhookURL field is set to the value of the last call.
+func (b *GlobalMattermostConfigApplyConfiguration) WithWebhookURL(value monitoringv1.URL) *GlobalMattermostConfigApplyConfiguration {
+	b.WebhookURL = &value
 	return b
 }
