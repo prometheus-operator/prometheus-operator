@@ -1325,14 +1325,20 @@ func deadlineExpired(deadline string) (bool, error) {
 // on the retention settings.
 // If Prometheus is configured with size-based retention only, it returns a
 // zero value.
+// The function should only be called when the shard retention policy is set to Retain.
 func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
-	if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
-		return time.Duration(0), nil
-	}
+	var retention monitoringv1.Duration
+	if p.Spec.ShardRetentionPolicy.Retain != nil {
+		retention = p.Spec.ShardRetentionPolicy.Retain.RetentionPeriod
+	} else {
+		if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
+			return time.Duration(0), nil
+		}
 
-	retention := p.Spec.Retention
-	if retention == "" {
-		retention = defaultRetention
+		retention = p.Spec.Retention
+		if retention == "" {
+			retention = defaultRetention
+		}
 	}
 
 	d, err := model.ParseDuration(string(retention))
