@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
@@ -65,6 +66,37 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			},
 			golden: "v0.24.0_remote_write_config.golden",
 		},
+		{
+			name:    "sigv4 version",
+			version: operator.DefaultThanosVersion,
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:                  "http://example.com",
+					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+					SendNativeHistograms: ptr.To(true),
+					RoundRobinDNS:        ptr.To(true),
+					Sigv4: &monitoringv1.Sigv4{
+						Profile:    "profilename",
+						RoleArn:    "arn:aws:iam::123456789012:instance-profile/prometheus",
+						ExternalID: "myExternalID",
+						AccessKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "access-key",
+						},
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "sigv4-secret",
+							},
+							Key: "secret-key",
+						},
+						Region: "us-central-0",
+					},
+				},
+			},
+			golden: "sigv4_remote_write_config.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cs := fake.NewClientset()
@@ -79,7 +111,18 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 					RemoteWrite: tc.remoteWrite,
 				},
 			}
-			sb := &assets.StoreBuilder{}
+			sb := assets.NewTestStoreBuilder(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "sigv4-secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"access-key": []byte("access-key"),
+						"secret-key": []byte("secret-key"),
+					},
+				},
+			)
 
 			err := o.createOrUpdateRulerConfigSecret(context.Background(), sb, tr)
 			if tc.expectErr {

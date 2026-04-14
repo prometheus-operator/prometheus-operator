@@ -6309,6 +6309,9 @@ spec:
                             It requires Prometheus >= v2.54.0.
                           type: boolean
                       type: object
+                      x-kubernetes-validations:
+                      - message: externalId can only be used when roleArn is specified
+                        rule: '!has(self.externalId) || has(self.roleArn)'
                     tlsConfig:
                       description: tlsConfig to use for the URL.
                       properties:

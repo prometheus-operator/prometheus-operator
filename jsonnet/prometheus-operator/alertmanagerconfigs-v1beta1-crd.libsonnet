@@ -7235,6 +7235,12 @@
                               },
                             },
                             type: 'object',
+                            'x-kubernetes-validations': [
+                              {
+                                message: 'externalId can only be used when roleArn is specified',
+                                rule: '!has(self.externalId) || has(self.roleArn)',
+                              },
+                            ],
                           },
                           subject: {
                             description: 'subject defines the subject line when the message is delivered to email endpoints.\nThis field is only used when sending to email subscribers of an SNS topic.',
