@@ -101,6 +101,7 @@ type Operator struct {
 	disableUnmanagedConfiguration bool
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
+	topologyShardingEnabled       bool
 
 	newEventRecorder operator.NewEventRecorderFunc
 	finalizerSyncer  *operator.FinalizerSyncer
@@ -213,6 +214,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:             c.ControllerID,
 		newEventRecorder:         c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		topologyShardingEnabled:  c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:          operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range opts {
@@ -1008,6 +1010,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+		if c.topologyShardingEnabled {
+			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
+		}
 
 		if notFound {
 			logger.Debug("creating statefulset")
