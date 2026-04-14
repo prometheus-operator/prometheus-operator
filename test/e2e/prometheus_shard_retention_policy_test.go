@@ -16,11 +16,14 @@ package e2e
 
 import (
 	"context"
+	"errors"
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	applyconfigurationsappsv1 "k8s.io/client-go/applyconfigurations/apps/v1"
 	"k8s.io/utils/ptr"
@@ -29,6 +32,180 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
+
+// testPrometheusTargetDistributionOnResharding verifies that targets are
+// correctly distributed across expected shard(s) when their number scales up
+// and down.
+// TODO: add a target (Prometheus) scraped by all shards.
+func testPrometheusTargetDistributionOnResharding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusShardRetentionPolicyFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	// Deploy an application with 10 replicas to ensure that targets will be
+	// spread across the 2 shards.
+	dep, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
+	require.NoError(t, err)
+	dep.Spec.Replicas = ptr.To(int32(10))
+
+	framework.CreateDeployment(context.Background(), ns, dep)
+	require.NoError(t, err)
+
+	svc := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "app",
+			Labels: map[string]string{
+				"group": "app",
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: dep.Spec.Template.ObjectMeta.Labels,
+			Ports: []corev1.ServicePort{
+				{
+					Name: "web",
+					Port: 8080,
+				},
+			},
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "auth",
+			Namespace: ns,
+		},
+		StringData: map[string]string{
+			"user": "user",
+			"pass": "pass",
+		},
+		Type: corev1.SecretTypeOpaque,
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor("test")
+	// Update the selector to select only the app pods.
+	sm.Spec.Selector.MatchLabels["group"] = "app"
+	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
+		Interval: monitoringv1.Duration("5s"),
+		Port:     "web",
+		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+					BasicAuth: &monitoringv1.BasicAuth{
+						Username: corev1.SecretKeySelector{
+							Key: "user",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "auth",
+							},
+						},
+						Password: corev1.SecretKeySelector{
+							Key: "pass",
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "auth",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Deploy a Prometheus resource with 1 shard and ensure that it discovers 10 targets.
+	// We test only against the Retain strategy. There's no need to verify with
+	// the Delete strategy because the second shard will not exist anymore in
+	// case of scale down.
+	prom := framework.MakeBasicPrometheus(ns, "test", "test", 1)
+	prom.Spec.Shards = ptr.To(int32(1))
+	prom.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
+		WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+	}
+
+	shardServices := make([]*corev1.Service, 2)
+	for i := range shardServices {
+		svc := framework.MakePrometheusService("test", "test", corev1.ServiceTypeClusterIP)
+		svc.Name += "-" + strconv.Itoa(i)
+		svc.Spec.Selector["operator.prometheus.io/shard"] = strconv.Itoa(i)
+
+		svc, err = framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
+		require.NoError(t, err)
+		shardServices[i] = svc
+	}
+
+	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
+	require.NoError(t, err)
+
+	err = framework.WaitForHealthyTargets(context.Background(), ns, shardServices[0].Name, 10)
+	require.NoError(t, err)
+
+	// Scale up the number of shards to 2 and ensure that
+	// * Each shard discovers a positive number of targets.
+	// * The sum of targets is 10.
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 2)
+	require.NoError(t, err)
+
+	var total atomic.Int32
+	t.Run("2 active shards", func(t *testing.T) {
+		for _, svc := range shardServices {
+			t.Run(svc.Name, func(t *testing.T) {
+				t.Parallel()
+
+				err = framework.WaitForHealthyTargetsWithCondition(
+					context.Background(),
+					ns,
+					svc.Name,
+					func(targets []*testFramework.Target) error {
+						if len(targets) == 0 {
+							return errors.New("expected more than zero targets")
+						}
+						_ = total.Add(int32(len(targets)))
+						return nil
+					},
+				)
+				require.NoError(t, err)
+			})
+		}
+	})
+	require.Equal(t, int32(10), total.Load())
+
+	// Scale down the number of shards to 1 and ensure that all targets are
+	// reaffected to the first shard.
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 1)
+	require.NoError(t, err)
+
+	t.Run("1 active shard", func(t *testing.T) {
+		for i, svc := range shardServices {
+			t.Run(svc.Name, func(t *testing.T) {
+				t.Parallel()
+
+				var targets int
+				if i == 0 {
+					targets = 10
+				}
+				err = framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, targets)
+				require.NoError(t, err)
+			})
+		}
+	})
+}
 
 // testPrometheusRetentionPolicies tests the shard retention policies for Prometheus.
 // ShardRetentionPolicy requires the ShardRetention feature gate to be enabled,

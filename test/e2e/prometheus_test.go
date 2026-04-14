@@ -5461,7 +5461,7 @@ func testPrometheusServiceName(t *testing.T) {
 }
 
 // testPrometheusReconciliationOnSecretChanges ensures that the operator
-// reconciles the configureation whenever a secret referenced by a service
+// reconciles the configuration whenever a secret referenced by a service
 // monitor gets added/deleted in another namespace than the workload.
 func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	t.Parallel()
