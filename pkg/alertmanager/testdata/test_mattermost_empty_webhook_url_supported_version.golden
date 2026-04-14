@@ -1,5 +1,5 @@
 global:
-  mattermost_webhook_url: www.test.com
+  mattermost_webhook_url: //www.test.com
 receivers:
 - name: ""
   mattermost_configs:

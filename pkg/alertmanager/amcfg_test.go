@@ -4333,7 +4333,7 @@ func TestSanitizeConfig(t *testing.T) {
 				Global: &globalConfig{
 					MattermostWebhookURL: &config.URL{
 						URL: &url.URL{
-							Host: "https://mattermost.example.com",
+							Host: "www.test.com",
 						}},
 				},
 			},
@@ -4346,7 +4346,7 @@ func TestSanitizeConfig(t *testing.T) {
 				Global: &globalConfig{
 					MattermostWebhookURL: &config.URL{
 						URL: &url.URL{
-							Host: "https://mattermost.example.com",
+							Host: "www.test.com",
 						}},
 				},
 			},
@@ -4379,7 +4379,7 @@ func TestSanitizeConfig(t *testing.T) {
 				Global: &globalConfig{
 					MattermostWebhookURL: &config.URL{
 						URL: &url.URL{
-							Host: "https://mattermost.example.com",
+							Host: "www.test.com",
 						}},
 					MattermostWebhookURLFile: "/mattermost/webhook/url",
 				},
