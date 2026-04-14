@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [FEATURE] Implement shard retention based on Prometheus data retention (it requires the `PrometheusShardRetentionPolicy` feature gate). #8478
+
 ## 0.90.1 / 2026-03-25
 
 * [BUGFIX] Fix Probe ignoring HTTP client settings in scrape configuration. #8461
