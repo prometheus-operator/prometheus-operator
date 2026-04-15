@@ -54,6 +54,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("wechatConfig: %w", err)
 	}
 
+	if err := validateGlobalMattermostConfig(gc.MattermostConfig); err != nil {
+		return fmt.Errorf("mattermost: %w", err)
+	}
+
 	return nil
 }
 
@@ -124,6 +128,18 @@ func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
 
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
 		return fmt.Errorf("invalid apiURL: %w", err)
+	}
+
+	return nil
+}
+
+func validateGlobalMattermostConfig(mc *monitoringv1.GlobalMattermostConfig) error {
+	if wc == nil {
+		return nil
+	}
+
+	if err := validation.ValidateURLPtr((*string)(mc.WebhookURL)); err != nil {
+		return fmt.Errorf("invalid webhookURL: %w", err)
 	}
 
 	return nil
