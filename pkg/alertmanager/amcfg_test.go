@@ -4331,7 +4331,10 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionGlobalMattermostWebhookURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "https://mattermost.example.com",
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
 				},
 			},
 			golden: "test_mattermost_webhook_url_supported_version.golden",
@@ -4341,7 +4344,10 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "https://mattermost.example.com",
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
 				},
 			},
 			golden: "test_mattermost_webhook_url_unsupported_version.golden",
@@ -4371,7 +4377,10 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionGlobalMattermostWebhookURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL:     "https://mattermost.example.com",
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
 					MattermostWebhookURLFile: "/mattermost/webhook/url",
 				},
 			},
@@ -5142,7 +5151,10 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionMattermostEmptyWebhookURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "www.test.com",
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
 				},
 				Receivers: []*receiver{
 					{
@@ -5161,7 +5173,10 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionMattermostEmptyWebhookURLNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					MattermostWebhookURL: "www.test.com",
+					MattermostWebhookURL: &config.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
 				},
 				Receivers: []*receiver{
 					{

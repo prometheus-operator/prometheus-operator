@@ -83,7 +83,7 @@ type globalConfig struct {
 	SlackAppTokenFile        string          `yaml:"slack_app_token_file,omitempty"`
 	SlackAppURL              *config.URL     `yaml:"slack_app_url,omitempty"`
 	WeChatAPISecretFile      string          `yaml:"wechat_api_secret_file,omitempty"`
-	MattermostWebhookURL     string          `yaml:"mattermost_webhook_url,omitempty"`
+	MattermostWebhookURL     *config.URL     `yaml:"mattermost_webhook_url,omitempty"`
 	MattermostWebhookURLFile string          `yaml:"mattermost_webhook_url_file,omitempty"`
 }
 
