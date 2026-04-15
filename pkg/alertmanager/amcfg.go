@@ -538,6 +538,10 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global victorops config: %w", err)
 	}
 
+	if err := cb.convertGlobalMattermostConfig(out, in.MattermostConfig); err != nil {
+		return nil, fmt.Errorf("invalid global mattermost config: %w", err)
+	}
+
 	return out, nil
 }
 
