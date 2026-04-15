@@ -98,6 +98,7 @@ type Operator struct {
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+	topologyShardingEnabled      bool
 
 	finalizerSyncer *operator.FinalizerSyncer
 }
@@ -174,6 +175,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		topologyShardingEnabled:      c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
@@ -838,6 +840,9 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+		if c.topologyShardingEnabled {
+			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
+		}
 
 		if notFound {
 			logger.Debug("creating statefulset")

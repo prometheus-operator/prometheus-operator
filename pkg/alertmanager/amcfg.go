@@ -2284,6 +2284,24 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.SMTPForceImplicitTLS = nil
 	}
 
+	if gc.MattermostWebhookURL != "" && amVersion.LT(semver.MustParse("0.32.0")) {
+		msg := "'mattermost_webhook_url' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.MattermostWebhookURL = ""
+	}
+
+	if gc.MattermostWebhookURLFile != "" && amVersion.LT(semver.MustParse("0.32.0")) {
+		msg := "'mattermost_webhook_url_file' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		gc.MattermostWebhookURLFile = ""
+	}
+
+	if gc.MattermostWebhookURL != "" && gc.MattermostWebhookURLFile != "" {
+		msg := "'mattermost_webhook_url' and 'mattermost_webhook_url_file' are mutually exclusive - 'mattermost_webhook_url' has taken precedence"
+		logger.Warn(msg)
+		gc.MattermostWebhookURLFile = ""
+	}
+
 	return nil
 }
 
@@ -2908,6 +2926,12 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.Timeout = nil
 	}
 
+	if len(whc.Payload) != 0 && amVersion.LT(semver.MustParse("0.32.0")) {
+		msg := "'payload' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		whc.Payload = nil
+	}
+
 	if whc.URL != "" {
 		if err := validation.ValidateTemplateURL(whc.URL); err != nil {
 			return fmt.Errorf("invalid 'url': %w", err)
@@ -3150,11 +3174,12 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 
 func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	mattermostAllowed := amVersion.GTE(semver.MustParse("0.30.0"))
+	lessThanV0_32 := amVersion.LT(semver.MustParse("0.32.0"))
 	if !mattermostAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; mattermost integration is available in Alertmanager >= 0.30.0`)
 	}
 
-	if mc.WebhookURL == "" && mc.WebhookURLFile == "" {
+	if mc.WebhookURL == "" && mc.WebhookURLFile == "" && lessThanV0_32 {
 		return fmt.Errorf(`one of 'webhook_url' or 'webhook_url_file' must be configured`)
 	}
 

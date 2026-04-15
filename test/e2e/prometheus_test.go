@@ -44,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
+	applyconfigurationsappsv1 "k8s.io/client-go/applyconfigurations/apps/v1"
 	certutil "k8s.io/client-go/util/cert"
 	"k8s.io/utils/ptr"
 
@@ -5481,40 +5482,100 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name                 string
-		whenScaledDown       *monitoringv1.WhenScaledRetentionType
-		expectedRemainingSts int
+		name           string
+		whenScaledDown *monitoringv1.WhenScaledRetentionType
 	}{
 		{
-			name:                 "delete",
-			whenScaledDown:       ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
-			expectedRemainingSts: 1,
+			name:           "delete policy",
+			whenScaledDown: ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
 		},
 		{
-			name:                 "retain",
-			whenScaledDown:       ptr.To(monitoringv1.RetainWhenScaledRetentionType),
-			expectedRemainingSts: 2,
+			name:           "retain policy",
+			whenScaledDown: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
 		},
 	}
 
-	for _, tc := range testCases {
+	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			p := framework.MakeBasicPrometheus(ns, tc.name, tc.name, 1)
+			name := "shard-retention-" + strconv.Itoa(i)
+			p := framework.MakeBasicPrometheus(ns, name, name, 1)
 			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
 				WhenScaled: tc.whenScaledDown,
 			}
 			p.Spec.Shards = ptr.To(int32(2))
 			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
-			require.NoError(t, err, "failed to create Prometheus")
+			require.NoError(t, err)
 
-			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, tc.name, ns, 1)
-			require.NoError(t, err, "failed to scale down Prometheus")
-			require.Equal(t, int32(1), p.Status.Shards, "expected scale of 1 shard")
+			t.Log("scaling down the number of shards to 1")
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 1)
+			require.NoError(t, err)
+			require.Equal(t, int32(1), p.Status.Shards)
 
-			podList, err := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
-			require.NoError(t, err, "failed to list statefulsets")
+			sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
+			require.NoError(t, err)
 
-			require.Len(t, podList.Items, tc.expectedRemainingSts)
+			expectedRemaining := 2
+			if *tc.whenScaledDown == monitoringv1.DeleteWhenScaledRetentionType {
+				expectedRemaining = 1
+			}
+			require.Len(t, sts.Items, expectedRemaining)
+
+			if expectedRemaining == 1 {
+				return
+			}
+
+			var shard1 string
+			for _, sts := range sts.Items {
+				deadlineAnnotation, found := sts.Annotations["operator.prometheus.io/deletion-deadline"]
+				switch shard := sts.Labels["operator.prometheus.io/shard"]; shard {
+				case "0":
+					require.False(t, found)
+				case "1":
+					require.True(t, found)
+					require.NotEmpty(t, deadlineAnnotation)
+					shard1 = sts.Name
+				default:
+					t.Fatalf("unexpected shard label: %s", shard)
+				}
+			}
+
+			t.Log("scaling up the number of shards to 2")
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 2)
+			require.NoError(t, err)
+			require.Equal(t, int32(2), p.Status.Shards)
+
+			sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
+			require.NoError(t, err)
+			require.Len(t, sts.Items, 2)
+
+			for _, sts := range sts.Items {
+				_, found := sts.Annotations["operator.prometheus.io/deletion-deadline"]
+				switch shard := sts.Labels["operator.prometheus.io/shard"]; shard {
+				case "0":
+				case "1":
+					require.False(t, found)
+				default:
+					t.Fatalf("unexpected shard label: %s", shard)
+				}
+			}
+
+			t.Log("scaling down the number of shards to 1 again")
+			p, err = framework.ScalePrometheusAndWaitUntilReady(ctx, name, ns, 1)
+			require.NoError(t, err)
+			require.Equal(t, int32(1), p.Status.Shards)
+
+			// Update the deadline annotation to trigger a deletion of the statefulset.
+			_, err = framework.KubeClient.AppsV1().StatefulSets(ns).Apply(
+				ctx,
+				applyconfigurationsappsv1.StatefulSet(shard1, ns).WithAnnotations(map[string]string{
+					"operator.prometheus.io/deletion-deadline": time.Now().UTC().Format(time.RFC3339),
+				}),
+				metav1.ApplyOptions{FieldManager: "e2e-test", Force: true},
+			)
+			require.NoError(t, err)
+
+			err = framework.WaitForPodsReady(ctx, ns, 2*time.Minute, 1, metav1.ListOptions{LabelSelector: p.Status.Selector})
+			require.NoError(t, err)
 		})
 	}
 }
