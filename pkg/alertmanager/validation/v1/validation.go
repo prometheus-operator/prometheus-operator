@@ -134,7 +134,7 @@ func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
 }
 
 func validateGlobalMattermostConfig(mc *monitoringv1.GlobalMattermostConfig) error {
-	if wc == nil {
+	if mc == nil {
 		return nil
 	}
 
