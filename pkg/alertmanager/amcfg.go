@@ -2090,6 +2090,22 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	return nil
 }
 
+func (cb *ConfigBuilder) convertGlobalMattermostConfig(out *globalConfig, in *monitoringv1.GlobalMattermostConfig) error {
+	if in == nil {
+		return nil
+	}
+
+	if in.WebhookURL != nil {
+		u, err := url.Parse(string(*in.WebhookURL))
+		if err != nil {
+			return fmt.Errorf("failed to parse Webhook URL: %w", err)
+		}
+		out.MattermostWebhookURL = &config.URL{URL: u}
+	}
+
+	return nil
+}
+
 // sanitize the config against a specific Alertmanager version
 // types may be sanitized in one of two ways:
 // 1. stripping the unsupported config and log a warning
