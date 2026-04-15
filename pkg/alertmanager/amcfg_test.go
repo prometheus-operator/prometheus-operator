@@ -86,6 +86,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
+	version32, err := semver.ParseTolerant("v0.32.0")
+	require.NoError(t, err)
+
 	pagerdutyURL := "example.pagerduty.com"
 	invalidPagerdutyURL := "://example.pagerduty.com"
 
@@ -107,6 +110,9 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 
 	victorOpsAPIURL := "https://victorops.example.com"
 	invalidVictorOpsAPIURL := "://victorops.example.com"
+
+	mattermostWebhookURL := "https://mattermost.example.com"
+	invalidMattermostWebhookURL := "://mattermost.example.com"
 
 	tests := []struct {
 		name            string
@@ -1875,6 +1881,80 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						},
 						Key: "api_key",
 					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "valid global config mattermost webhook url",
+			amVersion: &version32,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+					WebhookURL: ptr.To(monitoringv1.URL(mattermostWebhookURL)),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: false,
+		},
+		{
+			name:      "invalid global config mattermost webhook url",
+			amVersion: &version32,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+					WebhookURL: ptr.To(monitoringv1.URL(invalidMattermostWebhookURL)),
 				},
 			},
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
