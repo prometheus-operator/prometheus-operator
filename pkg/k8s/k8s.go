@@ -309,13 +309,15 @@ func AddTypeInformationToObject(obj runtime.Object) error {
 
 // mergeMetadata takes labels and annotations from the old resource and merges
 // them into the new resource. If a key is present in both resources, the new
-// resource wins. It also copies the ResourceVersion from the old resource to
-// the new resource to prevent update conflicts.
+// resource wins. All keys starting with the "operator.prometheus.io/" prefix
+// in the old resource are dropped before merging.
+// It also copies the ResourceVersion from the old resource to the new resource
+// to prevent update conflicts.
 func mergeMetadata(newObj *metav1.ObjectMeta, oldObj metav1.ObjectMeta) {
 	newObj.ResourceVersion = oldObj.ResourceVersion
 
-	newObj.SetLabels(mergeMap(oldObj.Labels, maps.All(newObj.Labels)))
-	newObj.SetAnnotations(mergeMap(oldObj.Annotations, maps.All(newObj.Annotations)))
+	newObj.SetLabels(mergeMap(maps.Collect(excludeOperatorPrefixSeq(oldObj.Labels)), maps.All(newObj.Labels)))
+	newObj.SetAnnotations(mergeMap(maps.Collect(excludeOperatorPrefixSeq(oldObj.Annotations)), maps.All(newObj.Annotations)))
 }
 
 // copyKubectlAnnotations copies the kubectl's annotations into the object
@@ -324,16 +326,30 @@ func copyKubectlAnnotations(objMeta *metav1.ObjectMeta, annotations map[string]s
 	objMeta.SetAnnotations(mergeMap(objMeta.Annotations, filterByPrefixSeq(annotations, "kubectl.kubernetes.io/")))
 }
 
+// excludeOperatorPrefixSeq returns a iterator over m excluding all keys
+// which start by the reserved operator's prefix.
+func excludeOperatorPrefixSeq(m map[string]string) iter.Seq2[string, string] {
+	return func(yield func(k, v string) bool) {
+		for k, v := range m {
+			if strings.HasPrefix(k, "operator.prometheus.io/") {
+				continue
+			}
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
 // filterByPrefixSeq returns a iterator over m for all keys matching the
 // prefix.
 func filterByPrefixSeq(m map[string]string, prefix string) iter.Seq2[string, string] {
 	return func(yield func(k, v string) bool) {
 		for k, v := range m {
-			if !strings.HasPrefix(k, prefix) {
-				continue
-			}
-			if !yield(k, v) {
-				return
+			if strings.HasPrefix(k, prefix) {
+				if !yield(k, v) {
+					return
+				}
 			}
 		}
 	}
@@ -348,6 +364,5 @@ func mergeMap(m map[string]string, seq iter.Seq2[string, string]) map[string]str
 	}
 
 	maps.Insert(m, seq)
-
 	return m
 }

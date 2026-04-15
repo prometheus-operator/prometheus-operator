@@ -17,6 +17,7 @@ package prometheus
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"net/url"
 	"path"
 	"path/filepath"
@@ -107,6 +108,40 @@ func shardsNumber(
 	}
 
 	return *cpf.Shards
+}
+
+// NodeSelectorWithTopologyZone returns the node selector for the given shard,
+// merging the existing node selector with a topology.kubernetes.io/zone entry
+// when the sharding strategy mode is Topology.
+// For other modes or when topology values are not configured, the original
+// node selector is returned unchanged.
+func NodeSelectorWithTopologyZone(cpf monitoringv1.CommonPrometheusFields, shardIndex int32) map[string]string {
+	return nodeSelectorWithTopologyZone(
+		cpf.NodeSelector,
+		cpf.ShardingStrategy,
+		shardIndex,
+	)
+}
+
+func nodeSelectorWithTopologyZone(nodeSelector map[string]string, shardingStrategy *monitoringv1.ShardingStrategy, shardIndex int32) map[string]string {
+	if shardingStrategy == nil ||
+		shardingStrategy.Mode == nil ||
+		*shardingStrategy.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		shardingStrategy.Topology == nil ||
+		len(shardingStrategy.Topology.Values) == 0 {
+		return nodeSelector
+	}
+
+	numZones := int32(len(shardingStrategy.Topology.Values))
+	zone := shardingStrategy.Topology.Values[shardIndex%numZones]
+
+	result := maps.Clone(nodeSelector)
+	if result == nil {
+		result = make(map[string]string)
+	}
+	result[corev1.LabelTopologyZone] = zone
+
+	return result
 }
 
 // ReplicasNumberPtr returns a ptr to the normalized number of replicas.
