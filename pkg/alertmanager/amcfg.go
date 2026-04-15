@@ -914,6 +914,15 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 	}
 
+	var payload map[string]any
+	if l := len(in.Payload); l > 0 {
+		payload = make(map[string]any, l)
+		for _, p := range in.Payload {
+			payload[p.Key] = p.Value
+		}
+	}
+	out.Payload = payload
+
 	return out, nil
 }
 
