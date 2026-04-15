@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -25,12 +26,15 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -60,6 +64,9 @@ const (
 
 	unmanagedConfigurationReason  = "ConfigurationUnmanaged"
 	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead. Unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')."
+
+	deletionDeadlineAnnotation = "operator.prometheus.io/deletion-deadline"
+	annotationTimeFormat       = time.RFC3339
 )
 
 // Operator manages the life cycle of Prometheus deployments and
@@ -101,6 +108,7 @@ type Operator struct {
 	disableUnmanagedConfiguration bool
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
+	topologyShardingEnabled       bool
 
 	newEventRecorder operator.NewEventRecorderFunc
 	finalizerSyncer  *operator.FinalizerSyncer
@@ -213,6 +221,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:             c.ControllerID,
 		newEventRecorder:         c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		topologyShardingEnabled:  c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:          operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range opts {
@@ -621,6 +630,45 @@ func (c *Operator) Run(ctx context.Context) error {
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
 	go operator.StatusPoller(ctx, c)
 
+	if c.retentionPoliciesEnabled {
+		// Periodically scan statefulsets for expired shards.
+		go func() {
+			_ = wait.PollUntilContextCancel(ctx, time.Minute, true, func(context.Context) (bool, error) {
+				_ = c.ssetInfs.ListAll(labels.Everything(), func(o any) {
+					sset := o.(*appsv1.StatefulSet)
+
+					deadline, found := sset.Annotations[deletionDeadlineAnnotation]
+					if !found {
+						return
+					}
+
+					logger := c.logger.With("statefulset", fmt.Sprintf("%s/%s", sset.Namespace, sset.Name))
+					expired, err := deadlineExpired(deadline)
+					if err != nil {
+						logger.Warn("failed to parse deletion deadline annotation", "err", err)
+						return
+					}
+
+					if !expired {
+						logger.Debug("deletion deadline not expired", "deadline", deadline)
+						return
+					}
+
+					logger.Info("deletion deadline expired", "deadline", deadline)
+					owner := c.rr.FindOwner(sset)
+					if owner == nil {
+						logger.Warn("owner not found")
+						return
+					}
+
+					c.rr.EnqueueForReconciliation(owner)
+				})
+
+				return false, nil
+			})
+		}()
+	}
+
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
 	return nil
@@ -960,7 +1008,7 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
-	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
+	// Reconcile all active statefulset shards.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
 		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
@@ -1008,6 +1056,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+		if c.topologyShardingEnabled {
+			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
+		}
 
 		if notFound {
 			logger.Debug("creating statefulset")
@@ -1055,18 +1106,19 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 			return
 		}
 
-		shouldRetain, retainErr := c.shouldRetain(p)
-		if retainErr != nil {
-			deleteErrs = append(deleteErrs, fmt.Errorf("failed to determine if StatefulSet %s should be retained: %w", s.GetName(), retainErr))
-			return
-		}
-		if shouldRetain {
+		shouldDelete, err := c.processShardRetention(ctx, p, s)
+		if err != nil {
+			logger.Warn("failed to process shard retention, not deleting the shard", "err", err, "statefulset", fmt.Sprintf("%s/%s", s.Namespace, s.Name))
 			return
 		}
 
-		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
-			if !apierrors.IsNotFound(delErr) {
-				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
+		if !shouldDelete {
+			return
+		}
+
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
+			if !apierrors.IsNotFound(err) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), err))
 			}
 		}
 	})
@@ -1197,23 +1249,95 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	return nil
 }
 
-// As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
-// For now, shouldRetain just returns the appropriate boolean based on the retention type.
-func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
+// processShardRetention returns true if the associated statefulset should be
+// deleted.
+func (c *Operator) processShardRetention(ctx context.Context, p *monitoringv1.Prometheus, sset *appsv1.StatefulSet) (bool, error) {
 	if !c.retentionPoliciesEnabled {
-		// Feature-gate is disabled, default behavior is always to delete.
-		return false, nil
-	}
-	if p.Spec.ShardRetentionPolicy == nil {
-		// ShardRetentionPolicy not configured, default behavior is to delete.
-		return false, nil
-	}
-	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,
-		monitoringv1.DeleteWhenScaledRetentionType) == monitoringv1.RetainWhenScaledRetentionType {
+		// When the feature gate is disabled, the default behavior is always to delete.
 		return true, nil
 	}
 
-	return false, nil
+	if p.Spec.ShardRetentionPolicy == nil {
+		// ShardRetentionPolicy not configured, the default behavior is to delete.
+		return true, nil
+	}
+
+	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled, monitoringv1.DeleteWhenScaledRetentionType) != monitoringv1.RetainWhenScaledRetentionType {
+		return true, nil
+	}
+
+	if deadline, found := sset.Annotations[deletionDeadlineAnnotation]; found {
+		expired, err := deadlineExpired(deadline)
+		if err != nil {
+			return false, err
+		}
+
+		return expired, nil
+	}
+
+	// Set the annotation on the statefulset. If the deadline never expires,
+	// the annotation is set to the zero time value.
+	gracePeriod, err := gracePeriodForPrometheusStorage(p)
+	if err != nil {
+		return false, err
+	}
+
+	var deadline time.Time
+	if gracePeriod > 0 {
+		deadline = time.Now().UTC().Add(gracePeriod)
+	}
+
+	patchData, err := json.Marshal(map[string]any{
+		"metadata": map[string]any{
+			"annotations": map[string]string{
+				deletionDeadlineAnnotation: deadline.Format(annotationTimeFormat),
+			},
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	_, err = c.kclient.AppsV1().StatefulSets(sset.Namespace).Patch(
+		ctx,
+		sset.Name,
+		types.StrategicMergePatchType,
+		patchData,
+		metav1.PatchOptions{FieldManager: k8s.PrometheusOperatorFieldManager})
+
+	return false, err
+}
+
+func deadlineExpired(deadline string) (bool, error) {
+	t, err := time.Parse(annotationTimeFormat, deadline)
+	if err != nil {
+		return false, err
+	}
+
+	// A zero time means that the deadline never expires.
+	return !t.IsZero() && time.Now().UTC().After(t), nil
+}
+
+// gracePeriodForPrometheusStorage returns how long the Prometheus data can be available based
+// on the retention settings.
+// If Prometheus is configured with size-based retention only, it returns a
+// zero value.
+func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
+	if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
+		return time.Duration(0), nil
+	}
+
+	retention := p.Spec.Retention
+	if retention == "" {
+		retention = defaultRetention
+	}
+
+	d, err := model.ParseDuration(string(retention))
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	return time.Duration(d), nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
