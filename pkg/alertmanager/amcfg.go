@@ -3469,6 +3469,10 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
+	if err := cb.checkGlobalMattermostConfig(ctx, gc.MattermostConfig, namespace); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -3579,6 +3583,22 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 		if _, err := cb.store.GetSecretKey(ctx, namespace, *wc.APISecret); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (cb *ConfigBuilder) checkGlobalMattermostConfig(
+	ctx context.Context,
+	mc *monitoringv1.GlobalMattermostConfig,
+	namespace string,
+) error {
+	if mc == nil {
+		return nil
+	}
+
+	if cb.amVersion.LT(semver.MustParse("0.32.0")) {
+		return fmt.Errorf(`'mattermost' global parameters require Alertmanager >= 0.32.0 - current %s`, cb.amVersion)
 	}
 
 	return nil
