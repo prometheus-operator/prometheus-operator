@@ -33,12 +33,12 @@ require (
 	golang.org/x/sync v0.20.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.35.3
+	k8s.io/api v0.35.4
 	k8s.io/apiextensions-apiserver v0.35.3
-	k8s.io/apimachinery v0.35.3
-	k8s.io/apiserver v0.35.3
-	k8s.io/client-go v0.35.3
-	k8s.io/component-base v0.35.3
+	k8s.io/apimachinery v0.35.4
+	k8s.io/apiserver v0.35.4
+	k8s.io/client-go v0.35.4
+	k8s.io/component-base v0.35.4
 	k8s.io/klog/v2 v2.140.0
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 	sigs.k8s.io/controller-runtime v0.23.3
@@ -129,7 +129,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/metalmatze/signal v0.0.0-20210307161603-1c9aa721a97a // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
-	github.com/moby/spdystream v0.5.0 // indirect
+	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
