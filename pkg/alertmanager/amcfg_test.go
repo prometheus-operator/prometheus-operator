@@ -1947,7 +1947,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
 				Type: "OnNamespace",
 			},
-			wantErr: false,
+			golden: "valid_global_config_mattermost_webhook_url.golden",
 		},
 		{
 			name:      "invalid global config mattermost webhook url",
