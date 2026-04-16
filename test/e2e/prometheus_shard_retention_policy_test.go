@@ -17,14 +17,15 @@ package e2e
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	applyconfigurationsappsv1 "k8s.io/client-go/applyconfigurations/apps/v1"
 	"k8s.io/utils/ptr"
 
@@ -34,9 +35,11 @@ import (
 )
 
 // testPrometheusTargetDistributionOnResharding verifies that targets are
-// correctly distributed across expected shard(s) when their number scales up
-// and down.
-// TODO: add a target (Prometheus) scraped by all shards.
+// correctly distributed across active shard(s) when their number scales up
+// and down and the Retain policy is used. It also ensures that targets setting
+// the __tmp_disable_sharding label are scraped by all active shards.
+//
+// After a scale-down, the "inactive" shards shouldn't scrape any target.
 func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -98,9 +101,8 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	sm := framework.MakeBasicServiceMonitor("test")
-	// Update the selector to select only the app pods.
-	sm.Spec.Selector.MatchLabels["group"] = "app"
+	// Create a service monitor for the app deployment.
+	sm := framework.MakeBasicServiceMonitor("app")
 	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
 		Interval: monitoringv1.Duration("5s"),
 		Port:     "web",
@@ -129,12 +131,35 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	// Deploy a Prometheus resource with 1 shard and ensure that it discovers 10 targets.
+	// Create 1 service monitor for the Prometheus service.
+	sm = framework.MakeBasicServiceMonitor("test")
+	sm.Spec.Endpoints[0].RelabelConfigs = []monitoringv1.RelabelConfig{
+		{
+			TargetLabel: "__tmp_disable_sharding",
+			Action:      "Replace",
+			Replacement: ptr.To("true"),
+		},
+	}
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Deploy a Prometheus resource with 1 shard and ensure that it discovers
+	// 10 targets for the app service and 1 target for the test service.
 	// We test only against the Retain strategy. There's no need to verify with
 	// the Delete strategy because the second shard will not exist anymore in
 	// case of scale down.
 	prom := framework.MakeBasicPrometheus(ns, "test", "test", 1)
 	prom.Spec.Shards = ptr.To(int32(1))
+	prom.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{
+				Key:      "group",
+				Operator: metav1.LabelSelectorOpIn,
+				Values:   []string{"app", "test"},
+			},
+		},
+	}
+
 	prom.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
 		WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
 	}
@@ -153,38 +178,48 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prom)
 	require.NoError(t, err)
 
-	err = framework.WaitForHealthyTargets(context.Background(), ns, shardServices[0].Name, 10)
+	// Expecting 10 app pods + 1 prometheus pod.
+	err = framework.WaitForHealthyTargets(context.Background(), ns, shardServices[0].Name, 11)
 	require.NoError(t, err)
 
 	// Scale up the number of shards to 2 and ensure that
-	// * Each shard discovers a positive number of targets.
-	// * The sum of targets is 10.
+	// * Each shard discovers more than 2 targets (at least 1 app pod + 2 prometheus pods).
+	// * The sum of targets is 10 app pods + 2*2 prometheus pods = 14.
 	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 2)
 	require.NoError(t, err)
 
-	var total atomic.Int32
 	t.Run("2 active shards", func(t *testing.T) {
-		for _, svc := range shardServices {
-			t.Run(svc.Name, func(t *testing.T) {
-				t.Parallel()
-
-				err = framework.WaitForHealthyTargetsWithCondition(
+		var pollErr error
+		err := wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+			var total int
+			for _, svc := range shardServices {
+				err := framework.WaitForHealthyTargetsWithCondition(
 					context.Background(),
 					ns,
 					svc.Name,
 					func(targets []*testFramework.Target) error {
-						if len(targets) == 0 {
-							return errors.New("expected more than zero targets")
+						if len(targets) < 2 {
+							return errors.New("expected more than 2 targets")
 						}
-						_ = total.Add(int32(len(targets)))
+
+						total += len(targets)
 						return nil
 					},
 				)
-				require.NoError(t, err)
-			})
-		}
+				if err != nil {
+					pollErr = fmt.Errorf("%s: %w", svc.Name, err)
+					return false, nil
+				}
+			}
+
+			if total != 14 {
+				pollErr = fmt.Errorf("expected 14 targets, got %d", total)
+				return false, nil
+			}
+			return true, nil
+		})
+		require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
 	})
-	require.Equal(t, int32(10), total.Load())
 
 	// Scale down the number of shards to 1 and ensure that all targets are
 	// reaffected to the first shard.
@@ -198,9 +233,10 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 				var targets int
 				if i == 0 {
-					targets = 10
+					// 10 app pods + 2 prometheus pods.
+					targets = 12
 				}
-				err = framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, targets)
+				err := framework.WaitForHealthyTargets(context.Background(), ns, svc.Name, targets)
 				require.NoError(t, err)
 			})
 		}
