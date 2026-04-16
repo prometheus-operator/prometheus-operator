@@ -3489,7 +3489,7 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
-	if err := cb.checkGlobalMattermostConfig(ctx, gc.MattermostConfig, namespace); err != nil {
+	if err := cb.checkGlobalMattermostConfig(gc.MattermostConfig); err != nil {
 		return err
 	}
 
