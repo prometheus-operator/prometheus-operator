@@ -984,6 +984,11 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 			reset("azureAD.scope", &rw.AzureAD.Scope)
 		}
 
+		// Thanos does not support sigv4.externalId in any version
+		if rw.Sigv4 != nil && rw.Sigv4.ExternalID != "" {
+			rw.Sigv4.ExternalID = ""
+		}
+
 		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.
 		if version.LT(semver.MustParse("0.40.0")) {
 			if rw.AzureAD != nil && rw.AzureAD.ManagedIdentity != nil {

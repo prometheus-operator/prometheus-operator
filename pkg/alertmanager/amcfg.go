@@ -1529,10 +1529,13 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 
 	if in.Sigv4 != nil {
 		out.Sigv4 = sigV4Config{
-			Region:     in.Sigv4.Region,
-			Profile:    in.Sigv4.Profile,
-			RoleARN:    in.Sigv4.RoleArn,
-			ExternalID: in.Sigv4.ExternalID,
+			Region:  in.Sigv4.Region,
+			Profile: in.Sigv4.Profile,
+			RoleARN: in.Sigv4.RoleArn,
+		}
+
+		if cb.amVersion.GT(semver.MustParse("0.32.0")) {
+			out.Sigv4.ExternalID = in.Sigv4.ExternalID
 		}
 
 		if in.Sigv4.AccessKey != nil && in.Sigv4.SecretKey != nil {

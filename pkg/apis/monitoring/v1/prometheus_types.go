@@ -1955,8 +1955,9 @@ type Sigv4 struct {
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
 	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-	// It requires Prometheus >= v3.11.0.
+	// It requires Prometheus >= v3.11.0 or Alertmanager > v0.32.0.
 	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ExternalID string `json:"externalId,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.

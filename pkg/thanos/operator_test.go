@@ -67,7 +67,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			golden: "v0.24.0_remote_write_config.golden",
 		},
 		{
-			name:    "sigv4 version",
+			name:    "sigv4 external_id not support in any thanos version",
 			version: operator.DefaultThanosVersion,
 			remoteWrite: []monitoringv1.RemoteWriteSpec{
 				{
@@ -95,7 +95,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 					},
 				},
 			},
-			golden: "sigv4_remote_write_config.golden",
+			golden: "sigv4_externalId_remote_write_config.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
