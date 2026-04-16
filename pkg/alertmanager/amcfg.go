@@ -3609,9 +3609,7 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 }
 
 func (cb *ConfigBuilder) checkGlobalMattermostConfig(
-	ctx context.Context,
 	mc *monitoringv1.GlobalMattermostConfig,
-	namespace string,
 ) error {
 	if mc == nil {
 		return nil
