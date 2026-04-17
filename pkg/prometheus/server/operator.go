@@ -955,6 +955,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	if c.retentionPoliciesEnabled {
 		opts = append(opts, prompkg.WithPrometheusRetentionPolicies())
 	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return closure, err

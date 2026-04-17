@@ -674,6 +674,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
 		opts = append(opts, prompkg.WithDaemonSet())
 	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {

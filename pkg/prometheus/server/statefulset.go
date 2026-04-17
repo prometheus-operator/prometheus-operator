@@ -147,6 +147,7 @@ func makeStatefulSetSpec(
 	tlsSecrets *operator.ShardedSecret,
 ) (*appsv1.StatefulSetSpec, error) {
 	cpf := p.GetCommonPrometheusFields()
+	topologyZone := prompkg.TopologyZoneForShard(cpf, shard)
 
 	pImagePath, err := operator.BuildImagePath(
 		ptr.Deref(cpf.Image, ""),
@@ -268,6 +269,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.Shard(shard),
+			operator.Zone(topologyZone),
 		),
 	)
 
@@ -317,6 +319,7 @@ func makeStatefulSetSpec(
 			watchedDirectories,
 			operator.Shard(shard),
 			operator.WebConfigFile(configReloaderWebConfigFile),
+			operator.Zone(topologyZone),
 		),
 	}, additionalContainers...)
 

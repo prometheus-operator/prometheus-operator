@@ -414,3 +414,72 @@ func TestLabelSelectorForStatefulSets(t *testing.T) {
 		})
 	}
 }
+
+func TestTopologyZoneForShard(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+	addressMode := monitoringv1.AddressShardingStrategyMode
+
+	for _, tc := range []struct {
+		name             string
+		shardingStrategy *monitoringv1.ShardingStrategy
+		shardIndex       int32
+		expectedZone     string
+	}{
+		{
+			name:         "nil strategy returns empty",
+			shardIndex:   0,
+			expectedZone: "",
+		},
+		{
+			name: "address mode returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(addressMode),
+			},
+			shardIndex:   0,
+			expectedZone: "",
+		},
+		{
+			name: "topology mode with no values returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			shardIndex:   0,
+			expectedZone: "",
+		},
+		{
+			name: "shard 0 gets first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			shardIndex:   0,
+			expectedZone: "zone-a",
+		},
+		{
+			name: "shard 1 gets second zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			shardIndex:   1,
+			expectedZone: "zone-b",
+		},
+		{
+			name: "shard 2 wraps around to first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			shardIndex:   2,
+			expectedZone: "zone-a",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cpf := monitoringv1.CommonPrometheusFields{
+				ShardingStrategy: tc.shardingStrategy,
+			}
+			require.Equal(t, tc.expectedZone, TopologyZoneForShard(cpf, tc.shardIndex))
+		})
+	}
+}

@@ -54,8 +54,9 @@ const (
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
 
-	defaultPrometheusExternalLabelName = "prometheus"
-	defaultReplicaExternalLabelName    = "prometheus_replica"
+	defaultPrometheusExternalLabelName   = "prometheus"
+	defaultReplicaExternalLabelName      = "prometheus_replica"
+	defaultTopologyZoneExternalLabelName = "zone"
 
 	hashLabelNameForSharding          = "__tmp_hash"
 	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
@@ -758,6 +759,21 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
+	}
+
+	if cg.prometheusTopologySharding {
+		ss := cpf.ShardingStrategy
+		if ss != nil && ss.Mode != nil &&
+			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+			ss.Topology != nil {
+
+			// Default label name is "zone"; nil means use default.
+			// Empty string means skip.
+			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
+			if zoneExternalLabelName != "" {
+				m[zoneExternalLabelName] = fmt.Sprintf("$(%s)", operator.TopologyZoneEnvVar)
+			}
+		}
 	}
 
 	for k, v := range cpf.ExternalLabels {
