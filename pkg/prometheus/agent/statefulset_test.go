@@ -555,7 +555,7 @@ func TestConfigReloaderTopologyZoneEnvVar(t *testing.T) {
 			}
 
 			logger := prompkg.NewLogger()
-			cg, err := prompkg.NewConfigGenerator(logger, &p)
+			cg, err := prompkg.NewConfigGenerator(logger, &p, prompkg.WithPrometheusTopologySharding())
 			require.NoError(t, err)
 
 			sset, err := makeStatefulSet(
