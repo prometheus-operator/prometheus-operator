@@ -432,8 +432,10 @@ func TestTopologyZoneExternalLabel(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval:   "30s",
 						ShardingStrategy: tc.shardingStrategy,
 					},
+					EvaluationInterval: "30s",
 				},
 			}
 
