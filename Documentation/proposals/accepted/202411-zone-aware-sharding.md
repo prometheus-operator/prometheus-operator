@@ -20,7 +20,7 @@ draft: false
   * [Well known kubernetes labels](https://kubernetes.io/docs/reference/labels-annotations-taints/#topologykubernetesiozone)
   * [AWS zone names](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-availability-zones)
   * [GCP zone names](https://cloud.google.com/compute/docs/regions-zones#available)
-  * [Shard Autoscaling](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md) design proposal.
+  * [Shard Autoscaling](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/accepted/202310-shard-autoscaling.md) design proposal.
 
 This proposal describes how we can implement zone-aware sharding by adding
 support for custom labels and zone configuration options to the existing
