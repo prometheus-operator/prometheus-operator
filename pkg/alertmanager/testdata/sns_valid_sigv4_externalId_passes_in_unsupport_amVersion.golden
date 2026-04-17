@@ -1,0 +1,12 @@
+receivers:
+- name: ""
+  sns_configs:
+  - api_url: https://sns.us-east-1.amazonaws.com
+    sigv4:
+      region: us-west-2
+      access_key: key
+      secret_key: secret
+      profile: dev
+      role_arn: arn:dev
+    topic_arn: arn:aws:sns:us-east-1:123456789012:test
+templates: []

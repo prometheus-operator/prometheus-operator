@@ -1534,7 +1534,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			RoleARN: in.Sigv4.RoleArn,
 		}
 
-		if cb.amVersion.GT(semver.MustParse("0.32.0")) {
+		if cb.amVersion.GTE(semver.MustParse("0.33.0")) {
 			out.Sigv4.ExternalID = in.Sigv4.ExternalID
 		}
 
@@ -2993,6 +2993,12 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 		if err := validation.ValidateTemplateURL(sc.APIUrl); err != nil {
 			return fmt.Errorf("invalid 'api_url': %w", err)
 		}
+	}
+
+	if sc.Sigv4.ExternalID != "" && amVersion.LT(semver.MustParse("0.33.0")) {
+		msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
+		logger.Warn(msg)
+		sc.Sigv4.ExternalID = ""
 	}
 
 	return sc.HTTPConfig.sanitize(amVersion, logger)

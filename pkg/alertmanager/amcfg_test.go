@@ -8122,6 +8122,7 @@ func TestSanitizeWebexConfig(t *testing.T) {
 func TestSanitizeSNSConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
+	versionV33 := semver.Version{Major: 0, Minor: 33}
 
 	for _, tc := range []struct {
 		name           string
@@ -8163,6 +8164,56 @@ func TestSanitizeSNSConfig(t *testing.T) {
 				},
 			},
 			golden: "sns_valid_url_passes.golden",
+		},
+		{
+			name:           "sns valid sigv4.externalid passes in support amVersion",
+			againstVersion: versionV33,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									RoleARN:    "arn:dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "sns_valid_sigv4_externalId_passes_in_support_amVersion.golden",
+		},
+		{
+			name:           "sns valid sigv4.externalid passes in unsupport amVersion",
+			againstVersion: versionSNSAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									RoleARN:    "arn:dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "sns_valid_sigv4_externalId_passes_in_unsupport_amVersion.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
