@@ -109,24 +109,6 @@ func shardsNumber(
 	return *cpf.Shards
 }
 
-// TopologyZoneForShard returns the topology zone name assigned to the given
-// shard index when the sharding strategy mode is Topology.
-// Returns an empty string when topology mode is not active or no values are
-// configured.
-func TopologyZoneForShard(cpf monitoringv1.CommonPrometheusFields, shardIndex int32) string {
-	ss := cpf.ShardingStrategy
-	if ss == nil ||
-		ss.Mode == nil ||
-		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
-		ss.Topology == nil ||
-		len(ss.Topology.Values) == 0 {
-		return ""
-	}
-
-	numZones := int32(len(ss.Topology.Values))
-	return ss.Topology.Values[shardIndex%numZones]
-}
-
 // ReplicasNumberPtr returns a ptr to the normalized number of replicas.
 func ReplicasNumberPtr(
 	p monitoringv1.PrometheusInterface,

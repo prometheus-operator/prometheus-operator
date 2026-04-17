@@ -5200,12 +5200,25 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	return cfg
 }
 
+func (cg *ConfigGenerator) TopologyZoneForShard(shardIndex int32) string {
+	if !cg.prometheusTopologySharding {
+		return ""
+	}
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	if ss == nil ||
+		ss.Mode == nil ||
+		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		ss.Topology == nil ||
+		len(ss.Topology.Values) == 0 {
+		return ""
+	}
+	numZones := int32(len(ss.Topology.Values))
+	return ss.Topology.Values[shardIndex%numZones]
+}
+
 func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
 	cpf := cg.prom.GetCommonPrometheusFields()
-	if !cg.prometheusTopologySharding {
-		return cpf.NodeSelector
-	}
-	zone := TopologyZoneForShard(cpf, shardIndex)
+	zone := cg.TopologyZoneForShard(shardIndex)
 	if zone == "" {
 		return cpf.NodeSelector
 	}
