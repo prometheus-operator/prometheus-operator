@@ -1062,9 +1062,6 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
-		if c.topologyShardingEnabled {
-			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
-		}
 
 		if notFound {
 			logger.Debug("creating statefulset")

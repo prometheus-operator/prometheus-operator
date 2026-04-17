@@ -5199,3 +5199,20 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 
 	return cfg
 }
+
+func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	if !cg.prometheusTopologySharding {
+		return cpf.NodeSelector
+	}
+	zone := TopologyZoneForShard(cpf, shardIndex)
+	if zone == "" {
+		return cpf.NodeSelector
+	}
+	result := maps.Clone(cpf.NodeSelector)
+	if result == nil {
+		result = make(map[string]string)
+	}
+	result[corev1.LabelTopologyZone] = zone
+	return result
+}
