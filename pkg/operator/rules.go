@@ -24,6 +24,7 @@ import (
 	"slices"
 	"strings"
 
+	metricsql "github.com/VictoriaMetrics/metricsql"
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
@@ -49,6 +50,28 @@ const (
 	// ThanosFormat indicates that the rule configuration should comply with the Thanos format.
 	ThanosFormat
 )
+
+// ExpressionLanguage defines the query language used to validate rule expressions.
+type ExpressionLanguage int
+
+const (
+	// PromQLLanguage uses the Prometheus PromQL parser for expression validation.
+	// This is the default and is compatible with Prometheus and Thanos targets.
+	PromQLLanguage ExpressionLanguage = iota
+	// MetricsQLLanguage uses the VictoriaMetrics MetricsQL parser for expression validation.
+	// MetricsQL is a superset of PromQL and is required for VictoriaMetrics targets.
+	MetricsQLLanguage
+)
+
+// String returns the string representation of the ExpressionLanguage.
+func (e ExpressionLanguage) String() string {
+	switch e {
+	case MetricsQLLanguage:
+		return "metricsql"
+	default:
+		return "promql"
+	}
+}
 
 const (
 	selectingPrometheusRuleResourcesAction = "SelectingPrometheusRuleResources"
@@ -199,6 +222,14 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
 func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme) []error {
+	return ValidateRuleWithExpressionLanguage(promRuleSpec, validationScheme, PromQLLanguage)
+}
+
+// ValidateRuleWithExpressionLanguage validates a PrometheusRuleSpec using the given expression language.
+// Use PromQLLanguage (the default) for Prometheus and Thanos targets.
+// Use MetricsQLLanguage for VictoriaMetrics targets, which accepts a superset of PromQL including
+// functions such as share_eq_over_time, median_over_time, and other MetricsQL extensions.
+func ValidateRuleWithExpressionLanguage(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme, exprLang ExpressionLanguage) []error {
 	for i := range promRuleSpec.Groups {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
@@ -228,7 +259,103 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
+	if exprLang == MetricsQLLanguage {
+		return validateGroupsWithMetricsQL(promRuleSpec.Groups, validationScheme)
+	}
+
 	_, errs := rulefmt.Parse(content, false, validationScheme)
+	return errs
+}
+
+// validateGroupsWithMetricsQL validates rule groups using the MetricsQL expression parser.
+// It replicates the structural checks of rulefmt.Validate but uses metricsql.Parse for expressions.
+func validateGroupsWithMetricsQL(groups []monitoringv1.RuleGroup, validationScheme model.ValidationScheme) []error {
+	var errs []error
+	seen := make(map[string]struct{})
+	for _, g := range groups {
+		if g.Name == "" {
+			errs = append(errs, errors.New("group name must not be empty"))
+		}
+		if _, ok := seen[g.Name]; ok {
+			errs = append(errs, fmt.Errorf("groupname: %q is repeated in the same file", g.Name))
+		}
+		seen[g.Name] = struct{}{}
+
+		for k, v := range g.Labels {
+			if !validationScheme.IsValidLabelName(k) || k == model.MetricNameLabel {
+				errs = append(errs, fmt.Errorf("invalid label name: %s", k))
+			}
+			if !model.LabelValue(v).IsValid() {
+				errs = append(errs, fmt.Errorf("invalid label value: %s", v))
+			}
+		}
+
+		for i, r := range g.Rules {
+			errs = append(errs, validateMetricsQLRule(g.Name, i+1, r, validationScheme)...)
+		}
+	}
+	return errs
+}
+
+// validateMetricsQLRule validates a single rule using the MetricsQL expression parser.
+func validateMetricsQLRule(groupName string, ruleIndex int, r monitoringv1.Rule, validationScheme model.ValidationScheme) []error {
+	var errs []error
+	ruleName := r.Alert
+	if ruleName == "" {
+		ruleName = r.Record
+	}
+
+	wrap := func(err error) error {
+		return fmt.Errorf("group %q, rule %d, %q: %w", groupName, ruleIndex, ruleName, err)
+	}
+
+	if r.Record != "" && r.Alert != "" {
+		errs = append(errs, wrap(errors.New("only one of 'record' and 'alert' must be set")))
+	}
+	if r.Record == "" && r.Alert == "" {
+		errs = append(errs, wrap(errors.New("one of 'record' or 'alert' must be set")))
+	}
+
+	expr := r.Expr.String()
+	if expr == "" {
+		errs = append(errs, wrap(errors.New("field 'expr' must be set in rule")))
+	} else if _, err := metricsql.Parse(expr); err != nil {
+		errs = append(errs, wrap(fmt.Errorf("could not parse expression: %w", err)))
+	}
+
+	if r.Record != "" {
+		if len(r.Annotations) > 0 {
+			errs = append(errs, wrap(errors.New("invalid field 'annotations' in recording rule")))
+		}
+		if r.For != nil && *r.For != "" {
+			errs = append(errs, wrap(errors.New("invalid field 'for' in recording rule")))
+		}
+		if r.KeepFiringFor != nil {
+			errs = append(errs, wrap(errors.New("invalid field 'keep_firing_for' in recording rule")))
+		}
+		if !validationScheme.IsValidMetricName(r.Record) {
+			errs = append(errs, wrap(fmt.Errorf("invalid recording rule name: %s", r.Record)))
+		}
+		if strings.Contains(r.Record, "{") || strings.Contains(r.Record, "}") {
+			errs = append(errs, wrap(fmt.Errorf("braces present in the recording rule name; should it be in expr?: %s", r.Record)))
+		}
+	}
+
+	for k, v := range r.Labels {
+		if !validationScheme.IsValidLabelName(k) || k == model.MetricNameLabel {
+			errs = append(errs, wrap(fmt.Errorf("invalid label name: %s", k)))
+		}
+		if !model.LabelValue(v).IsValid() {
+			errs = append(errs, wrap(fmt.Errorf("invalid label value: %s", v)))
+		}
+	}
+
+	for k := range r.Annotations {
+		if !validationScheme.IsValidLabelName(k) {
+			errs = append(errs, wrap(fmt.Errorf("invalid annotation name: %s", k)))
+		}
+	}
+
 	return errs
 }
 

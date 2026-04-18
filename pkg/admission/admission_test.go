@@ -34,6 +34,7 @@ import (
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	promoperator "github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
 
 func TestMutateRule(t *testing.T) {
@@ -326,6 +327,7 @@ func apiWithValidationScheme(validationScheme model.ValidationScheme) *Admission
 	return New(
 		slog.New(slog.DiscardHandler),
 		validationScheme,
+		promoperator.PromQLLanguage,
 	)
 }
 

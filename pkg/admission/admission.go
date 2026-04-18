@@ -75,20 +75,22 @@ var (
 // 1. PrometheusRules (validation, mutation) - ensuring created resources can be loaded by Prometheus
 // 2. monitoringv1alpha1.AlertmanagerConfig (validation) - ensuring.
 type Admission struct {
-	logger           *slog.Logger
-	wh               http.Handler
-	validationScheme model.ValidationScheme
+	logger            *slog.Logger
+	wh                http.Handler
+	validationScheme  model.ValidationScheme
+	ruleQueryLanguage promoperator.ExpressionLanguage
 }
 
-func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admission {
+func New(logger *slog.Logger, validationScheme model.ValidationScheme, ruleQueryLanguage promoperator.ExpressionLanguage) *Admission {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(monitoringv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(monitoringv1beta1.AddToScheme(scheme))
 
 	return &Admission{
-		logger:           logger,
-		wh:               conversion.NewWebhookHandler(scheme, conversion.NewRegistry()),
-		validationScheme: validationScheme,
+		logger:            logger,
+		wh:                conversion.NewWebhookHandler(scheme, conversion.NewRegistry()),
+		validationScheme:  validationScheme,
+		ruleQueryLanguage: ruleQueryLanguage,
 	}
 }
 
@@ -239,7 +241,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
-	errors := promoperator.ValidateRule(promRule.Spec, a.validationScheme)
+	errors := promoperator.ValidateRuleWithExpressionLanguage(promRule.Spec, a.validationScheme, a.ruleQueryLanguage)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
 		a.logger.Debug(m, "content", promRule.Spec)

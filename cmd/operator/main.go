@@ -104,6 +104,8 @@ const (
 	defaultReloaderMemory = "50Mi"
 
 	defaultMemlimitRatio = 0.0
+
+	defaultRuleQueryLanguage = operator.PromQLLanguage
 )
 
 var (
@@ -131,6 +133,8 @@ var (
 	kubeletHTTPMetrics   bool
 
 	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
+
+	ruleQueryLanguage string
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -194,6 +198,7 @@ func parseFlags(fs *flag.FlagSet) {
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
+	fs.StringVar(&ruleQueryLanguage, "rule-query-language", defaultRuleQueryLanguage.String(), "The query language to use for rule expression validation ('promql' or 'metricsql'). Use 'metricsql' for VictoriaMetrics targets.")
 	cfg.RegisterFeatureGatesFlags(fs, featureGates)
 
 	logging.RegisterFlags(fs, &logConfig)
@@ -730,7 +735,14 @@ func start() int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
+	var exprLanguage operator.ExpressionLanguage
+	switch ruleQueryLanguage {
+	case "metricsql":
+		exprLanguage = operator.MetricsQLLanguage
+	default:
+		exprLanguage = operator.PromQLLanguage
+	}
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation, exprLanguage)
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)
