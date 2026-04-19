@@ -34,6 +34,10 @@ type TSDBSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	OutOfOrderTimeWindow *monitoringv1.Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// retention configures data retention settings for TSDB.
+	//
+	// It requires Prometheus >= 3.8.0.
+	Retention *TSDBRetentionSpecApplyConfiguration `json:"retention,omitempty"`
 }
 
 // TSDBSpecApplyConfiguration constructs a declarative configuration of the TSDBSpec type for use with
@@ -47,5 +51,13 @@ func TSDBSpec() *TSDBSpecApplyConfiguration {
 // If called multiple times, the OutOfOrderTimeWindow field is set to the value of the last call.
 func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value monitoringv1.Duration) *TSDBSpecApplyConfiguration {
 	b.OutOfOrderTimeWindow = &value
+	return b
+}
+
+// WithRetention sets the Retention field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Retention field is set to the value of the last call.
+func (b *TSDBSpecApplyConfiguration) WithRetention(value *TSDBRetentionSpecApplyConfiguration) *TSDBSpecApplyConfiguration {
+	b.Retention = value
 	return b
 }

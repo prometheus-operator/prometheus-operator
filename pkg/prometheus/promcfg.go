@@ -1054,12 +1054,35 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 	}
 
 	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
+		var storageTSDB yaml.MapSlice
+
+		if tsdb.OutOfOrderTimeWindow != nil {
+			storageTSDB = cg.WithMinimumVersion("2.39.0").
+				AppendMapItem(storageTSDB, "out_of_order_time_window", *tsdb.OutOfOrderTimeWindow)
+		}
+
+		if retention := tsdb.Retention; retention != nil {
+			var storageTSDBRetention yaml.MapSlice
+			if retention.Time != nil {
+				storageTSDBRetention = cg.WithMinimumVersion("3.8.0").
+					AppendMapItem(storageTSDB, "time", *retention.Time)
+			}
+			if retention.Size != nil {
+				storageTSDBRetention = cg.WithMinimumVersion("3.8.0").
+					AppendMapItem(storageTSDB, "size", *retention.Size)
+			}
+			if retention.Percentage != nil {
+				storageTSDBRetention = cg.WithMinimumVersion("3.11.0").AppendMapItem(storageTSDB,
+					"percentage", *retention.Percentage)
+			}
+			if len(storageTSDBRetention) != 0 {
+				storageTSDBRetention = cg.AppendMapItem(storageTSDB, "retention", storageTSDBRetention)
+			}
+		}
+
+		if len(storageTSDB) != 0 {
+			storage = cg.AppendMapItem(storage, "tsdb", storageTSDB)
+		}
 	}
 
 	if len(storage) == 0 {

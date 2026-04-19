@@ -2451,6 +2451,38 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	// +optional
 	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// retention configures data retention settings for TSDB.
+	//
+	// It requires Prometheus >= 3.8.0.
+	// +optional
+	Retention *TSDBRetentionSpec `json:"retention,omitempty"`
+}
+
+// TSDBRetentionSpec defines the data retention configurations for TSDB.
+//
+// +k8s:openapi-gen=true
+type TSDBRetentionSpec struct {
+	// time defines how long to retain samples in storage.
+	// If neither this option nor the size option is set, the retention time defaults to 15d.
+	// This configuration will overwrite the storage.tsdb.retention.time command line flag.
+	//
+	// +optional
+	Time *Duration `json:"time,omitempty"`
+	// size defines the maximum number of bytes that can be stored for blocks.
+	// A unit is required, supported units: B, KB, MB, GB, TB, PB, EB.
+	// Ex: "512MB". Based on powers-of-2, so 1KB is 1024B.
+	// If set to 0 or not set, size-based retention is disabled.
+	// This configuration will overwrite the storage.tsdb.retention.size command line flag.
+	//
+	// +optional
+	Size *ByteSize `json:"size,omitempty"`
+	// percentage configures data retention settings for TSDB.
+	//
+	// It requires Prometheus >= 3.11.0.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=100
+	// +optional
+	Percentage *int `json:"percentage,omitempty"`
 }
 
 type Exemplars struct {

@@ -9420,6 +9420,28 @@
                         "description": "outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with\nrespect to the TSDB max time.\n\nAn out-of-order/out-of-bounds sample is ingested into the TSDB as long as\nthe timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nIt requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.",
                         "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
+                      },
+                      "retention": {
+                        "description": "retention configures data retention settings for TSDB.\n\nIt requires Prometheus >= 3.8.0.",
+                        "properties": {
+                          "percentage": {
+                            "description": "percentage configures data retention settings for TSDB.\n\nIt requires Prometheus >= 3.11.0.",
+                            "maximum": 100,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "size": {
+                            "description": "size defines the maximum number of bytes that can be stored for blocks.\nA unit is required, supported units: B, KB, MB, GB, TB, PB, EB.\nEx: \"512MB\". Based on powers-of-2, so 1KB is 1024B.\nIf set to 0 or not set, size-based retention is disabled.\nThis configuration will overwrite the storage.tsdb.retention.size command line flag.",
+                            "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+                            "type": "string"
+                          },
+                          "time": {
+                            "description": "time defines how long to retain samples in storage.\nIf neither this option nor the size option is set, the retention time defaults to 15d.\nThis configuration will overwrite the storage.tsdb.retention.time command line flag.",
+                            "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
                       }
                     },
                     "type": "object"

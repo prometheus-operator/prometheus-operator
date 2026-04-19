@@ -244,6 +244,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.TopologySpreadConstraintApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TracingConfig"):
 		return &monitoringv1.TracingConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("TSDBRetentionSpec"):
+		return &monitoringv1.TSDBRetentionSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("TSDBSpec"):
 		return &monitoringv1.TSDBSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("WebConfigFileFields"):
