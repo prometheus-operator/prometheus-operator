@@ -1086,10 +1086,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		}
 
 		if len(storageTSDB) != 0 {
-			storage = append(storage, yaml.MapItem{
-				Key:   "tsdb",
-				Value: storageTSDB,
-			})
+			storage = append(storage, yaml.MapItem{Key: "tsdb", Value: storageTSDB})
 		}
 	}
 
