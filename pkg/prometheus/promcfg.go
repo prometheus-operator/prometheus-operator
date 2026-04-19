@@ -1068,20 +1068,20 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 			)
 
 			if retention.Time != nil {
-				storageTSDBRetention = cgRetention.AppendMapItem(storageTSDB, "time", *retention.Time)
+				storageTSDBRetention = cgRetention.AppendMapItem(storageTSDBRetention, "time", *retention.Time)
 			}
 
 			if retention.Size != nil {
-				storageTSDBRetention = cgRetention.AppendMapItem(storageTSDB, "size", *retention.Size)
+				storageTSDBRetention = cgRetention.AppendMapItem(storageTSDBRetention, "size", *retention.Size)
 			}
 
 			if retention.Percentage != nil {
-				storageTSDBRetention = cg.WithMinimumVersion("3.11.0").AppendMapItem(storageTSDB,
+				storageTSDBRetention = cg.WithMinimumVersion("3.11.0").AppendMapItem(storageTSDBRetention,
 					"percentage", *retention.Percentage)
 			}
 
 			if len(storageTSDBRetention) != 0 {
-				storageTSDBRetention = cg.AppendMapItem(storageTSDB, "retention", storageTSDBRetention)
+				storageTSDB = cg.AppendMapItem(storageTSDB, "retention", storageTSDBRetention)
 			}
 		}
 
