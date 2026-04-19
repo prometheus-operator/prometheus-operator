@@ -2476,7 +2476,7 @@ type TSDBRetentionSpec struct {
 	//
 	// +optional
 	Size *ByteSize `json:"size,omitempty"`
-	// percentage defines the aximum percent of total disk space allowed for storage of blocks.
+	// percentage defines the maximum percent of total disk space allowed for storage of blocks.
 	// Alternative to `size` and behaves the same as if size was calculated by hand
 	// as a percentage of the total storage capacity.
 	//

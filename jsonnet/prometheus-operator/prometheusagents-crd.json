@@ -7435,7 +7435,7 @@
                         "description": "retention configures data retention settings for TSDB.\n\nIt requires Prometheus >= 3.8.0.",
                         "properties": {
                           "percentage": {
-                            "description": "percentage defines the aximum percent of total disk space allowed for storage of blocks.\nAlternative to `size` and behaves the same as if size was calculated by hand\nas a percentage of the total storage capacity.\n\nIt requires Prometheus >= 3.11.0.",
+                            "description": "percentage defines the maximum percent of total disk space allowed for storage of blocks.\nAlternative to `size` and behaves the same as if size was calculated by hand\nas a percentage of the total storage capacity.\n\nIt requires Prometheus >= 3.11.0.",
                             "maximum": 100,
                             "minimum": 0,
                             "type": "integer"
