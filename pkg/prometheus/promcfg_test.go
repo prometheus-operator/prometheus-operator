@@ -5866,6 +5866,48 @@ func TestTSDBConfig(t *testing.T) {
 			},
 			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
+		{
+			name:    "TSDB config with retention",
+			version: "v3.8.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				Retention: &monitoringv1.TSDBRetentionSpec{
+					Time: ptr.To(monitoringv1.Duration("30s")),
+					Size: ptr.To(monitoringv1.ByteSize("256GB")),
+				},
+			},
+			golden: "TSDB_config_with_retention.golden",
+		},
+		{
+			name:    "TSDB config with retention unsupported version",
+			version: "v3.7.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				Retention: &monitoringv1.TSDBRetentionSpec{
+					Time: ptr.To(monitoringv1.Duration("30s")),
+					Size: ptr.To(monitoringv1.ByteSize("256GB")),
+				},
+			},
+			golden: "TSDB_config_with_retention_unsupported_version.golden",
+		},
+		{
+			name:    "TSDB config with retention percentage",
+			version: "v3.8.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				Retention: &monitoringv1.TSDBRetentionSpec{
+					Percentage: ptr.To(80),
+				},
+			},
+			golden: "TSDB_config_with_retention_percentage.golden",
+		},
+		{
+			name:    "TSDB config with retention percentage unsupported version",
+			version: "v3.7.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				Retention: &monitoringv1.TSDBRetentionSpec{
+					Percentage: ptr.To(80),
+				},
+			},
+			golden: "TSDB_config_with_retention_percentage_unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()

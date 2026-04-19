@@ -2476,7 +2476,9 @@ type TSDBRetentionSpec struct {
 	//
 	// +optional
 	Size *ByteSize `json:"size,omitempty"`
-	// percentage configures data retention settings for TSDB.
+	// percentage defines the aximum percent of total disk space allowed for storage of blocks.
+	// Alternative to `size` and behaves the same as if size was calculated by hand
+	// as a percentage of the total storage capacity.
 	//
 	// It requires Prometheus >= 3.11.0.
 	// +kubebuilder:validation:Minimum=0
