@@ -1053,7 +1053,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
+	if tsdb != nil {
 		var storageTSDB yaml.MapSlice
 
 		if tsdb.OutOfOrderTimeWindow != nil {
