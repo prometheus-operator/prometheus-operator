@@ -3626,8 +3626,12 @@ func (cb *ConfigBuilder) checkGlobalMattermostConfig(
 	}
 
 	if mc.WebhookURL != nil {
-		if _, err := cb.store.GetSecretKey(ctx, namespace, *mc.WebhookURL); err != nil {
-			return err
+		url, err := cb.store.GetSecretKey(ctx, namespace, *mc.WebhookURL)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve Mattermost Webhook URL: %w", err)
+		}
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("failed to validate Mattermost Webhook URL: %w", err)
 		}
 	}
 
