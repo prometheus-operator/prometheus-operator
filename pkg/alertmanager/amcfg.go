@@ -538,7 +538,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		return nil, fmt.Errorf("invalid global victorops config: %w", err)
 	}
 
-	if err := cb.convertGlobalMattermostConfig(out, in.MattermostConfig); err != nil {
+	if err := cb.convertGlobalMattermostConfig(ctx, out, in.MattermostConfig, crKey); err != nil {
 		return nil, fmt.Errorf("invalid global mattermost config: %w", err)
 	}
 
@@ -2094,13 +2094,17 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 	return nil
 }
 
-func (cb *ConfigBuilder) convertGlobalMattermostConfig(out *globalConfig, in *monitoringv1.GlobalMattermostConfig) error {
+func (cb *ConfigBuilder) convertGlobalMattermostConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalMattermostConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
 	}
 
 	if in.WebhookURL != nil {
-		u, err := url.Parse(string(*in.WebhookURL))
+		webhookURLStr, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
+		if err != nil {
+			return fmt.Errorf("failed to get Mattermost Webhook URL Secret: %w", err)
+		}
+		u, err := url.Parse(webhookURLStr)
 		if err != nil {
 			return fmt.Errorf("failed to parse Webhook URL: %w", err)
 		}
@@ -3489,7 +3493,7 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
-	if err := cb.checkGlobalMattermostConfig(gc.MattermostConfig); err != nil {
+	if err := cb.checkGlobalMattermostConfig(ctx, gc.MattermostConfig, namespace); err != nil {
 		return err
 	}
 
@@ -3609,7 +3613,9 @@ func (cb *ConfigBuilder) checkGlobalWeChatConfig(
 }
 
 func (cb *ConfigBuilder) checkGlobalMattermostConfig(
+	ctx context.Context,
 	mc *monitoringv1.GlobalMattermostConfig,
+	namespace string,
 ) error {
 	if mc == nil {
 		return nil
@@ -3617,6 +3623,12 @@ func (cb *ConfigBuilder) checkGlobalMattermostConfig(
 
 	if cb.amVersion.LT(semver.MustParse("0.32.0")) {
 		return fmt.Errorf(`'mattermost' global parameters require Alertmanager >= 0.32.0 - current %s`, cb.amVersion)
+	}
+
+	if mc.WebhookURL != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *mc.WebhookURL); err != nil {
+			return err
+		}
 	}
 
 	return nil

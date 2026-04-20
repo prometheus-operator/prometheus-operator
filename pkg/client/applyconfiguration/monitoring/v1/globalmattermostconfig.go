@@ -17,7 +17,7 @@
 package v1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // GlobalMattermostConfigApplyConfiguration represents a declarative configuration of the GlobalMattermostConfig type for use
@@ -28,7 +28,7 @@ type GlobalMattermostConfigApplyConfiguration struct {
 	// webhookURL defines the default Mattermost Webhook URL.
 	//
 	// It requires Alertmanager >= v0.32.0.
-	WebhookURL *monitoringv1.URL `json:"webhookURL,omitempty"`
+	WebhookURL *corev1.SecretKeySelector `json:"webhookURL,omitempty"`
 }
 
 // GlobalMattermostConfigApplyConfiguration constructs a declarative configuration of the GlobalMattermostConfig type for use with
@@ -40,7 +40,7 @@ func GlobalMattermostConfig() *GlobalMattermostConfigApplyConfiguration {
 // WithWebhookURL sets the WebhookURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the WebhookURL field is set to the value of the last call.
-func (b *GlobalMattermostConfigApplyConfiguration) WithWebhookURL(value monitoringv1.URL) *GlobalMattermostConfigApplyConfiguration {
+func (b *GlobalMattermostConfigApplyConfiguration) WithWebhookURL(value corev1.SecretKeySelector) *GlobalMattermostConfigApplyConfiguration {
 	b.WebhookURL = &value
 	return b
 }

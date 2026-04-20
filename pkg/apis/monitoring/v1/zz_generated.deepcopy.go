@@ -1513,8 +1513,8 @@ func (in *GlobalMattermostConfig) DeepCopyInto(out *GlobalMattermostConfig) {
 	*out = *in
 	if in.WebhookURL != nil {
 		in, out := &in.WebhookURL, &out.WebhookURL
-		*out = new(URL)
-		**out = **in
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
 	}
 }
 

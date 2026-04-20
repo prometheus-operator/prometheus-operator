@@ -783,7 +783,7 @@ type GlobalMattermostConfig struct {
 	// It requires Alertmanager >= v0.32.0.
 	//
 	// +optional
-	WebhookURL *URL `json:"webhookURL,omitempty"`
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.
