@@ -1,5 +1,0 @@
-receivers:
-- name: ""
-  slack_configs:
-  - update_message: true
-templates: []
