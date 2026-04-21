@@ -2536,14 +2536,16 @@ func TestThanosGrpcArguments(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
-				GRPCServerTLSConfig: &monitoringv1.TLSConfig{
-					SafeTLSConfig: monitoringv1.SafeTLSConfig{
-						MinVersion: ptr.To(monitoringv1.TLSVersion13),
-					},
-					TLSFilesConfig: monitoringv1.TLSFilesConfig{
-						CAFile:   "/tmp/ca",
-						CertFile: "/tmp/cert",
-						KeyFile:  "/tmp/key",
+				GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+					TLSConfig: monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							MinVersion: ptr.To(monitoringv1.TLSVersion13),
+						},
+						TLSFilesConfig: monitoringv1.TLSFilesConfig{
+							CAFile:   "/tmp/ca",
+							CertFile: "/tmp/cert",
+							KeyFile:  "/tmp/key",
+						},
 					},
 				},
 			},
@@ -2553,6 +2555,54 @@ func TestThanosGrpcArguments(t *testing.T) {
 
 	ssetContainerArgs := sset.Spec.Template.Spec.Containers[2].Args
 	require.Equal(t, expectedThanosArgs, ssetContainerArgs)
+}
+
+func TestGRPCServerTLSCipherSuites(t *testing.T) {
+	ciphers := []string{"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		cipherSuites  []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with cipher suites",
+			version:       "0.41.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					Thanos: &monitoringv1.ThanosSpec{
+						Version: ptr.To(tc.version),
+						GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+							CipherSuites: tc.cipherSuites,
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
+			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+		})
+	}
 }
 
 func TestThanosAdditionalArgsNoError(t *testing.T) {
