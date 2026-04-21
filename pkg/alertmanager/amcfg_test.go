@@ -8215,6 +8215,30 @@ func TestSanitizeSNSConfig(t *testing.T) {
 			},
 			golden: "sns_valid_sigv4_externalId_passes_in_unsupport_amVersion.golden",
 		},
+		{
+			name:           "sns sigv4.externalid without role_arn returns error",
+			againstVersion: versionV33,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)

@@ -2995,10 +2995,15 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 		}
 	}
 
-	if sc.Sigv4.ExternalID != "" && amVersion.LT(semver.MustParse("0.33.0")) {
-		msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
-		logger.Warn(msg)
-		sc.Sigv4.ExternalID = ""
+	if sc.Sigv4.ExternalID != "" {
+		if sc.Sigv4.RoleARN == "" {
+			return fmt.Errorf("'external_id' in sigv4 config requires 'role_arn' to be set")
+		}
+		if amVersion.LT(semver.MustParse("0.33.0")) {
+			msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
+			logger.Warn(msg)
+			sc.Sigv4.ExternalID = ""
+		}
 	}
 
 	return sc.HTTPConfig.sanitize(amVersion, logger)
