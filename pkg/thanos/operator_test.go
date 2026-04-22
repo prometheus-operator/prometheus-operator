@@ -16,6 +16,7 @@ package thanos
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -100,7 +101,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cs := fake.NewClientset()
-			o := &Operator{kclient: cs}
+			o := &Operator{kclient: cs, logger: slog.Default()}
 			tr := &monitoringv1.ThanosRuler{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
