@@ -50,7 +50,7 @@ type WebhookConfigApplyConfiguration struct {
 	// This is an advanced configuration option that allows you
 	// to define a custom payload using Go templates.
 	// It requires Alertmanager >= v0.32.0.
-	Payload []KeyValueApplyConfiguration `json:"payload,omitempty"`
+	Payload *string `json:"payload,omitempty"`
 }
 
 // WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with
@@ -107,15 +107,10 @@ func (b *WebhookConfigApplyConfiguration) WithTimeout(value monitoringv1.Duratio
 	return b
 }
 
-// WithPayload adds the given value to the Payload field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Payload field.
-func (b *WebhookConfigApplyConfiguration) WithPayload(values ...*KeyValueApplyConfiguration) *WebhookConfigApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithPayload")
-		}
-		b.Payload = append(b.Payload, *values[i])
-	}
+// WithPayload sets the Payload field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Payload field is set to the value of the last call.
+func (b *WebhookConfigApplyConfiguration) WithPayload(value string) *WebhookConfigApplyConfiguration {
+	b.Payload = &value
 	return b
 }

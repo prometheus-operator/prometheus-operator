@@ -10012,27 +10012,8 @@
                           },
                           payload: {
                             description: 'payload define custom payload to be sent to the webhook endpoint.\nThis is an advanced configuration option that allows you\nto define a custom payload using Go templates.\nIt requires Alertmanager >= v0.32.0.',
-                            items: {
-                              description: 'KeyValue defines a (key, value) tuple.',
-                              properties: {
-                                key: {
-                                  description: 'key defines the key of the tuple.\nThis is the identifier or name part of the key-value pair.',
-                                  minLength: 1,
-                                  type: 'string',
-                                },
-                                value: {
-                                  description: 'value defines the value of the tuple.\nThis is the data or content associated with the key.',
-                                  type: 'string',
-                                },
-                              },
-                              required: [
-                                'key',
-                                'value',
-                              ],
-                              type: 'object',
-                            },
-                            type: 'array',
-                            'x-kubernetes-list-type': 'atomic',
+                            minLength: 1,
+                            type: 'string',
                           },
                           sendResolved: {
                             description: 'sendResolved defines whether or not to notify about resolved alerts.',

@@ -584,9 +584,9 @@ type WebhookConfig struct {
 	// This is an advanced configuration option that allows you
 	// to define a custom payload using Go templates.
 	// It requires Alertmanager >= v0.32.0.
-	// +listType=atomic
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Payload []KeyValue `json:"payload,omitempty"`
+	Payload *string `json:"payload,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.

@@ -1783,8 +1783,8 @@ func (in *WebhookConfig) DeepCopyInto(out *WebhookConfig) {
 	}
 	if in.Payload != nil {
 		in, out := &in.Payload, &out.Payload
-		*out = make([]KeyValue, len(*in))
-		copy(*out, *in)
+		*out = new(string)
+		**out = **in
 	}
 }
 

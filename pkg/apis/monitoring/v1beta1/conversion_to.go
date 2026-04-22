@@ -410,7 +410,7 @@ func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
 		Timeout:      in.Timeout,
-		Payload:      convertKeyValuesTo(in.Payload),
+		Payload:      in.Payload,
 	}
 }
 
