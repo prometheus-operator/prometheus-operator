@@ -2931,7 +2931,7 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.Timeout = nil
 	}
 
-	if len(whc.Payload) != 0 && amVersion.LT(semver.MustParse("0.32.0")) {
+	if whc.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
 		msg := "'payload' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		whc.Payload = nil
