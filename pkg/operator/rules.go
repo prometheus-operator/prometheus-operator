@@ -27,6 +27,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
+	"github.com/prometheus/prometheus/promql/parser"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -228,7 +229,8 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content, false, validationScheme)
+	p := parser.NewParser(parser.Options{})
+	_, errs := rulefmt.Parse(content, false, validationScheme, p)
 	return errs
 }
 
