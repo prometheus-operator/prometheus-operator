@@ -28,6 +28,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/timeinterval"
+	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
@@ -485,7 +486,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		if err != nil {
 			return nil, fmt.Errorf("parse slack API URL: %w", err)
 		}
-		out.SlackAPIURL = &config.URL{URL: u}
+		out.SlackAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	if in.OpsGenieAPIURL != nil {
@@ -497,7 +498,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		if err != nil {
 			return nil, fmt.Errorf("parse OpsGenie API URL: %w", err)
 		}
-		out.OpsGenieAPIURL = &config.URL{URL: u}
+		out.OpsGenieAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	if in.OpsGenieAPIKey != nil {
@@ -513,7 +514,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		if err != nil {
 			return nil, fmt.Errorf("parse Pagerduty URL: %w", err)
 		}
-		out.PagerdutyURL = &config.URL{URL: u}
+		out.PagerdutyURL = &commoncfg.URL{URL: u}
 	}
 
 	if err := cb.convertGlobalTelegramConfig(out, in.TelegramConfig); err != nil {
@@ -1979,7 +1980,7 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 		if err != nil {
 			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
 		}
-		out.TelegramAPIURL = &config.URL{URL: u}
+		out.TelegramAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	return nil
@@ -1995,7 +1996,7 @@ func (cb *ConfigBuilder) convertGlobalJiraConfig(out *globalConfig, in *monitori
 		if err != nil {
 			return fmt.Errorf("failed to parse Jira API URL: %w", err)
 		}
-		out.JiraAPIURL = &config.URL{URL: u}
+		out.JiraAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	return nil
@@ -2011,7 +2012,7 @@ func (cb *ConfigBuilder) convertGlobalRocketChatConfig(ctx context.Context, out 
 		if err != nil {
 			return fmt.Errorf("failed to parse Rocket Chat API URL: %w", err)
 		}
-		out.RocketChatAPIURL = &config.URL{URL: u}
+		out.RocketChatAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	if in.Token != nil {
@@ -2043,7 +2044,7 @@ func (cb *ConfigBuilder) convertGlobalWebexConfig(out *globalConfig, in *monitor
 		if err != nil {
 			return fmt.Errorf("parse Webex API URL: %w", err)
 		}
-		out.WebexAPIURL = &config.URL{URL: u}
+		out.WebexAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	return nil
@@ -2059,7 +2060,7 @@ func (cb *ConfigBuilder) convertGlobalWeChatConfig(ctx context.Context, out *glo
 		if err != nil {
 			return fmt.Errorf("wechat API URL: %w", err)
 		}
-		out.WeChatAPIURL = &config.URL{URL: u}
+		out.WeChatAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	if in.APISecret != nil {
@@ -2087,7 +2088,7 @@ func (cb *ConfigBuilder) convertGlobalVictorOpsConfig(ctx context.Context, out *
 		if err != nil {
 			return fmt.Errorf("failed to parse VictorOps API URL: %w", err)
 		}
-		out.VictorOpsAPIURL = &config.URL{URL: u}
+		out.VictorOpsAPIURL = &commoncfg.URL{URL: u}
 	}
 
 	if in.APIKey != nil {
@@ -2295,10 +2296,10 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.SMTPForceImplicitTLS = nil
 	}
 
-	if gc.MattermostWebhookURL != "" && amVersion.LT(semver.MustParse("0.32.0")) {
+	if gc.MattermostWebhookURL != nil && amVersion.LT(semver.MustParse("0.32.0")) {
 		msg := "'mattermost_webhook_url' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
-		gc.MattermostWebhookURL = ""
+		gc.MattermostWebhookURL = nil
 	}
 
 	if gc.MattermostWebhookURLFile != "" && amVersion.LT(semver.MustParse("0.32.0")) {
@@ -2307,7 +2308,7 @@ func (gc *globalConfig) sanitize(amVersion semver.Version, logger *slog.Logger) 
 		gc.MattermostWebhookURLFile = ""
 	}
 
-	if gc.MattermostWebhookURL != "" && gc.MattermostWebhookURLFile != "" {
+	if gc.MattermostWebhookURL != nil && gc.MattermostWebhookURLFile != "" {
 		msg := "'mattermost_webhook_url' and 'mattermost_webhook_url_file' are mutually exclusive - 'mattermost_webhook_url' has taken precedence"
 		logger.Warn(msg)
 		gc.MattermostWebhookURLFile = ""
