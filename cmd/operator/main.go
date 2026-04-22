@@ -291,7 +291,6 @@ func start() int {
 		"watch_referenced_objects_in_all_namespaces", cfg.WatchObjectRefsInAllNamespaces,
 		"controller_id", cfg.ControllerID,
 		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
-	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {

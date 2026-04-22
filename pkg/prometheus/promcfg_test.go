@@ -14233,3 +14233,77 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 		})
 	}
 }
+
+func TestShardingRelabelConfigsWithRetention(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		shards           int32
+		retentionEnabled bool
+		golden           string
+	}{
+		{
+			name:             "without_retention",
+			shards:           2,
+			retentionEnabled: false,
+			golden:           "ShardingRelabelConfigs_without_retention.golden",
+		},
+		{
+			name:             "with_retention_2_shards",
+			shards:           2,
+			retentionEnabled: true,
+			golden:           "ShardingRelabelConfigs_with_retention_2_shards.golden",
+		},
+		{
+			name:             "with_retention_3_shards",
+			shards:           3,
+			retentionEnabled: true,
+			golden:           "ShardingRelabelConfigs_with_retention_3_shards.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Shards = ptr.To(tc.shards)
+
+			opts := []ConfigGeneratorOption{}
+			if tc.retentionEnabled {
+				opts = append(opts, WithPrometheusRetentionPolicies())
+			}
+
+			cg := mustNewConfigGenerator(t, p, opts...)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"test": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							Selector: metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"foo": "bar",
+								},
+							},
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									Port:     "web",
+									Interval: "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}

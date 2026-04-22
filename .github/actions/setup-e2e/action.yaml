@@ -39,7 +39,7 @@ runs:
       run: |
         echo "Waiting for all nodes to be ready..."
         kubectl wait --for=condition=Ready nodes --all --timeout=120s
-        kubectl get nodes
+        kubectl get nodes --show-labels=true
         echo "Waiting for all pods to be ready..."
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl get pods -A

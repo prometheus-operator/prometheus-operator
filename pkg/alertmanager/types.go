@@ -43,46 +43,48 @@ type globalConfig struct {
 
 	HTTPConfig *httpClientConfig `yaml:"http_config,omitempty"`
 
-	SMTPFrom              string          `yaml:"smtp_from,omitempty"`
-	SMTPHello             string          `yaml:"smtp_hello,omitempty"`
-	SMTPSmarthost         config.HostPort `yaml:"smtp_smarthost,omitempty"`
-	SMTPAuthUsername      string          `yaml:"smtp_auth_username,omitempty"`
-	SMTPAuthPassword      string          `yaml:"smtp_auth_password,omitempty"`
-	SMTPAuthPasswordFile  string          `yaml:"smtp_auth_password_file,omitempty"`
-	SMTPAuthSecret        string          `yaml:"smtp_auth_secret,omitempty"`
-	SMTPAuthSecretFile    string          `yaml:"smtp_auth_secret_file,omitempty"`
-	SMTPAuthIdentity      string          `yaml:"smtp_auth_identity,omitempty"`
-	SMTPRequireTLS        *bool           `yaml:"smtp_require_tls,omitempty"`
-	SMTPTLSConfig         *tlsConfig      `yaml:"smtp_tls_config,omitempty"`
-	SMTPForceImplicitTLS  *bool           `yaml:"smtp_force_implicit_tls,omitempty"`
-	SlackAPIURL           *config.URL     `yaml:"slack_api_url,omitempty"`
-	SlackAPIURLFile       string          `yaml:"slack_api_url_file,omitempty"`
-	PagerdutyURL          *config.URL     `yaml:"pagerduty_url,omitempty"`
-	HipchatAPIURL         *config.URL     `yaml:"hipchat_api_url,omitempty"`
-	HipchatAuthToken      string          `yaml:"hipchat_auth_token,omitempty"`
-	OpsGenieAPIURL        *config.URL     `yaml:"opsgenie_api_url,omitempty"`
-	OpsGenieAPIKey        string          `yaml:"opsgenie_api_key,omitempty"`
-	OpsGenieAPIKeyFile    string          `yaml:"opsgenie_api_key_file,omitempty"`
-	WeChatAPIURL          *config.URL     `yaml:"wechat_api_url,omitempty"`
-	WeChatAPISecret       string          `yaml:"wechat_api_secret,omitempty"`
-	WeChatAPICorpID       string          `yaml:"wechat_api_corp_id,omitempty"`
-	VictorOpsAPIURL       *config.URL     `yaml:"victorops_api_url,omitempty"`
-	VictorOpsAPIKey       string          `yaml:"victorops_api_key,omitempty"`
-	VictorOpsAPIKeyFile   string          `yaml:"victorops_api_key_file,omitempty"`
-	TelegramAPIURL        *config.URL     `yaml:"telegram_api_url,omitempty"`
-	TelegramBotToken      string          `yaml:"telegram_bot_token,omitempty"`
-	TelegramBotTokenFile  string          `yaml:"telegram_bot_token_file,omitempty"`
-	WebexAPIURL           *config.URL     `yaml:"webex_api_url,omitempty"`
-	JiraAPIURL            *config.URL     `yaml:"jira_api_url,omitempty"`
-	RocketChatAPIURL      *config.URL     `yaml:"rocketchat_api_url,omitempty"`
-	RocketChatToken       string          `yaml:"rocketchat_token,omitempty"`
-	RocketChatTokenFile   string          `yaml:"rocketchat_token_file,omitempty"`
-	RocketChatTokenID     string          `yaml:"rocketchat_token_id,omitempty"`
-	RocketChatTokenIDFile string          `yaml:"rocketchat_token_id_file,omitempty"`
-	SlackAppToken         string          `yaml:"slack_app_token,omitempty"`
-	SlackAppTokenFile     string          `yaml:"slack_app_token_file,omitempty"`
-	SlackAppURL           *config.URL     `yaml:"slack_app_url,omitempty"`
-	WeChatAPISecretFile   string          `yaml:"wechat_api_secret_file,omitempty"`
+	SMTPFrom                 string          `yaml:"smtp_from,omitempty"`
+	SMTPHello                string          `yaml:"smtp_hello,omitempty"`
+	SMTPSmarthost            config.HostPort `yaml:"smtp_smarthost,omitempty"`
+	SMTPAuthUsername         string          `yaml:"smtp_auth_username,omitempty"`
+	SMTPAuthPassword         string          `yaml:"smtp_auth_password,omitempty"`
+	SMTPAuthPasswordFile     string          `yaml:"smtp_auth_password_file,omitempty"`
+	SMTPAuthSecret           string          `yaml:"smtp_auth_secret,omitempty"`
+	SMTPAuthSecretFile       string          `yaml:"smtp_auth_secret_file,omitempty"`
+	SMTPAuthIdentity         string          `yaml:"smtp_auth_identity,omitempty"`
+	SMTPRequireTLS           *bool           `yaml:"smtp_require_tls,omitempty"`
+	SMTPTLSConfig            *tlsConfig      `yaml:"smtp_tls_config,omitempty"`
+	SMTPForceImplicitTLS     *bool           `yaml:"smtp_force_implicit_tls,omitempty"`
+	SlackAPIURL              *commoncfg.URL  `yaml:"slack_api_url,omitempty"`
+	SlackAPIURLFile          string          `yaml:"slack_api_url_file,omitempty"`
+	PagerdutyURL             *commoncfg.URL  `yaml:"pagerduty_url,omitempty"`
+	HipchatAPIURL            *commoncfg.URL  `yaml:"hipchat_api_url,omitempty"`
+	HipchatAuthToken         string          `yaml:"hipchat_auth_token,omitempty"`
+	OpsGenieAPIURL           *commoncfg.URL  `yaml:"opsgenie_api_url,omitempty"`
+	OpsGenieAPIKey           string          `yaml:"opsgenie_api_key,omitempty"`
+	OpsGenieAPIKeyFile       string          `yaml:"opsgenie_api_key_file,omitempty"`
+	WeChatAPIURL             *commoncfg.URL  `yaml:"wechat_api_url,omitempty"`
+	WeChatAPISecret          string          `yaml:"wechat_api_secret,omitempty"`
+	WeChatAPICorpID          string          `yaml:"wechat_api_corp_id,omitempty"`
+	VictorOpsAPIURL          *commoncfg.URL  `yaml:"victorops_api_url,omitempty"`
+	VictorOpsAPIKey          string          `yaml:"victorops_api_key,omitempty"`
+	VictorOpsAPIKeyFile      string          `yaml:"victorops_api_key_file,omitempty"`
+	TelegramAPIURL           *commoncfg.URL  `yaml:"telegram_api_url,omitempty"`
+	TelegramBotToken         string          `yaml:"telegram_bot_token,omitempty"`
+	TelegramBotTokenFile     string          `yaml:"telegram_bot_token_file,omitempty"`
+	WebexAPIURL              *commoncfg.URL  `yaml:"webex_api_url,omitempty"`
+	JiraAPIURL               *commoncfg.URL  `yaml:"jira_api_url,omitempty"`
+	RocketChatAPIURL         *commoncfg.URL  `yaml:"rocketchat_api_url,omitempty"`
+	RocketChatToken          string          `yaml:"rocketchat_token,omitempty"`
+	RocketChatTokenFile      string          `yaml:"rocketchat_token_file,omitempty"`
+	RocketChatTokenID        string          `yaml:"rocketchat_token_id,omitempty"`
+	RocketChatTokenIDFile    string          `yaml:"rocketchat_token_id_file,omitempty"`
+	SlackAppToken            string          `yaml:"slack_app_token,omitempty"`
+	SlackAppTokenFile        string          `yaml:"slack_app_token_file,omitempty"`
+	SlackAppURL              *commoncfg.URL  `yaml:"slack_app_url,omitempty"`
+	WeChatAPISecretFile      string          `yaml:"wechat_api_secret_file,omitempty"`
+	MattermostWebhookURL     *commoncfg.URL  `yaml:"mattermost_webhook_url,omitempty"`
+	MattermostWebhookURLFile string          `yaml:"mattermost_webhook_url_file,omitempty"`
 }
 
 type route struct {
@@ -139,6 +141,7 @@ type webhookConfig struct {
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
 	MaxAlerts     int32             `yaml:"max_alerts,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
+	Payload       map[string]any    `yaml:"payload,omitempty"`
 }
 
 type pagerdutyConfig struct {
