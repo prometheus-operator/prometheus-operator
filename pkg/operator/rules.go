@@ -137,7 +137,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 		validationScheme = ValidationSchemeForPrometheus(prs.version)
 	}
 
-	errs := ValidateRule(promRuleSpec, validationScheme)
+	errs := ValidateRule(promRuleSpec, validationScheme, parser.Options{})
 	if len(errs) != 0 {
 		const m = "invalid rule"
 		logger.Debug(m, "content", content)
@@ -199,7 +199,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 }
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
-func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme) []error {
+func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme, parserOptions parser.Options) []error {
 	for i := range promRuleSpec.Groups {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
@@ -229,7 +229,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parser.Options{}))
+	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parserOptions))
 	return errs
 }
 

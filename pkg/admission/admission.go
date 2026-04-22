@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql/parser"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -78,9 +79,10 @@ type Admission struct {
 	logger           *slog.Logger
 	wh               http.Handler
 	validationScheme model.ValidationScheme
+	parserOptions    parser.Options
 }
 
-func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admission {
+func New(logger *slog.Logger, validationScheme model.ValidationScheme, parserOptions parser.Options) *Admission {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(monitoringv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(monitoringv1beta1.AddToScheme(scheme))
@@ -89,6 +91,7 @@ func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admissio
 		logger:           logger,
 		wh:               conversion.NewWebhookHandler(scheme, conversion.NewRegistry()),
 		validationScheme: validationScheme,
+		parserOptions:    parserOptions,
 	}
 }
 
@@ -239,7 +242,7 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 		return toAdmissionResponseFailure(errUnmarshalRules, prometheusRuleResource, []error{err})
 	}
 
-	errors := promoperator.ValidateRule(promRule.Spec, a.validationScheme)
+	errors := promoperator.ValidateRule(promRule.Spec, a.validationScheme, a.parserOptions)
 	if len(errors) != 0 {
 		const m = "Invalid rule"
 		a.logger.Debug(m, "content", promRule.Spec)
