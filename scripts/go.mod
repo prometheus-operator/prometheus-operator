@@ -439,5 +439,3 @@ require (
 )
 
 replace google.golang.org/genproto => google.golang.org/genproto v0.0.0-20250603155806-513f23925822
-
-replace github.com/go-openapi/testify/v2 => github.com/go-openapi/testify/v2 v2.0.2
