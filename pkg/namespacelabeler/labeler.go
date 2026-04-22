@@ -115,7 +115,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			rule.Spec.Groups[gi].Rules[ri].Labels[l.enforcedNsLabel] = rule.Namespace
 
 			expr := r.Expr.String()
-			parsedExpr, err := parser.ParseExpr(expr)
+			parsedExpr, err := parser.NewParser(parser.Options{}).ParseExpr(expr)
 			if err != nil {
 				return fmt.Errorf("failed to parse promql expression: %w", err)
 			}

@@ -450,6 +450,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PromAgentReconcileDaemonSetResourceDelete":            testPromAgentReconcileDaemonSetResourceDelete,
 		"PrometheusAgentDaemonSetSelectPodMonitor":             testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
+		"PrometheusTargetDistributionOnResharding":             testPrometheusTargetDistributionOnResharding,
 		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
 		"ShardingStrategyCELValidations":                       testPrometheusShardingStrategyCELValidations,
 		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
@@ -474,6 +475,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusRuleStatusSubresourceForThanosRuler":        testPrometheusRuleStatusSubresourceForThanosRuler,
 		"GarbageCollectionOfPromRuleBindingForThanosRuler":     testGarbageCollectionOfPromRuleBindingForThanosRuler,
 		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler": testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"PrometheusTopologySharding":                           testPrometheusTopologySharding,
 	}
 
 	for name, f := range testFuncs {
