@@ -986,6 +986,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 
 		// Thanos does not support sigv4.externalId in any version
 		if rw.Sigv4 != nil && rw.Sigv4.ExternalID != "" {
+			o.logger.Warn("ignoring \"sigv4.externalId\" not supported by Thanos", "remote_write_index", i)
 			rw.Sigv4.ExternalID = ""
 		}
 
