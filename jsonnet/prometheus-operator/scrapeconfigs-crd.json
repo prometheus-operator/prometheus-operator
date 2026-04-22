@@ -928,13 +928,18 @@
                           "type": "boolean"
                         },
                         "filter": {
-                          "description": "filter defines the filter expression used to filter the catalog results.\nSee https://www.consul.io/api-docs/catalog#list-services\nIt requires Prometheus >= 3.0.0.",
+                          "description": "filter defines the filter expression used to filter the catalog results.\nSee https://developer.hashicorp.com/consul/api-docs/catalog#filtering\nIt requires Prometheus >= 3.0.0.",
                           "minLength": 1,
                           "type": "string"
                         },
                         "followRedirects": {
                           "description": "followRedirects defines whether HTTP requests follow HTTP 3xx redirects.",
                           "type": "boolean"
+                        },
+                        "healthFilter": {
+                          "description": "healthFilter defines the filter expression used to filter the health results.\nSee https://developer.hashicorp.com/consul/api-docs/health#filtering\nIt requires Prometheus >= 3.11.2.",
+                          "minLength": 1,
+                          "type": "string"
                         },
                         "namespace": {
                           "description": "namespace are only supported in Consul Enterprise.\n\nIt requires Prometheus >= 2.28.0.",

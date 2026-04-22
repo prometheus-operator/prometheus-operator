@@ -3620,6 +3620,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.HealthFilter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "health_filter",
+					Value: config.HealthFilter,
+				})
+			}
+
 			if config.AllowStale != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "allow_stale",

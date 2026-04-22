@@ -770,6 +770,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
 		}
 
+		if config.HealthFilter != nil && rs.version.LT(semver.MustParse("3.11.2")) {
+			return fmt.Errorf("field `config.HealthFilter` is only supported for Prometheus version >= 3.11.2")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}

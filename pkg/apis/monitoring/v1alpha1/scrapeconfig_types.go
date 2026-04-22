@@ -561,11 +561,17 @@ type ConsulSDConfig struct {
 	//nolint:kubeapilinter
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// filter defines the filter expression used to filter the catalog results.
-	// See https://www.consul.io/api-docs/catalog#list-services
+	// See https://developer.hashicorp.com/consul/api-docs/catalog#filtering
 	// It requires Prometheus >= 3.0.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
+	// healthFilter defines the filter expression used to filter the health results.
+	// See https://developer.hashicorp.com/consul/api-docs/health#filtering
+	// It requires Prometheus >= 3.11.2.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	HealthFilter *string `json:"healthFilter,omitempty"`
 	// allowStale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
