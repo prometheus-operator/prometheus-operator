@@ -8485,7 +8485,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
 						Environment:          ptr.To("AzurePublicCloud"),
-						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 					},
 				},
