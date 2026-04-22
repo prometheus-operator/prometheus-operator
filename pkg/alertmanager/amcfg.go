@@ -917,7 +917,9 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 	}
 
-	out.Payload = *in.Payload
+	if in.Payload != nil {
+		out.Payload = *in.Payload
+	}
 
 	return out, nil
 }
