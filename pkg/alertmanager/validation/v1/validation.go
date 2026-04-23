@@ -21,6 +21,18 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
+func ValidateAlertmanager(am *monitoringv1.Alertmanager) error {
+	if am.Spec.AlertmanagerConfiguration != nil {
+		config := am.Spec.AlertmanagerConfiguration
+		if config.Global != nil {
+			if err := ValidateAlertmanagerGlobalConfig(config.Global); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig) error {
 	if gc == nil {
 		return nil
