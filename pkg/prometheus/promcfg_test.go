@@ -8479,6 +8479,19 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigEmpty.golden",
 		},
+		{
+			name: "azure_sd_config_valid_workloadidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_WorkloadIdentityAuth.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
