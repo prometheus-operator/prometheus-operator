@@ -1009,3 +1009,71 @@ func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "additionalScrapeConfigs cannot be set when mode is DaemonSet")
 }
+
+func testPrometheusAgentDaemonSetWithVolumes(t *testing.T) {
+	t.Parallel()
+
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ctx := context.Background()
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "test-agent-with-volumes"
+	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
+
+	p.Spec.Volumes = []v1.Volume{
+		{
+			Name: "test-vol",
+			VolumeSource: v1.VolumeSource{
+				EmptyDir: &v1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+
+	p.Spec.VolumeMounts = []v1.VolumeMount{
+		{
+			Name:      "test-vol",
+			MountPath: "/var/run/po-test-mount-unique",
+		},
+	}
+
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	dmsName := fmt.Sprintf("prom-agent-%s", p.Name)
+	dms, err := framework.KubeClient.AppsV1().DaemonSets(ns).Get(ctx, dmsName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	var foundVolume bool
+	for _, vol := range dms.Spec.Template.Spec.Volumes {
+		if vol.Name == "test-vol" {
+			foundVolume = true
+			break
+		}
+	}
+	require.True(t, foundVolume, "expected volume 'test-vol' to be present in DaemonSet")
+
+	var foundVolumeMount bool
+	for _, container := range dms.Spec.Template.Spec.Containers {
+		if container.Name == "prometheus" {
+			for _, vm := range container.VolumeMounts {
+				if vm.Name == "test-vol" && vm.MountPath == "/var/run/po-test-mount-unique" {
+					foundVolumeMount = true
+					break
+				}
+			}
+		}
+	}
+	require.True(t, foundVolumeMount, "expected volume mount 'test-vol' at '/var/run/po-test-mount-unique' to be present in prometheus container")
+}
