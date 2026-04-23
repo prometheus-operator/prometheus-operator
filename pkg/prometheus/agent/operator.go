@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -98,6 +98,7 @@ type Operator struct {
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+	topologyShardingEnabled      bool
 
 	finalizerSyncer *operator.FinalizerSyncer
 }
@@ -174,6 +175,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		topologyShardingEnabled:      c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
@@ -403,6 +405,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.reconciliations,
 		o.ssetInfs,
 		o.rr,
+		c.RepairPolicy,
 	)
 
 	return o, nil
@@ -837,6 +840,9 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+		if c.topologyShardingEnabled {
+			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
+		}
 
 		if notFound {
 			logger.Debug("creating statefulset")
@@ -1027,7 +1033,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
-	pStatus, err := c.statusReporter.Process(ctx, p, key)
+	pStatus, err := c.statusReporter.Process(ctx, c.logger, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)
 	}

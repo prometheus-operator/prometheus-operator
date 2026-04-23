@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    controller-gen.kubebuilder.io/version: v0.20.1
+    operator.prometheus.io/version: 0.90.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -8074,9 +8074,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to send samples
-                        to.
-                      minLength: 1
+                      description: |-
+                        url defines the URL of the endpoint to send samples to.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                     writeRelabelConfigs:
                       description: writeRelabelConfigs defines the list of remote
@@ -8436,6 +8438,11 @@ spec:
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               scrapeClasses:
                 description: |-
                   scrapeClasses defines the list of scrape classes to expose to scraping objects such as
@@ -8921,7 +8928,8 @@ spec:
                   matches all namespaces. A null label selector matches the current
                   namespace only.
 
-                  Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+                  Note that the ScrapeConfig custom resource definition is currently at Alpha level
+                  and will be graduated to Beta in a future release.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -8980,7 +8988,8 @@ spec:
                   of the custom resource definition. It is recommended to use
                   `spec.additionalScrapeConfigs` instead.
 
-                  Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+                  Note that the ScrapeConfig custom resource definition is currently at Alpha level
+                  and will be graduated to Beta in a future release.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -9498,6 +9507,54 @@ spec:
                     - Delete
                     type: string
                 type: object
+              shardingStrategy:
+                description: |-
+                  shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.
+
+                  When not defined, the operator defaults to the 'Address' mode which distributes
+                  targets based on a hash of the target address.
+                properties:
+                  mode:
+                    description: |-
+                      mode defines the sharding mode. Can be 'Address' or 'Topology'.
+
+                      'Address' is the default mode and distributes targets across shards
+                      based on a hash of the target address.
+
+                      'Topology' enables zone-aware sharding where each shard is assigned to a
+                      specific topology zone and only scrapes targets in that zone.
+                      (Alpha) Using the 'Topology' mode requires the `PrometheusTopologySharding`
+                      feature gate to be enabled.
+                    enum:
+                    - Address
+                    - Topology
+                    type: string
+                  topology:
+                    description: |-
+                      topology defines the configuration for topology-aware sharding.
+                      This field is only valid when mode is set to 'Topology'.
+                    properties:
+                      externalLabelName:
+                        description: |-
+                          externalLabelName defines the name of the Prometheus external label used
+                          to communicate the topology zone assigned to the Prometheus instance.
+                          If not defined, it defaults to "zone".
+                          If set to the empty string, no external label is added to the Prometheus configuration.
+                        type: string
+                      values:
+                        description: |-
+                          values defines the list of topology values (e.g. zone names) to be used
+                          for sharding. The configured number of shards must be greater than or
+                          equal to the number of values.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: topology can only be defined when mode is set to 'Topology'
+                  rule: '!has(self.topology) || (has(self.mode) && self.mode == ''Topology'')'
               shards:
                 description: |-
                   shards defines the number of shards to distribute the scraped targets onto.
@@ -13569,6 +13626,13 @@ spec:
                     type: object
                 type: object
             type: object
+            x-kubernetes-validations:
+            - message: shards must be greater than or equal to the number of topology
+                values when sharding strategy mode is Topology
+              rule: '!has(self.shardingStrategy) || !has(self.shardingStrategy.mode)
+                || self.shardingStrategy.mode != ''Topology'' || !has(self.shardingStrategy.topology)
+                || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size()
+                == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()'
           status:
             description: |-
               status defines the most recent observed status of the Prometheus cluster. Read-only.

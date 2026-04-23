@@ -1,4 +1,4 @@
-// Copyright 2017 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -198,10 +198,19 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)
 
+	version25, err := semver.ParseTolerant("v0.25.0")
+	require.NoError(t, err)
+
+	version26, err := semver.ParseTolerant("v0.26.0")
+	require.NoError(t, err)
+
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
 	version30, err := semver.ParseTolerant("v0.30.0")
+	require.NoError(t, err)
+
+	version29, err := semver.ParseTolerant("v0.29.0")
 	require.NoError(t, err)
 
 	c := fake.NewClientset(
@@ -215,6 +224,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				"template-url":         []byte("{{ .labels.url }}"),
 				"invalid-url":          []byte("://foo"),
 				"invalid-template-url": []byte("{{ .labels.url"),
+				"token":                []byte("abc1243"),
 			},
 		},
 	)
@@ -1413,6 +1423,114 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version30,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-with-bottoken",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
+							{
+								BotToken: &corev1.SecretKeySelector{
+									Key: "token",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+								BotTokenFile: ptr.To("/bot/token/file"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version26,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-with-unsupported-bottokenfile",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
+							{
+								BotTokenFile: ptr.To("/bot/token/file"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version25,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "email-config-with-threading",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost: ptr.To("example.com:587"),
+								From:      ptr.To("admin@example.com"),
+								To:        ptr.To("customers@example.com"),
+								Threading: &monitoringv1alpha1.EmailThreadingConfig{
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "email-config-with-threading",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost: ptr.To("example.com:587"),
+								From:      ptr.To("admin@example.com"),
+								To:        ptr.To("customers@example.com"),
+								Threading: &monitoringv1alpha1.EmailThreadingConfig{
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version29,
 			ok:      false,
 		},
 	} {

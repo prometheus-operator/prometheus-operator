@@ -1,4 +1,4 @@
-// Copyright 2017 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -864,6 +864,33 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 	)
 	require.NoError(t, err)
 	golden.Assert(t, string(cfg), "ProbeIngressSDConfigGenerationWithLabelEnforce.golden")
+}
+
+func TestProbeWithHttp2Disabled(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.EnforcedNamespaceLabel = "namespace"
+
+	probe := defaultProbe()
+	enableHTTP2 := false
+	probe.Spec.HTTPConfig.EnableHTTP2 = &enableHTTP2
+
+	cg := mustNewConfigGenerator(t, p)
+	cfg, err := cg.GenerateServerConfiguration(
+		p,
+		nil,
+		nil,
+		map[string]*monitoringv1.Probe{
+			"probe1": probe,
+		},
+		nil,
+		&assets.StoreBuilder{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	golden.Assert(t, string(cfg), "ProbeWithHttp2Disabled.golden")
 }
 
 func TestK8SSDConfigGeneration(t *testing.T) {
@@ -8452,6 +8479,19 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigEmpty.golden",
 		},
+		{
+			name: "azure_sd_config_valid_workloadidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_WorkloadIdentityAuth.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
@@ -14190,6 +14230,80 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 			require.NoError(t, err)
 
 			golden.Assert(t, string(cfg), tc.expectedCfg)
+		})
+	}
+}
+
+func TestShardingRelabelConfigsWithRetention(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		shards           int32
+		retentionEnabled bool
+		golden           string
+	}{
+		{
+			name:             "without_retention",
+			shards:           2,
+			retentionEnabled: false,
+			golden:           "ShardingRelabelConfigs_without_retention.golden",
+		},
+		{
+			name:             "with_retention_2_shards",
+			shards:           2,
+			retentionEnabled: true,
+			golden:           "ShardingRelabelConfigs_with_retention_2_shards.golden",
+		},
+		{
+			name:             "with_retention_3_shards",
+			shards:           3,
+			retentionEnabled: true,
+			golden:           "ShardingRelabelConfigs_with_retention_3_shards.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Shards = ptr.To(tc.shards)
+
+			opts := []ConfigGeneratorOption{}
+			if tc.retentionEnabled {
+				opts = append(opts, WithPrometheusRetentionPolicies())
+			}
+
+			cg := mustNewConfigGenerator(t, p, opts...)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"test": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "test",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							Selector: metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"foo": "bar",
+								},
+							},
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									Port:     "web",
+									Interval: "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }

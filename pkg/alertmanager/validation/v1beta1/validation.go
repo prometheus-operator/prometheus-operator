@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -341,6 +341,10 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	for i, config := range configs {
 		if config.BotToken == nil && config.BotTokenFile == nil {
 			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
+		}
+
+		if config.BotToken != nil && config.BotTokenFile != nil {
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
 		}
 
 		if config.ChatID == 0 {

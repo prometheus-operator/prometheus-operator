@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,17 +32,17 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 
 	testCases := []struct {
 		name     string
-		existing map[string]string
-		new      map[string]string
+		source   map[string]string
+		dest     map[string]string
 		expected map[string]string
 	}{
 		{
 			name:     "no annotations",
-			expected: nil,
+			expected: map[string]string{},
 		},
 		{
 			name: "add owned annotation",
-			new: map[string]string{
+			dest: map[string]string{
 				"test-key": "test-value",
 			},
 			expected: map[string]string{
@@ -51,10 +51,10 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 		},
 		{
 			name: "change owned annotation",
-			existing: map[string]string{
+			source: map[string]string{
 				"test-key": "test-value",
 			},
-			new: map[string]string{
+			dest: map[string]string{
 				"test-key": "modified-test-value",
 			},
 			expected: map[string]string{
@@ -63,18 +63,18 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 		},
 		{
 			name: "remove owned annotation",
-			existing: map[string]string{
+			source: map[string]string{
 				"test-key": "test-value",
 			},
-			new:      map[string]string{},
+			dest:     map[string]string{},
 			expected: map[string]string{},
 		},
 		{
 			name: "add kubectl annotation",
-			existing: map[string]string{
+			source: map[string]string{
 				"test-key": "test-value",
 			},
-			new: map[string]string{
+			dest: map[string]string{
 				"kubectl.kubernetes.io/restartedAt": "now",
 			},
 			expected: map[string]string{
@@ -83,10 +83,10 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 		},
 		{
 			name: "modify kubectl annotation",
-			existing: map[string]string{
+			source: map[string]string{
 				"kubectl.kubernetes.io/restartedAt": "yesterday",
 			},
-			new: map[string]string{
+			dest: map[string]string{
 				"kubectl.kubernetes.io/restartedAt": "now",
 			},
 			expected: map[string]string{
@@ -95,10 +95,10 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 		},
 		{
 			name: "remove kubectl annotation",
-			existing: map[string]string{
+			source: map[string]string{
 				"kubectl.kubernetes.io/restartedAt": "now",
 			},
-			new: map[string]string{},
+			dest: map[string]string{},
 			expected: map[string]string{
 				"kubectl.kubernetes.io/restartedAt": "now",
 			},
@@ -117,7 +117,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 				Spec: appsv1.StatefulSetSpec{
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
-							Annotations: tc.existing,
+							Annotations: tc.source,
 						},
 					},
 				},
@@ -126,7 +126,7 @@ func TestPropagateKubectlTemplateAnnotations(t *testing.T) {
 			ssetClient := fake.NewClientset(sset).AppsV1().StatefulSets(namespace)
 
 			modifiedSset := sset.DeepCopy()
-			modifiedSset.Spec.Template.Annotations = tc.new
+			modifiedSset.Spec.Template.Annotations = tc.dest
 
 			err := updateStatefulSet(ctx, ssetClient, modifiedSset)
 			require.NoError(t, err)

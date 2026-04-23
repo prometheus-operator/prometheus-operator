@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -3021,6 +3021,30 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			valid: false,
+		},
+		{
+			scenario: "Azure SD config with workload identity unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+					},
+				}
+			},
+			promVersion: "3.10.0",
+			valid:       false,
+		},
+		{
+			scenario: "Azure SD config with workload identity",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+					},
+				}
+			},
+			promVersion: "3.11.0",
+			valid:       true,
 		},
 		{
 			scenario: "OpenStack SD config with valid secret ref",

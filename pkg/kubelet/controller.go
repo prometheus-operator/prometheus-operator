@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -645,7 +645,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service,
 			c.logger.Debug("Deleting endpointslice object", "name", eps.Name)
 			err := client.Delete(ctx, eps.Name, metav1.DeleteOptions{})
 			if err != nil {
-				return fmt.Errorf("failed to delete endpoinslice: %w", err)
+				return fmt.Errorf("failed to delete endpointslice: %w", err)
 			}
 
 			continue
@@ -654,7 +654,7 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service,
 		c.logger.Debug("Updating endpointslice object", "name", eps.Name)
 		err := k8s.CreateOrUpdateEndpointSlice(ctx, client, &eps)
 		if err != nil {
-			return fmt.Errorf("failed to update endpoinslice: %w", err)
+			return fmt.Errorf("failed to update endpointslice: %w", err)
 		}
 	}
 

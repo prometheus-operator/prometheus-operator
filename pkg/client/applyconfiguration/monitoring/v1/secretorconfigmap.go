@@ -22,8 +22,12 @@ import (
 
 // SecretOrConfigMapApplyConfiguration represents a declarative configuration of the SecretOrConfigMap type for use
 // with apply.
+//
+// SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
 type SecretOrConfigMapApplyConfiguration struct {
-	Secret    *corev1.SecretKeySelector    `json:"secret,omitempty"`
+	// secret defines the Secret containing data to use for the targets.
+	Secret *corev1.SecretKeySelector `json:"secret,omitempty"`
+	// configMap defines the ConfigMap containing data to use for the targets.
 	ConfigMap *corev1.ConfigMapKeySelector `json:"configMap,omitempty"`
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package prometheus
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -25,12 +26,15 @@ import (
 
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
@@ -60,6 +64,9 @@ const (
 
 	unmanagedConfigurationReason  = "ConfigurationUnmanaged"
 	unmanagedConfigurationMessage = "the operator doesn't manage the Prometheus configuration secret because neither serviceMonitorSelector nor podMonitorSelector, nor probeSelector, nor scrapeConfigSelector is specified. Unmanaged Prometheus configuration is deprecated, use additionalScrapeConfigs or the ScrapeConfig Custom Resource Definition instead. Unmanaged Prometheus configuration can also be disabled from the operator's command-line (check './operator --help')."
+
+	deletionDeadlineAnnotation = "operator.prometheus.io/deletion-deadline"
+	annotationTimeFormat       = time.RFC3339
 )
 
 // Operator manages the life cycle of Prometheus deployments and
@@ -101,6 +108,7 @@ type Operator struct {
 	disableUnmanagedConfiguration bool
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
+	topologyShardingEnabled       bool
 
 	newEventRecorder operator.NewEventRecorderFunc
 	finalizerSyncer  *operator.FinalizerSyncer
@@ -213,6 +221,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:             c.ControllerID,
 		newEventRecorder:         c.EventRecorderFactory(client, controllerName),
 		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		topologyShardingEnabled:  c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:          operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range opts {
@@ -424,6 +433,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		o.reconciliations,
 		o.ssetInfs,
 		o.rr,
+		c.RepairPolicy,
 	)
 
 	return o, nil
@@ -619,6 +629,45 @@ func (c *Operator) Run(ctx context.Context) error {
 
 	// TODO(simonpasquier): watch for Prometheus pods instead of polling.
 	go operator.StatusPoller(ctx, c)
+
+	if c.retentionPoliciesEnabled {
+		// Periodically scan statefulsets for expired shards.
+		go func() {
+			_ = wait.PollUntilContextCancel(ctx, time.Minute, true, func(context.Context) (bool, error) {
+				_ = c.ssetInfs.ListAll(labels.Everything(), func(o any) {
+					sset := o.(*appsv1.StatefulSet)
+
+					deadline, found := sset.Annotations[deletionDeadlineAnnotation]
+					if !found {
+						return
+					}
+
+					logger := c.logger.With("statefulset", fmt.Sprintf("%s/%s", sset.Namespace, sset.Name))
+					expired, err := deadlineExpired(deadline)
+					if err != nil {
+						logger.Warn("failed to parse deletion deadline annotation", "err", err)
+						return
+					}
+
+					if !expired {
+						logger.Debug("deletion deadline not expired", "deadline", deadline)
+						return
+					}
+
+					logger.Info("deletion deadline expired", "deadline", deadline)
+					owner := c.rr.FindOwner(sset)
+					if owner == nil {
+						logger.Warn("owner not found")
+						return
+					}
+
+					c.rr.EnqueueForReconciliation(owner)
+				})
+
+				return false, nil
+			})
+		}()
+	}
 
 	c.metrics.Ready().Set(1)
 	<-ctx.Done()
@@ -817,22 +866,31 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	c.reconciliations.ResetStatus(key)
-	err := c.sync(ctx, key)
+
+	closure, err := c.sync(ctx, key)
+	if err != nil {
+		_ = closure(ctx)
+	} else {
+		err = closure(ctx)
+	}
+
 	c.reconciliations.SetStatus(key, err)
 
 	return err
 }
 
-func (c *Operator) sync(ctx context.Context, key string) error {
+func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) error, error) {
+	closure := func(context.Context) error { return nil }
+
 	p, err := operator.GetObjectFromKey[*monitoringv1.Prometheus](c.promInfs, key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if p == nil {
 		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return closure, nil
 	}
 
 	logger := c.logger.With("key", key)
@@ -842,29 +900,29 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return c.configResStatusCleanup(ctx, p)
 	})
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if finalizerAdded {
 		// Since the finalizer has been added to the object, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
-		return nil
+		return closure, nil
 	}
 
 	if c.rr.DeletionInProgress(p) {
 		c.reconciliations.ForgetObject(key)
-		return nil
+		return closure, nil
 	}
 
 	if p.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
-		return nil
+		return closure, nil
 	}
 
 	c.recordDeprecatedFields(key, logger, p)
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
-		return err
+		return closure, err
 	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
@@ -872,7 +930,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Select configuration resources.
 	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
 	if err != nil {
-		return err
+		return closure, err
+	}
+
+	// Returns updateConfigResourcesStatus as the closure
+	// so that we can call it at the end of each sync.
+	closure = func(ctx context.Context) error {
+		return c.updateConfigResourcesStatus(ctx, p, *resources)
 	}
 
 	if resources.Len() == 0 {
@@ -881,34 +945,37 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	ruleConfigMapNames, err := c.createOrUpdateRuleConfigMaps(ctx, p, resources.rules, logger)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
+	if c.retentionPoliciesEnabled {
+		opts = append(opts, prompkg.WithPrometheusRetentionPolicies())
+	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, ruleConfigMapNames, assetStore, resources); err != nil {
-		return fmt.Errorf("creating config failed: %w", err)
+		return closure, fmt.Errorf("creating config failed: %w", err)
 	}
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return closure, fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
 	if err := c.createOrUpdateThanosConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
+		return closure, fmt.Errorf("failed to reconcile Thanos config secret: %w", err)
 	}
 
 	if p.Spec.ServiceName != nil {
@@ -916,7 +983,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		selectorLabels := makeSelectorLabels(p.Name)
 
 		if err := k8s.EnsureCustomGoverningService(ctx, p.Namespace, *p.Spec.ServiceName, svcClient, selectorLabels); err != nil {
-			return err
+			return closure, err
 		}
 	} else {
 		// Reconcile the default governing service.
@@ -938,13 +1005,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 
 		if _, err := k8s.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
-			return fmt.Errorf("synchronizing default governing service failed: %w", err)
+			return closure, fmt.Errorf("synchronizing default governing service failed: %w", err)
 		}
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(p.Namespace)
 
-	// Ensure we have a StatefulSet running Prometheus deployed and that StatefulSet names are created correctly.
+	// Reconcile all active statefulset shards.
 	expected := prompkg.ExpectedStatefulSetShardNames(p)
 	for shard, ssetName := range expected {
 		logger := logger.With("statefulset", ssetName, "shard", fmt.Sprintf("%d", shard))
@@ -955,7 +1022,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if err != nil {
 			notFound = apierrors.IsNotFound(err)
 			if !notFound {
-				return fmt.Errorf("retrieving statefulset failed: %w", err)
+				return closure, fmt.Errorf("retrieving statefulset failed: %w", err)
 			}
 		}
 
@@ -976,7 +1043,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 		newSSetInputHash, err := createSSetInputHash(*p, c.config, ruleConfigMapNames, tlsAssets, existingStatefulSet.Spec)
 		if err != nil {
-			return err
+			return closure, err
 		}
 
 		sset, err := makeStatefulSet(
@@ -989,14 +1056,17 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			int32(shard),
 			tlsAssets)
 		if err != nil {
-			return fmt.Errorf("making statefulset failed: %w", err)
+			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
+		if c.topologyShardingEnabled {
+			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
+		}
 
 		if notFound {
 			logger.Debug("creating statefulset")
 			if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
-				return fmt.Errorf("failed to create statefulset: %w", err)
+				return closure, fmt.Errorf("failed to create statefulset: %w", err)
 			}
 			continue
 		}
@@ -1016,7 +1086,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			c.metrics.StsDeleteCreateCounter().Inc()
 			logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 		}); err != nil {
-			return err
+			return closure, err
 		}
 	}
 
@@ -1039,31 +1109,30 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 			return
 		}
 
-		shouldRetain, retainErr := c.shouldRetain(p)
-		if retainErr != nil {
-			deleteErrs = append(deleteErrs, fmt.Errorf("failed to determine if StatefulSet %s should be retained: %w", s.GetName(), retainErr))
-			return
-		}
-		if shouldRetain {
+		shouldDelete, err := c.processShardRetention(ctx, p, s)
+		if err != nil {
+			logger.Warn("failed to process shard retention, not deleting the shard", "err", err, "statefulset", fmt.Sprintf("%s/%s", s.Namespace, s.Name))
 			return
 		}
 
-		if delErr := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); delErr != nil {
-			if !apierrors.IsNotFound(delErr) {
-				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), delErr))
+		if !shouldDelete {
+			return
+		}
+
+		if err := ssetClient.Delete(ctx, s.GetName(), metav1.DeleteOptions{PropagationPolicy: ptr.To(metav1.DeletePropagationForeground)}); err != nil {
+			if !apierrors.IsNotFound(err) {
+				deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete StatefulSet %s: %w", s.GetName(), err))
 			}
 		}
 	})
 	if err != nil {
-		return fmt.Errorf("listing StatefulSet resources failed: %w", err)
+		return closure, fmt.Errorf("listing StatefulSet resources failed: %w", err)
 	}
 	if len(deleteErrs) > 0 {
-		return fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
+		return closure, fmt.Errorf("failed to clean up excess StatefulSets: %w", errors.Join(deleteErrs...))
 	}
 
-	err = c.updateConfigResourcesStatus(ctx, p, *resources)
-
-	return err
+	return closure, err
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
@@ -1183,23 +1252,95 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 	return nil
 }
 
-// As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
-// For now, shouldRetain just returns the appropriate boolean based on the retention type.
-func (c *Operator) shouldRetain(p *monitoringv1.Prometheus) (bool, error) {
+// processShardRetention returns true if the associated statefulset should be
+// deleted.
+func (c *Operator) processShardRetention(ctx context.Context, p *monitoringv1.Prometheus, sset *appsv1.StatefulSet) (bool, error) {
 	if !c.retentionPoliciesEnabled {
-		// Feature-gate is disabled, default behavior is always to delete.
-		return false, nil
-	}
-	if p.Spec.ShardRetentionPolicy == nil {
-		// ShardRetentionPolicy not configured, default behavior is to delete.
-		return false, nil
-	}
-	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled,
-		monitoringv1.DeleteWhenScaledRetentionType) == monitoringv1.RetainWhenScaledRetentionType {
+		// When the feature gate is disabled, the default behavior is always to delete.
 		return true, nil
 	}
 
-	return false, nil
+	if p.Spec.ShardRetentionPolicy == nil {
+		// ShardRetentionPolicy not configured, the default behavior is to delete.
+		return true, nil
+	}
+
+	if ptr.Deref(p.Spec.ShardRetentionPolicy.WhenScaled, monitoringv1.DeleteWhenScaledRetentionType) != monitoringv1.RetainWhenScaledRetentionType {
+		return true, nil
+	}
+
+	if deadline, found := sset.Annotations[deletionDeadlineAnnotation]; found {
+		expired, err := deadlineExpired(deadline)
+		if err != nil {
+			return false, err
+		}
+
+		return expired, nil
+	}
+
+	// Set the annotation on the statefulset. If the deadline never expires,
+	// the annotation is set to the zero time value.
+	gracePeriod, err := gracePeriodForPrometheusStorage(p)
+	if err != nil {
+		return false, err
+	}
+
+	var deadline time.Time
+	if gracePeriod > 0 {
+		deadline = time.Now().UTC().Add(gracePeriod)
+	}
+
+	patchData, err := json.Marshal(map[string]any{
+		"metadata": map[string]any{
+			"annotations": map[string]string{
+				deletionDeadlineAnnotation: deadline.Format(annotationTimeFormat),
+			},
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	_, err = c.kclient.AppsV1().StatefulSets(sset.Namespace).Patch(
+		ctx,
+		sset.Name,
+		types.StrategicMergePatchType,
+		patchData,
+		metav1.PatchOptions{FieldManager: k8s.PrometheusOperatorFieldManager})
+
+	return false, err
+}
+
+func deadlineExpired(deadline string) (bool, error) {
+	t, err := time.Parse(annotationTimeFormat, deadline)
+	if err != nil {
+		return false, err
+	}
+
+	// A zero time means that the deadline never expires.
+	return !t.IsZero() && time.Now().UTC().After(t), nil
+}
+
+// gracePeriodForPrometheusStorage returns how long the Prometheus data can be available based
+// on the retention settings.
+// If Prometheus is configured with size-based retention only, it returns a
+// zero value.
+func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
+	if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
+		return time.Duration(0), nil
+	}
+
+	retention := p.Spec.Retention
+	if retention == "" {
+		retention = defaultRetention
+	}
+
+	d, err := model.ParseDuration(string(retention))
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	return time.Duration(d), nil
 }
 
 // UpdateStatus updates the status subresource of the object identified by the given
@@ -1218,7 +1359,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
-	pStatus, err := c.statusReporter.Process(ctx, p, key)
+	pStatus, err := c.statusReporter.Process(ctx, c.logger, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus status: %w", err)
 	}

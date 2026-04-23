@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -615,6 +615,7 @@ func TestListenTLS(t *testing.T) {
 		"--reload-url=https://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1805,6 +1806,7 @@ func TestConfigReloader(t *testing.T) {
 		"--reload-url=http://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1821,6 +1823,7 @@ func TestConfigReloader(t *testing.T) {
 		"--listen-address=:8080",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1864,6 +1867,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		"--runtimeinfo-url=http://localhost:9090/api/v1/status/runtimeinfo",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1886,6 +1890,7 @@ func TestConfigReloaderWithSignal(t *testing.T) {
 		"--listen-address=:8081",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 
 	for _, c := range sset.Spec.Template.Spec.InitContainers {
@@ -2243,6 +2248,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			Name: "registry-secret",
 		},
 	}
+	schedulerName := "my-scheduler"
 
 	hostNetwork := false
 	hostUsers := true
@@ -2260,6 +2266,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				HostAliases:        hostAliases,
 				ImagePullPolicy:    imagePullPolicy,
 				ImagePullSecrets:   imagePullSecrets,
+				SchedulerName:      schedulerName,
 				HostNetwork:        hostNetwork,
 				HostUsers:          ptr.To(true),
 			},
@@ -2273,6 +2280,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, securityContext, *sset.Spec.Template.Spec.SecurityContext, "expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
 	require.Equal(t, priorityClassName, sset.Spec.Template.Spec.PriorityClassName, "expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, schedulerName, sset.Spec.Template.Spec.SchedulerName, "expected scheduler name to match, want %s, got %s", schedulerName, sset.Spec.Template.Spec.SchedulerName)
 	require.Len(t, sset.Spec.Template.Spec.HostAliases, len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {

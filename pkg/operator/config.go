@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,9 @@ type Config struct {
 	// Controller id for pod ownership.
 	ControllerID string
 
+	// Repair policy
+	RepairPolicy RepairPolicy
+
 	// Event recorder factory.
 	EventRecorderFactory EventRecorderFactory
 
@@ -116,6 +119,7 @@ func DefaultConfig(cpu, memory string) Config {
 				enabled:     false,
 			},
 		},
+		RepairPolicy: NoneRepairPolicy,
 	}
 }
 

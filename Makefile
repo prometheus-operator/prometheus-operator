@@ -306,7 +306,7 @@ Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) 
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck docs ## Format all files.
+format: go-fmt jsonnet-fmt fix-license shellcheck docs ## Format all files.
 
 .PHONY: go-fmt
 go-fmt: ## Run go fmt against code.
@@ -318,7 +318,13 @@ jsonnet-fmt: $(JSONNETFMT_BINARY)
 
 .PHONY: check-license
 check-license: ## Check license headers.
-	./scripts/check_license.sh
+	@echo ">> checking license header"
+	cd scripts && go run ./check-license/ -check -root ..
+
+.PHONY: fix-license
+fix-license: ## Fix missing or non-compliant license headers.
+	@echo ">> adding license header where it's missing"
+	cd scripts && go run ./check-license/ -fix -root ..
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY) ## Run shellcheck on shell scripts.

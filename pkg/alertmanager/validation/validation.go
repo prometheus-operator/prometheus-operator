@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/alertmanager/config/common"
 	"k8s.io/utils/ptr"
 )
 
@@ -39,8 +39,8 @@ func ValidateURLPtr(url *string) error {
 // This could potentially become a regex and be validated via OpenAPI
 // but right now, since we know we need to unmarshal into an upstream type
 // after conversion, we validate we don't error when doing so.
-func ValidateURL(url string) (*config.URL, error) {
-	var u config.URL
+func ValidateURL(url string) (*common.URL, error) {
+	var u common.URL
 	err := json.Unmarshal(fmt.Appendf(nil, `"%s"`, url), &u)
 	if err != nil {
 		return nil, fmt.Errorf("validate url from string failed for %s: %w", url, err)
@@ -84,7 +84,7 @@ func validateStringPtr(s *string, validFn func(string) error) error {
 // This is for URLs which are retrieved from secrets and should not
 // logged as part of the err.
 func ValidateSecretURL(url string) error {
-	var u config.SecretURL
+	var u common.SecretURL
 
 	err := u.UnmarshalJSON(fmt.Appendf(nil, `"%s"`, url))
 	if err != nil {

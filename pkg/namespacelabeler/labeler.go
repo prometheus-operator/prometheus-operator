@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -115,7 +115,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			rule.Spec.Groups[gi].Rules[ri].Labels[l.enforcedNsLabel] = rule.Namespace
 
 			expr := r.Expr.String()
-			parsedExpr, err := parser.ParseExpr(expr)
+			parsedExpr, err := parser.NewParser(parser.Options{}).ParseExpr(expr)
 			if err != nil {
 				return fmt.Errorf("failed to parse promql expression: %w", err)
 			}

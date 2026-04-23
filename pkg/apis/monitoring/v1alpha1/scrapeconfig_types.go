@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,6 +163,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ScrapeConfigSpec struct {
 	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
 	//
@@ -695,13 +696,14 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
-// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK;WorkloadIdentity
 type AuthenticationMethodType string
 
 const (
-	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
-	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
-	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+	AuthMethodTypeOAuth            AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity  AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK              AuthenticationMethodType = "SDK"
+	AuthMethodTypeWorkloadIdentity AuthenticationMethodType = "WorkloadIdentity"
 )
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -769,7 +771,7 @@ type AzureSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -889,6 +891,7 @@ type OpenStackSDConfig struct {
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// applicationCredentialId defines the OpenStack applicationCredentialId.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
 	// applicationCredentialSecret defines the required field if using an application
@@ -1146,6 +1149,7 @@ type NomadSDConfig struct {
 	AllowStale *bool `json:"allowStale,omitempty"` // nolint:kubeapilinter
 	// namespace defines the Nomad namespace to query for service discovery.
 	// When specified, only resources within this namespace will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -1154,6 +1158,7 @@ type NomadSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// region defines the Nomad region to query for service discovery.
 	// When specified, only resources within this region will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Region *string `json:"region,omitempty"`
 	// server defines the Nomad server address to connect to for service discovery.
@@ -1162,6 +1167,7 @@ type NomadSDConfig struct {
 	Server URL `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
 	// This determines how Nomad service tags are concatenated into Prometheus labels.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// basicAuth defines information to use on every scrape request.
@@ -1374,7 +1380,6 @@ type PuppetDBSDConfig struct {
 
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfig struct {
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
@@ -1387,6 +1392,7 @@ type LightSailSDConfig struct {
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// roleARN defines the AWS Role ARN, an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	RoleARN *string `json:"roleARN,omitempty"`
 	// endpoint defines the custom endpoint to be used.
@@ -1437,7 +1443,9 @@ const (
 
 // ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
+//
+// Note: The `_file` variants of credential fields (e.g. `secret_key_file`)
+// from the Prometheus configuration are not supported. Use Kubernetes secrets via `secretKey` instead.
 type ScalewaySDConfig struct {
 	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1

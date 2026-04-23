@@ -23,14 +23,27 @@ import (
 
 // SafeTLSConfigApplyConfiguration represents a declarative configuration of the SafeTLSConfig type for use
 // with apply.
+//
+// SafeTLSConfig defines safe TLS configurations.
 type SafeTLSConfigApplyConfiguration struct {
-	CA                 *SecretOrConfigMapApplyConfiguration `json:"ca,omitempty"`
-	Cert               *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
-	KeySecret          *corev1.SecretKeySelector            `json:"keySecret,omitempty"`
-	ServerName         *string                              `json:"serverName,omitempty"`
-	InsecureSkipVerify *bool                                `json:"insecureSkipVerify,omitempty"`
-	MinVersion         *monitoringv1.TLSVersion             `json:"minVersion,omitempty"`
-	MaxVersion         *monitoringv1.TLSVersion             `json:"maxVersion,omitempty"`
+	// ca defines the Certificate authority used when verifying server certificates.
+	CA *SecretOrConfigMapApplyConfiguration `json:"ca,omitempty"`
+	// cert defines the Client certificate to present when doing client-authentication.
+	Cert *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
+	// keySecret defines the Secret containing the client key file for the targets.
+	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
+	// serverName is used to verify the hostname for the targets.
+	ServerName *string `json:"serverName,omitempty"`
+	// insecureSkipVerify defines how to disable target certificate validation.
+	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
+	// minVersion defines the minimum acceptable TLS version.
+	//
+	// It requires Prometheus >= v2.35.0 or Thanos >= v0.28.0.
+	MinVersion *monitoringv1.TLSVersion `json:"minVersion,omitempty"`
+	// maxVersion defines the maximum acceptable TLS version.
+	//
+	// It requires Prometheus >= v2.41.0 or Thanos >= v0.31.0.
+	MaxVersion *monitoringv1.TLSVersion `json:"maxVersion,omitempty"`
 }
 
 // SafeTLSConfigApplyConfiguration constructs a declarative configuration of the SafeTLSConfig type for use with

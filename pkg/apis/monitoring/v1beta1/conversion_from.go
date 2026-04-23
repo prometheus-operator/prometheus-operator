@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -520,6 +520,13 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 		RequireTLS:       in.RequireTLS,
 		TLSConfig:        in.TLSConfig,
 		ForceImplicitTLS: in.ForceImplicitTLS,
+		Threading:        convertEmailThreadingConfigFrom(in.Threading),
+	}
+}
+
+func convertEmailThreadingConfigFrom(in *v1alpha1.EmailThreadingConfig) *EmailThreadingConfig {
+	return &EmailThreadingConfig{
+		ThreadByDate: ThreadByDateType(in.ThreadByDate),
 	}
 }
 

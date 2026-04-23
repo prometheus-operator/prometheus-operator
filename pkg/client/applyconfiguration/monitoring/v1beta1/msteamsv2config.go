@@ -22,12 +22,24 @@ import (
 
 // MSTeamsV2ConfigApplyConfiguration represents a declarative configuration of the MSTeamsV2Config type for use
 // with apply.
+//
+// MSTeamsV2Config configures notifications via Microsoft Teams using the new message format with adaptive cards as required by flows.
+// See https://prometheus.io/docs/alerting/latest/configuration/#msteamsv2_config
+// It requires Alertmanager >= 0.28.0.
 type MSTeamsV2ConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	WebhookURL   *v1.SecretKeySelector         `json:"webhookURL,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Text         *string                       `json:"text,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// webhookURL defines the MSTeams incoming webhook URL for adaptive card notifications.
+	// This webhook must support the newer adaptive cards format required by Teams flows.
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
+	// title defines the message title template for adaptive card notifications.
+	// This appears as the main heading in the Teams adaptive card.
+	Title *string `json:"title,omitempty"`
+	// text defines the message body template for adaptive card notifications.
+	// This contains the detailed content displayed in the Teams adaptive card format.
+	Text *string `json:"text,omitempty"`
+	// httpConfig defines the HTTP client configuration for Teams webhook requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // MSTeamsV2ConfigApplyConfiguration constructs a declarative configuration of the MSTeamsV2Config type for use with

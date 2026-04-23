@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -207,6 +207,20 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 			require.Equal(t, tc.expectedValue, *sset.Spec.Template.Spec.AutomountServiceAccountToken)
 		})
 	}
+}
+
+func TestSchedulerName(t *testing.T) {
+	schedulerName := "my-scheduler"
+
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
+		Spec: monitoringv1alpha1.PrometheusAgentSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				SchedulerName: schedulerName,
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, schedulerName, sset.Spec.Template.Spec.SchedulerName)
 }
 
 func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {

@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strconv"
 	"strings"
@@ -69,19 +70,21 @@ type DeletionChecker interface {
 // StatusReporter reports the status for Prometheus and PrometheusAgent
 // resources based on the state of the statefulsets and pods.
 type StatusReporter struct {
-	client kubernetes.Interface
-	rcg    ReconciledConditionGetter
-	ssg    StatefulSetGetter
-	dc     DeletionChecker
+	client       kubernetes.Interface
+	rcg          ReconciledConditionGetter
+	ssg          StatefulSetGetter
+	dc           DeletionChecker
+	repairPolicy operator.RepairPolicy
 }
 
 // NewStatusReporter returns a new StatusReporter.
-func NewStatusReporter(client kubernetes.Interface, rcg ReconciledConditionGetter, ssg StatefulSetGetter, dc DeletionChecker) *StatusReporter {
+func NewStatusReporter(client kubernetes.Interface, rcg ReconciledConditionGetter, ssg StatefulSetGetter, dc DeletionChecker, repairPolicy operator.RepairPolicy) *StatusReporter {
 	return &StatusReporter{
-		client: client,
-		rcg:    rcg,
-		ssg:    ssg,
-		dc:     dc,
+		client:       client,
+		rcg:          rcg,
+		ssg:          ssg,
+		dc:           dc,
+		repairPolicy: repairPolicy,
 	}
 }
 
@@ -257,7 +260,7 @@ func combinedReason(reasons []string) string {
 // Process will determine the Status of a Prometheus or PrometheusAgent
 // resource depending on the current state of the underlying workload resources
 // (including pods).
-func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
+func (sr *StatusReporter) Process(ctx context.Context, logger *slog.Logger, p monitoringv1.PrometheusInterface, key string) (*monitoringv1.PrometheusStatus, error) {
 	commonFields := p.GetCommonPrometheusFields()
 	pStatus := monitoringv1.PrometheusStatus{
 		Paused: commonFields.Paused,
@@ -331,6 +334,10 @@ func (sr *StatusReporter) Process(ctx context.Context, p monitoringv1.Prometheus
 			if m := p.Message(); m != "" {
 				messages = append(messages, fmt.Sprintf("shard %d: pod %s: %s", shard, p.Name, m))
 			}
+		}
+
+		if err := stsReporter.Repair(ctx, logger, sr.repairPolicy); err != nil {
+			logger.Warn("failed to repair statefulset", "err", err)
 		}
 	}
 

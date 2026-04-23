@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -221,7 +221,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 // AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
 func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL:            url,
+		URL:            monitoringv1.URL(url),
 		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
 			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
@@ -456,6 +456,7 @@ func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Contex
 	)
 }
 
+// ScalePrometheusAndWaitUntilReady scales the number of shards.
 func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
 	promClient := f.MonClientV1.Prometheuses(ns)
 	scale, err := promClient.GetScale(ctx, name, metav1.GetOptions{})
@@ -468,6 +469,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to scale Prometheus %s/%s: %w", ns, name, err)
 	}
+
 	p, err := promClient.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Prometheus %s/%s: %w", ns, name, err)
@@ -633,21 +635,35 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 // WaitForHealthyTargets waits for a number of targets to be configured and
 // healthy.
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
+	return f.WaitForHealthyTargetsWithCondition(
+		ctx,
+		ns,
+		svcName,
+		func(targets []*Target) error {
+			if len(targets) != amount {
+				return fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
+			}
+
+			return nil
+		},
+	)
+}
+
+// WaitForHealthyTargetsWithCondition queries healthy targets from the
+// Prometheus API endpoint and waits for the condition function to return no
+// error.
+func (f *Framework) WaitForHealthyTargetsWithCondition(ctx context.Context, ns, svcName string, cond func([]*Target) error) error {
 	var loopErr error
 
-	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(ctx context.Context) (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(_ context.Context) (bool, error) {
 		var targets []*Target
-		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
+		targets, loopErr = f.GetHealthyTargets(context.Background(), ns, svcName)
 		if loopErr != nil {
 			return false, nil
 		}
 
-		if len(targets) == amount {
-			return true, nil
-		}
-
-		loopErr = fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
-		return false, nil
+		loopErr = cond(targets)
+		return loopErr == nil, nil
 	})
 	if err != nil {
 		return fmt.Errorf("%s: waiting for healthy targets failed: %v: %v", svcName, err, loopErr)
