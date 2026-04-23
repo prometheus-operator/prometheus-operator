@@ -3303,6 +3303,74 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_with_MessageText.golden",
 		},
 		{
+			name:      "CR with Slack Receiver with UpdateMessage",
+			kclient:   fake.NewClientset(),
+			amVersion: &semver.Version{Major: 0, Minor: 32},
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &commoncfg.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								MessageText: ptr.To("test message text"),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_UpdateMessage.golden",
+		},
+		{
+			name:      "CR with Slack Receiver with UpdateMessage Unsupported Version",
+			kclient:   fake.NewClientset(),
+			amVersion: &semver.Version{Major: 0, Minor: 31},
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &commoncfg.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								MessageText: ptr.To("test message text"),
+							}},
+						}},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewClientset(
 				&corev1.Secret{

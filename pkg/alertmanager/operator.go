@@ -1420,6 +1420,10 @@ func checkSlackConfigs(
 			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
+		if config.UpdateMessage != nil && amVersion.LT(semver.MustParse("0.32.0")) {
+			return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
