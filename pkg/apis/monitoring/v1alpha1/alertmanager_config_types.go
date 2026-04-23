@@ -910,6 +910,25 @@ type EmailConfig struct {
 	// It requires Alertmanager >= v0.31.0.
 	// +optional
 	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
+	// threading defines the threading configuration for email receiver.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Threading *EmailThreadingConfig `json:"threading,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=Daily;None
+type ThreadByDateType string
+
+const (
+	ThreadByDateTypeDaily ThreadByDateType = "Daily"
+	ThreadByDateTypeNone  ThreadByDateType = "None"
+)
+
+type EmailThreadingConfig struct {
+	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+	// (None means group by alert group key, no date).
+	// +required
+	ThreadByDate ThreadByDateType `json:"threadByDate"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
