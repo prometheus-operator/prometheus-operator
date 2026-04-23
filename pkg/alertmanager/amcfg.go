@@ -2812,6 +2812,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 	lessThanV0_31 := amVersion.LT(semver.MustParse("0.31.0"))
+	lessThanV0_32 := amVersion.LT(semver.MustParse("0.32.0"))
 
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
@@ -2845,6 +2846,12 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		msg := "'message_text' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.MessageText = ""
+	}
+
+	if sc.UpdateMessage != nil && lessThanV0_32 {
+		msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg)
+		sc.UpdateMessage = nil
 	}
 
 	if sc.AppToken != "" && sc.AppTokenFile != "" {

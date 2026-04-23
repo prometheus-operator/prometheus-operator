@@ -229,6 +229,7 @@ type slackConfig struct {
 	Actions       []slackAction     `yaml:"actions,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
 	MessageText   string            `yaml:"message_text,omitempty"`
+	UpdateMessage *bool             `yaml:"update_message,omitempty"`
 }
 
 type httpClientConfig struct {
