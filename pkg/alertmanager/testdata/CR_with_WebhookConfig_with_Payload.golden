@@ -10,6 +10,5 @@ receivers:
 - name: mynamespace/myamc/test
   webhook_configs:
   - url: https://example.com/
-    payload:
-      foo: bar
+    payload: '{"foo": "bar"}'
 templates: []
