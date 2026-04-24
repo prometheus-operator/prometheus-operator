@@ -2121,7 +2121,7 @@ func (cb *ConfigBuilder) convertGlobalMattermostConfig(ctx context.Context, out 
 		if err != nil {
 			return fmt.Errorf("failed to parse Webhook URL: %w", err)
 		}
-		out.MattermostWebhookURL = &config.URL{URL: u}
+		out.MattermostWebhookURL = &commoncfg.URL{URL: u}
 	}
 
 	return nil
