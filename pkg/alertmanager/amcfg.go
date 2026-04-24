@@ -1656,6 +1656,18 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 		Text:         ptr.Deref(in.Text, ""),
 		IconURL:      ptr.Deref(in.IconURL, ""),
 		IconEmoji:    ptr.Deref(in.IconEmoji, ""),
+		Fallback:     ptr.Deref(in.Fallback, ""),
+		Color:        ptr.Deref(in.Color, ""),
+		Pretext:      ptr.Deref(in.Pretext, ""),
+		AuthorName:   ptr.Deref(in.AuthorName, ""),
+		AuthorLink:   ptr.Deref(in.AuthorLink, ""),
+		AuthorIcon:   ptr.Deref(in.AuthorIcon, ""),
+		Title:        ptr.Deref(in.Title, ""),
+		TitleLink:    ptr.Deref(in.TitleLink, ""),
+		ThumbURL:     ptr.Deref(in.ThumbURL, ""),
+		Footer:       ptr.Deref(in.Footer, ""),
+		FooterIcon:   ptr.Deref(in.FooterIcon, ""),
+		ImageURL:     ptr.Deref(in.ImageURL, ""),
 	}
 
 	webhookURL, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.WebhookURL)
@@ -1663,6 +1675,18 @@ func (cb *ConfigBuilder) convertMattermostConfig(ctx context.Context, in monitor
 		return nil, fmt.Errorf("failed to get Mattermost webhookURL: %w", err)
 	}
 	out.WebhookURL = webhookURL
+
+	if l := len(in.Fields); l > 0 {
+		fields := make([]mattermostField, l)
+		for i, f := range in.Fields {
+			fields[i] = mattermostField{
+				Title: f.Title,
+				Value: f.Value,
+				Short: ptr.Deref(f.Short, false),
+			}
+		}
+		out.Fields = fields
+	}
 
 	out.Attachments = make([]*mattermostAttachmentConfig, len(in.Attachments))
 	for i, c := range in.Attachments {

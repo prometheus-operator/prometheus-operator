@@ -1364,6 +1364,70 @@ type MattermostConfig struct {
 	// priority defines the priority parameters of the message.
 	// +optional
 	Priority *MattermostPriorityConfig `json:"priority,omitempty"`
+	// fallback defines a required plain-text summary of the attachment.
+	// This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Fallback *string `json:"fallback,omitempty"`
+	// color defines a hex color code that will be used as
+	// the left border color for the attachment.
+	// If not specified, it will default to match the channel sidebar header background color.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Color *string `json:"color,omitempty"`
+	// pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Pretext *string `json:"pretext,omitempty"`
+	// authorName defines an optional name used to identify the author.
+	// It will be included in a small section at the top of the attachment.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	AuthorName *string `json:"authorName,omitempty"`
+	// authorLink defines optional URL used to hyperlink the author_name.
+	// If no author_name is specified, this field does nothing.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	AuthorLink *string `json:"authorLink,omitempty"`
+	// authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	AuthorIcon *string `json:"authorIcon,omitempty"`
+	// title defines an optional title displayed below the author information in the attachment.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Title *string `json:"title,omitempty"`
+	// titleLink defines an optional URL used to hyperlink the title.
+	// If no title is specified, this field does nothing.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TitleLink *string `json:"titleLink,omitempty"`
+	// fields defines a list of fields that are sent with each notification
+	// to be displayed in a table format inside the attachment.
+	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
+	// +optional
+	Fields []MattermostField `json:"fields,omitempty"`
+	// thumbURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+	// on the right side of an attachment.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ThumbURL *string `json:"thumbURL,omitempty"`
+	// footer defines an optional line of text that will be displayed at the bottom of the attachment.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Footer *string `json:"footer,omitempty"`
+	// footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+	// that is displayed as a 16x16 pixel thumbnail before the footer text.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	FooterIcon *string `json:"footerIcon,omitempty"`
+	// imageURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ImageURL *string `json:"imageURL,omitempty"`
 	// httpConfig defines the HTTP client configuration for Mattermost webhook requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

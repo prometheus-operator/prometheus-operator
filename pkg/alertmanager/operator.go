@@ -1791,29 +1791,28 @@ func checkMattermostConfigs(
 		if amVersion.LT(semver.MustParse("0.32.0")) {
 			commonErrorMsg := " supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
 			fieldNameMapping := map[string]*string{
-				"fallback":   &config.Fallback,
-				"color":      &config.Color,
-				"pretext":    &config.Pretext,
-				"authorName": &config.AuthorName,
-				"authorLink": &config.AuthorLink,
-				"authorIcon": &config.AuthorIcon,
-				"title":      &config.Title,
-				"titleLink":  &config.TitleLink,
-				"thumbURL":   &config.ThumbURL,
-				"footer":     &config.Footer,
-				"footerIcon": &config.FooterIcon,
-				"imageURL":   &config.ImageURL,
+				"fallback":   config.Fallback,
+				"color":      config.Color,
+				"pretext":    config.Pretext,
+				"authorName": config.AuthorName,
+				"authorLink": config.AuthorLink,
+				"authorIcon": config.AuthorIcon,
+				"title":      config.Title,
+				"titleLink":  config.TitleLink,
+				"thumbURL":   config.ThumbURL,
+				"footer":     config.Footer,
+				"footerIcon": config.FooterIcon,
+				"imageURL":   config.ImageURL,
 			}
 			for fieldName, valuePtr := range fieldNameMapping {
-				return fmt.Errorf("'%s'"+commonErrorMsg, fieldName)
-				logger.Warn(msg, "current_version", amVersion.String())
-				*valuePtr = ""
+				if valuePtr != nil {
+					return fmt.Errorf("'%s'"+commonErrorMsg, fieldName)
+				}
 			}
 
-			if len(mc.Fields) > 0 {
+			if len(config.Fields) > 0 {
 				msg := "'fields'" + commonErrorMsg
-				logger.Warn(msg, "current_version", amVersion.String())
-				mc.Fields = nil
+				return fmt.Errorf(msg, "current_version", amVersion.String())
 			}
 		}
 
