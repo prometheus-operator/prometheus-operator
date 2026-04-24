@@ -1326,6 +1326,18 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
 	}
 
+	if t := in.Threading; t != nil {
+		out.Threading = &emailThreadingConfig{
+			Enabled: ptr.To(true),
+		}
+		switch t.ThreadByDate {
+		case "Daily":
+			out.Threading.ThreadByDate = "daily"
+		case "None":
+			out.Threading.ThreadByDate = "none"
+		}
+	}
+
 	return out, nil
 }
 
@@ -2816,6 +2828,7 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 	lessThanV0_31 := amVersion.LT(semver.MustParse("0.31.0"))
+	lessThanV0_32 := amVersion.LT(semver.MustParse("0.32.0"))
 
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
@@ -2849,6 +2862,12 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		msg := "'message_text' supported in Alertmanager >= 0.31.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		sc.MessageText = ""
+	}
+
+	if sc.UpdateMessage != nil && lessThanV0_32 {
+		msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		logger.Warn(msg)
+		sc.UpdateMessage = nil
 	}
 
 	if sc.AppToken != "" && sc.AppTokenFile != "" {
@@ -3203,6 +3222,36 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		msg := "'webhook_url' and 'webhook_url_file' are mutually exclusive for mattermost receiver config - 'webhook_url' has taken precedence"
 		logger.Warn(msg)
 		mc.WebhookURLFile = ""
+	}
+
+	// check the attachment top level fields and reject if below 0.32.0.
+	if amVersion.LT(semver.MustParse("0.32.0")) {
+		commonErrorMsg := " supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+		fieldNameMapping := map[string]*string{
+			"fallback":    &mc.Fallback,
+			"color":       &mc.Color,
+			"pretext":     &mc.Pretext,
+			"author_name": &mc.AuthorName,
+			"author_link": &mc.AuthorLink,
+			"author_icon": &mc.AuthorIcon,
+			"title":       &mc.Title,
+			"title_link":  &mc.TitleLink,
+			"thumb_url":   &mc.ThumbURL,
+			"footer":      &mc.Footer,
+			"footer_icon": &mc.FooterIcon,
+			"image_urL":   &mc.ImageURL,
+		}
+		for fieldName, valuePtr := range fieldNameMapping {
+			msg := fmt.Sprintf("'%s'"+commonErrorMsg, fieldName)
+			logger.Warn(msg, "current_version", amVersion.String())
+			*valuePtr = ""
+		}
+
+		if len(mc.Fields) > 0 {
+			msg := "'fields'" + commonErrorMsg
+			logger.Warn(msg, "current_version", amVersion.String())
+			mc.Fields = nil
+		}
 	}
 
 	return mc.HTTPConfig.sanitize(amVersion, logger)

@@ -75,6 +75,9 @@ type EmailConfigApplyConfiguration struct {
 	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
 	// It requires Alertmanager >= v0.31.0.
 	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"`
+	// threading defines the threading configuration for email receiver.
+	// It requires Alertmanager >= v0.30.0.
+	Threading *EmailThreadingConfigApplyConfiguration `json:"threading,omitempty"`
 }
 
 // EmailConfigApplyConfiguration constructs a declarative configuration of the EmailConfig type for use with
@@ -205,5 +208,13 @@ func (b *EmailConfigApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConfigApp
 // If called multiple times, the ForceImplicitTLS field is set to the value of the last call.
 func (b *EmailConfigApplyConfiguration) WithForceImplicitTLS(value bool) *EmailConfigApplyConfiguration {
 	b.ForceImplicitTLS = &value
+	return b
+}
+
+// WithThreading sets the Threading field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Threading field is set to the value of the last call.
+func (b *EmailConfigApplyConfiguration) WithThreading(value *EmailThreadingConfigApplyConfiguration) *EmailConfigApplyConfiguration {
+	b.Threading = value
 	return b
 }

@@ -4113,6 +4113,46 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_EmailConfig_ForceImplicitTLS.golden",
 		},
 		{
+			name:      "CR with EmailConfig with Threading",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost: ptr.To("example.com:25"),
+										From:      ptr.To("admin@example.com"),
+										To:        ptr.To("customers@example.com"),
+										Threading: &monitoringv1alpha1.EmailThreadingConfig{
+											ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_with_Threading.golden",
+		},
+		{
 			name:      "CR with WebhookConfig with Timeout Setup",
 			amVersion: &version28,
 			kclient:   fake.NewClientset(),
@@ -4268,6 +4308,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMattermostEmptyWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
 	versionMattermostEmptyWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
 
+	versionMattermostConfigTopLevelAttachmentAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostConfigTopLevelAttachmentNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
@@ -4276,6 +4319,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionSlackMessageTextAllowed := semver.Version{Major: 0, Minor: 31}
 	versionSlackMessageTextNotAllowed := semver.Version{Major: 0, Minor: 30}
+
+	versionSlackUpdateMessageAllowed := semver.Version{Major: 0, Minor: 32}
+	versionSlackUpdateMessageNotAllowed := semver.Version{Major: 0, Minor: 31}
 
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
@@ -4599,6 +4645,38 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_message_text_is_added_in_slack_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test slack update_message supported version",
+			againstVersion: versionSlackUpdateMessageAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_update_message_supported_version.golden",
+		},
+		{
+			name:           "Test slack update_message unsupported version",
+			againstVersion: versionSlackUpdateMessageNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_update_message_unsupported_version.golden",
 		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
@@ -5303,6 +5381,84 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_mattermos_text_is_optional.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config fields in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_unsupported_version.golden",
 		},
 		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",

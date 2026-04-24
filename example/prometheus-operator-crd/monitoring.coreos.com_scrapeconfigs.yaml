@@ -102,6 +102,7 @@ spec:
                       - OAuth
                       - ManagedIdentity
                       - SDK
+                      - WorkloadIdentity
                       type: string
                     authorization:
                       description: |-
