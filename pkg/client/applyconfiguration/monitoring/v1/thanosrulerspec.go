@@ -272,8 +272,8 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
 	// recorded rule data.
 	//
-	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
-	GRPCServerTLSConfig *TLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// alertQueryUrl defines how Thanos Ruler will set in the 'Source' field
 	// of all alerts.
 	// Maps to the '--alert.query-url' CLI arg.
@@ -838,7 +838,7 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRoutePrefix(value string) *Thano
 // WithGRPCServerTLSConfig sets the GRPCServerTLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GRPCServerTLSConfig field is set to the value of the last call.
-func (b *ThanosRulerSpecApplyConfiguration) WithGRPCServerTLSConfig(value *TLSConfigApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
+func (b *ThanosRulerSpecApplyConfiguration) WithGRPCServerTLSConfig(value *GRPCServerTLSConfigApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
 	b.GRPCServerTLSConfig = value
 	return b
 }
