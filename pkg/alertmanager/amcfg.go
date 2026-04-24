@@ -54,15 +54,13 @@ func alertmanagerConfigFromBytes(b []byte) (*alertmanagerConfig, error) {
 	// Run upstream Load function to get any validation checks that it runs.
 	_, err := config.Load(string(b))
 	if err != nil {
-		return nil, fmt.Errorf("error while load config: %w", err)
-		//return nil, err
+		return nil, err
 	}
 
 	cfg := &alertmanagerConfig{}
 	err = yaml.UnmarshalStrict(b, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("error while unmarshal: %w", err)
-		//return nil, err
+		return nil, err
 	}
 
 	if err := checkAlertmanagerConfigRootRoute(cfg.Route); err != nil {
