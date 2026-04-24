@@ -3328,7 +3328,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								MessageText: ptr.To("test message text"),
+								UpdateMessage: ptr.To(true),
 							}},
 						}},
 					},
@@ -3362,7 +3362,7 @@ func TestGenerateConfig(t *testing.T) {
 						Receivers: []monitoringv1alpha1.Receiver{{
 							Name: "test",
 							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-								MessageText: ptr.To("test message text"),
+								UpdateMessage: ptr.To(true),
 							}},
 						}},
 					},
