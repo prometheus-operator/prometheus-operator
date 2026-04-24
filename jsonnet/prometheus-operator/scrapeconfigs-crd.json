@@ -445,7 +445,8 @@
                           "enum": [
                             "OAuth",
                             "ManagedIdentity",
-                            "SDK"
+                            "SDK",
+                            "WorkloadIdentity"
                           ],
                           "type": "string"
                         },

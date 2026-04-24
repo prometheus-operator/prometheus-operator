@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/units"
@@ -53,8 +54,9 @@ const (
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
 
-	defaultPrometheusExternalLabelName = "prometheus"
-	defaultReplicaExternalLabelName    = "prometheus_replica"
+	defaultPrometheusExternalLabelName   = "prometheus"
+	defaultReplicaExternalLabelName      = "prometheus_replica"
+	defaultTopologyZoneExternalLabelName = "zone"
 
 	hashLabelNameForSharding          = "__tmp_hash"
 	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
@@ -69,16 +71,17 @@ func sanitizeLabelName(name string) string {
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger                     *slog.Logger
-	version                    semver.Version
-	notCompatible              bool
-	prom                       monitoringv1.PrometheusInterface
-	endpointSliceSupported     bool // True when the cluster supports EndpointSlice.
-	scrapeClasses              map[string]monitoringv1.ScrapeClass
-	defaultScrapeClassName     string
-	daemonSet                  bool
-	prometheusTopologySharding bool
-	inlineTLSConfig            bool
+	logger                      *slog.Logger
+	version                     semver.Version
+	notCompatible               bool
+	prom                        monitoringv1.PrometheusInterface
+	endpointSliceSupported      bool // True when the cluster supports EndpointSlice.
+	scrapeClasses               map[string]monitoringv1.ScrapeClass
+	defaultScrapeClassName      string
+	daemonSet                   bool
+	prometheusTopologySharding  bool
+	prometheusRetentionPolicies bool
+	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
 }
@@ -100,6 +103,12 @@ func WithDaemonSet() ConfigGeneratorOption {
 func WithPrometheusTopologySharding() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.prometheusTopologySharding = true
+	}
+}
+
+func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.prometheusRetentionPolicies = true
 	}
 }
 
@@ -244,17 +253,18 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // logger.
 func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:                     cg.logger.With(keyvals...),
-		version:                    cg.version,
-		notCompatible:              cg.notCompatible,
-		prom:                       cg.prom,
-		endpointSliceSupported:     cg.endpointSliceSupported,
-		scrapeClasses:              cg.scrapeClasses,
-		defaultScrapeClassName:     cg.defaultScrapeClassName,
-		daemonSet:                  cg.daemonSet,
-		prometheusTopologySharding: cg.prometheusTopologySharding,
-		inlineTLSConfig:            cg.inlineTLSConfig,
-		bypassVersionCheck:         cg.bypassVersionCheck,
+		logger:                      cg.logger.With(keyvals...),
+		version:                     cg.version,
+		notCompatible:               cg.notCompatible,
+		prom:                        cg.prom,
+		endpointSliceSupported:      cg.endpointSliceSupported,
+		scrapeClasses:               cg.scrapeClasses,
+		defaultScrapeClassName:      cg.defaultScrapeClassName,
+		daemonSet:                   cg.daemonSet,
+		prometheusTopologySharding:  cg.prometheusTopologySharding,
+		prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+		inlineTLSConfig:             cg.inlineTLSConfig,
+		bypassVersionCheck:          cg.bypassVersionCheck,
 	}
 }
 
@@ -269,17 +279,18 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                     cg.logger.With("minimum_version", version),
-			version:                    cg.version,
-			notCompatible:              true,
-			prom:                       cg.prom,
-			endpointSliceSupported:     cg.endpointSliceSupported,
-			scrapeClasses:              cg.scrapeClasses,
-			defaultScrapeClassName:     cg.defaultScrapeClassName,
-			daemonSet:                  cg.daemonSet,
-			prometheusTopologySharding: cg.prometheusTopologySharding,
-			inlineTLSConfig:            cg.inlineTLSConfig,
-			bypassVersionCheck:         cg.bypassVersionCheck,
+			logger:                      cg.logger.With("minimum_version", version),
+			version:                     cg.version,
+			notCompatible:               true,
+			prom:                        cg.prom,
+			endpointSliceSupported:      cg.endpointSliceSupported,
+			scrapeClasses:               cg.scrapeClasses,
+			defaultScrapeClassName:      cg.defaultScrapeClassName,
+			daemonSet:                   cg.daemonSet,
+			prometheusTopologySharding:  cg.prometheusTopologySharding,
+			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			inlineTLSConfig:             cg.inlineTLSConfig,
+			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
 	}
 
@@ -297,17 +308,18 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 	if cg.version.GTE(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                     cg.logger.With("maximum_version", version),
-			version:                    cg.version,
-			notCompatible:              true,
-			prom:                       cg.prom,
-			endpointSliceSupported:     cg.endpointSliceSupported,
-			scrapeClasses:              cg.scrapeClasses,
-			defaultScrapeClassName:     cg.defaultScrapeClassName,
-			daemonSet:                  cg.daemonSet,
-			prometheusTopologySharding: cg.prometheusTopologySharding,
-			inlineTLSConfig:            cg.inlineTLSConfig,
-			bypassVersionCheck:         cg.bypassVersionCheck,
+			logger:                      cg.logger.With("maximum_version", version),
+			version:                     cg.version,
+			notCompatible:               true,
+			prom:                        cg.prom,
+			endpointSliceSupported:      cg.endpointSliceSupported,
+			scrapeClasses:               cg.scrapeClasses,
+			defaultScrapeClassName:      cg.defaultScrapeClassName,
+			daemonSet:                   cg.daemonSet,
+			prometheusTopologySharding:  cg.prometheusTopologySharding,
+			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			inlineTLSConfig:             cg.inlineTLSConfig,
+			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
 	}
 
@@ -747,6 +759,21 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 	// Do not add the external label if the resulting value is empty.
 	if replicaExternalLabelName != "" {
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
+	}
+
+	if cg.prometheusTopologySharding {
+		ss := cpf.ShardingStrategy
+		if ss != nil && ss.Mode != nil &&
+			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+			ss.Topology != nil {
+
+			// Default label name is "zone"; nil means use default.
+			// Empty string means skip.
+			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
+			if zoneExternalLabelName != "" {
+				m[zoneExternalLabelName] = fmt.Sprintf("$(%s)", operator.TopologyZoneEnvVar)
+			}
+		}
 	}
 
 	for k, v := range cpf.ExternalLabels {
@@ -1550,7 +1577,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	// DaemonSet mode doesn't support sharding.
 	if !cg.daemonSet {
-		relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
+		relabelings = cg.appendShardingRelabelingWithAddress(relabelings, shards)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -1806,7 +1833,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
 	}
 
-	relabelings = appendShardingRelabelingForProbes(relabelings, shards)
+	relabelings = cg.appendShardingRelabelingForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -2096,7 +2123,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
+	relabelings = cg.appendShardingRelabelingWithAddress(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -2152,12 +2179,12 @@ func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
 	return enforced
 }
 
-func appendShardingRelabelingWithAddress(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return appendShardingRelabelingWithLabel(relabelings, shards, "__address__")
+func (cg *ConfigGenerator) appendShardingRelabelingWithAddress(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return cg.appendShardingRelabelingWithLabel(relabelings, shards, "__address__")
 }
 
-func appendShardingRelabelingForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return appendShardingRelabelingWithLabel(relabelings, shards, "__param_target")
+func (cg *ConfigGenerator) appendShardingRelabelingForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return cg.appendShardingRelabelingWithLabel(relabelings, shards, "__param_target")
 }
 
 func (cg *ConfigGenerator) appendShardingRelabelingWithAddressIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
@@ -2169,10 +2196,41 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithAddressIfMissing(relabeli
 			}
 		}
 	}
-	return appendShardingRelabelingWithAddress(relabelings, shards)
+	return cg.appendShardingRelabelingWithAddress(relabelings, shards)
 }
 
-func appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
+// generateInRangeShardPattern generates a regex pattern that matches shard IDs
+// that are in the valid range [0, shards-1].
+// This is used to drop all targets on inactive shards during scale-down operations.
+func generateInRangeShardPattern(shards int32) string {
+	// Enumerate all valid shard numbers from 0 to shards-1
+	var inRangeShards []string
+	for i := range shards {
+		inRangeShards = append(inRangeShards, strconv.Itoa(int(i)))
+	}
+
+	// Join with OR operator: e.g., for shards=2: "0|1"
+	return strings.Join(inRangeShards, "|")
+}
+
+func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
+	if cg.prometheusRetentionPolicies {
+		relabelings = append(relabelings,
+			// Capture the current SHARD environment variable value.
+			yaml.MapSlice{
+				{Key: "target_label", Value: "__tmp_current_shard"},
+				{Key: "replacement", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
+				{Key: "action", Value: "replace"},
+			},
+			// Keep only targets where the current shard is in the active range [0, shards-1].
+			// This ensures inactive shards (after scale-down with Retain policy) scrape nothing.
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{"__tmp_current_shard"}},
+				{Key: "regex", Value: generateInRangeShardPattern(shards)},
+				{Key: "action", Value: "keep"},
+			})
+	}
+
 	return append(relabelings,
 		// Store the "shardLabel" value into the __tmp_hash label unless the
 		// latter is already set.
@@ -5264,4 +5322,34 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendScrapeNativeHistograms(cfg)
 
 	return cfg
+}
+
+func (cg *ConfigGenerator) TopologyZoneForShard(shardIndex int32) string {
+	if !cg.prometheusTopologySharding {
+		return ""
+	}
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	if ss == nil ||
+		ss.Mode == nil ||
+		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		ss.Topology == nil ||
+		len(ss.Topology.Values) == 0 {
+		return ""
+	}
+	numZones := int32(len(ss.Topology.Values))
+	return ss.Topology.Values[shardIndex%numZones]
+}
+
+func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
+	cpf := cg.prom.GetCommonPrometheusFields()
+	zone := cg.TopologyZoneForShard(shardIndex)
+	if zone == "" {
+		return cpf.NodeSelector
+	}
+	result := maps.Clone(cpf.NodeSelector)
+	if result == nil {
+		result = make(map[string]string)
+	}
+	result[corev1.LabelTopologyZone] = zone
+	return result
 }

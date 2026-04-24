@@ -700,13 +700,14 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
-// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK;WorkloadIdentity
 type AuthenticationMethodType string
 
 const (
-	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
-	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
-	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+	AuthMethodTypeOAuth            AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity  AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK              AuthenticationMethodType = "SDK"
+	AuthMethodTypeWorkloadIdentity AuthenticationMethodType = "WorkloadIdentity"
 )
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.

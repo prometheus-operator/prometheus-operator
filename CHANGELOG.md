@@ -1,3 +1,11 @@
+## UNRELEASED
+
+* [FEATURE] Implement shard retention based on Prometheus data retention (it requires the `PrometheusShardRetentionPolicy` feature gate). #8478
+* [ENHANCEMENT] Add `cipherSuites` support for Thanos Sidecars and Rulers. #8524
+* [BUGFIX] Ensure that inactive shards don't scrape any targets when the sharding retention policy is `Retain`. #8513
+* [FEATURE] Configure node selector when sharding mode is `Topology` for `Prometheus` and `PrometheusAgent` custom resources (it requires the `PrometheusTopologySharding` feature gate). #8486
+* [FEATURE] Configure external label with topology information when sharding mode is `Topology` for `Prometheus` and `PrometheusAgent` custom resources (it requires the `PrometheusTopologySharding` feature gate). #8519
+
 ## 0.90.1 / 2026-03-25
 
 * [BUGFIX] Fix Probe ignoring HTTP client settings in scrape configuration. #8461

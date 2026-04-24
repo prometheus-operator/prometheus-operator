@@ -921,6 +921,23 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          threading: {
+                            description: 'threading defines the threading configuration for email receiver.\nIt requires Alertmanager >= v0.30.0.',
+                            properties: {
+                              threadByDate: {
+                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.\n(None means group by alert group key, no date).',
+                                enum: [
+                                  'Daily',
+                                  'None',
+                                ],
+                                type: 'string',
+                              },
+                            },
+                            required: [
+                              'threadByDate',
+                            ],
+                            type: 'object',
+                          },
                           tlsConfig: {
                             description: 'tlsConfig defines the TLS configuration for SMTP connections.\nThis includes settings for certificates, CA validation, and TLS protocol options.',
                             properties: {
@@ -10769,7 +10786,7 @@
                 type: 'array',
               },
               route: {
-                description: "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
+                description: "route defines the Alertmanager route definition for incoming alerts. It will be added to the\ngenerated Alertmanager configuration as a first-level route. The matching behavior of the\nroute depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                 properties: {
                   activeTimeIntervals: {
                     description: 'activeTimeIntervals is a list of TimeInterval names when this route should be active.',
@@ -10802,7 +10819,7 @@
                     type: 'string',
                   },
                   matchers: {
-                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object\nnamespace>` matcher.",
+                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,\nunless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                     items: {
                       description: "Matcher defines how to match on alert's labels.",
                       properties: {

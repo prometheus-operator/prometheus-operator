@@ -98,6 +98,7 @@ type Operator struct {
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+	topologyShardingEnabled      bool
 
 	finalizerSyncer *operator.FinalizerSyncer
 }
@@ -174,6 +175,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		topologyShardingEnabled:      c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
@@ -671,6 +673,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
 		opts = append(opts, prompkg.WithDaemonSet())
+	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
 	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)

@@ -881,12 +881,16 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
+		if authMethod == "WorkloadIdentity" && rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("[%d]: WorkloadIdentity authentication is only supported from Prometheus version 3.11.0", i)
+		}
+
 		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
 			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
 		}
 
 		// Since Prometheus uses default authentication method as "OAuth"
-		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
+		if authMethod == "ManagedIdentity" || authMethod == "SDK" || authMethod == "WorkloadIdentity" {
 			continue
 		}
 

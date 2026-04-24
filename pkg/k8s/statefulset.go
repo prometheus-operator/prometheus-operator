@@ -72,7 +72,7 @@ func CreateStatefulSetOrPatchLabels(ctx context.Context, ssetClient clientappsv1
 func ForceUpdateStatefulSet(ctx context.Context, ssetClient clientappsv1.StatefulSetInterface, sset *appsv1.StatefulSet, onDeleteFunc func(string)) error {
 	err := updateStatefulSet(ctx, ssetClient, sset)
 	if err == nil {
-		return err
+		return nil
 	}
 
 	// When trying to update immutable fields, the API server returns a 422 status code.
@@ -104,7 +104,7 @@ func updateStatefulSet(ctx context.Context, sstClient clientappsv1.StatefulSetIn
 
 		mergeMetadata(&sset.ObjectMeta, existingSset.ObjectMeta)
 		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-		mergeKubectlAnnotations(&existingSset.Spec.Template.ObjectMeta, sset.Spec.Template.ObjectMeta)
+		copyKubectlAnnotations(&sset.Spec.Template.ObjectMeta, existingSset.Spec.Template.Annotations)
 
 		_, err = sstClient.Update(ctx, sset, metav1.UpdateOptions{})
 		return err

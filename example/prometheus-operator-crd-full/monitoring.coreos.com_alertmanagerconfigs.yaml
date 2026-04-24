@@ -1154,6 +1154,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -13341,6 +13357,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -24111,9 +24143,9 @@ spec:
                 type: array
               route:
                 description: |-
-                  route defines the Alertmanager route definition for alerts matching the resource's
-                  namespace. If present, it will be added to the generated Alertmanager
-                  configuration as a first-level route.
+                  route defines the Alertmanager route definition for incoming alerts. It will be added to the
+                  generated Alertmanager configuration as a first-level route. The matching behavior of the
+                  route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
                 properties:
                   activeTimeIntervals:
                     description: activeTimeIntervals is a list of TimeInterval names
@@ -24154,8 +24186,8 @@ spec:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
                       level route, the operator removes any existing equality and regexp
-                      matcher on the `namespace` label and adds a `namespace: <object
-                      namespace>` matcher.
+                      matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+                      unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:

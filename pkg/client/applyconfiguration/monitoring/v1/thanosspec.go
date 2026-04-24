@@ -96,8 +96,8 @@ type ThanosSpecApplyConfiguration struct {
 	TracingConfigFile *string `json:"tracingConfigFile,omitempty"`
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
-	GRPCServerTLSConfig *TLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// logLevel for the Thanos sidecar.
 	LogLevel *string `json:"logLevel,omitempty"`
 	// logFormat for the Thanos sidecar.
@@ -249,7 +249,7 @@ func (b *ThanosSpecApplyConfiguration) WithTracingConfigFile(value string) *Than
 // WithGRPCServerTLSConfig sets the GRPCServerTLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the GRPCServerTLSConfig field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithGRPCServerTLSConfig(value *TLSConfigApplyConfiguration) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithGRPCServerTLSConfig(value *GRPCServerTLSConfigApplyConfiguration) *ThanosSpecApplyConfiguration {
 	b.GRPCServerTLSConfig = value
 	return b
 }

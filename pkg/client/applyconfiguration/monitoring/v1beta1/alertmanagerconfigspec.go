@@ -23,9 +23,9 @@ package v1beta1
 // By definition, the Alertmanager configuration only applies to alerts for which
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpecApplyConfiguration struct {
-	// route defines the Alertmanager route definition for alerts matching the resource's
-	// namespace. If present, it will be added to the generated Alertmanager
-	// configuration as a first-level route.
+	// route defines the Alertmanager route definition for incoming alerts. It will be added to the
+	// generated Alertmanager configuration as a first-level route. The matching behavior of the
+	// route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	Route *RouteApplyConfiguration `json:"route,omitempty"`
 	// receivers defines the list of receivers.
 	Receivers []ReceiverApplyConfiguration `json:"receivers,omitempty"`

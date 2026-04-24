@@ -3023,6 +3023,30 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "Azure SD config with workload identity unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+					},
+				}
+			},
+			promVersion: "3.10.0",
+			valid:       false,
+		},
+		{
+			scenario: "Azure SD config with workload identity",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AzureSDConfigs = []monitoringv1alpha1.AzureSDConfig{
+					{
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+					},
+				}
+			},
+			promVersion: "3.11.0",
+			valid:       true,
+		},
+		{
 			scenario: "OpenStack SD config with valid secret ref",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{

@@ -108,6 +108,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.GlobalWebexConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalWeChatConfig"):
 		return &monitoringv1.GlobalWeChatConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GRPCServerTLSConfig"):
+		return &monitoringv1.GRPCServerTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostAlias"):
 		return &monitoringv1.HostAliasApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HostPort"):
@@ -286,6 +288,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.EC2SDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1alpha1.EmailConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("EmailThreadingConfig"):
+		return &monitoringv1alpha1.EmailThreadingConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("EurekaSDConfig"):
 		return &monitoringv1alpha1.EurekaSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("FileSDConfig"):
@@ -404,6 +408,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.DiscordConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("EmailConfig"):
 		return &monitoringv1beta1.EmailConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("EmailThreadingConfig"):
+		return &monitoringv1beta1.EmailThreadingConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1beta1.HTTPConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("InhibitRule"):
