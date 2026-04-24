@@ -2399,7 +2399,7 @@
                     "type": "string"
                   },
                   "grpcServerTlsConfig": {
-                    "description": "grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads\nrecorded rule data.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.",
+                    "description": "grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads\nrecorded rule data.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.",
                     "properties": {
                       "ca": {
                         "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -2512,6 +2512,15 @@
                       "certFile": {
                         "description": "certFile defines the path to the client cert file in the Prometheus container for the targets.",
                         "type": "string"
+                      },
+                      "cipherSuites": {
+                        "description": "cipherSuites defines the list of supported cipher suites for TLS\nversions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       },
                       "insecureSkipVerify": {
                         "description": "insecureSkipVerify defines how to disable target certificate validation.",

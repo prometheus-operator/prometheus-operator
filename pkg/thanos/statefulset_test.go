@@ -724,14 +724,16 @@ func TestThanosGrpcArguments(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			Version:        ptr.To("0.37.0"),
 			QueryEndpoints: emptyQueryEndpoints,
-			GRPCServerTLSConfig: &monitoringv1.TLSConfig{
-				SafeTLSConfig: monitoringv1.SafeTLSConfig{
-					MinVersion: ptr.To(monitoringv1.TLSVersion13),
-				},
-				TLSFilesConfig: monitoringv1.TLSFilesConfig{
-					CAFile:   "/tmp/ca",
-					CertFile: "/tmp/cert",
-					KeyFile:  "/tmp/key",
+			GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+				TLSConfig: monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						MinVersion: ptr.To(monitoringv1.TLSVersion13),
+					},
+					TLSFilesConfig: monitoringv1.TLSFilesConfig{
+						CAFile:   "/tmp/ca",
+						CertFile: "/tmp/cert",
+						KeyFile:  "/tmp/key",
+					},
 				},
 			},
 		},
@@ -744,6 +746,54 @@ func TestThanosGrpcArguments(t *testing.T) {
 	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-key=/tmp/key"))
 	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-client-ca=/tmp/ca"))
 	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-min-version=1.3"))
+}
+
+func TestGRPCServerTLSCipherSuites(t *testing.T) {
+	ciphers := []string{"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		cipherSuites  []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with cipher suites",
+			version:       "0.41.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:        ptr.To(tc.version),
+					QueryEndpoints: emptyQueryEndpoints,
+					GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+						CipherSuites: tc.cipherSuites,
+					},
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(trArgs, expectedArg))
+		})
+	}
 }
 
 func TestPodTemplateConfig(t *testing.T) {

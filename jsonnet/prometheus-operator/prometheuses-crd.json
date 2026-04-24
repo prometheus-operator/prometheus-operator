@@ -7990,10 +7990,10 @@
                     "description": "shardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
                     "properties": {
                       "retain": {
-                        "description": "retain defines the config for retention when the retention policy is set to `Retain`.\nThis field is ineffective as of now.",
+                        "description": "retain defines the config for retention when the retention policy is set\nto `Retain`.\n\nIf not defined, the operator will use the retention duration configured\nfor the Prometheus data. If the resource uses size-based retention, the\nshard(s) are kept forever (unless manually deleted).",
                         "properties": {
                           "retentionPeriod": {
-                            "description": "retentionPeriod defines the retentionPeriod for shard retention policy.",
+                            "description": "retentionPeriod defines how long the scaled-down shard(s) need to be\nkept before being deleted.",
                             "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                             "type": "string"
                           }
@@ -8660,7 +8660,7 @@
                         "type": "boolean"
                       },
                       "grpcServerTlsConfig": {
-                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.",
+                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.",
                         "properties": {
                           "ca": {
                             "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -8773,6 +8773,15 @@
                           "certFile": {
                             "description": "certFile defines the path to the client cert file in the Prometheus container for the targets.",
                             "type": "string"
+                          },
+                          "cipherSuites": {
+                            "description": "cipherSuites defines the list of supported cipher suites for TLS\nversions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "x-kubernetes-list-type": "set"
                           },
                           "insecureSkipVerify": {
                             "description": "insecureSkipVerify defines how to disable target certificate validation.",

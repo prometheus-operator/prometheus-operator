@@ -3228,9 +3228,11 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			"image_urL":   &mc.ImageURL,
 		}
 		for fieldName, valuePtr := range fieldNameMapping {
-			msg := fmt.Sprintf("'%s'"+commonErrorMsg, fieldName)
-			logger.Warn(msg, "current_version", amVersion.String())
-			*valuePtr = ""
+			if *valuePtr != "" {
+				msg := fmt.Sprintf("'%s'"+commonErrorMsg, fieldName)
+				logger.Warn(msg, "current_version", amVersion.String())
+				*valuePtr = ""
+			}
 		}
 
 		if len(mc.Fields) > 0 {

@@ -42,6 +42,11 @@ const (
 	// NodeNameEnvVar is the name of the environment variable injected in the
 	// config-reloader container that contains the node name.
 	NodeNameEnvVar = "NODE_NAME"
+
+	// TopologyZoneEnvVar is the name of the environment variable injected into
+	// the config-reloader container that contains the topology zone assigned to
+	// the shard.
+	TopologyZoneEnvVar = "TOPOLOGY_ZONE"
 )
 
 // ConfigReloader contains the options to configure
@@ -61,6 +66,7 @@ type ConfigReloader struct {
 	runtimeInfoURL     url.URL
 	initContainer      bool
 	shard              *int32
+	zone               string
 	volumeMounts       []corev1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
@@ -191,6 +197,15 @@ func WithDaemonSetMode() ReloaderOption {
 	}
 }
 
+// Zone sets the topology zone for the config-reloader container.
+// When set to a non-empty value, a TOPOLOGY_ZONE environment variable with the
+// zone value is injected into the container.
+func Zone(zone string) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.zone = zone
+	}
+}
+
 // CreateConfigReloader returns the definition of the config-reloader
 // container.
 func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Container {
@@ -307,6 +322,13 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  ShardEnvVar,
 			Value: strconv.Itoa(int(*configReloader.shard)),
+		})
+	}
+
+	if configReloader.zone != "" {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  TopologyZoneEnvVar,
+			Value: configReloader.zone,
 		})
 	}
 

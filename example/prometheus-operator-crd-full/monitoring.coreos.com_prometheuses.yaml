@@ -9484,12 +9484,17 @@ spec:
                 properties:
                   retain:
                     description: |-
-                      retain defines the config for retention when the retention policy is set to `Retain`.
-                      This field is ineffective as of now.
+                      retain defines the config for retention when the retention policy is set
+                      to `Retain`.
+
+                      If not defined, the operator will use the retention duration configured
+                      for the Prometheus data. If the resource uses size-based retention, the
+                      shard(s) are kept forever (unless manually deleted).
                     properties:
                       retentionPeriod:
-                        description: retentionPeriod defines the retentionPeriod for
-                          shard retention policy.
+                        description: |-
+                          retentionPeriod defines how long the scaled-down shard(s) need to be
+                          kept before being deleted.
                         pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                         type: string
                     required:
@@ -10381,7 +10386,7 @@ spec:
                     description: |-
                       grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 
-                      Note: Currently only the `minVersion`, `caFile`, `certFile`, and `keyFile` fields are supported.
+                      Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
                     properties:
                       ca:
                         description: ca defines the Certificate authority used when
@@ -10499,6 +10504,22 @@ spec:
                         description: certFile defines the path to the client cert
                           file in the Prometheus container for the targets.
                         type: string
+                      cipherSuites:
+                        description: |-
+                          cipherSuites defines the list of supported cipher suites for TLS
+                          versions up to TLS 1.2.
+
+                          If not defined, the Go default cipher suites are used.
+                          Available cipher suites are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#pkg-constants
+
+                          It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+                          the Thanos version supports the provided values.
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
                       insecureSkipVerify:
                         description: insecureSkipVerify defines how to disable target
                           certificate validation.
