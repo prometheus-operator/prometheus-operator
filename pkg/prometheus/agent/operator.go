@@ -674,6 +674,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
 		opts = append(opts, prompkg.WithDaemonSet())
 	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
@@ -840,9 +843,6 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			return fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
-		if c.topologyShardingEnabled {
-			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
-		}
 
 		if notFound {
 			logger.Debug("creating statefulset")

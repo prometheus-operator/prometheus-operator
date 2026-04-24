@@ -261,6 +261,7 @@ func makeStatefulSetSpec(
 		}
 	}
 
+	topologyZone := cg.TopologyZoneForShard(shard)
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
 			p,
@@ -269,6 +270,7 @@ func makeStatefulSetSpec(
 			configReloaderVolumeMounts,
 			watchedDirectories,
 			operator.Shard(shard),
+			operator.Zone(topologyZone),
 		),
 	)
 
@@ -318,6 +320,7 @@ func makeStatefulSetSpec(
 			watchedDirectories,
 			operator.Shard(shard),
 			operator.WebConfigFile(configReloaderWebConfigFile),
+			operator.Zone(topologyZone),
 		),
 	}, additionalContainers...)
 
@@ -353,7 +356,7 @@ func makeStatefulSetSpec(
 				SecurityContext:               cpf.SecurityContext,
 				ServiceAccountName:            cpf.ServiceAccountName,
 				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
-				NodeSelector:                  cpf.NodeSelector,
+				NodeSelector:                  cg.NodeSelectorWithTopologyZone(shard),
 				SchedulerName:                 cpf.SchedulerName,
 				PriorityClassName:             cpf.PriorityClassName,
 				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),

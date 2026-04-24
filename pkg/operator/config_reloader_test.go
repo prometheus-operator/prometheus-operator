@@ -254,3 +254,30 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 		Value: strconv.Itoa(0),
 	})
 }
+
+func TestCreateConfigReloaderWithZone(t *testing.T) {
+	for _, tc := range []struct {
+		zone        string
+		expectEnVar bool
+	}{
+		{zone: "zone-a", expectEnVar: true},
+		{zone: "", expectEnVar: false},
+	} {
+		t.Run(tc.zone, func(t *testing.T) {
+			container := CreateConfigReloader(
+				"config-reloader",
+				ReloaderConfig(reloaderConfig),
+				Zone(tc.zone),
+			)
+
+			var found bool
+			for _, env := range container.Env {
+				if env.Name == TopologyZoneEnvVar {
+					assert.Equal(t, tc.zone, env.Value)
+					found = true
+				}
+			}
+			assert.Equal(t, tc.expectEnVar, found)
+		})
+	}
+}

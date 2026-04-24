@@ -3379,3 +3379,95 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigReloaderTopologyZoneEnvVar(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name             string
+		shardingStrategy *monitoringv1.ShardingStrategy
+		shardIndex       int32
+		expectedZone     string
+	}{
+		{
+			name: "shard 0 gets zone-a",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			shardIndex:   0,
+			expectedZone: "zone-a",
+		},
+		{
+			name: "shard 1 gets zone-b",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			shardIndex:   1,
+			expectedZone: "zone-b",
+		},
+		{
+			name:             "no topology mode means no zone env var",
+			shardingStrategy: nil,
+			shardIndex:       0,
+			expectedZone:     "",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+
+			logger := prompkg.NewLogger()
+			cg, err := prompkg.NewConfigGenerator(logger, &p, prompkg.WithPrometheusTopologySharding())
+			require.NoError(t, err)
+
+			sset, err := makeStatefulSet(
+				"test",
+				&p,
+				defaultTestConfig,
+				cg,
+				nil,
+				"",
+				tc.shardIndex,
+				&operator.ShardedSecret{},
+			)
+			require.NoError(t, err)
+
+			checkZoneEnvVar := func(containers []corev1.Container, containerName string) {
+				t.Helper()
+				for _, c := range containers {
+					if c.Name != containerName {
+						continue
+					}
+					var found bool
+					for _, env := range c.Env {
+						if env.Name == operator.TopologyZoneEnvVar {
+							assert.Equal(t, tc.expectedZone, env.Value)
+							found = true
+						}
+					}
+					if tc.expectedZone == "" {
+						assert.False(t, found, "unexpected %s env var in %s", operator.TopologyZoneEnvVar, containerName)
+					} else {
+						assert.True(t, found, "missing %s env var in %s", operator.TopologyZoneEnvVar, containerName)
+					}
+					return
+				}
+				t.Errorf("container %q not found", containerName)
+			}
+
+			checkZoneEnvVar(sset.Spec.Template.Spec.Containers, "config-reloader")
+			checkZoneEnvVar(sset.Spec.Template.Spec.InitContainers, "init-config-reloader")
+		})
+	}
+}
