@@ -9484,12 +9484,17 @@ spec:
                 properties:
                   retain:
                     description: |-
-                      retain defines the config for retention when the retention policy is set to `Retain`.
-                      This field is ineffective as of now.
+                      retain defines the config for retention when the retention policy is set
+                      to `Retain`.
+
+                      If not defined, the operator will use the retention duration configured
+                      for the Prometheus data. If the resource uses size-based retention, the
+                      shard(s) are kept forever (unless manually deleted).
                     properties:
                       retentionPeriod:
-                        description: retentionPeriod defines the retentionPeriod for
-                          shard retention policy.
+                        description: |-
+                          retentionPeriod defines how long the scaled-down shard(s) need to be
+                          kept before being deleted.
                         pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                         type: string
                     required:

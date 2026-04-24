@@ -1356,7 +1356,9 @@ var (
 )
 
 type RetainConfig struct {
-	// retentionPeriod defines the retentionPeriod for shard retention policy.
+	// retentionPeriod defines how long the scaled-down shard(s) need to be
+	// kept before being deleted.
+	//
 	// +required
 	RetentionPeriod Duration `json:"retentionPeriod"`
 }
@@ -1367,11 +1369,17 @@ type ShardRetentionPolicy struct {
 	// * `Retain`, the operator will keep the pods from the scaled-down shard(s), so the data can still be queried.
 	//
 	// If not defined, the operator assumes the `Delete` value.
+	//
 	// +kubebuilder:validation:Enum=Retain;Delete
 	// +optional
 	WhenScaled *WhenScaledRetentionType `json:"whenScaled,omitempty"`
-	// retain defines the config for retention when the retention policy is set to `Retain`.
-	// This field is ineffective as of now.
+	// retain defines the config for retention when the retention policy is set
+	// to `Retain`.
+	//
+	// If not defined, the operator will use the retention duration configured
+	// for the Prometheus data. If the resource uses size-based retention, the
+	// shard(s) are kept forever (unless manually deleted).
+	//
 	// +optional
 	Retain *RetainConfig `json:"retain,omitempty"`
 }
