@@ -1739,6 +1739,73 @@ func (in *MattermostConfig) DeepCopyInto(out *MattermostConfig) {
 		*out = new(MattermostPriorityConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Fallback != nil {
+		in, out := &in.Fallback, &out.Fallback
+		*out = new(string)
+		**out = **in
+	}
+	if in.Color != nil {
+		in, out := &in.Color, &out.Color
+		*out = new(string)
+		**out = **in
+	}
+	if in.Pretext != nil {
+		in, out := &in.Pretext, &out.Pretext
+		*out = new(string)
+		**out = **in
+	}
+	if in.AuthorName != nil {
+		in, out := &in.AuthorName, &out.AuthorName
+		*out = new(string)
+		**out = **in
+	}
+	if in.AuthorLink != nil {
+		in, out := &in.AuthorLink, &out.AuthorLink
+		*out = new(string)
+		**out = **in
+	}
+	if in.AuthorIcon != nil {
+		in, out := &in.AuthorIcon, &out.AuthorIcon
+		*out = new(string)
+		**out = **in
+	}
+	if in.Title != nil {
+		in, out := &in.Title, &out.Title
+		*out = new(string)
+		**out = **in
+	}
+	if in.TitleLink != nil {
+		in, out := &in.TitleLink, &out.TitleLink
+		*out = new(string)
+		**out = **in
+	}
+	if in.Fields != nil {
+		in, out := &in.Fields, &out.Fields
+		*out = make([]MattermostField, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.ThumbURL != nil {
+		in, out := &in.ThumbURL, &out.ThumbURL
+		*out = new(string)
+		**out = **in
+	}
+	if in.Footer != nil {
+		in, out := &in.Footer, &out.Footer
+		*out = new(string)
+		**out = **in
+	}
+	if in.FooterIcon != nil {
+		in, out := &in.FooterIcon, &out.FooterIcon
+		*out = new(string)
+		**out = **in
+	}
+	if in.ImageURL != nil {
+		in, out := &in.ImageURL, &out.ImageURL
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

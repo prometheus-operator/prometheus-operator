@@ -18,10 +18,29 @@ package v1beta1
 
 // MattermostPriorityConfigApplyConfiguration represents a declarative configuration of the MattermostPriorityConfig type for use
 // with apply.
+//
+// MattermostPriorityConfig configures the parameters related to the priority of the message.
 type MattermostPriorityConfigApplyConfiguration struct {
-	Priority                *string `json:"priority,omitempty"`
-	RequestedAck            *bool   `json:"requestedAck,omitempty"`
-	PersistentNotifications *bool   `json:"persistentNotifications,omitempty"`
+	// priority adds the priority label to the message.
+	// Possible values are `urgent`, `important` and `standard`.
+	Priority *string `json:"priority,omitempty"`
+	// requestedAck defines whether the message requires an acknowledgement from users.
+	//
+	// If set to true, the message will be marked as requiring an acknowledgment
+	// from the users by displaying a checkmark icon next to the message.
+	//
+	// Keep in mind that this requires the message priority to be set to `important` or `urgent`.
+	//
+	// Only for enterprise version of Mattermost.
+	RequestedAck *bool `json:"requestedAck,omitempty"`
+	// persistentNotifications defines whether the message notification will be persisted.
+	//
+	// This can be used only with the `urgent` messages.
+	// If set to true recipients will receive a persistent notification
+	// every five minutes until they acknowledge the message.
+	//
+	// Only for enterprise version of Mattermost.
+	PersistentNotifications *bool `json:"persistentNotifications,omitempty"`
 }
 
 // MattermostPriorityConfigApplyConfiguration constructs a declarative configuration of the MattermostPriorityConfig type for use with

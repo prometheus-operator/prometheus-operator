@@ -18,21 +18,52 @@ package v1beta1
 
 // MattermostAttachmentConfigApplyConfiguration represents a declarative configuration of the MattermostAttachmentConfig type for use
 // with apply.
+//
+// MattermostAttachmentConfig configures attachment parameters for the notifications.
+// For more information, please refer to the Mattermost document:
+// https://developers.mattermost.com/integrate/reference/message-attachments/
 type MattermostAttachmentConfigApplyConfiguration struct {
-	Fallback   *string                             `json:"fallback,omitempty"`
-	Color      *string                             `json:"color,omitempty"`
-	Pretext    *string                             `json:"pretext,omitempty"`
-	Text       *string                             `json:"text,omitempty"`
-	AuthorName *string                             `json:"authorName,omitempty"`
-	AuthorLink *string                             `json:"authorLink,omitempty"`
-	AuthorIcon *string                             `json:"authorIcon,omitempty"`
-	Title      *string                             `json:"title,omitempty"`
-	TitleLink  *string                             `json:"titleLink,omitempty"`
-	Fields     []MattermostFieldApplyConfiguration `json:"fields,omitempty"`
-	ThumbURL   *string                             `json:"thumbURL,omitempty"`
-	Footer     *string                             `json:"footer,omitempty"`
-	FooterIcon *string                             `json:"footerIcon,omitempty"`
-	ImageURL   *string                             `json:"imageURL,omitempty"`
+	// fallback defines a required plain-text summary of the attachment.
+	// This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).
+	Fallback *string `json:"fallback,omitempty"`
+	// color defines a hex color code that will be used as
+	// the left border color for the attachment.
+	// If not specified, it will default to match the channel sidebar header background color.
+	Color *string `json:"color,omitempty"`
+	// pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.
+	Pretext *string `json:"pretext,omitempty"`
+	// text defines the text to be included in the attachment.
+	// It can be formatted using Markdown.
+	// For long texts, the message is collapsed and a “Show More” link is added to expand the message. Supports @mentions.
+	Text *string `json:"text,omitempty"`
+	// authorName defines an optional name used to identify the author.
+	// It will be included in a small section at the top of the attachment.
+	AuthorName *string `json:"authorName,omitempty"`
+	// authorLink defines optional URL used to hyperlink the author_name.
+	// If no author_name is specified, this field does nothing.
+	AuthorLink *string `json:"authorLink,omitempty"`
+	// authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.
+	AuthorIcon *string `json:"authorIcon,omitempty"`
+	// title defines an optional title displayed below the author information in the attachment.
+	Title *string `json:"title,omitempty"`
+	// titleLink defines an optional URL used to hyperlink the title.
+	// If no title is specified, this field does nothing.
+	TitleLink *string `json:"titleLink,omitempty"`
+	// fields defines a list of fields that are sent with each notification
+	// to be displayed in a table format inside the attachment.
+	Fields []MattermostFieldApplyConfiguration `json:"fields,omitempty"`
+	// thumbURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+	// on the right side of an attachment.
+	ThumbURL *string `json:"thumbURL,omitempty"`
+	// footer defines an optional line of text that will be displayed at the bottom of the attachment.
+	Footer *string `json:"footer,omitempty"`
+	// footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+	// that is displayed as a 16x16 pixel thumbnail before the footer text.
+	FooterIcon *string `json:"footerIcon,omitempty"`
+	// imageURL defines an optional URL to an image file
+	// (GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.
+	ImageURL *string `json:"imageURL,omitempty"`
 }
 
 // MattermostAttachmentConfigApplyConfiguration constructs a declarative configuration of the MattermostAttachmentConfig type for use with

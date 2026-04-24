@@ -18,7 +18,12 @@ package v1beta1
 
 // MattermostPropsConfigApplyConfiguration represents a declarative configuration of the MattermostPropsConfig type for use
 // with apply.
+//
+// MattermostPropsConfig configures extra information to be sent to Mattermost.
 type MattermostPropsConfigApplyConfiguration struct {
+	// card allows for extra information (Markdown-formatted text)
+	// to be sent to Mattermost that will only be displayed in the RHS panel
+	// after a user selects the info icon displayed alongside the post.
 	Card *string `json:"card,omitempty"`
 }
 

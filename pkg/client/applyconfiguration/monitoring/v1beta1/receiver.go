@@ -56,6 +56,8 @@ type ReceiverApplyConfiguration struct {
 	// rocketchatConfigs defines the list of RocketChat configurations.
 	// It requires Alertmanager >= 0.28.0.
 	RocketChatConfigs []RocketChatConfigApplyConfiguration `json:"rocketchatConfigs,omitempty"`
+	// mattermostConfigs defines the list of Mattermost configurations.
+	// It requires Alertmanager >= 0.30.0.
 	MattermostConfigs []MattermostConfigApplyConfiguration `json:"mattermostConfigs,omitempty"`
 }
 

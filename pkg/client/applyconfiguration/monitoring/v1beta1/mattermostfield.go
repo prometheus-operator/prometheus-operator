@@ -18,10 +18,19 @@ package v1beta1
 
 // MattermostFieldApplyConfiguration represents a declarative configuration of the MattermostField type for use
 // with apply.
+//
+// MattermostField configures information to be displayed in a table format inside the attachment.
 type MattermostFieldApplyConfiguration struct {
+	// title defines the label or header text displayed for this field.
+	// This appears as bold text above the field value in the Slack message.
 	Title *string `json:"title,omitempty"`
+	// value defines the content or data displayed for this field.
+	// This appears below the title and can contain plain text or markdown.
 	Value *string `json:"value,omitempty"`
-	Short *bool   `json:"short,omitempty"`
+	// short determines whether this field can be displayed alongside other short fields.
+	// When true, Slack may display this field side by side with other short fields.
+	// When false or not specified, the field takes the full width of the message.
+	Short *bool `json:"short,omitempty"`
 }
 
 // MattermostFieldApplyConfiguration constructs a declarative configuration of the MattermostField type for use with

@@ -1221,8 +1221,73 @@
                             type: 'array',
                             'x-kubernetes-list-type': 'atomic',
                           },
+                          authorIcon: {
+                            description: "authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author's name.",
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          authorLink: {
+                            description: 'authorLink defines optional URL used to hyperlink the author_name.\nIf no author_name is specified, this field does nothing.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          authorName: {
+                            description: 'authorName defines an optional name used to identify the author.\nIt will be included in a small section at the top of the attachment.',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           channel: {
                             description: 'channel overrides the channel the message posts in.\nUse the channel’s name and not the display name, e.g. use town-square, not Town Square.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          color: {
+                            description: 'color defines a hex color code that will be used as\nthe left border color for the attachment.\nIf not specified, it will default to match the channel sidebar header background color.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          fallback: {
+                            description: 'fallback defines a required plain-text summary of the attachment.\nThis is used in notifications, and in clients that don’t support formatted text (e.g. IRC).',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          fields: {
+                            description: 'fields defines a list of fields that are sent with each notification\nto be displayed in a table format inside the attachment.',
+                            items: {
+                              description: 'MattermostField configures information to be displayed in a table format inside the attachment.',
+                              properties: {
+                                short: {
+                                  description: 'short determines whether this field can be displayed alongside other short fields.\nWhen true, Slack may display this field side by side with other short fields.\nWhen false or not specified, the field takes the full width of the message.',
+                                  type: 'boolean',
+                                },
+                                title: {
+                                  description: 'title defines the label or header text displayed for this field.\nThis appears as bold text above the field value in the Slack message.',
+                                  minLength: 1,
+                                  type: 'string',
+                                },
+                                value: {
+                                  description: 'value defines the content or data displayed for this field.\nThis appears below the title and can contain plain text or markdown.',
+                                  minLength: 1,
+                                  type: 'string',
+                                },
+                              },
+                              required: [
+                                'title',
+                                'value',
+                              ],
+                              type: 'object',
+                            },
+                            minItems: 1,
+                            type: 'array',
+                            'x-kubernetes-list-type': 'atomic',
+                          },
+                          footer: {
+                            description: 'footer defines an optional line of text that will be displayed at the bottom of the attachment.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          footerIcon: {
+                            description: 'footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)\nthat is displayed as a 16x16 pixel thumbnail before the footer text.',
                             minLength: 1,
                             type: 'string',
                           },
@@ -1874,6 +1939,16 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          imageURL: {
+                            description: 'imageURL defines an optional URL to an image file\n(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          pretext: {
+                            description: 'pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           priority: {
                             description: 'priority defines the priority parameters of the message.',
                             properties: {
@@ -1917,6 +1992,21 @@
                           },
                           text: {
                             description: 'text defines the markdown-formatted message to display in the post.\nTo trigger notifications, use @<username>, @channel, and @here like you would in other Mattermost messages.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          thumbURL: {
+                            description: 'thumbURL defines an optional URL to an image file\n(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail\non the right side of an attachment.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          title: {
+                            description: 'title defines an optional title displayed below the author information in the attachment.',
+                            minLength: 1,
+                            type: 'string',
+                          },
+                          titleLink: {
+                            description: 'titleLink defines an optional URL used to hyperlink the title.\nIf no title is specified, this field does nothing.',
                             minLength: 1,
                             type: 'string',
                           },
