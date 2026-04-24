@@ -96,6 +96,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.ExemplarsApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalJiraConfig"):
 		return &monitoringv1.GlobalJiraConfigApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("GlobalMattermostConfig"):
+		return &monitoringv1.GlobalMattermostConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalRocketChatConfig"):
 		return &monitoringv1.GlobalRocketChatConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("GlobalSMTPConfig"):
