@@ -1,5 +1,3 @@
-global:
-  slack_api_url: http://slack.example.com
 route:
   receiver: "null"
   routes:
@@ -11,5 +9,10 @@ receivers:
 - name: "null"
 - name: mynamespace/myamc/test
   slack_configs:
-  - update_message: true
+  - api_url: https://slack.com/api/chat.postMessage
+    http_config:
+      authorization:
+        type: bearer
+        credentials: abcdef123456
+    update_message: true
 templates: []
