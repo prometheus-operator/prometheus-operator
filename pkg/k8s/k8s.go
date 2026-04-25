@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"iter"
+	"maps"
 	"net/url"
 	"os"
 	"strings"
@@ -24,7 +26,7 @@ import (
 	promversion "github.com/prometheus/common/version"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +35,8 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/discovery"
 	clientappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	clientauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
@@ -127,7 +129,7 @@ type ResourceAttribute struct {
 // the requirements aren't met.
 func IsAllowed(
 	ctx context.Context,
-	ssarClient clientauthv1.SelfSubjectAccessReviewInterface,
+	ssarClient typedauthv1.SelfSubjectAccessReviewInterface,
 	namespaces []string,
 	attributes ...ResourceAttribute,
 ) (bool, []error, error) {
@@ -136,7 +138,7 @@ func IsAllowed(
 	}
 
 	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+		namespaces = []string{corev1.NamespaceAll}
 	}
 
 	var missingPermissions []error
@@ -182,7 +184,7 @@ func IsAllowed(
 					}
 
 					switch ns {
-					case v1.NamespaceAll:
+					case corev1.NamespaceAll:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for all namespaces", verb, resource, ra.Group)
 					default:
 						reason = fmt.Errorf("missing %q permission on resource %q (group: %q) for namespace %q", verb, resource, ra.Group, ns)
@@ -208,7 +210,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 
 		mergeMetadata(&dset.ObjectMeta, existingDset.ObjectMeta)
 		// Propagate annotations set by kubectl on spec.template.annotations. e.g performing a rolling restart.
-		mergeKubectlAnnotations(&existingDset.Spec.Template.ObjectMeta, dset.Spec.Template.ObjectMeta)
+		copyKubectlAnnotations(&dset.Spec.Template.ObjectMeta, existingDset.Spec.Template.Annotations)
 
 		_, err = dmsClient.Update(ctx, dset, metav1.UpdateOptions{})
 		return err
@@ -216,7 +218,7 @@ func UpdateDaemonSet(ctx context.Context, dmsClient clientappsv1.DaemonSetInterf
 }
 
 // CreateOrUpdateSecret merges metadata of existing Secret with new one and updates it.
-func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInterface, desired *v1.Secret) error {
+func CreateOrUpdateSecret(ctx context.Context, secretClient typedcorev1.SecretInterface, desired *corev1.Secret) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingSecret, err := secretClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -229,7 +231,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 			return err
 		}
 
-		mutated := existingSecret.DeepCopyObject().(*v1.Secret)
+		mutated := existingSecret.DeepCopyObject().(*corev1.Secret)
 		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 		if apiequality.Semantic.DeepEqual(existingSecret, desired) {
 			return nil
@@ -240,7 +242,7 @@ func CreateOrUpdateSecret(ctx context.Context, secretClient clientv1.SecretInter
 }
 
 // CreateOrUpdateConfigMap merges metadata of existing ConfigMap with new one and updates it.
-func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInterface, desired *v1.ConfigMap) error {
+func CreateOrUpdateConfigMap(ctx context.Context, cmClient typedcorev1.ConfigMapInterface, desired *corev1.ConfigMap) error {
 	// As stated in the RetryOnConflict's documentation, the returned error shouldn't be wrapped.
 	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		existingCM, err := cmClient.Get(ctx, desired.Name, metav1.GetOptions{})
@@ -253,7 +255,7 @@ func CreateOrUpdateConfigMap(ctx context.Context, cmClient clientv1.ConfigMapInt
 			return err
 		}
 
-		mutated := existingCM.DeepCopyObject().(*v1.ConfigMap)
+		mutated := existingCM.DeepCopyObject().(*corev1.ConfigMap)
 		mergeMetadata(&desired.ObjectMeta, mutated.ObjectMeta)
 		if apiequality.Semantic.DeepEqual(existingCM, desired) {
 			return nil
@@ -307,37 +309,60 @@ func AddTypeInformationToObject(obj runtime.Object) error {
 
 // mergeMetadata takes labels and annotations from the old resource and merges
 // them into the new resource. If a key is present in both resources, the new
-// resource wins. It also copies the ResourceVersion from the old resource to
-// the new resource to prevent update conflicts.
+// resource wins. All keys starting with the "operator.prometheus.io/" prefix
+// in the old resource are dropped before merging.
+// It also copies the ResourceVersion from the old resource to the new resource
+// to prevent update conflicts.
 func mergeMetadata(newObj *metav1.ObjectMeta, oldObj metav1.ObjectMeta) {
 	newObj.ResourceVersion = oldObj.ResourceVersion
 
-	newObj.SetLabels(mergeMaps(newObj.Labels, oldObj.Labels))
-	newObj.SetAnnotations(mergeMaps(newObj.Annotations, oldObj.Annotations))
+	newObj.SetLabels(mergeMap(maps.Collect(excludeOperatorPrefixSeq(oldObj.Labels)), maps.All(newObj.Labels)))
+	newObj.SetAnnotations(mergeMap(maps.Collect(excludeOperatorPrefixSeq(oldObj.Annotations)), maps.All(newObj.Annotations)))
 }
 
-func mergeMaps(newObj map[string]string, oldObj map[string]string) map[string]string {
-	return mergeMapsByPrefix(newObj, oldObj, "")
+// copyKubectlAnnotations copies the kubectl's annotations into the object
+// metadata.
+func copyKubectlAnnotations(objMeta *metav1.ObjectMeta, annotations map[string]string) {
+	objMeta.SetAnnotations(mergeMap(objMeta.Annotations, filterByPrefixSeq(annotations, "kubectl.kubernetes.io/")))
 }
 
-func mergeKubectlAnnotations(from *metav1.ObjectMeta, to metav1.ObjectMeta) {
-	from.SetAnnotations(mergeMapsByPrefix(from.Annotations, to.Annotations, "kubectl.kubernetes.io/"))
-}
-
-func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix string) map[string]string {
-	if to == nil {
-		to = make(map[string]string)
-	}
-
-	if from == nil {
-		from = make(map[string]string)
-	}
-
-	for k, v := range from {
-		if strings.HasPrefix(k, prefix) {
-			to[k] = v
+// excludeOperatorPrefixSeq returns a iterator over m excluding all keys
+// which start by the reserved operator's prefix.
+func excludeOperatorPrefixSeq(m map[string]string) iter.Seq2[string, string] {
+	return func(yield func(k, v string) bool) {
+		for k, v := range m {
+			if strings.HasPrefix(k, "operator.prometheus.io/") {
+				continue
+			}
+			if !yield(k, v) {
+				return
+			}
 		}
 	}
+}
 
-	return to
+// filterByPrefixSeq returns a iterator over m for all keys matching the
+// prefix.
+func filterByPrefixSeq(m map[string]string, prefix string) iter.Seq2[string, string] {
+	return func(yield func(k, v string) bool) {
+		for k, v := range m {
+			if strings.HasPrefix(k, prefix) {
+				if !yield(k, v) {
+					return
+				}
+			}
+		}
+	}
+}
+
+// mergeMap returns a clone of m for which key-value pairs from seq have been added.
+func mergeMap(m map[string]string, seq iter.Seq2[string, string]) map[string]string {
+	// Don't mutate the input maps.
+	m = maps.Clone(m)
+	if m == nil {
+		m = make(map[string]string)
+	}
+
+	maps.Insert(m, seq)
+	return m
 }

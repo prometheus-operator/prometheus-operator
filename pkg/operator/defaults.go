@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import (
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
-	DefaultAlertmanagerVersion = "v0.31.1"
+	DefaultAlertmanagerVersion = "v0.32.0"
 	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager.
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager.
@@ -99,6 +99,10 @@ var (
 		"v3.8.1",
 		"v3.9.0",
 		"v3.9.1",
+		"v3.10.0",
+		"v3.11.0",
+		"v3.11.1",
+		"v3.11.2",
 	}
 )
 

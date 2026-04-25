@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Run cSpell
-        uses: streetsidesoftware/cspell-action@d5d910b521ad408f1e7383c24609079f5a88bdca
+        uses: streetsidesoftware/cspell-action@de2a73e963e7443969755b648a1008f77033c5b2 # v8.4.0
         with:
           incremental_files_only: false
           files:  "**/*.{md,yaml,yml}"

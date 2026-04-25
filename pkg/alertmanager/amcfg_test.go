@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +81,12 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
 	pagerdutyURL := "example.pagerduty.com"
@@ -991,6 +997,80 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			golden: "valid_global_config_with_amVersion21.golden",
 		},
 		{
+			name:      "valid smtpConfig forceImplicitTLS",
+			amVersion: &version31,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					ForceImplicitTLS: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_smtpConfig_forceImplicitTLS.golden",
+		},
+		{
+			name:      "invalid smtpConfig forceImplicitTLS unsupported version",
+			amVersion: &version28,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				SMTPConfig: &monitoringv1.GlobalSMTPConfig{
+					ForceImplicitTLS: ptr.To(true),
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name:      "valid global config telegram api url",
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
@@ -1830,6 +1910,132 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:      "valid global config mattermost webhook url",
+			amVersion: &version32,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "webhook_url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost",
+						},
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			golden: "valid_global_config_mattermost_webhook_url.golden",
+		},
+		{
+			name:      "invalid global config mattermost webhook url",
+			amVersion: &version32,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "invalid_webhook_url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "invalid-secret",
+						},
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
+			name:      "invalid global config mattermost webhook url secret not found",
+			amVersion: &version32,
+			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
+				MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "webhook-url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "invalid-secret",
+						},
+					},
+				},
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "OnNamespace",
+			},
+			wantErr: true,
+		},
+		{
 			name:      "invalid httpConfig global config basicAuth and oauth2 are both specified",
 			amVersion: &version28,
 			globalConfig: &monitoringv1.AlertmanagerGlobalConfig{
@@ -1914,7 +2120,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 			tt.amVersion = &version
 		}
 
-		kclient := fake.NewSimpleClientset(
+		kclient := fake.NewClientset(
 			&corev1.ConfigMap{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "webhook-client-id",
@@ -2023,6 +2229,16 @@ Z8Ja2z8jw1xUKxfurno8wsAgFAQLuUZ0sTpwHBtwzFEdIeaAHBbNkkuGq7leIw/u
 			},
 			&corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mattermost",
+					Namespace: "mynamespace",
+				},
+				Data: map[string][]byte{
+					"webhook_url":         []byte("https://mattermost.example.com"),
+					"invalid_webhook_url": []byte("://mattermost.example.com"),
+				},
+			},
+			&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "secret",
 					Namespace: "mynamespace",
 				},
@@ -2079,13 +2295,16 @@ func TestGenerateConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
 	testCases := []testCase{
 		{
 			name:    "skeleton base, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2094,7 +2313,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global send_revolved, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					ResolveTimeout: ptr.To(model.Duration(time.Minute)),
@@ -2106,7 +2325,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to false, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPRequireTLS: ptr.To(false),
@@ -2118,7 +2337,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with global smtp_require_tls set to true, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPRequireTLS: ptr.To(true),
@@ -2130,7 +2349,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with inhibit rules, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				InhibitRules: []*inhibitRule{
 					{
@@ -2145,7 +2364,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "base with sub route and matchers, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2163,7 +2382,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with mute time intervals, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2215,7 +2434,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base with sns receiver, no CRs",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{Receiver: "sns-test"},
 				Receivers: []*receiver{
@@ -2245,7 +2464,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "skeleton base with active_time_intervals, no CRs",
 			amVersion: &version24,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2276,7 +2495,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, simple CR",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2300,7 +2519,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with sub-routes",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2347,7 +2566,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "multiple AlertmanagerConfig objects",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2406,7 +2625,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, simple CR with namespaceMatcher disabled",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2433,7 +2652,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base in same namespace as alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2460,7 +2679,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base in different namespace to alertmanager, simple CR with namespaceMatcher disabled for alertmanager namespace",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2487,7 +2706,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers not converted)",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2527,7 +2746,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only (deprecated matchers are converted)",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2564,7 +2783,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "skeleton base, CR with inhibition rules only",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route:     &route{Receiver: "null"},
 				Receivers: []*receiver{{Name: "null"}},
@@ -2602,7 +2821,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "base with subroute - deprecated matching pattern, simple CR",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -2628,7 +2847,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Pagerduty Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-pd-test-receiver",
@@ -2686,7 +2905,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Webhook Receiver and custom http config (oauth2)",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "webhook-client-id",
@@ -2759,7 +2978,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2804,7 +3023,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Team Responder",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2853,7 +3072,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-og-test-receiver",
@@ -2899,7 +3118,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with WeChat Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-wechat-test-receiver",
@@ -2945,7 +3164,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with Pushover Receiver",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-pushover-test-receiver",
@@ -3009,7 +3228,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-telegram-test-receiver",
@@ -3057,10 +3276,10 @@ func TestGenerateConfig(t *testing.T) {
 		{
 
 			name:    "CR with Slack Receiver and global Slack URL",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+					SlackAPIURL: &commoncfg.URL{URL: globalSlackAPIURL},
 				},
 				Route: &route{
 					Receiver: "null",
@@ -3105,10 +3324,10 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Slack Receiver with URL fields",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAPIURL: &config.URL{URL: globalSlackAPIURL},
+					SlackAPIURL: &commoncfg.URL{URL: globalSlackAPIURL},
 				},
 				Route: &route{
 					Receiver: "null",
@@ -3142,7 +3361,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Slack Receiver and global Slack URL File",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3189,8 +3408,42 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_and_global_Slack_URL_File.golden",
 		},
 		{
+			name:      "CR with Slack Receiver with MessageText",
+			kclient:   fake.NewClientset(),
+			amVersion: &semver.Version{Major: 0, Minor: 31},
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SlackAPIURL: &commoncfg.URL{URL: globalSlackAPIURL},
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								MessageText: ptr.To("test message text"),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_MessageText.golden",
+		},
+		{
 			name: "CR with SNS Receiver with Access and Key",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-sns-test",
@@ -3248,7 +3501,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name: "CR with SNS Receiver with roleARN",
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "am-sns-test",
@@ -3295,7 +3548,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Mute Time Intervals",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3375,7 +3628,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:    "CR with Active Time Intervals",
-			kclient: fake.NewSimpleClientset(),
+			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAPIURLFile: "/etc/test",
@@ -3457,7 +3710,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver",
 			amVersion: &version26,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3509,7 +3762,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver with Summary",
 			amVersion: &version27,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3562,7 +3815,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeams Receiver with Partial Conf",
 			amVersion: &version26,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3612,7 +3865,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeamsV2 Receiver",
 			amVersion: &version28,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3664,7 +3917,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with MSTeamsV2 Receiver with Partial Conf",
 			amVersion: &version28,
-			kclient: fake.NewSimpleClientset(
+			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "ms-teams-secret",
@@ -3714,7 +3967,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3751,7 +4004,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing SmartHost Field",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3787,7 +4040,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing SMTP From Field",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3823,7 +4076,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Global: &globalConfig{
 					SMTPSmarthost: config.HostPort{
@@ -3863,9 +4116,87 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_EmailConfig_Receiver_Global_Defaults_Conf.golden",
 		},
 		{
+			name:      "CR with EmailConfig with ForceImplicitTLS",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost:        ptr.To("example.com:25"),
+										From:             ptr.To("admin@example.com"),
+										To:               ptr.To("customers@example.com"),
+										ForceImplicitTLS: ptr.To(true),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_ForceImplicitTLS.golden",
+		},
+		{
+			name:      "CR with EmailConfig with Threading",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost: ptr.To("example.com:25"),
+										From:      ptr.To("admin@example.com"),
+										To:        ptr.To("customers@example.com"),
+										Threading: &monitoringv1alpha1.EmailThreadingConfig{
+											ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_with_Threading.golden",
+		},
+		{
 			name:      "CR with WebhookConfig with Timeout Setup",
 			amVersion: &version28,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -3901,7 +4232,7 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			name:      "CR with WebhookConfig with Timeout Setup Older Version",
 			amVersion: &version26,
-			kclient:   fake.NewSimpleClientset(),
+			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
 				Route: &route{
 					Receiver: "null",
@@ -4015,20 +4346,38 @@ func TestSanitizeConfig(t *testing.T) {
 	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionMattermostEmptyWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostEmptyWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
+
+	versionMattermostConfigTopLevelAttachmentAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostConfigTopLevelAttachmentNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
 	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
+	versionSlackUpdateMessageAllowed := semver.Version{Major: 0, Minor: 32}
+	versionSlackUpdateMessageNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	versionJiraAllowed := semver.Version{Major: 0, Minor: 28}
 	versionJiraNotAllowed := semver.Version{Major: 0, Minor: 27}
-	jiraURL := config.URL{}
+	jiraURL := commoncfg.URL{}
 	jiraGlobalURL, _ := jiraURL.Parse("http://example.com")
 	jiraURL.URL = jiraGlobalURL
 
 	versionGlobalTelegramBotTokenAllowed := semver.Version{Major: 0, Minor: 31}
 	versionGlobalTelegramBotTokenNotAllowed := semver.Version{Major: 0, Minor: 30}
+
+	versionGlobalSMTPAuthSecretFileAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalSMTPAuthSecretFileNotAllowed := semver.Version{Major: 0, Minor: 30}
+
+	versionGlobalSMTPForceImplicitTLSAllowed := semver.Version{Major: 0, Minor: 31}
+	versionGlobalSMTPForceImplicitTLSNotAllowed := semver.Version{Major: 0, Minor: 30}
+
+	versionGlobalMattermostWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionGlobalMattermostWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
 
 	for _, tc := range []struct {
 		name           string
@@ -4064,11 +4413,62 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_smtp_tls_config_is_added_for_supported_versions.golden",
 		},
 		{
+			name:           "Test smtp_auth_secret_file is added for supported versions",
+			againstVersion: versionGlobalSMTPAuthSecretFileAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthSecretFile: "/smtp/auth/secret/file",
+				},
+			},
+			golden: "test_smtp_auth_secret_file_is_added_for_supported_versions.golden",
+		},
+		{
+			name:           "Test smtp_auth_secret_file is dropped for unsupported versions",
+			againstVersion: versionGlobalSMTPAuthSecretFileNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthSecretFile: "/smtp/auth/secret/file",
+				},
+			},
+			golden: "test_smtp_auth_secret_file_is_dropped_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test smtp_auth_secret takes precedence over smtp_auth_secret_file",
+			againstVersion: versionGlobalSMTPAuthSecretFileAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPAuthSecret:     "authsecret12345",
+					SMTPAuthSecretFile: "/smtp/auth/secret/file",
+				},
+			},
+			golden: "test_smtp_auth_secret_takes_precedence_over_smtp_auth_secret_file.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls added for supported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
+				},
+			},
+			golden: "test_smtp_force_implicit_tls_added_for_supported_version.golden",
+		},
+		{
+			name:           "Test smtp_force_implicit_tls dropped for unsupported version",
+			againstVersion: versionGlobalSMTPForceImplicitTLSNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPForceImplicitTLS: ptr.To(true),
+				},
+			},
+			golden: "test_smtp_force_implicit_tls_dropped_for_unsupported_version.golden",
+		},
+		{
 			name:           "Test slack_api_url takes precedence in global config",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAPIURL: &config.URL{
+					SlackAPIURL: &commoncfg.URL{
 						URL: &url.URL{
 							Host: "www.test.com",
 						}},
@@ -4109,6 +4509,66 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_wechat_api_secret_takes_precedence_over_wechat_api_secret_file_in_global_config.golden",
 		},
 		{
+			name:           "Test mattermost_webhook_url supported version",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+			},
+			golden: "test_mattermost_webhook_url_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url unsupported version",
+			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+			},
+			golden: "test_mattermost_webhook_url_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url_file supported version",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
+				},
+			},
+			golden: "test_mattermost_webhook_url_file_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url_file unsupported version",
+			againstVersion: versionGlobalMattermostWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
+				},
+			},
+			golden: "test_mattermost_webhook_url_file_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost_webhook_url takes precedence over mattermost_webhook_url_file in global config",
+			againstVersion: versionGlobalMattermostWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+					MattermostWebhookURLFile: "/mattermost/webhook/url",
+				},
+			},
+			golden: "test_mattermost_webhook_url_takes_precedence_over_mattermost_webhook_url_file_in_global_config.golden",
+		},
+		{
 			name:           "Test slack config happy path",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
@@ -4126,6 +4586,38 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_config_happy_path.golden",
+		},
+		{
+			name:           "Test slack update_message supported version",
+			againstVersion: versionSlackUpdateMessageAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_update_message_supported_version.golden",
+		},
+		{
+			name:           "Test slack update_message unsupported version",
+			againstVersion: versionSlackUpdateMessageNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_update_message_unsupported_version.golden",
 		},
 		{
 			name:           "Test inhibit rules error with unsupported syntax",
@@ -4772,6 +5264,144 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
 		},
 		{
+			name:           "Test mattermost empty webhook_url supported version",
+			againstVersion: versionMattermostEmptyWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_empty_webhook_url_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost empty webhook_url unsupported version",
+			againstVersion: versionMattermostEmptyWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test text is optional in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermos_text_is_optional.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config fields in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_unsupported_version.golden",
+		},
+		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
 			againstVersion: versionTimeoutConfigNotAllowed,
 
@@ -4810,7 +5440,7 @@ func TestSanitizeConfig(t *testing.T) {
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAppToken: "xoxb-token",
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4826,7 +5456,7 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionSlackAppConfigNotAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4843,7 +5473,7 @@ func TestSanitizeConfig(t *testing.T) {
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
 					SlackAppToken: "xoxb-token",
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4861,7 +5491,7 @@ func TestSanitizeConfig(t *testing.T) {
 				Global: &globalConfig{
 					SlackAppToken:     "xoxb-token",
 					SlackAppTokenFile: "/var/secrets/token",
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4877,7 +5507,7 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionSlackAppConfigAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAPIURL: &config.URL{
+					SlackAPIURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "hooks.slack.com",
@@ -4885,7 +5515,7 @@ func TestSanitizeConfig(t *testing.T) {
 						},
 					},
 					SlackAppToken: "xoxb-token",
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4901,7 +5531,7 @@ func TestSanitizeConfig(t *testing.T) {
 			againstVersion: versionSlackAppConfigAllowed,
 			in: &alertmanagerConfig{
 				Global: &globalConfig{
-					SlackAPIURL: &config.URL{
+					SlackAPIURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -4909,7 +5539,7 @@ func TestSanitizeConfig(t *testing.T) {
 						},
 					},
 					SlackAppToken: "xoxb-token",
-					SlackAppURL: &config.URL{
+					SlackAppURL: &commoncfg.URL{
 						URL: &url.URL{
 							Scheme: "https",
 							Host:   "slack.com",
@@ -5667,6 +6297,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 		name           string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
+		expectErr      bool
 		golden         string
 	}{
 		{
@@ -5691,7 +6322,7 @@ func TestSanitizeEmailConfig(t *testing.T) {
 			golden: "test_smtp_auth_password_file_is_dropped_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test smtp_auth_password takes precedence in email config",
+			name:           "Test auth_password takes precedence in email config",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -5705,10 +6336,10 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_smtp_auth_password_takes_precedence_in_email_config.golden",
+			golden: "test_auth_password_takes_precedence_in_email_config.golden",
 		},
 		{
-			name:           "Test smtp_auth_password_file is dropped in email config for unsupported versions",
+			name:           "Test auth_password_file is dropped in email config for unsupported versions",
 			againstVersion: semver.Version{Major: 0, Minor: 24},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
@@ -5721,43 +6352,169 @@ func TestSanitizeEmailConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "test_smtp_auth_password_file_is_dropped_in_email_config_for_unsupported_versions.golden",
+			golden: "test_auth_password_file_is_dropped_in_email_config_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test implicit_tls is dropped in email config for unsupported versions",
+			name:           "Test auth_password_file is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthPasswordFile: "bar",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_password_file_is_added_in_email_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test force_implicit_tls is dropped in email config for unsupported versions",
 			againstVersion: semver.Version{Major: 0, Minor: 30},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						EmailConfigs: []*emailConfig{
 							{
-								ImplicitTLS: ptr.To(true),
+								ForceImplicitTLS: ptr.To(true),
 							},
 						},
 					},
 				},
 			},
-			golden: "test_implicit_tls_is_dropped_in_email_config_for_unsupported_versions.golden",
+			golden: "test_force_implicit_tls_is_dropped_in_email_config_for_unsupported_versions.golden",
 		},
 		{
-			name:           "Test implicit_tls is added in email config for supported version",
+			name:           "Test force_implicit_tls is added in email config for supported version",
 			againstVersion: semver.Version{Major: 0, Minor: 31},
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
 						EmailConfigs: []*emailConfig{
 							{
-								ImplicitTLS: ptr.To(true),
+								ForceImplicitTLS: ptr.To(true),
 							},
 						},
 					},
 				},
 			},
-			golden: "test_implicit_tls_is_added_in_email_config_for_supported_versions.golden",
+			golden: "test_force_implicit_tls_is_added_in_email_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test auth_secret_file is added in email config for supported version",
+			againstVersion: semver.Version{Major: 0, Minor: 31},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthSecretFile: "/auth/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_secret_file_is_added_in_email_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test auth_secret_file is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthSecretFile: "/auth/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_secret_file_is_dropped_in_email_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test auth_secret_file is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 31},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								AuthSecret:     "emailconfigauthsecret123",
+								AuthSecretFile: "/auth/secret/file",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_auth_secret_takes_higher_precedence.golden",
+		},
+		{
+			name:           "Test threading is dropped in email config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "daily",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_threading_is_dropped_in_email_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test threading is added in email config for supported version",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "daily",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_threading_is_added_in_email_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test email config empty thread_by_date",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						EmailConfigs: []*emailConfig{
+							{
+								Threading: &emailThreadingConfig{
+									Enabled:      ptr.To(true),
+									ThreadByDate: "",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
@@ -6022,6 +6779,54 @@ func TestSanitizeWebhookConfig(t *testing.T) {
 			},
 			golden: "test_webhook_valid_template_url_passes.golden",
 		},
+		{
+			name:           "Test payload supported version",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+								Payload: map[string]any{
+									"foo":  "bar",
+									"foo1": []string{"bar2", "bar3"},
+									"foo2": map[string]any{
+										"foo21": "bar21",
+										"foo22": "bar22",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_payload_supported_version.golden",
+		},
+		{
+			name:           "Test payload unsupported version",
+			againstVersion: semver.Version{Major: 0, Minor: 31},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						WebhookConfigs: []*webhookConfig{
+							{
+								URL: "http://example.com/webhook",
+								Payload: map[string]any{
+									"foo":  "bar",
+									"foo1": []string{"bar2", "bar3"},
+									"foo2": map[string]any{
+										"foo21": "bar21",
+										"foo22": "bar22",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_payload_unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
@@ -6218,6 +7023,7 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
 			name:           "Test routing_key takes precedence in pagerduty config",
@@ -6317,9 +7123,76 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			},
 			golden: "test_source_is_added_in_pagerduty_config_for_supported_versions.golden",
 		},
+		{
+			name:           "Test nested field in description",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_nested_field_in_description.golden",
+		},
+		{
+			name:           "Test string field in description for version not support nested field",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": "value",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_string_field_in_description_for_version_not_support_nested_field.golden",
+		},
+		{
+			name:           "Test nested field in description result in error for unsupported version",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Details: map[string]any{
+									"foo": "bar",
+									"key": map[string]string{
+										"subkey1": "subvalue1",
+										"subkey2": "subvalue2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 
 			amPagerDutyCfg, err := yaml.Marshal(tc.in)
@@ -7282,6 +8155,9 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionTelegramExampleAllowed := semver.Version{Major: 0, Minor: 26}
 
+	versionWithGlobalTelegramBotToken := semver.Version{Major: 0, Minor: 31}
+	versionWithoutGlobalTelegramBotToken := semver.Version{Major: 0, Minor: 30}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -7324,6 +8200,40 @@ func TestSanitizeTelegramConfig(t *testing.T) {
 				},
 			},
 			golden: "telegram_valid_url_passes.golden",
+		},
+		{
+			name:           "telegram no bot token specified",
+			againstVersion: versionWithoutGlobalTelegramBotToken,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl: "http://example.com",
+								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "telegram no bot token specified with global bot token version",
+			againstVersion: versionWithGlobalTelegramBotToken,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						TelegramConfigs: []*telegramConfig{
+							{
+								APIUrl: "http://example.com",
+								ChatID: 12345,
+							},
+						},
+					},
+				},
+			},
+			golden: "telegram_no_bot_token_specified_with_global_bot_token_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -7663,7 +8573,8 @@ func TestSanitizeWeChatConfig(t *testing.T) {
 
 func TestSanitizeOpsGenieConfig(t *testing.T) {
 	logger := newNopLogger(t)
-	versionOpsGenieAllowed := semver.Version{Major: 0, Minor: 25}
+	version23 := semver.Version{Major: 0, Minor: 23}
+	version24 := semver.Version{Major: 0, Minor: 24}
 
 	for _, tc := range []struct {
 		name           string
@@ -7674,7 +8585,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 	}{
 		{
 			name:           "opsgenie invalid api_url returns error",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -7691,7 +8602,7 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 		},
 		{
 			name:           "opsgenie valid api_url passes validation",
-			againstVersion: versionOpsGenieAllowed,
+			againstVersion: version24,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -7705,6 +8616,98 @@ func TestSanitizeOpsGenieConfig(t *testing.T) {
 				},
 			},
 			golden: "opsgenie_valid_url_passes.golden",
+		},
+		{
+			name:           "opsgenie api_key takes precedence over api_key_file",
+			againstVersion: version24,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKey:     "test-key",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_api_key_takes_precedence_over_api_key_file.golden",
+		},
+		{
+			name:           "opsgenie api_key_file unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:     "https://api.opsgenie.com/v2/alerts",
+								APIKeyFile: "/opsgenie/api/key",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_api_key_file_unsupported_version.golden",
+		},
+		{
+			name:           "opsgenie responder type teams unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL: "https://api.opsgenie.com/v2/alerts",
+								Responders: []opsgenieResponder{
+									{
+										Type: "teams",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "opsgenie actions supported version",
+			againstVersion: version24,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:  "https://api.opsgenie.com/v2/alerts",
+								APIKey:  "test-key",
+								Actions: "close",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_actions_supported_version.golden",
+		},
+		{
+			name:           "opsgenie actions unsupported version",
+			againstVersion: version23,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						OpsgenieConfigs: []*opsgenieConfig{
+							{
+								APIURL:  "https://api.opsgenie.com/v2/alerts",
+								APIKey:  "test-key",
+								Actions: "close",
+							},
+						},
+					},
+				},
+			},
+			golden: "opsgenie_actions_unsupported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

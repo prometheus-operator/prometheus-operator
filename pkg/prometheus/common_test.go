@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/ptr"
@@ -142,7 +143,7 @@ func TestBuildCommonPrometheusArgsWithRemoteWriteMessageV2(t *testing.T) {
 						Version: tc.version,
 						RemoteWrite: []monitoringv1.RemoteWriteSpec{
 							{
-								URL:            "http://example.com",
+								URL:            monitoringv1.URL("http://example.com"),
 								MessageVersion: tc.messageVersion,
 							},
 						},
@@ -287,6 +288,148 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 	}
 }
 
+func TestNodeSelectorWithTopologyZone(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name                       string
+		nodeSelector               map[string]string
+		shardingStrategy           *monitoringv1.ShardingStrategy
+		prometheusTopologySharding bool
+		shardIndex                 int32
+		expectedSelector           map[string]string
+	}{
+		{
+			name:                       "prometheusTopologySharding=false returns original selector",
+			nodeSelector:               map[string]string{"foo": "bar"},
+			prometheusTopologySharding: false,
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			expectedSelector: map[string]string{"foo": "bar"},
+		},
+		{
+			name:                       "shardingStrategy=nil returns original selector",
+			nodeSelector:               map[string]string{"foo": "bar"},
+			prometheusTopologySharding: true,
+			shardingStrategy:           nil,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			// This case isn't possible in practice because the API enforces
+			// the "topology can only be defined when strategy = topology
+			// sharding" invariant.
+			name:         "Topology mode with no values returns original selector",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(monitoringv1.AddressShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			// This case isn't possible in practice because the API enforces
+			// the "shards >= number of zones" invariant.
+			name:         "Topology mode with no values returns original selector",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			prometheusTopologySharding: true,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			name:         "Topology mode shard #0 with 2 zones assigns first zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode shard #1 with 2 zones assigns second zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 1,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-b"},
+		},
+		{
+			name:         "Topology mode shard #2 with 2 zones assigns first zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 2,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode shard #3 with 2 zones assigns second zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 3,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-b"},
+		},
+		{
+			name:         "Topology mode overrides existing topology.kubernetes.io/zone",
+			nodeSelector: map[string]string{"topology.kubernetes.io/zone": "will-be-replaced"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode with nil nodeSelector creates new map",
+			nodeSelector: nil,
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{corev1.LabelTopologyZone: "zone-a"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						NodeSelector:     tc.nodeSelector,
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+			opts := []ConfigGeneratorOption{}
+			if tc.prometheusTopologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg, err := NewConfigGenerator(nil, p, opts...)
+			require.NoError(t, err)
+			got := cg.NodeSelectorWithTopologyZone(tc.shardIndex)
+			require.Equal(t, tc.expectedSelector, got)
+		})
+	}
+}
+
 func TestLabelSelectorForStatefulSets(t *testing.T) {
 	for _, tc := range []struct {
 		mode string
@@ -307,6 +450,92 @@ func TestLabelSelectorForStatefulSets(t *testing.T) {
 
 			_, err := labels.Parse(ls)
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestTopologyZoneForShard(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+	addressMode := monitoringv1.AddressShardingStrategyMode
+
+	for _, tc := range []struct {
+		name                       string
+		shardingStrategy           *monitoringv1.ShardingStrategy
+		prometheusTopologySharding bool
+		shardIndex                 int32
+		expectedZone               string
+	}{
+		{
+			name:                       "prometheusTopologySharding=false returns empty",
+			prometheusTopologySharding: false,
+			expectedZone:               "",
+		},
+		{
+			name: "address mode returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(addressMode),
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "",
+		},
+		{
+			name: "topology mode with no values returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "",
+		},
+		{
+			name: "shard 0 gets first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "zone-a",
+		},
+		{
+			name: "shard 1 gets second zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 1,
+			expectedZone:               "zone-b",
+		},
+		{
+			name: "shard 2 wraps around to first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 2,
+			expectedZone:               "zone-a",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+			opts := []ConfigGeneratorOption{}
+			if tc.prometheusTopologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg, err := NewConfigGenerator(nil, p, opts...)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedZone, cg.TopologyZoneForShard(tc.shardIndex))
 		})
 	}
 }

@@ -19,6 +19,9 @@ package v1
 // RulesApplyConfiguration represents a declarative configuration of the Rules type for use
 // with apply.
 type RulesApplyConfiguration struct {
+	// alert defines the parameters of the Prometheus rules' engine.
+	//
+	// Any update to these parameters trigger a restart of the pods.
 	Alert *RulesAlertApplyConfiguration `json:"alert,omitempty"`
 }
 

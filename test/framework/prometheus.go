@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -122,8 +122,8 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 	}
 
 	var (
-		secrets    = map[string]*v1.Secret{}
-		configMaps = map[string]*v1.ConfigMap{}
+		secrets    = map[string]*corev1.Secret{}
+		configMaps = map[string]*corev1.ConfigMap{}
 	)
 
 	secrets[ScrapingTLSSecret] = MakeSecretWithCert(namespace, ScrapingTLSSecret, []string{PrivateKey, CertKey, CAKey}, [][]byte{scrapingKey, scrapingCert, serverCert})
@@ -203,9 +203,9 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 					},
 				},
 				ServiceAccountName: "prometheus",
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("400Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("400Mi"),
 					},
 				},
 			},
@@ -221,7 +221,7 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 // AddRemoteWriteWithTLSToPrometheus configures Prometheus to send samples to the remote-write endpoint.
 func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *monitoringv1.Prometheus, url string) {
 	p.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{{
-		URL:            url,
+		URL:            monitoringv1.URL(url),
 		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
 			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
@@ -239,8 +239,8 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 	}
 
 	if prwtc.ClientKey.SecretName != "" && prwtc.ClientCert.ResourceName != "" {
-		p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		p.Spec.RemoteWrite[0].TLSConfig.KeySecret = &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: prwtc.ClientKey.SecretName,
 			},
 			Key: PrivateKey,
@@ -248,15 +248,15 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		p.Spec.RemoteWrite[0].TLSConfig.Cert = monitoringv1.SecretOrConfigMap{}
 
 		if prwtc.ClientCert.ResourceType == SECRET {
-			p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.Secret = &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.ClientCert.ResourceName,
 				},
 				Key: CertKey,
 			}
 		} else { //certType == CONFIGMAP
-			p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &v1.ConfigMapKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.Cert.ConfigMap = &corev1.ConfigMapKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.ClientCert.ResourceName,
 				},
 				Key: CertKey,
@@ -269,15 +269,15 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		p.Spec.RemoteWrite[0].TLSConfig.CA = monitoringv1.SecretOrConfigMap{}
 		switch prwtc.CA.ResourceType {
 		case SECRET:
-			p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.CA.Secret = &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.CA.ResourceName,
 				},
 				Key: CAKey,
 			}
 		case CONFIGMAP:
-			p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &v1.ConfigMapKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			p.Spec.RemoteWrite[0].TLSConfig.CA.ConfigMap = &corev1.ConfigMapKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: prwtc.CA.ResourceName,
 				},
 				Key: CAKey,
@@ -295,23 +295,23 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
 				ClientCA: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: ServerCASecret,
 						},
 						Key: CAKey,
 					},
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: ServerTLSSecret,
 						},
 						Key: CertKey,
 					},
 				},
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: ServerTLSSecret,
 					},
 					Key: PrivateKey,
@@ -383,17 +383,17 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 	}
 }
 
-func (f *Framework) MakePrometheusService(name, group string, serviceType v1.ServiceType) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakePrometheusService(name, group string, serviceType corev1.ServiceType) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("prometheus-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Type: serviceType,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9090,
@@ -408,13 +408,13 @@ func (f *Framework) MakePrometheusService(name, group string, serviceType v1.Ser
 	return service
 }
 
-func (f *Framework) MakeThanosQuerierService(name string) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakeThanosQuerierService(name string) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       10902,
@@ -456,6 +456,7 @@ func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Contex
 	)
 }
 
+// ScalePrometheusAndWaitUntilReady scales the number of shards.
 func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
 	promClient := f.MonClientV1.Prometheuses(ns)
 	scale, err := promClient.GetScale(ctx, name, metav1.GetOptions{})
@@ -468,6 +469,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to scale Prometheus %s/%s: %w", ns, name, err)
 	}
+
 	p, err := promClient.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Prometheus %s/%s: %w", ns, name, err)
@@ -633,21 +635,35 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 // WaitForHealthyTargets waits for a number of targets to be configured and
 // healthy.
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
+	return f.WaitForHealthyTargetsWithCondition(
+		ctx,
+		ns,
+		svcName,
+		func(targets []*Target) error {
+			if len(targets) != amount {
+				return fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
+			}
+
+			return nil
+		},
+	)
+}
+
+// WaitForHealthyTargetsWithCondition queries healthy targets from the
+// Prometheus API endpoint and waits for the condition function to return no
+// error.
+func (f *Framework) WaitForHealthyTargetsWithCondition(ctx context.Context, ns, svcName string, cond func([]*Target) error) error {
 	var loopErr error
 
-	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(ctx context.Context) (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(_ context.Context) (bool, error) {
 		var targets []*Target
-		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
+		targets, loopErr = f.GetHealthyTargets(context.Background(), ns, svcName)
 		if loopErr != nil {
 			return false, nil
 		}
 
-		if len(targets) == amount {
-			return true, nil
-		}
-
-		loopErr = fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
-		return false, nil
+		loopErr = cond(targets)
+		return loopErr == nil, nil
 	})
 	if err != nil {
 		return fmt.Errorf("%s: waiting for healthy targets failed: %v: %v", svcName, err, loopErr)

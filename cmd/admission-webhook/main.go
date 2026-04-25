@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,6 @@ func main() {
 		stdlog.Fatal(err)
 	}
 
-	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	// Parse and validate the name validation scheme

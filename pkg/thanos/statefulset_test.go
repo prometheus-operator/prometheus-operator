@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kylelemons/godebug/pretty"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -44,70 +43,98 @@ var (
 	emptyQueryEndpoints = []string{""}
 )
 
-func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
-	labels := map[string]string{
-		"testlabel":                    "testlabelvalue",
+func TestStatefulSetLabelsAndAnnotations(t *testing.T) {
+	expectedStsLabels := map[string]string{
+		// operator managed labels.
 		"managed-by":                   "prometheus-operator",
 		"thanos-ruler":                 "test",
 		"app.kubernetes.io/instance":   "test",
 		"app.kubernetes.io/managed-by": "prometheus-operator",
 		"app.kubernetes.io/name":       "thanos-ruler",
+		// user-defined labels.
+		"thanosrulerlabel": "testlabelvalue",
+		"operatorlabel":    "operator-value",
+		"podlabel":         "test-label",
+	}
+	expectedSelectorLabels := map[string]string{
+		// operator managed labels.
+		"thanos-ruler":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "thanos-ruler",
+		// user-defined labels.
+		"operatorlabel": "operator-value",
+		"podlabel":      "test-label",
+	}
+	expectedPodLabels := map[string]string{
+		// operator managed labels.
+		"thanos-ruler":                 "test",
+		"app.kubernetes.io/instance":   "test",
+		"app.kubernetes.io/managed-by": "prometheus-operator",
+		"app.kubernetes.io/name":       "thanos-ruler",
+		"app.kubernetes.io/version":    strings.TrimPrefix(operator.DefaultThanosVersion, "v"),
+		// user-defined labels.
+		"operatorlabel": "operator-value",
+		"podlabel":      "test-label",
 	}
 
-	annotations := map[string]string{
-		"testannotation": "testannotationvalue",
-		"kubectl.kubernetes.io/last-applied-configuration": "something",
-		"kubectl.kubernetes.io/something":                  "something",
-	}
-
-	// kubectl annotations must not be on the statefulset so kubectl does
-	// not manage the generated object
-	expectedAnnotations := map[string]string{
+	// kubectl annotations from the ThanosRuler resource must not propagated to
+	// the statefulset and pods so kubectl does not manage the generated
+	// object.
+	expectedStsAnnotations := map[string]string{
 		"prometheus-operator-input-hash": "abc",
-		"testannotation":                 "testannotationvalue",
+		"operatorannotation":             "operator-value",
+		"thanosrulerannotation":          "testannotationvalue",
+	}
+	expectedPodAnnotations := map[string]string{
+		"kubectl.kubernetes.io/default-container": "thanos-ruler",
+		"podannotation": "test-annotation",
 	}
 
+	testConfig := Config{
+		ReloaderConfig:         operator.DefaultReloaderTestConfig.ReloaderConfig,
+		ThanosDefaultBaseImage: operator.DefaultThanosBaseImage,
+		Labels: map[string]string{
+			"operatorlabel": "operator-value",
+		},
+		Annotations: map[string]string{
+			"operatorannotation": "operator-value",
+		},
+	}
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        "test",
-			Namespace:   "ns",
-			Labels:      labels,
-			Annotations: annotations,
+			Name:      "test",
+			Namespace: "ns",
+			Labels: map[string]string{
+				"thanosrulerlabel": "testlabelvalue",
+			},
+			Annotations: map[string]string{
+				"thanosrulerannotation":                            "testannotationvalue",
+				"kubectl.kubernetes.io/last-applied-configuration": "something",
+				"kubectl.kubernetes.io/something":                  "something",
+			},
 		},
-		Spec: monitoringv1.ThanosRulerSpec{QueryEndpoints: emptyQueryEndpoints},
-	}, defaultTestConfig, nil, "abc", &operator.ShardedSecret{})
-
-	require.NoError(t, err)
-
-	require.Equal(t, labels, sset.Labels, pretty.Compare(labels, sset.Labels))
-
-	require.Equal(t, expectedAnnotations, sset.Annotations, pretty.Compare(expectedAnnotations, sset.Annotations))
-}
-
-func TestPodLabelsAnnotations(t *testing.T) {
-	annotations := map[string]string{
-		"testannotation": "testvalue",
-	}
-	labels := map[string]string{
-		"testlabel": "testvalue",
-	}
-	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
-		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
 			PodMetadata: &monitoringv1.EmbeddedObjectMetadata{
-				Annotations: annotations,
-				Labels:      labels,
+				Labels: map[string]string{
+					"podlabel": "test-label",
+				},
+				Annotations: map[string]string{
+					"podannotation": "test-annotation",
+				},
 			},
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, testConfig, nil, "abc", &operator.ShardedSecret{})
+
 	require.NoError(t, err)
 
-	valLabel := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
-	require.Equal(t, "testvalue", valLabel)
+	require.Equal(t, expectedStsLabels, sset.Labels)
+	require.Equal(t, expectedSelectorLabels, sset.Spec.Selector.MatchLabels)
+	require.Equal(t, expectedPodLabels, sset.Spec.Template.ObjectMeta.Labels)
 
-	valAnnotations := sset.Spec.Template.ObjectMeta.Annotations["testannotation"]
-	require.Equal(t, "testvalue", valAnnotations)
+	require.Equal(t, expectedStsAnnotations, sset.Annotations)
+	require.Equal(t, expectedPodAnnotations, sset.Spec.Template.ObjectMeta.Annotations)
 }
 
 func TestThanosDefaultBaseImageFlag(t *testing.T) {
@@ -129,11 +156,11 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 func TestStatefulSetVolumes(t *testing.T) {
 	expected := &appsv1.StatefulSet{
 		Spec: appsv1.StatefulSetSpec{
-			Template: v1.PodTemplateSpec{
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
-							VolumeMounts: []v1.VolumeMount{
+							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "remote-write-config",
 									ReadOnly:  true,
@@ -166,13 +193,13 @@ func TestStatefulSetVolumes(t *testing.T) {
 							},
 						},
 					},
-					Volumes: []v1.Volume{
+					Volumes: []corev1.Volume{
 						{
 							Name: "remote-write-config",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
 									SecretName: "thanos-ruler-foo-config",
-									Items: []v1.KeyToPath{
+									Items: []corev1.KeyToPath{
 										{
 											Key:  "remote-write.yaml",
 											Path: "remote-write.yaml",
@@ -183,25 +210,25 @@ func TestStatefulSetVolumes(t *testing.T) {
 						},
 						{
 							Name: "tls-assets",
-							VolumeSource: v1.VolumeSource{
-								Projected: &v1.ProjectedVolumeSource{
-									Sources: []v1.VolumeProjection{},
+							VolumeSource: corev1.VolumeSource{
+								Projected: &corev1.ProjectedVolumeSource{
+									Sources: []corev1.VolumeProjection{},
 								},
 							},
 						},
 						{
 							Name: "web-config",
-							VolumeSource: v1.VolumeSource{
-								Secret: &v1.SecretVolumeSource{
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
 									SecretName: "thanos-ruler-foo-web-config",
 								},
 							},
 						},
 						{
 							Name: "rules-configmap-one",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
 									Optional: ptr.To(true),
@@ -210,14 +237,14 @@ func TestStatefulSetVolumes(t *testing.T) {
 						},
 						{
 							Name: "thanos-ruler-foo-data",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
 						},
 						{
 							Name: "additional-volume",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
 							},
 						},
 					},
@@ -232,17 +259,17 @@ func TestStatefulSetVolumes(t *testing.T) {
 		},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			Volumes: []v1.Volume{
+			Volumes: []corev1.Volume{
 				{
 					Name: "additional-volume",
-					VolumeSource: v1.VolumeSource{
-						EmptyDir: &v1.EmptyDirVolumeSource{
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{
 							Medium: "",
 						},
 					},
 				},
 			},
-			VolumeMounts: []v1.VolumeMount{
+			VolumeMounts: []corev1.VolumeMount{
 				{
 					Name:      "additional-volume",
 					ReadOnly:  false,
@@ -270,8 +297,8 @@ func TestTracing(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			TracingConfig: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			TracingConfig: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: secretKey,
@@ -321,7 +348,7 @@ func TestTracingFile(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:    emptyQueryEndpoints,
 			TracingConfigFile: testPath,
-			TracingConfig: &v1.SecretKeySelector{
+			TracingConfig: &corev1.SecretKeySelector{
 				Key: testKey,
 			},
 		},
@@ -362,8 +389,8 @@ func TestObjectStorage(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			ObjectStorageConfig: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			ObjectStorageConfig: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: secretKey,
@@ -413,7 +440,7 @@ func TestObjectStorageFile(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:          emptyQueryEndpoints,
 			ObjectStorageConfigFile: &testPath,
-			ObjectStorageConfig: &v1.SecretKeySelector{
+			ObjectStorageConfig: &corev1.SecretKeySelector{
 				Key: testKey,
 			},
 		},
@@ -454,8 +481,8 @@ func TestAlertRelabel(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			AlertRelabelConfigs: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			AlertRelabelConfigs: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: secretKey,
@@ -505,7 +532,7 @@ func TestAlertRelabelFile(t *testing.T) {
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints:         emptyQueryEndpoints,
 			AlertRelabelConfigFile: &testPath,
-			AlertRelabelConfigs: &v1.SecretKeySelector{
+			AlertRelabelConfigs: &corev1.SecretKeySelector{
 				Key: testKey,
 			},
 		},
@@ -634,7 +661,7 @@ func TestAdditionalContainers(t *testing.T) {
 	addSset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			Containers: []v1.Container{
+			Containers: []corev1.Container{
 				{
 					Name: "extra-container",
 				},
@@ -651,7 +678,7 @@ func TestAdditionalContainers(t *testing.T) {
 	modSset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
 			QueryEndpoints: emptyQueryEndpoints,
-			Containers: []v1.Container{
+			Containers: []corev1.Container{
 				{
 					Name:  existingContainerName,
 					Image: containerImage,
@@ -692,32 +719,109 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestThanosGrpcArguments(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			Version:        ptr.To("0.37.0"),
+			QueryEndpoints: emptyQueryEndpoints,
+			GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+				TLSConfig: monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						MinVersion: ptr.To(monitoringv1.TLSVersion13),
+					},
+					TLSFilesConfig: monitoringv1.TLSFilesConfig{
+						CAFile:   "/tmp/ca",
+						CertFile: "/tmp/cert",
+						KeyFile:  "/tmp/key",
+					},
+				},
+			},
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+	require.NoError(t, err)
+
+	trArgs := sset.Spec.Template.Spec.Containers[0].Args
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-cert=/tmp/cert"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-key=/tmp/key"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-client-ca=/tmp/ca"))
+	require.True(t, slices.Contains(trArgs, "--grpc-server-tls-min-version=1.3"))
+}
+
+func TestGRPCServerTLSCipherSuites(t *testing.T) {
+	ciphers := []string{"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		cipherSuites  []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with cipher suites",
+			version:       "0.41.0",
+			cipherSuites:  ciphers,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without cipher suites",
+			version:       "0.42.0",
+			cipherSuites:  nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:        ptr.To(tc.version),
+					QueryEndpoints: emptyQueryEndpoints,
+					GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+						CipherSuites: tc.cipherSuites,
+					},
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(trArgs, expectedArg))
+		})
+	}
+}
+
 func TestPodTemplateConfig(t *testing.T) {
 	nodeSelector := map[string]string{
 		"foo": "bar",
 	}
-	affinity := v1.Affinity{
-		NodeAffinity: &v1.NodeAffinity{},
-		PodAffinity: &v1.PodAffinity{
-			PreferredDuringSchedulingIgnoredDuringExecution: []v1.WeightedPodAffinityTerm{
+	affinity := corev1.Affinity{
+		NodeAffinity: &corev1.NodeAffinity{},
+		PodAffinity: &corev1.PodAffinity{
+			PreferredDuringSchedulingIgnoredDuringExecution: []corev1.WeightedPodAffinityTerm{
 				{
-					PodAffinityTerm: v1.PodAffinityTerm{
+					PodAffinityTerm: corev1.PodAffinityTerm{
 						Namespaces: []string{"foo"},
 					},
 					Weight: 100,
 				},
 			},
 		},
-		PodAntiAffinity: &v1.PodAntiAffinity{},
+		PodAntiAffinity: &corev1.PodAntiAffinity{},
 	}
 
-	tolerations := []v1.Toleration{
+	tolerations := []corev1.Toleration{
 		{
 			Key: "key",
 		},
 	}
 	userid := int64(1234)
-	securityContext := v1.PodSecurityContext{
+	securityContext := corev1.PodSecurityContext{
 		RunAsUser: &userid,
 	}
 	priorityClassName := "foo"
@@ -728,17 +832,18 @@ func TestPodTemplateConfig(t *testing.T) {
 			IP:        "1.1.1.1",
 		},
 	}
-	imagePullSecrets := []v1.LocalObjectReference{
+	imagePullSecrets := []corev1.LocalObjectReference{
 		{
 			Name: "registry-secret",
 		},
 	}
-	imagePullPolicy := v1.PullAlways
+	imagePullPolicy := corev1.PullAlways
 
 	additionalArgs := []monitoringv1.Argument{
 		{Name: "additional.arg", Value: "additional-arg-value"},
 	}
 
+	schedulerName := "my-scheduler"
 	hostUsers := true
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -755,6 +860,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
+			SchedulerName:      schedulerName,
 			HostUsers:          ptr.To(true),
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
@@ -766,6 +872,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, securityContext, *sset.Spec.Template.Spec.SecurityContext)
 	require.Equal(t, priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, schedulerName, sset.Spec.Template.Spec.SchedulerName)
 	require.Equal(t, len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	require.Equal(t, hostUsers, *sset.Spec.Template.Spec.HostUsers)
@@ -862,8 +969,8 @@ func TestStatefulSetPVC(t *testing.T) {
 		EmbeddedObjectMetadata: monitoringv1.EmbeddedObjectMetadata{
 			Annotations: annotations,
 		},
-		Spec: v1.PersistentVolumeClaimSpec{
-			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 			StorageClassName: &storageClass,
 		},
 	}
@@ -894,8 +1001,8 @@ func TestStatefulEmptyDir(t *testing.T) {
 		"testannotation": "testannotationvalue",
 	}
 
-	emptyDir := v1.EmptyDirVolumeSource{
-		Medium: v1.StorageMediumMemory,
+	emptyDir := corev1.EmptyDirVolumeSource{
+		Medium: corev1.StorageMediumMemory,
 	}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -927,10 +1034,10 @@ func TestStatefulSetEphemeral(t *testing.T) {
 
 	storageClass := "storageclass"
 
-	ephemeral := v1.EphemeralVolumeSource{
-		VolumeClaimTemplate: &v1.PersistentVolumeClaimTemplate{
-			Spec: v1.PersistentVolumeClaimSpec{
-				AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+	ephemeral := corev1.EphemeralVolumeSource{
+		VolumeClaimTemplate: &corev1.PersistentVolumeClaimTemplate{
+			Spec: corev1.PersistentVolumeClaimSpec{
+				AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
 				StorageClassName: &storageClass,
 			},
 		},
@@ -1008,11 +1115,11 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
-	require.Equal(t, v1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
-	require.Equal(t, &v1.PodDNSConfig{
+	require.Equal(t, corev1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected DNS policy to match")
+	require.Equal(t, &corev1.PodDNSConfig{
 		Nameservers: []string{"8.8.8.8"},
 		Searches:    []string{"custom.search"},
-		Options: []v1.PodDNSConfigOption{
+		Options: []corev1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
 				Value: ptr.To("5"),

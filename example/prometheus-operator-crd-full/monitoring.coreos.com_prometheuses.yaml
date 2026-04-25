@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    controller-gen.kubebuilder.io/version: v0.20.1
+    operator.prometheus.io/version: 0.90.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -2228,9 +2228,8 @@ spec:
                   * `config-reloader`
                   * `thanos-sidecar`
 
-                  Overriding containers is entirely outside the scope of what the
-                  maintainers will support and by doing so, you accept that this behaviour
-                  may break at any time without notice.
+                  Overriding containers which are managed by the operator require careful
+                  testing, especially when upgrading to a new version of the operator.
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -3098,7 +3097,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -4178,7 +4179,7 @@ spec:
               initContainers:
                 description: |-
                   initContainers allows injecting initContainers to the Pod definition. Those
-                  can be used to e.g.  fetch secrets for injection into the Prometheus
+                  can be used to e.g. fetch secrets for injection into the Prometheus
                   configuration from external sources. Any errors during the execution of
                   an initContainer will lead to a restart of the Pod. More info:
                   https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
@@ -4189,9 +4190,9 @@ spec:
                   The names of init container name managed by the operator are:
                   * `init-config-reloader`.
 
-                  Overriding init containers is entirely outside the scope of what the
-                  maintainers will support and by doing so, you accept that this behaviour
-                  may break at any time without notice.
+                  Overriding init containers which are managed by the operator require
+                  careful testing, especially when upgrading to a new version of the
+                  operator.
                 items:
                   description: A single application container that you want to run
                     within a pod.
@@ -5059,7 +5060,9 @@ spec:
                           type: integer
                       type: object
                     resizePolicy:
-                      description: Resources resize policy for the container.
+                      description: |-
+                        Resources resize policy for the container.
+                        This field cannot be set on ephemeral containers.
                       items:
                         description: ContainerResizePolicy represents resource resize
                           policy for the container.
@@ -8071,9 +8074,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to send samples
-                        to.
-                      minLength: 1
+                      description: |-
+                        url defines the URL of the endpoint to send samples to.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                     writeRelabelConfigs:
                       description: writeRelabelConfigs defines the list of remote
@@ -8433,6 +8438,11 @@ spec:
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
                 type: integer
+              schedulerName:
+                description: schedulerName defines the scheduler to use for Pod scheduling.
+                  If not specified, the default scheduler is used.
+                minLength: 1
+                type: string
               scrapeClasses:
                 description: |-
                   scrapeClasses defines the list of scrape classes to expose to scraping objects such as
@@ -8918,7 +8928,8 @@ spec:
                   matches all namespaces. A null label selector matches the current
                   namespace only.
 
-                  Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+                  Note that the ScrapeConfig custom resource definition is currently at Alpha level
+                  and will be graduated to Beta in a future release.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -8977,7 +8988,8 @@ spec:
                   of the custom resource definition. It is recommended to use
                   `spec.additionalScrapeConfigs` instead.
 
-                  Note that the ScrapeConfig custom resource definition is currently at Alpha level.
+                  Note that the ScrapeConfig custom resource definition is currently at Alpha level
+                  and will be graduated to Beta in a future release.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -9472,12 +9484,17 @@ spec:
                 properties:
                   retain:
                     description: |-
-                      retain defines the config for retention when the retention policy is set to `Retain`.
-                      This field is ineffective as of now.
+                      retain defines the config for retention when the retention policy is set
+                      to `Retain`.
+
+                      If not defined, the operator will use the retention duration configured
+                      for the Prometheus data. If the resource uses size-based retention, the
+                      shard(s) are kept forever (unless manually deleted).
                     properties:
                       retentionPeriod:
-                        description: retentionPeriod defines the retentionPeriod for
-                          shard retention policy.
+                        description: |-
+                          retentionPeriod defines how long the scaled-down shard(s) need to be
+                          kept before being deleted.
                         pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                         type: string
                     required:
@@ -9495,6 +9512,54 @@ spec:
                     - Delete
                     type: string
                 type: object
+              shardingStrategy:
+                description: |-
+                  shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.
+
+                  When not defined, the operator defaults to the 'Address' mode which distributes
+                  targets based on a hash of the target address.
+                properties:
+                  mode:
+                    description: |-
+                      mode defines the sharding mode. Can be 'Address' or 'Topology'.
+
+                      'Address' is the default mode and distributes targets across shards
+                      based on a hash of the target address.
+
+                      'Topology' enables zone-aware sharding where each shard is assigned to a
+                      specific topology zone and only scrapes targets in that zone.
+                      (Alpha) Using the 'Topology' mode requires the `PrometheusTopologySharding`
+                      feature gate to be enabled.
+                    enum:
+                    - Address
+                    - Topology
+                    type: string
+                  topology:
+                    description: |-
+                      topology defines the configuration for topology-aware sharding.
+                      This field is only valid when mode is set to 'Topology'.
+                    properties:
+                      externalLabelName:
+                        description: |-
+                          externalLabelName defines the name of the Prometheus external label used
+                          to communicate the topology zone assigned to the Prometheus instance.
+                          If not defined, it defaults to "zone".
+                          If set to the empty string, no external label is added to the Prometheus configuration.
+                        type: string
+                      values:
+                        description: |-
+                          values defines the list of topology values (e.g. zone names) to be used
+                          for sharding. The configured number of shards must be greater than or
+                          equal to the number of values.
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                    type: object
+                type: object
+                x-kubernetes-validations:
+                - message: topology can only be defined when mode is set to 'Topology'
+                  rule: '!has(self.topology) || (has(self.mode) && self.mode == ''Topology'')'
               shards:
                 description: |-
                   shards defines the number of shards to distribute the scraped targets onto.
@@ -9694,7 +9759,7 @@ spec:
                               resources:
                                 description: |-
                                   resources represents the minimum resources the volume should have.
-                                  If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                  Users are allowed to specify resource requirements
                                   that are lower than previous value but must still be higher than capacity recorded in the
                                   status field of the claim.
                                   More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -9949,7 +10014,7 @@ spec:
                           resources:
                             description: |-
                               resources represents the minimum resources the volume should have.
-                              If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                              Users are allowed to specify resource requirements
                               that are lower than previous value but must still be higher than capacity recorded in the
                               status field of the claim.
                               More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -10105,9 +10170,7 @@ spec:
                               ignore the update for the purpose it was designed. For
                               example - a controller that\nonly is responsible for
                               resizing capacity of the volume, should ignore PVC updates
-                              that change other valid\nresources associated with PVC.\n\nThis
-                              is an alpha field and requires enabling RecoverVolumeExpansionFailure
-                              feature."
+                              that change other valid\nresources associated with PVC."
                             type: object
                             x-kubernetes-map-type: granular
                           allocatedResources:
@@ -10139,9 +10202,7 @@ spec:
                               ignore the update for the purpose it was designed. For
                               example - a controller that\nonly is responsible for
                               resizing capacity of the volume, should ignore PVC updates
-                              that change other valid\nresources associated with PVC.\n\nThis
-                              is an alpha field and requires enabling RecoverVolumeExpansionFailure
-                              feature."
+                              that change other valid\nresources associated with PVC."
                             type: object
                           capacity:
                             additionalProperties:
@@ -10325,7 +10386,7 @@ spec:
                     description: |-
                       grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 
-                      Note: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.
+                      Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
                     properties:
                       ca:
                         description: ca defines the Certificate authority used when
@@ -10443,6 +10504,22 @@ spec:
                         description: certFile defines the path to the client cert
                           file in the Prometheus container for the targets.
                         type: string
+                      cipherSuites:
+                        description: |-
+                          cipherSuites defines the list of supported cipher suites for TLS
+                          versions up to TLS 1.2.
+
+                          If not defined, the Go default cipher suites are used.
+                          Available cipher suites are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#pkg-constants
+
+                          It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+                          the Thanos version supports the provided values.
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
                       insecureSkipVerify:
                         description: insecureSkipVerify defines how to disable target
                           certificate validation.
@@ -10801,9 +10878,10 @@ spec:
                     operator:
                       description: |-
                         Operator represents a key's relationship to the value.
-                        Valid operators are Exists and Equal. Defaults to Equal.
+                        Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
                         Exists is equivalent to wildcard for value, so that a pod can
                         tolerate all taints of a particular category.
+                        Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
                       type: string
                     tolerationSeconds:
                       description: |-
@@ -11961,7 +12039,7 @@ spec:
                                 resources:
                                   description: |-
                                     resources represents the minimum resources the volume should have.
-                                    If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+                                    Users are allowed to specify resource requirements
                                     that are lower than previous value but must still be higher than capacity recorded in the
                                     status field of the claim.
                                     More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
@@ -12840,6 +12918,24 @@ spec:
                                     description: Kubelet's generated CSRs will be
                                       addressed to this signer.
                                     type: string
+                                  userAnnotations:
+                                    additionalProperties:
+                                      type: string
+                                    description: |-
+                                      userAnnotations allow pod authors to pass additional information to
+                                      the signer implementation.  Kubernetes does not restrict or validate this
+                                      metadata in any way.
+
+                                      These values are copied verbatim into the `spec.unverifiedUserAnnotations` field of
+                                      the PodCertificateRequest objects that Kubelet creates.
+
+                                      Entries are subject to the same validation as object metadata annotations,
+                                      with the addition that all keys must be domain-prefixed. No restrictions
+                                      are placed on values, except an overall size limitation on the entire field.
+
+                                      Signers should document the keys and values they support. Signers should
+                                      deny requests that contain keys they do not recognize.
+                                    type: object
                                 required:
                                 - keyType
                                 - signerName
@@ -13551,6 +13647,13 @@ spec:
                     type: object
                 type: object
             type: object
+            x-kubernetes-validations:
+            - message: shards must be greater than or equal to the number of topology
+                values when sharding strategy mode is Topology
+              rule: '!has(self.shardingStrategy) || !has(self.shardingStrategy.mode)
+                || self.shardingStrategy.mode != ''Topology'' || !has(self.shardingStrategy.topology)
+                || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size()
+                == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()'
           status:
             description: |-
               status defines the most recent observed status of the Prometheus cluster. Read-only.

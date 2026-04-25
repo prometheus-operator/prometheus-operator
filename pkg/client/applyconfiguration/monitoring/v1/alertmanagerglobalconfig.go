@@ -23,20 +23,40 @@ import (
 
 // AlertmanagerGlobalConfigApplyConfiguration represents a declarative configuration of the AlertmanagerGlobalConfig type for use
 // with apply.
+//
+// AlertmanagerGlobalConfig configures parameters that are valid in all other configuration contexts.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type AlertmanagerGlobalConfigApplyConfiguration struct {
-	SMTPConfig          *GlobalSMTPConfigApplyConfiguration       `json:"smtp,omitempty"`
-	ResolveTimeout      *monitoringv1.Duration                    `json:"resolveTimeout,omitempty"`
-	HTTPConfigWithProxy *HTTPConfigWithProxyApplyConfiguration    `json:"httpConfig,omitempty"`
-	SlackAPIURL         *corev1.SecretKeySelector                 `json:"slackApiUrl,omitempty"`
-	OpsGenieAPIURL      *corev1.SecretKeySelector                 `json:"opsGenieApiUrl,omitempty"`
-	OpsGenieAPIKey      *corev1.SecretKeySelector                 `json:"opsGenieApiKey,omitempty"`
-	PagerdutyURL        *monitoringv1.URL                         `json:"pagerdutyUrl,omitempty"`
-	TelegramConfig      *GlobalTelegramConfigApplyConfiguration   `json:"telegram,omitempty"`
-	JiraConfig          *GlobalJiraConfigApplyConfiguration       `json:"jira,omitempty"`
-	VictorOpsConfig     *GlobalVictorOpsConfigApplyConfiguration  `json:"victorops,omitempty"`
-	RocketChatConfig    *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
-	WebexConfig         *GlobalWebexConfigApplyConfiguration      `json:"webex,omitempty"`
-	WeChatConfig        *GlobalWeChatConfigApplyConfiguration     `json:"wechat,omitempty"`
+	// smtp defines global SMTP parameters.
+	SMTPConfig *GlobalSMTPConfigApplyConfiguration `json:"smtp,omitempty"`
+	// resolveTimeout defines the default value used by alertmanager if the alert does
+	// not include EndsAt, after this time passes it can declare the alert as resolved if it has not been updated.
+	// This has no impact on alerts from Prometheus, as they always include EndsAt.
+	ResolveTimeout *monitoringv1.Duration `json:"resolveTimeout,omitempty"`
+	// httpConfig defines the default HTTP configuration.
+	HTTPConfigWithProxy *HTTPConfigWithProxyApplyConfiguration `json:"httpConfig,omitempty"`
+	// slackApiUrl defines the default Slack API URL.
+	SlackAPIURL *corev1.SecretKeySelector `json:"slackApiUrl,omitempty"`
+	// opsGenieApiUrl defines the default OpsGenie API URL.
+	OpsGenieAPIURL *corev1.SecretKeySelector `json:"opsGenieApiUrl,omitempty"`
+	// opsGenieApiKey defines the default OpsGenie API Key.
+	OpsGenieAPIKey *corev1.SecretKeySelector `json:"opsGenieApiKey,omitempty"`
+	// pagerdutyUrl defines the default Pagerduty URL.
+	PagerdutyURL *monitoringv1.URL `json:"pagerdutyUrl,omitempty"`
+	// telegram defines the default Telegram config
+	TelegramConfig *GlobalTelegramConfigApplyConfiguration `json:"telegram,omitempty"`
+	// jira defines the default configuration for Jira.
+	JiraConfig *GlobalJiraConfigApplyConfiguration `json:"jira,omitempty"`
+	// victorops defines the default configuration for VictorOps.
+	VictorOpsConfig *GlobalVictorOpsConfigApplyConfiguration `json:"victorops,omitempty"`
+	// rocketChat defines the default configuration for Rocket Chat.
+	RocketChatConfig *GlobalRocketChatConfigApplyConfiguration `json:"rocketChat,omitempty"`
+	// webex defines the default configuration for Webex.
+	WebexConfig *GlobalWebexConfigApplyConfiguration `json:"webex,omitempty"`
+	// wechat defines the default WeChat Config
+	WeChatConfig *GlobalWeChatConfigApplyConfiguration `json:"wechat,omitempty"`
+	// mattermost defines the default Mattermost Config
+	MattermostConfig *GlobalMattermostConfigApplyConfiguration `json:"mattermost,omitempty"`
 }
 
 // AlertmanagerGlobalConfigApplyConfiguration constructs a declarative configuration of the AlertmanagerGlobalConfig type for use with
@@ -146,5 +166,13 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWebexConfig(value *Glob
 // If called multiple times, the WeChatConfig field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithWeChatConfig(value *GlobalWeChatConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.WeChatConfig = value
+	return b
+}
+
+// WithMattermostConfig sets the MattermostConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MattermostConfig field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithMattermostConfig(value *GlobalMattermostConfigApplyConfiguration) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.MattermostConfig = value
 	return b
 }

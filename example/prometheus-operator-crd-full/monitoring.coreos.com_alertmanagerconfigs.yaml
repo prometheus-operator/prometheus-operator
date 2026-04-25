@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    controller-gen.kubebuilder.io/version: v0.20.1
+    operator.prometheus.io/version: 0.90.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1084,6 +1084,14 @@ spec:
                               This is used for SMTP AUTH when the server requires authentication.
                             minLength: 1
                             type: string
+                          forceImplicitTLS:
+                            description: |-
+                              forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+                              true: force use of implicit TLS (direct TLS connection on any port)
+                              false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+                              nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+                              It requires Alertmanager >= v0.31.0.
+                            type: boolean
                           from:
                             description: |-
                               from defines the sender address for email notifications.
@@ -1146,6 +1154,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -7291,6 +7315,13 @@ spec:
                               linkNames enables automatic linking of channel names and usernames in the message.
                               When true, @channel and @username will be converted to clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText defines text content of the Slack message.
+                              If set, this is sent as the top-level 'text' field in the Slack payload.
+                              It requires Alertmanager >= v0.31.0.
+                            minLength: 1
+                            type: string
                           mrkdwnIn:
                             description: |-
                               mrkdwnIn defines which fields should be parsed as Slack markdown.
@@ -13257,6 +13288,14 @@ spec:
                               This is used for SMTP AUTH when the server requires authentication.
                             minLength: 1
                             type: string
+                          forceImplicitTLS:
+                            description: |-
+                              forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+                              true: force use of implicit TLS (direct TLS connection on any port)
+                              false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+                              nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+                              It requires Alertmanager >= v0.31.0.
+                            type: boolean
                           from:
                             description: |-
                               from defines the sender address for email notifications.
@@ -13318,6 +13357,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -19354,6 +19409,13 @@ spec:
                               linkNames enables automatic linking of channel names and usernames in the message.
                               When true, @channel and @username will be converted to clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText defines text content of the Slack message.
+                              If set, this is sent as the top-level 'text' field in the Slack payload.
+                              It requires Alertmanager >= v0.31.0.
+                            minLength: 1
+                            type: string
                           mrkdwnIn:
                             description: |-
                               mrkdwnIn defines which fields should be parsed as Slack markdown.
@@ -24081,9 +24143,9 @@ spec:
                 type: array
               route:
                 description: |-
-                  route defines the Alertmanager route definition for alerts matching the resource's
-                  namespace. If present, it will be added to the generated Alertmanager
-                  configuration as a first-level route.
+                  route defines the Alertmanager route definition for incoming alerts. It will be added to the
+                  generated Alertmanager configuration as a first-level route. The matching behavior of the
+                  route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
                 properties:
                   activeTimeIntervals:
                     description: activeTimeIntervals is a list of TimeInterval names
@@ -24124,8 +24186,8 @@ spec:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
                       level route, the operator removes any existing equality and regexp
-                      matcher on the `namespace` label and adds a `namespace: <object
-                      namespace>` matcher.
+                      matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+                      unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:

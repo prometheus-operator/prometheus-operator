@@ -24,23 +24,60 @@ import (
 
 // AlertmanagerEndpointsApplyConfiguration represents a declarative configuration of the AlertmanagerEndpoints type for use
 // with apply.
+//
+// AlertmanagerEndpoints defines a selection of a single Endpoints object
+// containing Alertmanager IPs to fire alerts against.
 type AlertmanagerEndpointsApplyConfiguration struct {
-	Namespace                     *string                              `json:"namespace,omitempty"`
-	Name                          *string                              `json:"name,omitempty"`
-	Port                          *intstr.IntOrString                  `json:"port,omitempty"`
-	Scheme                        *monitoringv1.Scheme                 `json:"scheme,omitempty"`
-	PathPrefix                    *string                              `json:"pathPrefix,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration         `json:"tlsConfig,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                              `json:"bearerTokenFile,omitempty"`
-	Authorization                 *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	Sigv4                         *Sigv4ApplyConfiguration             `json:"sigv4,omitempty"`
+	// namespace of the Endpoints object.
+	//
+	// If not set, the object will be discovered in the namespace of the
+	// Prometheus object.
+	Namespace *string `json:"namespace,omitempty"`
+	// name of the Endpoints object in the namespace.
+	Name *string `json:"name,omitempty"`
+	// port on which the Alertmanager API is exposed.
+	Port *intstr.IntOrString `json:"port,omitempty"`
+	// scheme defines the HTTP scheme to use when sending alerts.
+	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
+	// pathPrefix defines the prefix for the HTTP path alerts are pushed to.
+	PathPrefix *string `json:"pathPrefix,omitempty"`
+	// tlsConfig to use for Alertmanager.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// basicAuth configuration for Alertmanager.
+	//
+	// Cannot be set at the same time as `bearerTokenFile`, `authorization` or `sigv4`.
+	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// bearerTokenFile defines the file to read bearer token for Alertmanager.
+	//
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `sigv4`.
+	//
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
+	// authorization section for Alertmanager.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `sigv4`.
+	Authorization *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// sigv4 defines AWS's Signature Verification 4 for the URL.
+	//
+	// It requires Prometheus >= v2.48.0.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.
+	Sigv4 *Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
+	// ProxyConfig
 	ProxyConfigApplyConfiguration `json:",inline"`
-	APIVersion                    *monitoringv1.AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
-	Timeout                       *monitoringv1.Duration               `json:"timeout,omitempty"`
-	EnableHttp2                   *bool                                `json:"enableHttp2,omitempty"`
-	RelabelConfigs                []RelabelConfigApplyConfiguration    `json:"relabelings,omitempty"`
-	AlertRelabelConfigs           []RelabelConfigApplyConfiguration    `json:"alertRelabelings,omitempty"`
+	// apiVersion defines the version of the Alertmanager API that Prometheus uses to send alerts.
+	// It can be "V1" or "V2".
+	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.
+	APIVersion *monitoringv1.AlertmanagerAPIVersion `json:"apiVersion,omitempty"`
+	// timeout defines a per-target Alertmanager timeout when pushing alerts.
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// enableHttp2 defines whether to enable HTTP2.
+	EnableHttp2 *bool `json:"enableHttp2,omitempty"`
+	// relabelings defines the relabel configuration applied to the discovered Alertmanagers.
+	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	// alertRelabelings defines the relabeling configs applied before sending alerts to a specific Alertmanager.
+	// It requires Prometheus >= v2.51.0.
+	AlertRelabelConfigs []RelabelConfigApplyConfiguration `json:"alertRelabelings,omitempty"`
 }
 
 // AlertmanagerEndpointsApplyConfiguration constructs a declarative configuration of the AlertmanagerEndpoints type for use with

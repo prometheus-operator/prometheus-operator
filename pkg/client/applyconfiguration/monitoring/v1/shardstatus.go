@@ -19,11 +19,18 @@ package v1
 // ShardStatusApplyConfiguration represents a declarative configuration of the ShardStatus type for use
 // with apply.
 type ShardStatusApplyConfiguration struct {
-	ShardID             *string `json:"shardID,omitempty"`
-	Replicas            *int32  `json:"replicas,omitempty"`
-	UpdatedReplicas     *int32  `json:"updatedReplicas,omitempty"`
-	AvailableReplicas   *int32  `json:"availableReplicas,omitempty"`
-	UnavailableReplicas *int32  `json:"unavailableReplicas,omitempty"`
+	// shardID defines the identifier of the shard.
+	ShardID *string `json:"shardID,omitempty"`
+	// replicas defines the total number of pods targeted by this shard.
+	Replicas *int32 `json:"replicas,omitempty"`
+	// updatedReplicas defines the total number of non-terminated pods targeted by this shard
+	// that have the desired spec.
+	UpdatedReplicas *int32 `json:"updatedReplicas,omitempty"`
+	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
+	// targeted by this shard.
+	AvailableReplicas *int32 `json:"availableReplicas,omitempty"`
+	// unavailableReplicas defines the Total number of unavailable pods targeted by this shard.
+	UnavailableReplicas *int32 `json:"unavailableReplicas,omitempty"`
 }
 
 // ShardStatusApplyConfiguration constructs a declarative configuration of the ShardStatus type for use with

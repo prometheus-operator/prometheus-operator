@@ -862,6 +862,10 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          forceImplicitTLS: {
+                            description: 'forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.\ntrue: force use of implicit TLS (direct TLS connection on any port)\nfalse: force disable implicit TLS (use explicit TLS/STARTTLS if required)\nnil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility\nIt requires Alertmanager >= v0.31.0.',
+                            type: 'boolean',
+                          },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
                             minLength: 1,
@@ -916,6 +920,23 @@
                             description: "text defines the plain text body of the email notification.\nThis provides a fallback for email clients that don't support HTML.",
                             minLength: 1,
                             type: 'string',
+                          },
+                          threading: {
+                            description: 'threading defines the threading configuration for email receiver.\nIt requires Alertmanager >= v0.30.0.',
+                            properties: {
+                              threadByDate: {
+                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.\n(None means group by alert group key, no date).',
+                                enum: [
+                                  'Daily',
+                                  'None',
+                                ],
+                                type: 'string',
+                              },
+                            },
+                            required: [
+                              'threadByDate',
+                            ],
+                            type: 'object',
                           },
                           tlsConfig: {
                             description: 'tlsConfig defines the TLS configuration for SMTP connections.\nThis includes settings for certificates, CA validation, and TLS protocol options.',
@@ -6431,6 +6452,11 @@
                             description: 'linkNames enables automatic linking of channel names and usernames in the message.\nWhen true, @channel and @username will be converted to clickable links.',
                             type: 'boolean',
                           },
+                          messageText: {
+                            description: "messageText defines text content of the Slack message.\nIf set, this is sent as the top-level 'text' field in the Slack payload.\nIt requires Alertmanager >= v0.31.0.",
+                            minLength: 1,
+                            type: 'string',
+                          },
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
                             items: {
@@ -10760,7 +10786,7 @@
                 type: 'array',
               },
               route: {
-                description: "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
+                description: "route defines the Alertmanager route definition for incoming alerts. It will be added to the\ngenerated Alertmanager configuration as a first-level route. The matching behavior of the\nroute depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                 properties: {
                   activeTimeIntervals: {
                     description: 'activeTimeIntervals is a list of TimeInterval names when this route should be active.',
@@ -10793,7 +10819,7 @@
                     type: 'string',
                   },
                   matchers: {
-                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object\nnamespace>` matcher.",
+                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,\nunless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                     items: {
                       description: "Matcher defines how to match on alert's labels.",
                       properties: {

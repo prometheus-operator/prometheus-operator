@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -94,10 +94,11 @@ type Operator struct {
 
 	newEventRecorder operator.NewEventRecorderFunc
 
-	statusReporter prompkg.StatusReporter
+	statusReporter *prompkg.StatusReporter
 
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
+	topologyShardingEnabled      bool
 
 	finalizerSyncer *operator.FinalizerSyncer
 }
@@ -174,6 +175,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		controllerID:                 c.ControllerID,
 		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
 		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		topologyShardingEnabled:      c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
 		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	o.metrics.MustRegister(
@@ -296,7 +298,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = c.ConfigMapListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceConfigMaps)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceConfigMaps)),
 		informers.PartialObjectMetadataStrip(operator.ConfigMapGVK()),
 	)
 	if err != nil {
@@ -314,7 +316,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 				options.LabelSelector = c.SecretListWatchLabelSelector.String()
 			},
 		),
-		v1.SchemeGroupVersion.WithResource(string(v1.ResourceSecrets)),
+		corev1.SchemeGroupVersion.WithResource(string(corev1.ResourceSecrets)),
 		informers.PartialObjectMetadataStrip(operator.SecretGVK()),
 	)
 	if err != nil {
@@ -380,7 +382,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		logger.Debug("creating namespace informer", "privileged", privileged)
 		return cache.NewSharedIndexInformer(
 			o.metrics.NewInstrumentedListerWatcher(lw),
-			&v1.Namespace{}, resyncPeriod, cache.Indexers{},
+			&corev1.Namespace{}, resyncPeriod, cache.Indexers{},
 		), nil
 	}
 
@@ -398,12 +400,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		}
 	}
 
-	o.statusReporter = prompkg.StatusReporter{
-		Kclient:         o.kclient,
-		Reconciliations: o.reconciliations,
-		SsetInfs:        o.ssetInfs,
-		Rr:              o.rr,
-	}
+	o.statusReporter = prompkg.NewStatusReporter(
+		o.kclient,
+		o.reconciliations,
+		o.ssetInfs,
+		o.rr,
+		c.RepairPolicy,
+	)
 
 	return o, nil
 }
@@ -450,10 +453,9 @@ func (c *Operator) Run(ctx context.Context) error {
 }
 
 // Iterate implements the operator.StatusReconciler interface.
-func (c *Operator) Iterate(processFn func(metav1.Object, []monitoringv1.Condition)) {
+func (c *Operator) Iterate(processFn func(operator.StatusGetter)) {
 	if err := c.promInfs.ListAll(labels.Everything(), func(o any) {
-		p := o.(*monitoringv1alpha1.PrometheusAgent)
-		processFn(p, p.Status.Conditions)
+		processFn(o.(*monitoringv1alpha1.PrometheusAgent))
 	}); err != nil {
 		c.logger.Error("failed to list PrometheusAgent objects", "err", err)
 	}
@@ -671,6 +673,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode {
 		opts = append(opts, prompkg.WithDaemonSet())
+	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
 	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
@@ -1028,7 +1033,7 @@ func (c *Operator) UpdateStatus(ctx context.Context, key string) error {
 	if c.rr.DeletionInProgress(p) {
 		return nil
 	}
-	pStatus, err := c.statusReporter.Process(ctx, p, key)
+	pStatus, err := c.statusReporter.Process(ctx, c.logger, p, key)
 	if err != nil {
 		return fmt.Errorf("failed to get prometheus agent status: %w", err)
 	}
@@ -1068,7 +1073,7 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 		return fmt.Errorf("failed to initialize web config: %w", err)
 	}
 
-	s := &v1.Secret{}
+	s := &corev1.Secret{}
 	operator.UpdateObject(
 		s,
 		operator.WithLabels(c.config.Labels),
@@ -1106,7 +1111,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		c.logger.Error(fmt.Sprintf("get namespace to enqueue Prometheus instances failed: namespace %q does not exist", nsName))
 		return
 	}
-	ns := nsObject.(*v1.Namespace)
+	ns := nsObject.(*corev1.Namespace)
 
 	err = c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		// Check for Prometheus Agent instances in the namespace.
@@ -1185,8 +1190,8 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
-	old := oldo.(*v1.Namespace)
-	cur := curo.(*v1.Namespace)
+	old := oldo.(*corev1.Namespace)
+	cur := curo.(*corev1.Namespace)
 
 	c.logger.Debug("update handler", "namespace", cur.GetName(), "old", old.ResourceVersion, "cur", cur.ResourceVersion)
 
