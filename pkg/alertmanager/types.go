@@ -229,6 +229,7 @@ type slackConfig struct {
 	Actions       []slackAction     `yaml:"actions,omitempty"`
 	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
 	MessageText   string            `yaml:"message_text,omitempty"`
+	UpdateMessage *bool             `yaml:"update_message,omitempty"`
 }
 
 type httpClientConfig struct {
@@ -531,6 +532,19 @@ type mattermostConfig struct {
 	Attachments    []*mattermostAttachmentConfig `yaml:"attachments,omitempty" json:"attachments,omitempty"`
 	Props          *mattermostPropsConfig        `yaml:"props,omitempty" json:"props,omitempty"`
 	Priority       *mattermostPriorityConfig     `yaml:"priority,omitempty" json:"priority,omitempty"`
+	Fallback       string                        `yaml:"fallback,omitempty" json:"fallback,omitempty"`
+	Color          string                        `yaml:"color,omitempty" json:"color,omitempty"`
+	Pretext        string                        `yaml:"pretext,omitempty" json:"pretext,omitempty"`
+	AuthorName     string                        `yaml:"author_name,omitempty" json:"author_name,omitempty"`
+	AuthorLink     string                        `yaml:"author_link,omitempty" json:"author_link,omitempty"`
+	AuthorIcon     string                        `yaml:"author_icon,omitempty" json:"author_icon,omitempty"`
+	Title          string                        `yaml:"title,omitempty" json:"title,omitempty"`
+	TitleLink      string                        `yaml:"title_link,omitempty" json:"title_link,omitempty"`
+	Fields         []mattermostField             `yaml:"fields,omitempty" json:"fields,omitempty"`
+	ThumbURL       string                        `yaml:"thumb_url,omitempty" json:"thumb_url,omitempty"`
+	Footer         string                        `yaml:"footer,omitempty" json:"footer,omitempty"`
+	FooterIcon     string                        `yaml:"footer_icon,omitempty" json:"footer_icon,omitempty"`
+	ImageURL       string                        `yaml:"image_url,omitempty" json:"image_url,omitempty"`
 	HTTPConfig     *httpClientConfig             `yaml:"http_config,omitempty" json:"http_config,omitempty"`
 }
 

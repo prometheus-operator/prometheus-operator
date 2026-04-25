@@ -29,8 +29,12 @@ type ShardRetentionPolicyApplyConfiguration struct {
 	//
 	// If not defined, the operator assumes the `Delete` value.
 	WhenScaled *monitoringv1.WhenScaledRetentionType `json:"whenScaled,omitempty"`
-	// retain defines the config for retention when the retention policy is set to `Retain`.
-	// This field is ineffective as of now.
+	// retain defines the config for retention when the retention policy is set
+	// to `Retain`.
+	//
+	// If not defined, the operator will use the retention duration configured
+	// for the Prometheus data. If the resource uses size-based retention, the
+	// shard(s) are kept forever (unless manually deleted).
 	Retain *RetainConfigApplyConfiguration `json:"retain,omitempty"`
 }
 

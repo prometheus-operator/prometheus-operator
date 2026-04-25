@@ -30,20 +30,30 @@ func TestValidateUrl(t *testing.T) {
 		expectResult func() *common.URL
 	}{
 		{
-			name:      "Test invalid url returns error",
-			in:        "https://!^invalid.com",
+			name:      "invalid url",
+			in:        "https://!^example.com",
 			expectErr: true,
 		},
 		{
-			name:      "Test missing scheme returns error",
-			in:        "is.normally.valid",
+			name:      "missing host",
+			in:        "http://",
 			expectErr: true,
 		},
 		{
-			name: "Test happy path",
-			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
+			name:      "missing scheme",
+			in:        "example.com",
+			expectErr: true,
+		},
+		{
+			name:      "invalid scheme",
+			in:        "tcp://example.com",
+			expectErr: true,
+		},
+		{
+			name: "valid URL",
+			in:   "https://u:p@example.com",
 			expectResult: func() *common.URL {
-				u, _ := url.Parse("https://u:p@is.compliant.with.upstream.unmarshal")
+				u, _ := url.Parse("https://u:p@example.com")
 				return &common.URL{URL: u}
 			},
 		},
@@ -59,7 +69,7 @@ func TestValidateUrl(t *testing.T) {
 			require.NoError(t, err)
 
 			res := tc.expectResult()
-			require.Equal(t, u, res, "wanted %v but got %v", res, u)
+			require.Equal(t, u.String(), res.String())
 		})
 	}
 }
@@ -71,18 +81,28 @@ func TestValidateSecretUrl(t *testing.T) {
 		expectResult func() *common.URL
 	}{
 		{
-			name:      "Test invalid url returns error",
-			in:        "https://!^invalid.com",
+			name:      "invalid URL",
+			in:        "https://!^example.com",
 			expectErr: true,
 		},
 		{
-			name:      "Test missing scheme returns error",
-			in:        "is.normally.valid",
+			name:      "missing host",
+			in:        "http://",
+			expectErr: true,
+		},
+		{
+			name:      "missing scheme",
+			in:        "example.com",
+			expectErr: true,
+		},
+		{
+			name:      "invalid scheme",
+			in:        "tcp://example.com",
 			expectErr: true,
 		},
 		{
 			name: "Test happy path",
-			in:   "https://u:p@is.compliant.with.upstream.unmarshal",
+			in:   "https://u:p@example.com",
 		},
 	}
 
@@ -98,7 +118,6 @@ func TestValidateSecretUrl(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
 		})
 	}
 }

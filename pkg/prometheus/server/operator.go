@@ -955,6 +955,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	if c.retentionPoliciesEnabled {
 		opts = append(opts, prompkg.WithPrometheusRetentionPolicies())
 	}
+	if c.topologyShardingEnabled {
+		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
 		return closure, err
@@ -1059,9 +1062,6 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 			return closure, fmt.Errorf("making statefulset failed: %w", err)
 		}
 		operator.SanitizeSTS(sset)
-		if c.topologyShardingEnabled {
-			sset.Spec.Template.Spec.NodeSelector = prompkg.NodeSelectorWithTopologyZone(p.GetCommonPrometheusFields(), int32(shard))
-		}
 
 		if notFound {
 			logger.Debug("creating statefulset")
@@ -1325,14 +1325,20 @@ func deadlineExpired(deadline string) (bool, error) {
 // on the retention settings.
 // If Prometheus is configured with size-based retention only, it returns a
 // zero value.
+// The function should only be called when the shard retention policy is set to Retain.
 func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
-	if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
-		return time.Duration(0), nil
-	}
+	var retention monitoringv1.Duration
+	if p.Spec.ShardRetentionPolicy.Retain != nil {
+		retention = p.Spec.ShardRetentionPolicy.Retain.RetentionPeriod
+	} else {
+		if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
+			return time.Duration(0), nil
+		}
 
-	retention := p.Spec.Retention
-	if retention == "" {
-		retention = defaultRetention
+		retention = p.Spec.Retention
+		if retention == "" {
+			retention = defaultRetention
+		}
 	}
 
 	d, err := model.ParseDuration(string(retention))

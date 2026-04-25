@@ -435,14 +435,33 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 		expectedErr      bool
 	}{
 		{
-			name:             "empty retention uses default (24h)",
-			spec:             monitoringv1.PrometheusSpec{},
+			name: "empty retention uses default (24h)",
+			spec: monitoringv1.PrometheusSpec{
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+				},
+			},
 			expectedDuration: 24 * time.Hour,
+		},
+		{
+			name: "explicit retain retention duration",
+			spec: monitoringv1.PrometheusSpec{
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					Retain: &monitoringv1.RetainConfig{
+						RetentionPeriod: monitoringv1.Duration("15d"),
+					},
+				},
+			},
+			expectedDuration: 15 * 24 * time.Hour,
 		},
 		{
 			name: "explicit retention duration",
 			spec: monitoringv1.PrometheusSpec{
 				Retention: "15d",
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+				},
 			},
 			expectedDuration: 15 * 24 * time.Hour,
 		},
@@ -450,6 +469,9 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			name: "size-only retention returns zero duration",
 			spec: monitoringv1.PrometheusSpec{
 				RetentionSize: "10Gi",
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+				},
 			},
 			expectedDuration: 0,
 		},
@@ -458,6 +480,9 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			spec: monitoringv1.PrometheusSpec{
 				Retention:     "7d",
 				RetentionSize: "10Gi",
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+				},
 			},
 			expectedDuration: 7 * 24 * time.Hour,
 		},
@@ -465,6 +490,9 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			name: "invalid retention returns error",
 			spec: monitoringv1.PrometheusSpec{
 				Retention: "invalid",
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+				},
 			},
 			expectedErr: true,
 		},

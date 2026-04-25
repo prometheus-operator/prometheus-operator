@@ -210,6 +210,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
+	version29, err := semver.ParseTolerant("v0.29.0")
+	require.NoError(t, err)
+
 	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1472,6 +1475,62 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version25,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "email-config-with-threading",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost: ptr.To("example.com:587"),
+								From:      ptr.To("admin@example.com"),
+								To:        ptr.To("customers@example.com"),
+								Threading: &monitoringv1alpha1.EmailThreadingConfig{
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "email-config-with-threading",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						EmailConfigs: []monitoringv1alpha1.EmailConfig{
+							{
+								Smarthost: ptr.To("example.com:587"),
+								From:      ptr.To("admin@example.com"),
+								To:        ptr.To("customers@example.com"),
+								Threading: &monitoringv1alpha1.EmailThreadingConfig{
+									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version29,
 			ok:      false,
 		},
 	} {

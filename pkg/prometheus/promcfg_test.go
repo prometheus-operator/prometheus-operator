@@ -362,6 +362,107 @@ func TestGlobalSettings(t *testing.T) {
 	}
 }
 
+func TestTopologyZoneExternalLabel(t *testing.T) {
+	for _, tc := range []struct {
+		scenario         string
+		shardingStrategy *monitoringv1.ShardingStrategy
+		topologySharding bool
+		golden           string
+	}{
+		{
+			scenario: "default label name",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			topologySharding: true,
+			golden:           "topology_zone_external_label_default_name.golden",
+		},
+		{
+			scenario: "custom label name",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					ExternalLabelName: ptr.To("topology_zone"),
+					Values:            []string{"zone-a", "zone-b"},
+				},
+			},
+			topologySharding: true,
+			golden:           "topology_zone_external_label_custom_name.golden",
+		},
+		{
+			scenario: "label disabled",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					ExternalLabelName: ptr.To(""),
+					Values:            []string{"zone-a", "zone-b"},
+				},
+			},
+			topologySharding: true,
+			golden:           "topology_zone_external_label_disabled.golden",
+		},
+		{
+			scenario: "feature gate disabled",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			topologySharding: false,
+			golden:           "topology_zone_external_label_no_feature_gate.golden",
+		},
+		{
+			scenario: "address mode",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(monitoringv1.AddressShardingStrategyMode),
+			},
+			topologySharding: true,
+			golden:           "topology_zone_external_label_address_mode.golden",
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ScrapeInterval:   "30s",
+						ShardingStrategy: tc.shardingStrategy,
+					},
+					EvaluationInterval: "30s",
+				},
+			}
+
+			var opts []ConfigGeneratorOption
+			if tc.topologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg := mustNewConfigGenerator(t, p, opts...)
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestNamespaceSetCorrectly(t *testing.T) {
 	type testCase struct {
 		ServiceMonitor           *monitoringv1.ServiceMonitor
@@ -8478,6 +8579,19 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{},
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigEmpty.golden",
+		},
+		{
+			name: "azure_sd_config_valid_workloadidendity_auth",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          ptr.To("AzurePublicCloud"),
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_WorkloadIdentityAuth.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

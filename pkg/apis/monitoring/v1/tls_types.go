@@ -38,6 +38,28 @@ type TLSConfig struct {
 	TLSFilesConfig `json:",inline"`
 }
 
+// GRPCServerTLSConfig defines TLS configuration for a gRPC server.
+// +k8s:openapi-gen=true
+type GRPCServerTLSConfig struct {
+	TLSConfig `json:",inline"`
+
+	// cipherSuites defines the list of supported cipher suites for TLS
+	// versions up to TLS 1.2.
+	//
+	// If not defined, the Go default cipher suites are used.
+	// Available cipher suites are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	//
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	CipherSuites []string `json:"cipherSuites,omitempty"`
+}
+
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
 	if c == nil {
