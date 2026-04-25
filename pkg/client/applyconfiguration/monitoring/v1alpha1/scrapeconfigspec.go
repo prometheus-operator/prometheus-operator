@@ -80,6 +80,9 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	ScalewaySDConfigs []ScalewaySDConfigApplyConfiguration `json:"scalewaySDConfigs,omitempty"`
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
 	IonosSDConfigs []IonosSDConfigApplyConfiguration `json:"ionosSDConfigs,omitempty"`
+	// awsSDConfigs defines a list of AWS service discovery configurations.
+	// It requires Prometheus >= 3.8.0.
+	AWSSDConfigs []AWSSDConfigApplyConfiguration `json:"awsSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -484,6 +487,19 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithIonosSDConfigs(values ...*Ionos
 			panic("nil value passed to WithIonosSDConfigs")
 		}
 		b.IonosSDConfigs = append(b.IonosSDConfigs, *values[i])
+	}
+	return b
+}
+
+// WithAWSSDConfigs adds the given value to the AWSSDConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the AWSSDConfigs field.
+func (b *ScrapeConfigSpecApplyConfiguration) WithAWSSDConfigs(values ...*AWSSDConfigApplyConfiguration) *ScrapeConfigSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithAWSSDConfigs")
+		}
+		b.AWSSDConfigs = append(b.AWSSDConfigs, *values[i])
 	}
 	return b
 }

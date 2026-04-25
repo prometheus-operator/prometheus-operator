@@ -683,6 +683,10 @@ func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitorin
 		return fmt.Errorf("IonosSDConfigs: %w", err)
 	}
 
+	if err := rs.validateAWSSDConfigs(ctx, sc); err != nil {
+		return fmt.Errorf("AWSSDConfigs: %w", err)
+	}
+
 	return nil
 }
 
@@ -1011,6 +1015,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 
 	return nil
 }
+
 func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	if !rs.version.GTE(semver.MustParse("2.28.0")) {
 		return fmt.Errorf("linode SD configuration is only supported for Prometheus version >= 2.28.0")
@@ -1345,5 +1350,45 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		}
 
 	}
+	return nil
+}
+
+func (rs *ResourceSelector) validateAWSSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
+	if len(sc.Spec.AWSSDConfigs) > 0 {
+		if rs.version.LT(semver.MustParse("3.8.0")) {
+			return fmt.Errorf("AWS SD configuration is only supported for Prometheus version >= 3.8.0")
+		}
+	}
+
+	for i, config := range sc.Spec.AWSSDConfigs {
+		if config.Role == monitoringv1alpha1.AWSRoleMSK && rs.version.LT(semver.MustParse("3.10.0")) {
+			return fmt.Errorf("AWS SD Role MSK is only supported for Prometheus version >= 3.10.0")
+		}
+
+		if (config.Role == monitoringv1alpha1.AWSRoleElastiCache || config.Role == monitoringv1alpha1.AWSRoleRDS) &&
+			rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("AWS SD Role ElastiCache and RDS are only supported for Prometheus version >= 3.11.0")
+		}
+
+		if config.AccessKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+		if config.SecretKey != nil {
+			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
+				return fmt.Errorf("[%d]: %w", i, err)
+			}
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := addProxyConfigToStore(ctx, config.ProxyConfig, rs.store, sc.GetNamespace()); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+	}
+
 	return nil
 }

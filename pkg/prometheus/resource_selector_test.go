@@ -4565,6 +4565,110 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "AWS SD config with supported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.8.0",
+			valid:       true,
+		},
+		{
+			scenario: "AWS SD config with unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.7.0",
+			valid:       false,
+		},
+		{
+			scenario: "AWS SD config with MSK unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleMSK,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.9.0",
+			valid:       false,
+		},
+		{
+			scenario: "AWS SD config with MSK supported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleMSK,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.10.0",
+			valid:       true,
+		},
+		{
+			scenario: "AWS SD config with ElastiCache unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleElastiCache,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.10.0",
+			valid:       false,
+		},
+		{
+			scenario: "AWS SD config with ElastiCache supported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleElastiCache,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.11.0",
+			valid:       true,
+		},
+		{
+			scenario: "AWS SD config with RDS unsupported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleRDS,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.10.0",
+			valid:       false,
+		},
+		{
+			scenario: "AWS SD config with RDS supported version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.AWSSDConfigs = []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:   monitoringv1alpha1.AWSRoleRDS,
+						Region: ptr.To("us-east-1"),
+					},
+				}
+			},
+			promVersion: "3.11.0",
+			valid:       true,
+		},
+		{
 			scenario: "Inexistent Scrape Class",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
