@@ -2162,6 +2162,9 @@ func TestGenerateConfig(t *testing.T) {
 	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
+	version32, err := semver.ParseTolerant("v0.32.0")
+	require.NoError(t, err)
+
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -3987,7 +3990,7 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Mattermost_Reeceiver_with_Attachment.golden",
 		},
 		{
-			name:      "CR with Mattermost Receiver with Attachment",
+			name:      "CR with Mattermost Receiver with Priority",
 			amVersion: &version30,
 			kclient: fake.NewSimpleClientset(
 				&corev1.Secret{
@@ -4040,6 +4043,59 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Mattermost_Reeceiver_with_Priority.golden",
+		},
+		{
+			name:      "CR with Mattermost Receiver with Top-level Attachment",
+			amVersion: &version32,
+			kclient: fake.NewSimpleClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "mattermost-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://mattermost.example.com"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+									{
+										WebhookURL: &corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "mattermost-secret",
+											},
+										},
+										Fallback: ptr.To("abc"),
+										Pretext:  ptr.To("abc"),
+										Title:    ptr.To("abc"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Mattermost_Reeceiver_with_Top-level_Attachment.golden",
 		},
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
