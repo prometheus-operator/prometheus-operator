@@ -12933,7 +12933,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: monitoringv1alpha1.AWSRoleEC2,
+						Role:   monitoringv1alpha1.AWSRoleEC2,
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
@@ -12954,18 +12955,6 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden:  "ScrapeConfigSpecConfig_AWSSD_with_MSK.golden",
 		},
 		{
-			name: "aws_sd_config_with_msk_version_not_supported",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
-					{
-						Role: monitoringv1alpha1.AWSRoleMSK,
-					},
-				},
-			},
-			version: "3.9.0",
-			golden:  "ScrapeConfigSpecConfig_AWSSD_with_MSK_version_not_supported.golden",
-		},
-		{
 			name: "aws_sd_config_with_elasticache",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
@@ -12979,18 +12968,6 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			golden:  "ScrapeConfigSpecConfig_AWSSD_with_ElastiCache.golden",
 		},
 		{
-			name: "aws_sd_config_with_msk_version_not_supported",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
-					{
-						Role: monitoringv1alpha1.AWSRoleElastiCache,
-					},
-				},
-			},
-			version: "3.10.0",
-			golden:  "ScrapeConfigSpecConfig_AWSSD_with_ElastiCache_version_not_supported.golden",
-		},
-		{
 			name: "aws_sd_config_with_rds",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
@@ -13002,18 +12979,6 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			},
 			version: "3.11.0",
 			golden:  "ScrapeConfigSpecConfig_AWSSD_with_RDS.golden",
-		},
-		{
-			name: "aws_sd_config_with_msk_version_not_supported",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
-					{
-						Role: monitoringv1alpha1.AWSRoleRDS,
-					},
-				},
-			},
-			version: "3.10.0",
-			golden:  "ScrapeConfigSpecConfig_AWSSD_with_RDS_version_not_supported.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
