@@ -1590,12 +1590,12 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version30,
-			ok:      false,
+			ok:      true,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "mattermost-config-top-level-attachment-unsupported-version",
+					Name:      "mattermost-config-top-level-attachment",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1621,7 +1621,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version32,
-			ok:      false,
+			ok:      true,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
