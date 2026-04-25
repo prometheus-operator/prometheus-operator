@@ -9,10 +9,10 @@ receivers:
 - name: "null"
 - name: mynamespace/myamc/test
   slack_configs:
-  - api_url: https://slack.com/api/chat.postMessage
-    http_config:
+  - http_config:
       authorization:
-        type: bearer
+        type: Bearer
         credentials: abcdef123456
+    api_url: https://slack.com/api/chat.postMessage
     update_message: true
 templates: []
