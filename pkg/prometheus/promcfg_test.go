@@ -12906,6 +12906,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 							"cluster-1",
 							"cluster-2",
 						},
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
@@ -12921,6 +12922,7 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 							"cluster-1",
 							"cluster-2",
 						},
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
@@ -12943,7 +12945,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: monitoringv1alpha1.AWSRoleMSK,
+						Role:   monitoringv1alpha1.AWSRoleMSK,
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
@@ -12967,7 +12970,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: monitoringv1alpha1.AWSRoleElastiCache,
+						Role:   monitoringv1alpha1.AWSRoleElastiCache,
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
@@ -12991,7 +12995,8 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
 					{
-						Role: monitoringv1alpha1.AWSRoleRDS,
+						Role:   monitoringv1alpha1.AWSRoleRDS,
+						Region: ptr.To("us-east-1"),
 					},
 				},
 			},
