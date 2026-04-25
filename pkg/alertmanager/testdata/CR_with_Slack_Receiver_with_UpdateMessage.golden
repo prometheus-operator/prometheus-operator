@@ -11,5 +11,5 @@ receivers:
 - name: "null"
 - name: mynamespace/myamc/test
   slack_configs:
-  - update_message: true
+  - message_text: test message
 templates: []
