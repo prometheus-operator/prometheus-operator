@@ -44,7 +44,7 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Selector: dep.Spec.Template.ObjectMeta.Labels,
+			Selector: dep.Spec.Template.Labels,
 			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
