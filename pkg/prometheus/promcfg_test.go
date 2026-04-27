@@ -14335,6 +14335,130 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 	}
 }
 
+func TestTopologyShardingRelabeling(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	basicServiceMonitor := func() map[string]*monitoringv1.ServiceMonitor {
+		return map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{Port: "web", Interval: "30s"},
+					},
+				},
+			},
+		}
+	}
+
+	basicPodMonitor := func() map[string]*monitoringv1.PodMonitor {
+		return map[string]*monitoringv1.PodMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{Port: ptr.To("web"), Interval: "30s"},
+					},
+				},
+			},
+		}
+	}
+
+	for _, tc := range []struct {
+		name           string
+		shards         int32
+		zones          []string
+		serviceMonitor map[string]*monitoringv1.ServiceMonitor
+		podMonitor     map[string]*monitoringv1.PodMonitor
+		attachMetadata *monitoringv1.AttachMetadata
+		golden         string
+	}{
+		{
+			name:           "service_monitor_4shards_2zones",
+			shards:         4,
+			zones:          []string{"zone-a", "zone-b"},
+			serviceMonitor: basicServiceMonitor(),
+			golden:         "TopologySharding_ServiceMonitor_4shards_2zones.golden",
+		},
+		{
+			name:       "pod_monitor_4shards_2zones",
+			shards:     4,
+			zones:      []string{"zone-a", "zone-b"},
+			podMonitor: basicPodMonitor(),
+			golden:     "TopologySharding_PodMonitor_4shards_2zones.golden",
+		},
+		{
+			name:   "service_monitor_6shards_3zones",
+			shards: 6,
+			zones:  []string{"zone-a", "zone-b", "zone-c"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_6shards_3zones.golden",
+		},
+		{
+			name:   "service_monitor_force_attach_metadata_nil",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				sm["test"].Spec.AttachMetadata = nil
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_nil.golden",
+		},
+		{
+			name:   "service_monitor_force_attach_metadata_false",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: ptr.To(false)}
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_false.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Shards = ptr.To(tc.shards)
+			p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: tc.zones},
+			}
+
+			cg := mustNewConfigGenerator(t, p, WithPrometheusTopologySharding())
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitor,
+				tc.podMonitor,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 	for _, tc := range []struct {
 		name             string

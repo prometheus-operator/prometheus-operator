@@ -1,0 +1,85 @@
+global:
+  scrape_interval: 30s
+  external_labels:
+    prometheus: default/test
+    prometheus_replica: $(POD_NAME)
+    zone: $(TOPOLOGY_ZONE)
+  evaluation_interval: 30s
+scrape_configs:
+- job_name: podMonitor/default/test/0
+  honor_labels: false
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+      - default
+    attach_metadata:
+      node: true
+  scrape_interval: 30s
+  relabel_configs:
+  - source_labels:
+    - job
+    target_label: __tmp_prometheus_job_name
+  - action: drop
+    source_labels:
+    - __meta_kubernetes_pod_phase
+    regex: (Failed|Succeeded)
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_label_foo
+    - __meta_kubernetes_pod_labelpresent_foo
+    regex: (bar);true
+  - action: keep
+    source_labels:
+    - __meta_kubernetes_pod_container_port_name
+    regex: web
+  - source_labels:
+    - __meta_kubernetes_namespace
+    target_label: namespace
+  - source_labels:
+    - __meta_kubernetes_pod_container_name
+    target_label: container
+  - source_labels:
+    - __meta_kubernetes_pod_name
+    target_label: pod
+  - target_label: job
+    replacement: default/test
+  - target_label: endpoint
+    replacement: web
+  - source_labels:
+    - __meta_kubernetes_endpointslice_endpoint_zone
+    - __tmp_topology
+    target_label: __tmp_topology
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __meta_kubernetes_node_label_topology_kubernetes_io_zone
+    - __meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone
+    - __tmp_topology
+    target_label: __tmp_topology
+    regex: (.+);true;
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_topology
+    - __tmp_disable_sharding
+    regex: $(TOPOLOGY_ZONE);|.+;.+
+    action: keep
+  - source_labels:
+    - __address__
+    - __tmp_hash
+    target_label: __tmp_hash
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
+    - __tmp_hash
+    target_label: __tmp_hash
+    modulus: 2
+    action: hashmod
+  - source_labels:
+    - __tmp_hash
+    - __tmp_disable_sharding
+    regex: $(INZONE_SHARD);|.+;.+
+    action: keep
