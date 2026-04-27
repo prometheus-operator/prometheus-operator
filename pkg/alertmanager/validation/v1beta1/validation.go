@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"regexp"
 	"strings"
 
 	"k8s.io/utils/ptr"
@@ -26,8 +25,6 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
-
-var durationRe = regexp.MustCompile(`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`)
 
 // ValidateAlertmanagerConfig checks that the given resource complies with the
 // semantics of the Alertmanager configuration.
@@ -127,8 +124,10 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(conf.ClientURL)); err != nil {
-			return fmt.Errorf("[%d]: clientURL: %w", i, err)
+		if conf.ClientURL != nil && *conf.ClientURL != "" {
+			if err := validation.ValidateTemplateURL(*conf.ClientURL); err != nil {
+				return fmt.Errorf("[%d]: clientURL: %w", i, err)
+			}
 		}
 
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
@@ -136,14 +135,18 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 		}
 
 		for j, lc := range conf.PagerDutyLinkConfigs {
-			if err := validation.ValidateURLPtr((*string)(lc.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+			if lc.Href != nil && *lc.Href != "" {
+				if err := validation.ValidateTemplateURL(*lc.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 
 		for j, ic := range conf.PagerDutyImageConfigs {
-			if err := validation.ValidateURLPtr((*string)(ic.Href)); err != nil {
-				return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+			if ic.Href != nil && *ic.Href != "" {
+				if err := validation.ValidateTemplateURL(*ic.Href); err != nil {
+					return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+				}
 			}
 		}
 
@@ -173,27 +176,9 @@ func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
 }
 
 func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
-	for i, config := range configs {
+	for _, config := range configs {
 		if err := config.Validate(); err != nil {
 			return err
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.IconURL)); err != nil {
-			return fmt.Errorf("[%d]: iconURL: %w", i, err)
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.ImageURL)); err != nil {
-			return fmt.Errorf("[%d]: imageURL: %w", i, err)
-		}
-
-		if err := validation.ValidateURLPtr((*string)(config.ThumbURL)); err != nil {
-			return fmt.Errorf("[%d]: thumbURL: %w", i, err)
-		}
-
-		for j, sa := range config.Actions {
-			if err := validation.ValidateURLPtr((*string)(sa.URL)); err != nil {
-				return fmt.Errorf("[%d]: invalid 'action'[%d]: url: %w", i, j, err)
-			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -209,7 +194,7 @@ func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
+		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
 			return fmt.Errorf("[%d]: url: %w", i, err)
 		}
 
@@ -314,8 +299,10 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return fmt.Errorf("html and monospace options are mutually exclusive")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.URL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+		if config.URL != "" {
+			if err := validation.ValidateTemplateURL(config.URL); err != nil {
+				return fmt.Errorf("[%d]: url: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -332,8 +319,10 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.ApiURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if config.ApiURL != nil {
+			if err := validation.ValidateTemplateURL(*config.ApiURL); err != nil {
+				return fmt.Errorf("[%d]: apiURL: %w", i, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -347,6 +336,10 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	for i, config := range configs {
 		if config.BotToken == nil && config.BotTokenFile == nil {
 			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
+		}
+
+		if config.BotToken != nil && config.BotTokenFile != nil {
+			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
 		}
 
 		if config.ChatID == 0 {
@@ -393,6 +386,24 @@ func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) err
 	for i, config := range configs {
 		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
 			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'iconURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ImageURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'imageURL': %w", i, err)
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.ThumbURL); err != nil {
+			return fmt.Errorf("[%d]: invalid 'thumbURL': %w", i, err)
+		}
+
+		for j, a := range config.Actions {
+			if err := validation.ValidateTemplateURLPtr(a.URL); err != nil {
+				return fmt.Errorf("%d: actions[%d]: invalid 'url': %w", i, j, err)
+			}
 		}
 
 		if err := config.HTTPConfig.Validate(); err != nil {
@@ -465,18 +476,6 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		if _, found := timeIntervals[namedTimeInterval]; !found {
 			return fmt.Errorf("time interval %q not found", namedTimeInterval)
 		}
-	}
-
-	if r.GroupInterval != "" && !durationRe.MatchString(r.GroupInterval) {
-		return fmt.Errorf("groupInterval %s does not match required regex: %s", r.GroupInterval, durationRe.String())
-
-	}
-	if r.GroupWait != "" && !durationRe.MatchString(r.GroupWait) {
-		return fmt.Errorf("groupWait %s does not match required regex: %s", r.GroupWait, durationRe.String())
-	}
-
-	if r.RepeatInterval != "" && !durationRe.MatchString(r.RepeatInterval) {
-		return fmt.Errorf("repeatInterval %s does not match required regex: %s", r.RepeatInterval, durationRe.String())
 	}
 
 	for i, v := range r.Matchers {

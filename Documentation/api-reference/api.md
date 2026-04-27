@@ -645,14 +645,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -666,15 +670,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -2911,9 +2919,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -2928,7 +2935,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -2937,9 +2944,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -5383,13 +5390,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -5403,13 +5414,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -7174,14 +7183,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -7195,15 +7208,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -8193,7 +8210,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -9136,9 +9153,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -9153,7 +9169,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -9162,9 +9178,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -11427,6 +11443,22 @@ SafeTLSConfig
 <p>tlsConfig defines the default TLS configuration for SMTP receivers</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig
@@ -12713,7 +12745,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
 </p>
 <div>
 <p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -15660,9 +15692,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -15677,7 +15708,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -15686,9 +15717,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -20731,13 +20762,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -20751,13 +20786,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -23481,9 +23514,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -23498,7 +23530,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -23507,9 +23539,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -25008,6 +25040,23 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+response body that will be accepted by Prometheus. Targets responding with
+a body larger than this many bytes will cause the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeNativeHistograms</code><br/>
 <em>
 bool
@@ -26152,7 +26201,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the DigitalOcean API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26261,7 +26310,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the DigitalOcean API.</p>
 </td>
 </tr>
 <tr>
@@ -26442,7 +26491,7 @@ string
 </em>
 </td>
 <td>
-<p>host defines the address of the docker daemon</p>
+<p>host defines the address of the docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26511,7 +26560,8 @@ SafeTLSConfig
 </em>
 </td>
 <td>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration to connect to the Docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26606,7 +26656,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker daemon.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26761,7 +26811,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker Swarm API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26847,7 +26897,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.</p>
 </td>
 </tr>
 <tr>
@@ -27062,7 +27112,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.
+<p>tlsConfig defines the TLS configuration to connect to the EC2 API.
 It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
@@ -27302,6 +27352,69 @@ SafeTLSConfig
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled defines whether to enable threading, which makes alert notifications in the same
+alert group show up in the same email thread.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
+(none means group by alert group key, no date).</p>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig
@@ -27326,7 +27439,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27358,7 +27473,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Eureka server.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -27387,7 +27502,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Eureka server.</p>
 </td>
 </tr>
 <tr>
@@ -27896,7 +28011,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -28114,7 +28231,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Hetzner API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28223,7 +28340,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Hetzner API.</p>
 </td>
 </tr>
 <tr>
@@ -28398,7 +28515,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>authorization defines the  header configuration to authenticate against the IONOS.
+<p>authorization defines the header configuration to authenticate against the IONOS API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28469,7 +28586,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the IONOS API.</p>
 </td>
 </tr>
 <tr>
@@ -29012,7 +29129,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Kuma control plane.</p>
 </td>
 </tr>
 <tr>
@@ -29040,7 +29157,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Kuma control plane.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29219,7 +29336,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Lightsail API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29305,7 +29422,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Lightsail API.</p>
 </td>
 </tr>
 <tr>
@@ -29413,7 +29530,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Linode API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29511,7 +29628,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Linode API.</p>
 </td>
 </tr>
 <tr>
@@ -30020,7 +30137,9 @@ When specified, only resources within this region will be discovered.</p>
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30066,7 +30185,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Nomad API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -30095,7 +30214,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Nomad API.</p>
 </td>
 </tr>
 <tr>
@@ -30370,7 +30489,9 @@ string
 <td>
 <code>identityEndpoint</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30972,9 +31093,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31159,9 +31278,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31203,9 +31320,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -32197,9 +32312,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -32214,7 +32328,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -32223,9 +32337,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -33024,7 +33138,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33110,7 +33226,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the PuppetDB API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -33196,7 +33312,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the PuppetDB server.</p>
 </td>
 </tr>
 <tr>
@@ -33348,9 +33464,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33770,9 +33884,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33864,7 +33976,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -33878,7 +33992,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -33911,9 +34027,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33993,9 +34107,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34008,9 +34120,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34167,13 +34277,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -34181,13 +34292,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -34195,13 +34308,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -34317,9 +34432,7 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34540,7 +34653,9 @@ int32
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34690,7 +34805,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Scaleway API.</p>
 </td>
 </tr>
 </tbody>
@@ -35352,6 +35467,23 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+response body that will be accepted by Prometheus. Targets responding with
+a body larger than this many bytes will cause the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeNativeHistograms</code><br/>
 <em>
 bool
@@ -35595,9 +35727,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35760,9 +35890,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35873,9 +36001,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35887,9 +36013,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35901,9 +36025,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35980,6 +36102,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -36166,8 +36302,7 @@ map[string]string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape
-kubebuilder:validation:MinLength:=1</p>
+<p>Target represents a target for Prometheus to scrape</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
@@ -36472,7 +36607,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -36914,9 +37049,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -37110,9 +37243,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -37210,9 +37343,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -37630,6 +37763,69 @@ SafeTLSConfig
 <em>(Optional)</em>
 <p>tlsConfig defines the TLS configuration for SMTP connections.
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled defines whether to enable threading, which makes alert notifications in the same
+alert group show up in the same email thread.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: daily, none.
+(none means group by alert group key, no date).</p>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -38623,9 +38819,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38810,9 +39004,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38854,9 +39046,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39040,9 +39230,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39462,9 +39650,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39556,7 +39742,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -39570,7 +39758,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -39603,9 +39793,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39685,9 +39873,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39700,9 +39886,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39859,13 +40043,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -39873,13 +40058,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -39887,13 +40074,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -39910,8 +40099,8 @@ Example: &ldquo;4h&rdquo;</p>
 <em>(Optional)</em>
 <p>matchers defines the list of matchers that the alert&rsquo;s labels should match. For the first
 level route, the operator removes any existing equality and regexp
-matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object
-namespace&gt;</code> matcher.</p>
+matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object namespace&gt;</code> matcher,
+unless configured otherwise in Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -40001,9 +40190,7 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40208,9 +40395,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40373,9 +40558,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40486,9 +40669,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40500,9 +40681,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40514,9 +40693,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40593,6 +40770,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -41075,7 +41266,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -41518,9 +41709,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>

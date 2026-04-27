@@ -22,8 +22,14 @@ import (
 
 // BasicAuthApplyConfiguration represents a declarative configuration of the BasicAuth type for use
 // with apply.
+//
+// BasicAuth configures HTTP Basic Authentication settings.
 type BasicAuthApplyConfiguration struct {
+	// username defines a key of a Secret containing the username for
+	// authentication.
 	Username *corev1.SecretKeySelector `json:"username,omitempty"`
+	// password defines a key of a Secret containing the password for
+	// authentication.
 	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 }
 

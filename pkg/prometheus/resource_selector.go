@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,13 +19,14 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/blang/semver/v4"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -36,7 +37,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
 )
@@ -125,7 +126,7 @@ func selectObjects[T operator.ConfigurationResource](
 
 			obj := o.(runtime.Object)
 			obj = obj.DeepCopyObject()
-			if err := k8sutil.AddTypeInformationToObject(obj); err != nil {
+			if err := k8s.AddTypeInformationToObject(obj); err != nil {
 				logger.Error("failed to set type information", "namespace", ns, "err", err)
 				return
 			}
@@ -150,7 +151,7 @@ func selectObjects[T operator.ConfigurationResource](
 			rejected++
 			reason = operator.InvalidConfiguration
 			logger.Warn("skipping object", "error", err.Error(), "object", namespaceAndName)
-			rs.eventRecorder.Eventf(obj, v1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
+			rs.eventRecorder.Eventf(obj, corev1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingConfigurationResourcesAction, "%q was rejected due to invalid configuration: %v", namespaceAndName, err)
 		} else {
 			valid = append(valid, namespaceAndName)
 		}
@@ -491,18 +492,29 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	return nil
 }
 
-func validateProberURL(url string) error {
-	hostPort := strings.Split(url, ":")
-
-	if !govalidator.IsHost(hostPort[0]) {
-		return fmt.Errorf("invalid host: %q", hostPort[0])
+// validateProberURL checks that the prober URL is a valid host or host:port.
+// We use govalidator.IsHost() because the standard library doesn't offer a
+// single function that validates a string as an IP (v4/v6) or DNS hostname.
+// Similarly, govalidator.IsPort() validates that a string is a numeric port
+// in the valid range (1-65535), which has no stdlib equivalent.
+func validateProberURL(proberURL string) error {
+	// Try to parse as host:port (handles IPv6 in [bracket]:port format correctly)
+	host, port, err := net.SplitHostPort(proberURL)
+	if err != nil {
+		// No port specified - validate the entire input as a host.
+		// This handles bare hostnames, IPv4, and IPv6 addresses without ports.
+		if !govalidator.IsHost(proberURL) {
+			return fmt.Errorf("invalid host: %q", proberURL)
+		}
+		return nil
 	}
 
-	// handling cases with url specified as host:port
-	if len(hostPort) > 1 {
-		if !govalidator.IsPort(hostPort[1]) {
-			return fmt.Errorf("invalid port: %q", hostPort[1])
-		}
+	// Validate the extracted host and port
+	if !govalidator.IsHost(host) {
+		return fmt.Errorf("invalid host: %q", host)
+	}
+	if !govalidator.IsPort(port) {
+		return fmt.Errorf("invalid port: %q", port)
 	}
 
 	return nil
@@ -696,6 +708,10 @@ func (rs *ResourceSelector) validateKubernetesSDConfigs(ctx context.Context, sc 
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
+		if config.Role == monitoringv1alpha1.KubernetesRoleEndpointSlice && rs.version.LT(semver.MustParse("2.21.0")) {
+			return fmt.Errorf("[%d]: EndpointSlice role is only supported for Prometheus version >= 2.21.0", i)
+		}
+
 		if config.APIServer != nil && config.Namespaces != nil {
 			if ptr.Deref(config.Namespaces.IncludeOwnNamespace, false) {
 				return fmt.Errorf("[%d]: %w", i, errors.New("cannot use 'apiServer' and 'namespaces.ownNamespace' simultaneously"))
@@ -786,7 +802,7 @@ func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monit
 	}
 
 	for i, config := range sc.Spec.HTTPSDConfigs {
-		if _, err := url.Parse(config.URL); err != nil {
+		if _, err := url.Parse(string(config.URL)); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -828,12 +844,6 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 
 func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 
-	if len(sc.Spec.EC2SDConfigs) > 0 {
-		if rs.version.GTE(semver.MustParse("3.8.0")) {
-			return fmt.Errorf("EC2 SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
-		}
-	}
-
 	for i, config := range sc.Spec.EC2SDConfigs {
 
 		if config.AccessKey != nil {
@@ -867,12 +877,16 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
+		if authMethod == "WorkloadIdentity" && rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("[%d]: WorkloadIdentity authentication is only supported from Prometheus version 3.11.0", i)
+		}
+
 		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
 			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
 		}
 
 		// Since Prometheus uses default authentication method as "OAuth"
-		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
+		if authMethod == "ManagedIdentity" || authMethod == "SDK" || authMethod == "WorkloadIdentity" {
 			continue
 		}
 
@@ -965,6 +979,10 @@ func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, s
 
 func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.DockerSDConfigs {
+		if config.MatchFirstNetwork != nil && rs.version.LT(semver.MustParse("2.54.1")) {
+			return fmt.Errorf("[%d]: field `matchFirstNetwork` is only supported for Prometheus version >= 2.54.1", i)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1080,6 +1098,10 @@ func (rs *ResourceSelector) validateEurekaSDConfigs(ctx context.Context, sc *mon
 
 func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.HetznerSDConfigs {
+		if config.LabelSelector != nil && rs.version.LT(semver.MustParse("3.5.0")) {
+			return fmt.Errorf("[%d]: field `labelSelector` is only supported for Prometheus version >= 3.5.0", i)
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1106,6 +1128,10 @@ func (rs *ResourceSelector) validateHetznerSDConfigs(ctx context.Context, sc *mo
 
 func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.NomadSDConfigs {
+		if err := validateServer(string(config.Server)); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1170,7 +1196,7 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 	}
 
 	for i, config := range sc.Spec.PuppetDBSDConfigs {
-		parsedURL, err := url.Parse(config.URL)
+		parsedURL, err := url.Parse(string(config.URL))
 		if err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -1206,14 +1232,8 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if len(sc.Spec.LightSailSDConfigs) > 0 {
-		if rs.version.LT(semver.MustParse("2.27.0")) {
-			return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
-		}
-
-		if rs.version.GTE(semver.MustParse("3.8.0")) {
-			return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version < 3.8.0. For Prometheus 3.8.0 onwards, please use AWS SD")
-		}
+	if rs.version.LT(semver.MustParse("2.27.0")) {
+		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
 	}
 
 	for i, config := range sc.Spec.LightSailSDConfigs {

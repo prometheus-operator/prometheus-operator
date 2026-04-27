@@ -1,4 +1,4 @@
-// Copyright 2019 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,8 +38,8 @@ import (
 )
 
 const (
-	PrometheusOperatorFieldManager = "PrometheusOperator"
-
+	// InvalidConfigurationEvent is the  type used for events reporting invalid
+	// configuration resources.
 	InvalidConfigurationEvent = "InvalidConfiguration"
 )
 
@@ -506,6 +506,22 @@ func (i *instrumentedListerWatcher) List(options metav1.ListOptions) (runtime.Ob
 	return ret, err
 }
 
+// IsWatchListSemanticsUnSupported calls the wrapped ListerWatcher if it
+// implements the function. Otherwise it returns false.
+// It is only required for the unpriviliged namespace ListerWatcher which
+// doesn't support the new ListWatch semantics.
+func (i *instrumentedListerWatcher) IsWatchListSemanticsUnSupported() bool {
+	type unSupportedWatchListSemantics interface {
+		IsWatchListSemanticsUnSupported() bool
+	}
+
+	lw, ok := i.next.(unSupportedWatchListSemantics)
+	if !ok {
+		return false
+	}
+	return lw.IsWatchListSemanticsUnSupported()
+}
+
 // Watch implements the cache.ListerWatcher interface.
 func (i *instrumentedListerWatcher) Watch(options metav1.ListOptions) (watch.Interface, error) {
 	i.watchTotal.Inc()
@@ -564,12 +580,12 @@ func WaitForNamedCacheSync(ctx context.Context, controllerName string, logger *s
 
 // ConfigMapGVK returns the GroupVersionKind representing ConfigMap objects.
 func ConfigMapGVK() schema.GroupVersionKind {
-	return v1.SchemeGroupVersion.WithKind("ConfigMap")
+	return corev1.SchemeGroupVersion.WithKind("ConfigMap")
 }
 
 // SecretGVK returns the GroupVersionKind representing Secret objects.
 func SecretGVK() schema.GroupVersionKind {
-	return v1.SchemeGroupVersion.WithKind("Secret")
+	return corev1.SchemeGroupVersion.WithKind("Secret")
 }
 
 // SelectNamespacesFromCache returns the selected namespaces from the informer's cache.
@@ -586,7 +602,7 @@ func SelectNamespacesFromCache(obj metav1.Object, sel *metav1.LabelSelector, nsI
 
 	var ns []string
 	err = cache.ListAll(nsInfs.GetStore(), labelSelector, func(obj any) {
-		ns = append(ns, obj.(*v1.Namespace).Name)
+		ns = append(ns, obj.(*corev1.Namespace).Name)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list namespaces: %w", err)

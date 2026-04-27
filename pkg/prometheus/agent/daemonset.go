@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ import (
 	"maps"
 
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 )
@@ -128,7 +128,7 @@ func makeDaemonSetSpec(
 	finalSelectorLabels := c.Labels.Merge(podSelectorLabels)
 	finalLabels := c.Labels.Merge(podLabels)
 
-	var additionalContainers, operatorInitContainers []v1.Container
+	var additionalContainers, operatorInitContainers []corev1.Container
 
 	var watchedDirectories []string
 
@@ -143,7 +143,7 @@ func makeDaemonSetSpec(
 		),
 	)
 
-	initContainers, err := k8sutil.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
+	initContainers, err := k8s.MergePatchContainers(operatorInitContainers, cpf.InitContainers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge init containers spec: %w", err)
 	}
@@ -153,7 +153,7 @@ func makeDaemonSetSpec(
 		return nil, err
 	}
 
-	operatorContainers := append([]v1.Container{
+	operatorContainers := append([]corev1.Container{
 		{
 			Name:                     "prometheus",
 			Image:                    pImagePath,
@@ -165,12 +165,12 @@ func makeDaemonSetSpec(
 			LivenessProbe:            livenessProbe,
 			ReadinessProbe:           readinessProbe,
 			Resources:                cpf.Resources,
-			TerminationMessagePolicy: v1.TerminationMessageFallbackToLogsOnError,
-			SecurityContext: &v1.SecurityContext{
+			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+			SecurityContext: &corev1.SecurityContext{
 				ReadOnlyRootFilesystem:   ptr.To(true),
 				AllowPrivilegeEscalation: ptr.To(false),
-				Capabilities: &v1.Capabilities{
-					Drop: []v1.Capability{"ALL"},
+				Capabilities: &corev1.Capabilities{
+					Drop: []corev1.Capability{"ALL"},
 				},
 			},
 		},
@@ -185,7 +185,7 @@ func makeDaemonSetSpec(
 		),
 	}, additionalContainers...)
 
-	containers, err := k8sutil.MergePatchContainers(operatorContainers, cpf.Containers)
+	containers, err := k8s.MergePatchContainers(operatorContainers, cpf.Containers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to merge containers spec: %w", err)
 	}
@@ -195,12 +195,12 @@ func makeDaemonSetSpec(
 			MatchLabels: finalSelectorLabels,
 		},
 		MinReadySeconds: ptr.Deref(cpf.MinReadySeconds, 0),
-		Template: v1.PodTemplateSpec{
+		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels:      finalLabels,
 				Annotations: podAnnotations,
 			},
-			Spec: v1.PodSpec{
+			Spec: corev1.PodSpec{
 				ShareProcessNamespace:         prompkg.ShareProcessNamespace(p),
 				Containers:                    containers,
 				InitContainers:                initContainers,
@@ -208,6 +208,7 @@ func makeDaemonSetSpec(
 				ServiceAccountName:            cpf.ServiceAccountName,
 				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                  cpf.NodeSelector,
+				SchedulerName:                 cpf.SchedulerName,
 				PriorityClassName:             cpf.PriorityClassName,
 				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 				Volumes:                       volumes,
@@ -223,10 +224,10 @@ func makeDaemonSetSpec(
 	}
 
 	if cpf.HostNetwork {
-		spec.Template.Spec.DNSPolicy = v1.DNSClusterFirstWithHostNet
+		spec.Template.Spec.DNSPolicy = corev1.DNSClusterFirstWithHostNet
 	}
-	k8sutil.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
-	k8sutil.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
+	k8s.UpdateDNSPolicy(&spec.Template.Spec, cpf.DNSPolicy)
+	k8s.UpdateDNSConfig(&spec.Template.Spec, cpf.DNSConfig)
 
 	return &spec, nil
 }

@@ -129,7 +129,7 @@ attention which is why we ask you to comply with the following guidelines.
 ### When using AI for communication
 
 * Follow the proposed template when submitting GitHub issues.
-* Avoid verbose descriptions, provide enough information for the maintainers to understand the request but do not overwhelm them with unrelated details.
+* **Avoid verbose descriptions**, provide enough information for the maintainers to understand the request but do not overwhelm them with unrelated details.
 
 ### When using AI for code contribution
 
@@ -138,6 +138,7 @@ attention which is why we ask you to comply with the following guidelines.
 * If necessary call out the parts which are unclear to you.
 * When AI tools have contributed significant parts of the code change, communicate the information in the pull request's description and/or the commit message.
 * Don't submit changes which are unrelated to the purpose of the pull request.
+* **Avoid verbose AI-generated descriptions in PRs** keep descriptions concise, focused, and relevant to the actual changes being made.
 
 ## Local Development
 

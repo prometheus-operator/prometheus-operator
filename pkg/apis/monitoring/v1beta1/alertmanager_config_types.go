@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,9 +79,9 @@ type AlertmanagerConfigList struct {
 // By definition, the Alertmanager configuration only applies to alerts for which
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
-	// route defines the Alertmanager route definition for alerts matching the resource's
-	// namespace. If present, it will be added to the generated Alertmanager
-	// configuration as a first-level route.
+	// route defines the Alertmanager route definition for incoming alerts. It will be added to the
+	// generated Alertmanager configuration as a first-level route. The matching behavior of the
+	// route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
 	Route *Route `json:"route"`
 	// receivers defines the list of receivers.
@@ -113,26 +113,25 @@ type Route struct {
 	// +optional
 	GroupBy []string `json:"groupBy,omitempty"`
 	// groupWait defines how long to wait before sending the initial notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
 	// Example: "30s"
 	// +optional
-	GroupWait string `json:"groupWait,omitempty"`
+	GroupWait *monitoringv1.NonEmptyDuration `json:"groupWait,omitempty"`
 	// groupInterval defines how long to wait before sending an updated notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Must be greater than 0.
 	// Example: "5m"
 	// +optional
-	GroupInterval string `json:"groupInterval,omitempty"`
+	GroupInterval *monitoringv1.NonEmptyDuration `json:"groupInterval,omitempty"`
 	// repeatInterval defines how long to wait before repeating the last notification.
-	// Must match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`
+	// Must be greater than 0.
 	// Example: "4h"
 	// +optional
-	RepeatInterval string `json:"repeatInterval,omitempty"`
+	RepeatInterval *monitoringv1.NonEmptyDuration `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
-	// matcher on the `namespace` label and adds a `namespace: <object
-	// namespace>` matcher.
-	// +listType=atomic
+	// matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+	// unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
+  // +listType=atomic
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// continue defines the boolean indicating whether an alert should continue matching subsequent
 	// sibling nodes. It will always be overridden to true for the first-level
@@ -275,7 +274,7 @@ type PagerDutyConfig struct {
 	Client *string `json:"client,omitempty"`
 	// clientURL defines the backlink to the sender of notification.
 	// +optional
-	ClientURL *URL `json:"clientURL,omitempty"`
+	ClientURL *string `json:"clientURL,omitempty"`
 	// description of the incident.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -329,7 +328,7 @@ type PagerDutyImageConfig struct {
 	Src *string `json:"src,omitempty"`
 	// href defines the optional URL; makes the image a clickable link.
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt is the optional alternative text for the image.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -340,7 +339,7 @@ type PagerDutyImageConfig struct {
 type PagerDutyLinkConfig struct {
 	// href defines the URL of the link to be attached
 	// +optional
-	Href *URL `json:"href,omitempty"`
+	Href *string `json:"href,omitempty"`
 	// alt defines the text that describes the purpose of the link, and can be used as the link's text.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -410,7 +409,7 @@ type SlackConfig struct {
 	Title *string `json:"title,omitempty"`
 	// titleLink defines the URL that the title will link to when clicked.
 	// +optional
-	TitleLink *URL `json:"titleLink,omitempty"`
+	TitleLink string `json:"titleLink,omitempty"`
 	// pretext defines optional text that appears above the message attachment block.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -446,14 +445,14 @@ type SlackConfig struct {
 	IconEmoji *string `json:"iconEmoji,omitempty"`
 	// iconURL defines the URL to an image to use as the bot's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL string `json:"iconURL,omitempty"`
 	// imageURL defines the URL to an image file that will be displayed inside the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL string `json:"imageURL,omitempty"`
 	// thumbURL defines the URL to an image file that will be displayed as a thumbnail
 	// on the right side of the message attachment.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL string `json:"thumbURL,omitempty"`
 	// linkNames enables automatic linking of channel names and usernames in the message.
 	// When true, @channel and @username will be converted to clickable links.
 	// +optional
@@ -478,6 +477,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.30.0.
 	// +optional
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// messageText defines text content of the Slack message.
+	// If set, this is sent as the top-level 'text' field in the Slack payload.
+	// It requires Alertmanager >= v0.31.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -498,7 +503,7 @@ type SlackAction struct {
 	// url defines the URL to open when the action is triggered.
 	// Only applicable for button-type actions. When set, clicking the button opens this URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// style defines the visual appearance of the action element.
 	// Valid values include "default", "primary" (green), and "danger" (red).
 	// +kubebuilder:validation:MinLength=1
@@ -579,7 +584,7 @@ type WebhookConfig struct {
 	// url defines the URL to send HTTP POST requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
 	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
@@ -893,6 +898,32 @@ type EmailConfig struct {
 	// This includes settings for certificates, CA validation, and TLS protocol options.
 	// +optional
 	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+	// true: force use of implicit TLS (direct TLS connection on any port)
+	// false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
+	// threading defines the threading configuration for email receiver.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Threading *EmailThreadingConfig `json:"threading,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=Daily;None
+type ThreadByDateType string
+
+const (
+	ThreadByDateTypeDaily ThreadByDateType = "Daily"
+	ThreadByDateTypeNone  ThreadByDateType = "None"
+)
+
+type EmailThreadingConfig struct {
+	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+	// (None means group by alert group key, no date).
+	// +required
+	ThreadByDate ThreadByDateType `json:"threadByDate"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
@@ -988,7 +1019,7 @@ type PushoverConfig struct {
 	// url defines a supplementary URL shown alongside the message.
 	// This creates a clickable link within the Pushover notification.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// urlTitle defines a title for the supplementary URL.
 	// If not specified, the raw URL is shown instead.
 	// +kubebuilder:validation:MinLength=1
@@ -1046,7 +1077,7 @@ type SNSConfig struct {
 	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
 	// If not specified, the SNS API URL from the SNS SDK will be used.
 	// +optional
-	ApiURL *URL `json:"apiURL,omitempty"`
+	ApiURL *string `json:"apiURL,omitempty"`
 	// sigv4 configures AWS's Signature Verification 4 signing process to sign requests.
 	// This includes AWS credentials and region configuration for authentication.
 	// +optional
@@ -1207,10 +1238,14 @@ type RocketChatConfig struct {
 	Channel *string `json:"channel,omitempty"`
 	// token defines the sender token for RocketChat authentication.
 	// This is the personal access token or bot token used to authenticate API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	Token v1.SecretKeySelector `json:"token,omitempty"`
 	// tokenID defines the sender token ID for RocketChat authentication.
 	// This is the user ID associated with the token used for API requests.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
 	// +required
 	TokenID v1.SecretKeySelector `json:"tokenID,omitempty"`
 	// color defines the message color displayed in RocketChat.
@@ -1226,7 +1261,7 @@ type RocketChatConfig struct {
 	// iconURL defines the icon URL for the message avatar.
 	// This displays a custom image as the message sender's avatar.
 	// +optional
-	IconURL *URL `json:"iconURL,omitempty"`
+	IconURL *string `json:"iconURL,omitempty"`
 	// text defines the message text to send.
 	// This is optional because attachments can be used instead of or alongside text.
 	// +kubebuilder:validation:MinLength=1
@@ -1255,11 +1290,11 @@ type RocketChatConfig struct {
 	// imageURL defines the image URL to display within the message.
 	// This embeds an image directly in the message attachment.
 	// +optional
-	ImageURL *URL `json:"imageURL,omitempty"`
+	ImageURL *string `json:"imageURL,omitempty"`
 	// thumbURL defines the thumbnail URL for the message.
 	// This displays a small thumbnail image alongside the message content.
 	// +optional
-	ThumbURL *URL `json:"thumbURL,omitempty"`
+	ThumbURL *string `json:"thumbURL,omitempty"`
 	// linkNames defines whether to enable automatic linking of usernames and channels.
 	// When true, @username and #channel references become clickable links.
 	// +optional
@@ -1303,7 +1338,7 @@ type RocketChatActionConfig struct {
 	// url defines the URL the button links to when clicked.
 	// This creates a clickable button that opens the specified URL.
 	// +optional
-	URL *URL `json:"url,omitempty"`
+	URL *string `json:"url,omitempty"`
 	// msg defines the message to send when the button is clicked.
 	// This allows the button to post a predefined message to the channel.
 	// +kubebuilder:validation:MinLength=1

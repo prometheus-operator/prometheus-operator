@@ -1,0 +1,19 @@
+global:
+  slack_api_url: http://slack.example.com
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  slack_configs:
+  - channel: '#alerts'
+    title_link: https://example.com/title
+    icon_url: https://example.com/icon.png
+    image_url: https://example.com/image.png
+    thumb_url: https://example.com/thumb.png
+templates: []

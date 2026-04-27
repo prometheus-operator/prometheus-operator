@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -399,7 +399,7 @@ func (sa *SlackAction) Validate() error {
 		return errors.New("missing text in Slack action configuration")
 	}
 
-	if ptr.Deref(sa.URL, "") == "" && ptr.Deref(sa.Name, "") == "" {
+	if sa.URL == "" && ptr.Deref(sa.Name, "") == "" {
 		return errors.New("missing name or url in Slack action configuration")
 	}
 

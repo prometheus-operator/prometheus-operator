@@ -1,0 +1,6 @@
+receivers:
+- name: telegram
+  telegram_configs:
+  - bot_token: test
+    chat_id_file: /chat/id/file
+templates: []

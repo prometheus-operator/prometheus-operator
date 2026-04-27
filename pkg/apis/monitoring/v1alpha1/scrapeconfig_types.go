@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ const (
 )
 
 // Target represents a target for Prometheus to scrape
-// kubebuilder:validation:MinLength:=1
+// +kubebuilder:validation:MinLength=1
 type Target string
 
 // SDFile represents a file used for service discovery
@@ -61,7 +61,7 @@ type AttachMetadata struct {
 // Filter name and value pairs to limit the discovery process to a subset of available resources.
 type Filter struct {
 	// name of the Filter.
-	// +kubebuilder:vaidation:MinLength=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Name string `json:"name"`
 	// values defines values to filter on.
@@ -163,6 +163,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ScrapeConfigSpec struct {
 	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
 	//
@@ -246,11 +247,11 @@ type ScrapeConfigSpec struct {
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	RelabelConfigs []v1.RelabelConfig `json:"relabelings,omitempty"`
 	// metricsPath defines the HTTP path to scrape for metrics. If empty, Prometheus uses the default value (e.g. /metrics).
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	MetricsPath *string `json:"metricsPath,omitempty"`
 	// scrapeInterval defines the interval between consecutive scrapes.
@@ -268,7 +269,7 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v2.49.0.
 	//
 	// +listType=set
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	ScrapeProtocols []v1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -339,6 +340,14 @@ type ScrapeConfigSpec struct {
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+	// response body that will be accepted by Prometheus. Targets responding with
+	// a body larger than this many bytes will cause the scrape to fail.
+	//
+	// It requires Prometheus >= v2.28.0.
+	//
+	// +optional
+	BodySizeLimit *v1.ByteSize `json:"bodySizeLimit,omitempty"`
 
 	v1.NativeHistogramConfig `json:",inline"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
@@ -349,7 +358,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +optional
 	MetricRelabelConfigs []v1.RelabelConfig `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -378,7 +387,7 @@ type ScrapeConfigSpec struct {
 // +k8s:openapi-gen=true
 type StaticConfig struct {
 	// targets defines the list of targets for this static configuration.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +required
 	Targets []Target `json:"targets"`
@@ -397,7 +406,7 @@ type FileSDConfig struct {
 	// prometheus-operator project makes no guarantees about the working directory where the configuration file is
 	// stored.
 	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	// +required
 	Files []SDFile `json:"files"`
@@ -412,10 +421,8 @@ type FileSDConfig struct {
 // +k8s:openapi-gen=true
 type HTTPSDConfig struct {
 	// url defines the URL from which the targets are fetched.
-	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
 	// +optional
@@ -609,7 +616,7 @@ const (
 // +k8s:openapi-gen=true
 type DNSSDConfig struct {
 	// names defines a list of DNS domain names to be queried.
-	// +kubebuilder:validation:MinItems:=1
+	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1
 	// +required
 	Names []string `json:"names"`
@@ -675,7 +682,7 @@ type EC2SDConfig struct {
 	// +optional
 	Filters        Filters `json:"filters,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the EC2 API.
 	// It requires Prometheus >= v2.41.0
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -689,13 +696,14 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
-// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK;WorkloadIdentity
 type AuthenticationMethodType string
 
 const (
-	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
-	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
-	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+	AuthMethodTypeOAuth            AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity  AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK              AuthenticationMethodType = "SDK"
+	AuthMethodTypeWorkloadIdentity AuthenticationMethodType = "WorkloadIdentity"
 )
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -763,7 +771,7 @@ type AzureSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -784,17 +792,17 @@ type AzureSDConfig struct {
 // +k8s:openapi-gen=true
 type GCESDConfig struct {
 	// project defines the Google Cloud Project ID
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Project string `json:"project"`
 	// zone defines the zone of the scrape targets. If you need multiple zones use multiple GCESDConfigs.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Zone string `json:"zone"`
 	// filter defines the filter that can be used optionally to filter the instance list by other criteria
 	// Syntax of this filter is described in the filter query parameter section:
 	// https://cloud.google.com/compute/docs/reference/latest/instances/list
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -808,7 +816,7 @@ type GCESDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// tagSeparator defines the tag separator is used to separate the tags on concatenation
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 }
@@ -833,23 +841,22 @@ type OpenStackSDConfig struct {
 	// +required
 	Role OpenStackRole `json:"role"`
 	// region defines the OpenStack Region.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +required
 	Region string `json:"region"`
 	// identityEndpoint defines the HTTP endpoint that is required to work with
 	// the Identity API of the appropriate version.
-	// +kubebuilder:validation:Pattern:=`^http(s)?:\/\/.+$`
 	// +optional
-	IdentityEndpoint *string `json:"identityEndpoint,omitempty"`
+	IdentityEndpoint *URL `json:"identityEndpoint,omitempty"`
 	// username defines the username required if using Identity V2 API. Consult with your provider's
 	// control panel to discover your account's username.
 	// In Identity V3, either userid or a combination of username
 	// and domainId or domainName are needed
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Username *string `json:"username,omitempty"`
 	// userid defines the OpenStack userid.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	UserID *string `json:"userid,omitempty"`
 	// password defines the password for the Identity V2 and V3 APIs. Consult with your provider's
@@ -858,32 +865,33 @@ type OpenStackSDConfig struct {
 	Password *corev1.SecretKeySelector `json:"password,omitempty"`
 	// domainName defines at most one of domainId and domainName that must be provided if using username
 	// with Identity V3. Otherwise, either are optional.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	DomainName *string `json:"domainName,omitempty"`
 	// domainID defines The OpenStack domainID.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	DomainID *string `json:"domainID,omitempty"`
 	// projectName defines an optional field for the Identity V2 API.
 	// Some providers allow you to specify a ProjectName instead of the ProjectId.
 	// Some require both. Your provider's authentication policies will determine
 	// how these fields influence authentication.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ProjectName *string `json:"projectName,omitempty"`
 	// projectID defines the OpenStack projectID.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ProjectID *string `json:"projectID,omitempty"`
 	// applicationCredentialName defines the ApplicationCredentialID or ApplicationCredentialName fields are
 	// required if using an application credential to authenticate. Some providers
 	// allow you to create an application credential to authenticate rather than a
 	// password.
-	// +kubebuilder:validation:MinLength:=1
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// applicationCredentialId defines the OpenStack applicationCredentialId.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
 	// applicationCredentialSecret defines the required field if using an application
@@ -918,7 +926,7 @@ type OpenStackSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 // +k8s:openapi-gen=true
 type DigitalOceanSDConfig struct {
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the DigitalOcean API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -934,7 +942,7 @@ type DigitalOceanSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the DigitalOcean API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
@@ -970,13 +978,13 @@ type KumaSDConfig struct {
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Kuma control plane.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Kuma control plane.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -997,21 +1005,19 @@ type KumaSDConfig struct {
 // +k8s:openapi-gen=true
 type EurekaSDConfig struct {
 	// server defines the URL to connect to the Eureka server.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	Server string `json:"server"`
+	Server URL `json:"server"`
 	// basicAuth defines the BasicAuth information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Eureka server.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Eureka server.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -1035,15 +1041,16 @@ type EurekaSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config
 // +k8s:openapi-gen=true
 type DockerSDConfig struct {
-	// host defines the address of the docker daemon
+	// host defines the address of the docker daemon.
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
 	Host string `json:"host"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	// +optional
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
-	// +optionals
+	// tlsConfig defines the TLS configuration to connect to the Docker daemon.
+	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// +kubebuilder:validation:Minimum=0
@@ -1070,7 +1077,7 @@ type DockerSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Docker daemon.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1097,7 +1104,7 @@ type HetznerSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Hetzner API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1113,7 +1120,7 @@ type HetznerSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Hetzner API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
@@ -1142,6 +1149,7 @@ type NomadSDConfig struct {
 	AllowStale *bool `json:"allowStale,omitempty"` // nolint:kubeapilinter
 	// namespace defines the Nomad namespace to query for service discovery.
 	// When specified, only resources within this namespace will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -1150,28 +1158,29 @@ type NomadSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// region defines the Nomad region to query for service discovery.
 	// When specified, only resources within this region will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Region *string `json:"region,omitempty"`
 	// server defines the Nomad server address to connect to for service discovery.
 	// This should be the full URL including protocol (e.g., "https://nomad.example.com:4646").
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	Server string `json:"server"`
+	Server URL `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
 	// This determines how Nomad service tags are concatenated into Prometheus labels.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Nomad API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Nomad API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -1259,7 +1268,7 @@ type DockerSwarmSDConfig struct {
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Docker Swarm API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1268,7 +1277,7 @@ type DockerSwarmSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1300,7 +1309,7 @@ type LinodeSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Linode API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1312,7 +1321,7 @@ type LinodeSDConfig struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// +optional
 	FollowRedirects *bool `json:"followRedirects,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Linode API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
@@ -1324,10 +1333,8 @@ type LinodeSDConfig struct {
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
 type PuppetDBSDConfig struct {
 	// url defines the URL of the PuppetDB root query endpoint.
-	// +kubebuilder:validation:MinLength:=1
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 	// query defines the Puppet Query Language (PQL) query. Only resources are supported.
 	// https://puppet.com/docs/puppetdb/latest/api/query/v4/pql.html
 	// +kubebuilder:validation:MinLength=1
@@ -1351,7 +1358,7 @@ type PuppetDBSDConfig struct {
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the PuppetDB API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1360,7 +1367,7 @@ type PuppetDBSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the PuppetDB server.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1373,7 +1380,6 @@ type PuppetDBSDConfig struct {
 
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfig struct {
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
@@ -1386,6 +1392,7 @@ type LightSailSDConfig struct {
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// roleARN defines the AWS Role ARN, an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	RoleARN *string `json:"roleARN,omitempty"`
 	// endpoint defines the custom endpoint to be used.
@@ -1405,7 +1412,7 @@ type LightSailSDConfig struct {
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
-	// authorization defines the  header configuration to authenticate against the DigitalOcean API.
+	// authorization defines the header configuration to authenticate against the Lightsail API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
 	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
@@ -1414,7 +1421,7 @@ type LightSailSDConfig struct {
 	// +optional
 	OAuth2         *v1.OAuth2 `json:"oauth2,omitempty"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Lightsail API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
@@ -1436,7 +1443,9 @@ const (
 
 // ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
+//
+// Note: The `_file` variants of credential fields (e.g. `secret_key_file`)
+// from the Prometheus configuration are not supported. Use Kubernetes secrets via `secretKey` instead.
 type ScalewaySDConfig struct {
 	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1
@@ -1458,9 +1467,8 @@ type ScalewaySDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// apiURL defines the API URL to use when doing the server listing requests.
-	// +kubebuilder:validation:Pattern:="^http(s)?://.+$"
 	// +optional
-	ApiURL *string `json:"apiURL,omitempty"`
+	ApiURL *URL `json:"apiURL,omitempty"`
 	// zone defines the availability zone of your targets (e.g. fr-par-1).
 	// +kubebuilder:validation:MinLength=1
 	// +optional
@@ -1487,7 +1495,7 @@ type ScalewaySDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the Scaleway API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -1508,12 +1516,12 @@ type IonosSDConfig struct {
 	// If not set, Prometheus uses its default value.
 	// +optional
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
-	// authorization defines the  header configuration to authenticate against the IONOS.
+	// authorization defines the header configuration to authenticate against the IONOS API.
 	// Cannot be set at the same time as `oauth2`.
 	// +required
 	Authorization  v1.SafeAuthorization `json:"authorization"`
 	v1.ProxyConfig `json:",inline"`
-	// tlsConfig defines the TLS configuration to connect to the Consul API.
+	// tlsConfig defines the TLS configuration to connect to the IONOS API.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.

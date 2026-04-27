@@ -1,4 +1,4 @@
-// Copyright 2019 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ func New(logger *slog.Logger, validationScheme model.ValidationScheme) *Admissio
 
 	return &Admission{
 		logger:           logger,
-		wh:               conversion.NewWebhookHandler(scheme),
+		wh:               conversion.NewWebhookHandler(scheme, conversion.NewRegistry()),
 		validationScheme: validationScheme,
 	}
 }

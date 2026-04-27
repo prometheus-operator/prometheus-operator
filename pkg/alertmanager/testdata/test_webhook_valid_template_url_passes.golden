@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  webhook_configs:
+  - url: '{{ .labels.url }}'
+templates: []

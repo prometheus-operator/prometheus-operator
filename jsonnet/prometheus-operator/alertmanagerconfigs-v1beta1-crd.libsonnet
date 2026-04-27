@@ -867,6 +867,10 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          forceImplicitTLS: {
+                            description: 'forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.\ntrue: force use of implicit TLS (direct TLS connection on any port)\nfalse: force disable implicit TLS (use explicit TLS/STARTTLS if required)\nnil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility\nIt requires Alertmanager >= v0.31.0.',
+                            type: 'boolean',
+                          },
                           from: {
                             description: 'from defines the sender address for email notifications.\nThis appears as the "From" field in the email header.',
                             minLength: 1,
@@ -922,6 +926,23 @@
                             description: "text defines the plain text body of the email notification.\nThis provides a fallback for email clients that don't support HTML.",
                             minLength: 1,
                             type: 'string',
+                          },
+                          threading: {
+                            description: 'threading defines the threading configuration for email receiver.\nIt requires Alertmanager >= v0.30.0.',
+                            properties: {
+                              threadByDate: {
+                                description: 'threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.\n(None means group by alert group key, no date).',
+                                enum: [
+                                  'Daily',
+                                  'None',
+                                ],
+                                type: 'string',
+                              },
+                            },
+                            required: [
+                              'threadByDate',
+                            ],
+                            type: 'object',
                           },
                           tlsConfig: {
                             description: 'tlsConfig defines the TLS configuration for SMTP connections.\nThis includes settings for certificates, CA validation, and TLS protocol options.',
@@ -3277,7 +3298,6 @@
                           },
                           clientURL: {
                             description: 'clientURL defines the backlink to the sender of notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           component: {
@@ -3969,7 +3989,6 @@
                                 },
                                 href: {
                                   description: 'href defines the optional URL; makes the image a clickable link.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 src: {
@@ -3995,7 +4014,6 @@
                                 },
                                 href: {
                                   description: 'href defines the URL of the link to be attached',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -4795,7 +4813,6 @@
                           },
                           url: {
                             description: 'url defines a supplementary URL shown alongside the message.\nThis creates a clickable link within the Pushover notification.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlTitle: {
@@ -4855,7 +4872,6 @@
                                 },
                                 url: {
                                   description: 'url defines the URL the button links to when clicked.\nThis creates a clickable button that opens the specified URL.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                               },
@@ -5551,12 +5567,10 @@
                           },
                           iconURL: {
                             description: "iconURL defines the icon URL for the message avatar.\nThis displays a custom image as the message sender's avatar.",
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the image URL to display within the message.\nThis embeds an image directly in the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
@@ -5578,7 +5592,6 @@
                           },
                           thumbURL: {
                             description: 'thumbURL defines the thumbnail URL for the message.\nThis displays a small thumbnail image alongside the message content.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           title: {
@@ -5592,7 +5605,7 @@
                             type: 'string',
                           },
                           token: {
-                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.',
+                            description: 'token defines the sender token for RocketChat authentication.\nThis is the personal access token or bot token used to authenticate API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5615,7 +5628,7 @@
                             'x-kubernetes-map-type': 'atomic',
                           },
                           tokenID: {
-                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.',
+                            description: 'tokenID defines the sender token ID for RocketChat authentication.\nThis is the user ID associated with the token used for API requests.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.',
                             properties: {
                               key: {
                                 description: 'The key of the secret to select from.  Must be a valid secret key.',
@@ -5708,7 +5721,6 @@
                                 },
                                 url: {
                                   description: 'url defines the URL to open when the action is triggered.\nOnly applicable for button-type actions. When set, clicking the button opens this URL.',
-                                  pattern: '^https?://.+$',
                                   type: 'string',
                                 },
                                 value: {
@@ -6447,17 +6459,20 @@
                           },
                           iconURL: {
                             description: "iconURL defines the URL to an image to use as the bot's avatar.",
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           imageURL: {
                             description: 'imageURL defines the URL to an image file that will be displayed inside the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           linkNames: {
                             description: 'linkNames enables automatic linking of channel names and usernames in the message.\nWhen true, @channel and @username will be converted to clickable links.',
                             type: 'boolean',
+                          },
+                          messageText: {
+                            description: "messageText defines text content of the Slack message.\nIf set, this is sent as the top-level 'text' field in the Slack payload.\nIt requires Alertmanager >= v0.31.0.",
+                            minLength: 1,
+                            type: 'string',
                           },
                           mrkdwnIn: {
                             description: 'mrkdwnIn defines which fields should be parsed as Slack markdown.\nValid values include "pretext", "text", and "fields".',
@@ -6489,7 +6504,6 @@
                           },
                           thumbURL: {
                             description: 'thumbURL defines the URL to an image file that will be displayed as a thumbnail\non the right side of the message attachment.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           timeout: {
@@ -6504,7 +6518,6 @@
                           },
                           titleLink: {
                             description: 'titleLink defines the URL that the title will link to when clicked.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           username: {
@@ -6525,7 +6538,6 @@
                         properties: {
                           apiURL: {
                             description: 'apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.\nIf not specified, the SNS API URL from the SNS SDK will be used.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           attributes: {
@@ -10048,7 +10060,6 @@
                           },
                           url: {
                             description: 'url defines the URL to send HTTP POST requests to.\nurlSecret takes precedence over url. One of urlSecret and url should be defined.',
-                            pattern: '^https?://.+$',
                             type: 'string',
                           },
                           urlSecret: {
@@ -10803,7 +10814,7 @@
                 'x-kubernetes-list-type': 'map',
               },
               route: {
-                description: "route defines the Alertmanager route definition for alerts matching the resource's\nnamespace. If present, it will be added to the generated Alertmanager\nconfiguration as a first-level route.",
+                description: "route defines the Alertmanager route definition for incoming alerts. It will be added to the\ngenerated Alertmanager configuration as a first-level route. The matching behavior of the\nroute depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                 properties: {
                   activeTimeIntervals: {
                     description: 'activeTimeIntervals is a list of TimeInterval names when this route should be active.',
@@ -10826,15 +10837,19 @@
                     'x-kubernetes-list-type': 'set',
                   },
                   groupInterval: {
-                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "5m"',
+                    description: 'groupInterval defines how long to wait before sending an updated notification.\nMust be greater than 0.\nExample: "5m"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   groupWait: {
-                    description: 'groupWait defines how long to wait before sending the initial notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "30s"',
+                    description: 'groupWait defines how long to wait before sending the initial notification.\nExample: "30s"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   matchers: {
-                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object\nnamespace>` matcher.",
+                    description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,\nunless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                     items: {
                       description: "Matcher defines how to match on alert's labels.",
                       properties: {
@@ -10879,7 +10894,9 @@
                     type: 'string',
                   },
                   repeatInterval: {
-                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust match the regular expression`^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$`\nExample: "4h"',
+                    description: 'repeatInterval defines how long to wait before repeating the last notification.\nMust be greater than 0.\nExample: "4h"',
+                    minLength: 1,
+                    pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
                   routes: {
