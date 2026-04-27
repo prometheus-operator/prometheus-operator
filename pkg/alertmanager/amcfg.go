@@ -3191,6 +3191,20 @@ func (jc *jiraConfig) sanitize(amVersion semver.Version, logger *slog.Logger) er
 			}
 		}
 	}
+
+	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
+	if jc.Summary.EnableUpdate != nil && lessThanV0_30 {
+		msg := "'enable_update' on 'summary' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		jc.Summary.EnableUpdate = nil
+	}
+
+	if jc.Description.EnableUpdate != nil && lessThanV0_30 {
+		msg := "'enable_update' on 'description' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		jc.Description.EnableUpdate = nil
+	}
+
 	if jc.APIURL != "" {
 		if _, err := validation.ValidateURL(jc.APIURL); err != nil {
 			return fmt.Errorf("invalid 'api_url': %w", err)

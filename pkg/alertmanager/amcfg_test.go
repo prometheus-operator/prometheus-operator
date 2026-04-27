@@ -7310,6 +7310,10 @@ func TestSanitizeJiraConfig(t *testing.T) {
 
 	versionAPITypeAllowed := semver.Version{Major: 0, Minor: 29}
 	versionAPITypeNotAllowed := semver.Version{Major: 0, Minor: 28}
+
+	versionEnableUpdateAllowed := semver.Version{Major: 0, Minor: 30}
+	versionEnableUpdateNotAllowed := semver.Version{Major: 0, Minor: 29}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
@@ -7460,6 +7464,120 @@ func TestSanitizeJiraConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+		{
+			name:           "jira_configs with enable_update on summary",
+			againstVersion: versionEnableUpdateAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+								Summary: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.summary\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_enable_update_summary.golden",
+		},
+		{
+			name:           "jira_configs with enable_update on description",
+			againstVersion: versionEnableUpdateAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+								Description: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.description\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_enable_update_description.golden",
+		},
+		{
+			name:           "jira_configs with enable_update on summary version not supported",
+			againstVersion: versionEnableUpdateNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+								Summary: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.summary\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_enable_update_summary_version_not_supported.golden",
+		},
+		{
+			name:           "jira_configs with enable_update on description version not supported",
+			againstVersion: versionEnableUpdateNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+								Description: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.description\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_enable_update_description_version_not_supported.golden",
+		},
+		{
+			name:           "jira_configs with enable_update on both summary and description version not supported",
+			againstVersion: versionEnableUpdateNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						JiraConfigs: []*jiraConfig{
+							{
+								APIURL:    "http://issues.example.com",
+								Project:   "Monitoring",
+								IssueType: "Bug",
+								Summary: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.summary\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+								Description: jiraFieldConfig{
+									Template:     "{{ template \"jira.default.description\" . }}",
+									EnableUpdate: ptr.To(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "jira_config_with_enable_update_both_version_not_supported.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
