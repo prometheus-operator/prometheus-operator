@@ -327,6 +327,10 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if len(tls.CipherSuites) > 0 && version.GTE(semver.MustParse("0.42.0")) {
 			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: strings.Join(tls.CipherSuites, ",")})
 		}
+
+		if len(tls.Curves) > 0 && version.GTE(semver.MustParse("0.42.0")) {
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: strings.Join(tls.Curves, ",")})
+		}
 	}
 
 	if tr.Spec.ExternalPrefix != "" {

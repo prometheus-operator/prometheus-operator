@@ -561,6 +561,10 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		if len(tls.CipherSuites) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: strings.Join(tls.CipherSuites, ",")})
 		}
+
+		if len(tls.Curves) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: strings.Join(tls.Curves, ",")})
+		}
 	}
 
 	container = &corev1.Container{

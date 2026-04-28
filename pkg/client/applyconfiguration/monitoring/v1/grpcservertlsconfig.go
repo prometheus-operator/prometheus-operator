@@ -37,6 +37,16 @@ type GRPCServerTLSConfigApplyConfiguration struct {
 	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
 	// the Thanos version supports the provided values.
 	CipherSuites []string `json:"cipherSuites,omitempty"`
+	// curves defines the list of preferred elliptic curves for
+	// TLS handshakes.
+	//
+	// If not defined, the Go default curves are used.
+	// Available curves are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	Curves []string `json:"curves,omitempty"`
 }
 
 // GRPCServerTLSConfigApplyConfiguration constructs a declarative configuration of the GRPCServerTLSConfig type for use with
@@ -131,6 +141,16 @@ func (b *GRPCServerTLSConfigApplyConfiguration) WithKeyFile(value string) *GRPCS
 func (b *GRPCServerTLSConfigApplyConfiguration) WithCipherSuites(values ...string) *GRPCServerTLSConfigApplyConfiguration {
 	for i := range values {
 		b.CipherSuites = append(b.CipherSuites, values[i])
+	}
+	return b
+}
+
+// WithCurves adds the given value to the Curves field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Curves field.
+func (b *GRPCServerTLSConfigApplyConfiguration) WithCurves(values ...string) *GRPCServerTLSConfigApplyConfiguration {
+	for i := range values {
+		b.Curves = append(b.Curves, values[i])
 	}
 	return b
 }
