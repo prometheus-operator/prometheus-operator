@@ -13,3 +13,7 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+storage:
+  tsdb:
+    retention:
+      time: 24h

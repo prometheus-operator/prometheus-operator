@@ -1337,7 +1337,7 @@ func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration,
 
 		retention = p.Spec.Retention
 		if retention == "" {
-			retention = defaultRetention
+			retention = monitoringv1.Duration(prompkg.DefaultRetention)
 		}
 	}
 
