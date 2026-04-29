@@ -1014,7 +1014,7 @@ spec:
                     filter:
                       description: |-
                         filter defines the filter expression used to filter the catalog results.
-                        See https://www.consul.io/api-docs/catalog#list-services
+                        See https://developer.hashicorp.com/consul/api-docs/catalog#filtering
                         It requires Prometheus >= 3.0.0.
                       minLength: 1
                       type: string
@@ -1022,6 +1022,13 @@ spec:
                       description: followRedirects defines whether HTTP requests follow
                         HTTP 3xx redirects.
                       type: boolean
+                    healthFilter:
+                      description: |-
+                        healthFilter defines the filter expression used to filter the health results.
+                        See https://developer.hashicorp.com/consul/api-docs/health#filtering
+                        It requires Prometheus >= 3.11.2.
+                      minLength: 1
+                      type: string
                     namespace:
                       description: |-
                         namespace are only supported in Consul Enterprise.

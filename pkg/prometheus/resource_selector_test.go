@@ -2412,6 +2412,32 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "2.55.0",
 		},
 		{
+			scenario: "Consul SD config with health filter",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:       "example.com",
+						HealthFilter: ptr.To("Service.Meta.env == \"prod\""),
+					},
+				}
+			},
+			valid:       true,
+			promVersion: "3.11.2",
+		},
+		{
+			scenario: "Consul SD config with health filter but unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:       "example.com",
+						HealthFilter: ptr.To("Service.Meta.env == \"prod\""),
+					},
+				}
+			},
+			valid:       false,
+			promVersion: "3.11.1",
+		},
+		{
 			scenario: "Consul SD proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
