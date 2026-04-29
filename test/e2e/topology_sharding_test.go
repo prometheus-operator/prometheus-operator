@@ -59,39 +59,13 @@ func testPrometheusTopologySharding(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a service monitor for the app deployment.
-	sm := framework.MakeBasicServiceMonitor("app")
-	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
-		Interval: monitoringv1.Duration("5s"),
-		Port:     "web",
-		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
-			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
-				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: corev1.SecretKeySelector{
-							Key: "user",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-						Password: corev1.SecretKeySelector{
-							Key: "pass",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-	_, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	err = framework.DeployAppServiceMonitor(ctx, ns)
 	require.NoError(t, err)
 
-	name := "topology-sharding"
-	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
-		MatchLabels: map[string]string{"group": "app"},
-	}
+	const (
+		prometheusName = "topology-sharding"
+	)
+	p := framework.MakeBasicPrometheus(ns, prometheusName, testFramework.AppGroupLabel, 1)
 	p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 		Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 		Topology: &monitoringv1.TopologyShardingStrategy{
@@ -106,7 +80,7 @@ func testPrometheusTopologySharding(t *testing.T) {
 
 	shardServices := make([]*corev1.Service, 2)
 	for i := range shardServices {
-		svc := framework.MakePrometheusService(name, name, corev1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService(prometheusName, prometheusName, corev1.ServiceTypeClusterIP)
 		svc.Name += "-" + strconv.Itoa(i)
 		svc.Spec.Selector["operator.prometheus.io/shard"] = strconv.Itoa(i)
 		svc, err = framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
@@ -128,7 +102,7 @@ func testPrometheusTopologySharding(t *testing.T) {
 				metav1.ListOptions{
 					LabelSelector: labels.Set(map[string]string{
 						"operator.prometheus.io/shard": strconv.Itoa(i),
-						"operator.prometheus.io/name":  name,
+						"operator.prometheus.io/name":  prometheusName,
 						"topology.kubernetes.io/zone":  zone,
 					}).String(),
 				},

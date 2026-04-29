@@ -45,6 +45,10 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
+	const (
+		prometheusName       = "shard-retention"
+		prometheusGroupLabel = "test"
+	)
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
 
@@ -63,37 +67,11 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create a service monitor for the app deployment.
-	sm := framework.MakeBasicServiceMonitor("app")
-	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
-		Interval: monitoringv1.Duration("5s"),
-		Port:     "web",
-		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
-			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
-				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: corev1.SecretKeySelector{
-							Key: "user",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-						Password: corev1.SecretKeySelector{
-							Key: "pass",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	err = framework.DeployAppServiceMonitor(ctx, ns)
 	require.NoError(t, err)
 
 	// Create 1 service monitor for the Prometheus service.
-	sm = framework.MakeBasicServiceMonitor("test")
+	sm := framework.MakeBasicServiceMonitor(prometheusGroupLabel)
 	sm.Spec.Endpoints[0].RelabelConfigs = []monitoringv1.RelabelConfig{
 		{
 			TargetLabel: "__tmp_disable_sharding",
@@ -109,14 +87,14 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// We test only against the Retain strategy. There's no need to verify with
 	// the Delete strategy because the second shard will not exist anymore in
 	// case of scale down.
-	prom := framework.MakeBasicPrometheus(ns, "test", "test", 1)
+	prom := framework.MakeBasicPrometheus(ns, prometheusName, prometheusGroupLabel, 1)
 	prom.Spec.Shards = ptr.To(int32(1))
 	prom.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "group",
 				Operator: metav1.LabelSelectorOpIn,
-				Values:   []string{"app", "test"},
+				Values:   []string{testFramework.AppGroupLabel, prometheusGroupLabel},
 			},
 		},
 	}
@@ -127,7 +105,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 	shardServices := make([]*corev1.Service, 2)
 	for i := range shardServices {
-		svc := framework.MakePrometheusService("test", "test", corev1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService(prometheusName, prometheusGroupLabel, corev1.ServiceTypeClusterIP)
 		svc.Name += "-" + strconv.Itoa(i)
 		svc.Spec.Selector["operator.prometheus.io/shard"] = strconv.Itoa(i)
 
@@ -146,7 +124,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// Scale up the number of shards to 2 and ensure that
 	// * Each shard discovers more than 2 targets (at least 1 app pod + 2 prometheus pods).
 	// * The sum of targets is 10 app pods + 2*2 prometheus pods = 14.
-	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 2)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, prometheusName, ns, 2)
 	require.NoError(t, err)
 
 	t.Run("2 active shards", func(t *testing.T) {
@@ -184,7 +162,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 	// Scale down the number of shards to 1 and ensure that all targets are
 	// reaffected to the first shard.
-	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 1)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, prometheusName, ns, 1)
 	require.NoError(t, err)
 
 	t.Run("1 active shard", func(t *testing.T) {

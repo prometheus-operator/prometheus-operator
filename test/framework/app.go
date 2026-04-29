@@ -20,6 +20,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
+const (
+	// AppGroupLabel is the value of the "group" label for the instrumented sample
+	// app resources.
+	AppGroupLabel     = "app"
+	appSecretAuthName = "auth"
 )
 
 // DeployBasicAuthApp deploys the instrumented sample app with the given number
@@ -38,9 +47,9 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "app",
+			Name: AppGroupLabel,
 			Labels: map[string]string{
-				"group": "app",
+				"group": AppGroupLabel,
 			},
 		},
 		Spec: corev1.ServiceSpec{
@@ -59,7 +68,7 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "auth",
+			Name:      appSecretAuthName,
 			Namespace: ns,
 		},
 		StringData: map[string]string{
@@ -69,5 +78,32 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 		Type: corev1.SecretTypeOpaque,
 	}
 	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+	return err
+}
+
+// DeployAppServiceMonitor creates a ServiceMonitor for the app deployed by DeployBasicAuthApp.
+func (f *Framework) DeployAppServiceMonitor(ctx context.Context, ns string) error {
+	sm := f.MakeBasicServiceMonitor(AppGroupLabel)
+	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
+		Interval: monitoringv1.Duration("5s"),
+		Port:     "web",
+		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+					BasicAuth: &monitoringv1.BasicAuth{
+						Username: corev1.SecretKeySelector{
+							Key:                  "user",
+							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
+						},
+						Password: corev1.SecretKeySelector{
+							Key:                  "pass",
+							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
+						},
+					},
+				},
+			},
+		},
+	}
+	_, err := f.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
 	return err
 }
