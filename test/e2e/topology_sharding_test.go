@@ -62,10 +62,15 @@ func testPrometheusTopologySharding(t *testing.T) {
 	err = framework.DeployAppServiceMonitor(ctx, ns)
 	require.NoError(t, err)
 
+	// Create a pod monitor for the app deployment.
+	err = framework.DeployAppPodMonitor(ctx, ns)
+	require.NoError(t, err)
+
 	const (
 		prometheusName = "topology-sharding"
 	)
 	p := framework.MakeBasicPrometheus(ns, prometheusName, testFramework.AppGroupLabel, 1)
+	p.Spec.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
 	p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 		Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 		Topology: &monitoringv1.TopologyShardingStrategy{
@@ -112,35 +117,81 @@ func testPrometheusTopologySharding(t *testing.T) {
 	}
 
 	// Ensure that each shard scrapes a non-zero number of targets and that
-	// the total across all shards equals the number of app replicas (10).
+	// the total across all shards for a given monitor resource equals the
+	// number of app replicas (10).
 	t.Run("target distribution", func(t *testing.T) {
-		var pollErr error
-		err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
-			total := 0
-			for _, svc := range shardServices {
-				err := framework.WaitForHealthyTargetsWithCondition(
-					context.Background(),
-					ns,
-					svc.Name,
-					func(targets []*testFramework.Target) error {
-						if len(targets) == 0 {
-							return errors.New("expected non-zero targets")
-						}
-						total += len(targets)
-						return nil
-					},
-				)
-				if err != nil {
-					pollErr = fmt.Errorf("%s: %w", svc.Name, err)
+		t.Run("service monitor", func(t *testing.T) {
+			var pollErr error
+			err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+				total := 0
+				for _, svc := range shardServices {
+					err := framework.WaitForHealthyTargetsWithCondition(
+						context.Background(),
+						ns,
+						svc.Name,
+						func(targets []*testFramework.Target) error {
+							count := 0
+							for _, target := range targets {
+								if target.Labels["job"] == testFramework.AppGroupLabel {
+									count++
+								}
+							}
+							if count == 0 {
+								return errors.New("expected non-zero service monitor targets")
+							}
+							total += count
+							return nil
+						},
+					)
+					if err != nil {
+						pollErr = fmt.Errorf("%s: %w", svc.Name, err)
+						return false, nil
+					}
+				}
+				if total != 10 {
+					pollErr = fmt.Errorf("expected 10 service monitor targets, got %d", total)
 					return false, nil
 				}
-			}
-			if total != 10 {
-				pollErr = fmt.Errorf("expected 10 total targets, got %d", total)
-				return false, nil
-			}
-			return true, nil
+				return true, nil
+			})
+			require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
 		})
-		require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
+
+		t.Run("pod monitor", func(t *testing.T) {
+			var pollErr error
+			err := wait.PollUntilContextTimeout(ctx, 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+				total := 0
+				for _, svc := range shardServices {
+					err := framework.WaitForHealthyTargetsWithCondition(
+						context.Background(),
+						ns,
+						svc.Name,
+						func(targets []*testFramework.Target) error {
+							count := 0
+							for _, target := range targets {
+								if target.Labels["job"] == ns+"/"+testFramework.AppGroupLabel {
+									count++
+								}
+							}
+							if count == 0 {
+								return errors.New("expected non-zero pod monitor targets")
+							}
+							total += count
+							return nil
+						},
+					)
+					if err != nil {
+						pollErr = fmt.Errorf("%s: %w", svc.Name, err)
+						return false, nil
+					}
+				}
+				if total != 10 {
+					pollErr = fmt.Errorf("expected 10 pod monitor targets, got %d", total)
+					return false, nil
+				}
+				return true, nil
+			})
+			require.NoError(t, err, fmt.Sprintf("%s: %s", err, pollErr))
+		})
 	})
 }
