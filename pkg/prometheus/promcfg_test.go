@@ -5930,7 +5930,7 @@ func TestRuntimeConfig(t *testing.T) {
 			Runtime: &monitoringv1.RuntimeConfig{
 				GoGC: ptr.To(int32(25)),
 			},
-			Golden: "RuntimeConfig_GoGC_Not_Set.golden",
+			Golden: "RuntimeConfig_GoGC_Not_Set_v2.52.0.golden",
 		},
 		{
 			Scenario: "Runtime GoGC not specified",
@@ -6054,6 +6054,71 @@ func TestTSDBConfig(t *testing.T) {
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
 			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestRetentionConfigFile(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		version       string
+		retention     monitoringv1.Duration
+		retentionSize monitoringv1.ByteSize
+		golden        string
+	}{
+		{
+			name:      "retention.time set with Prometheus >= v3.11.0",
+			version:   "v3.11.0",
+			retention: "2d",
+			golden:    "RetentionConfigFile_time_v3.11.0.golden",
+		},
+		{
+			name:          "retention.size set with Prometheus >= v3.11.0",
+			version:       "v3.11.0",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_size_v3.11.0.golden",
+		},
+		{
+			name:          "retention.time and retention.size set with Prometheus >= v3.11.0",
+			version:       "v3.11.0",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_time_size_v3.11.0.golden",
+		},
+		{
+			name:    "retention defaults to 24h when neither field is set with Prometheus >= v3.11.0",
+			version: "v3.11.0",
+			golden:  "RetentionConfigFile_default_v3.11.0.golden",
+		},
+		{
+			name:          "retention is not in the configuration file for Prometheus < v3.11.0",
+			version:       "v3.10.0",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_v3.10.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+			p.Spec.Retention = tc.retention
+			p.Spec.RetentionSize = tc.retentionSize
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
