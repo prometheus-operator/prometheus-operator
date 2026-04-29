@@ -796,6 +796,54 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 	}
 }
 
+func TestGRPCServerTLSCurves(t *testing.T) {
+	curves := []string{"CurveP256", "X25519"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		curves        []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with curve preferences",
+			version:       "0.42.0",
+			curves:        curves,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with curve preferences",
+			version:       "0.41.0",
+			curves:        curves,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without curve preferences",
+			version:       "0.42.0",
+			curves:        nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					Version:        ptr.To(tc.version),
+					QueryEndpoints: emptyQueryEndpoints,
+					GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+						Curves: tc.curves,
+					},
+				},
+			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+
+			require.NoError(t, err)
+
+			trArgs := sset.Spec.Template.Spec.Containers[0].Args
+			expectedArg := "--grpc-server-tls-curves=CurveP256,X25519"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(trArgs, expectedArg))
+		})
+	}
+}
+
 func TestPodTemplateConfig(t *testing.T) {
 	nodeSelector := map[string]string{
 		"foo": "bar",

@@ -96,7 +96,7 @@ type ThanosSpecApplyConfiguration struct {
 	TracingConfigFile *string `json:"tracingConfigFile,omitempty"`
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
 	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// logLevel for the Thanos sidecar.
 	LogLevel *string `json:"logLevel,omitempty"`

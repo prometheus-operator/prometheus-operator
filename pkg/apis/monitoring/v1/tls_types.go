@@ -58,6 +58,21 @@ type GRPCServerTLSConfig struct {
 	// +listType=set
 	// +kubebuilder:validation:MinItems=1
 	CipherSuites []string `json:"cipherSuites,omitempty"`
+
+	// curves defines the list of preferred elliptic curves for
+	// TLS handshakes.
+	//
+	// If not defined, the Go default curves are used.
+	// Available curves are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	//
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	Curves []string `json:"curves,omitempty"`
 }
 
 // Validate semantically validates the given TLSConfig.

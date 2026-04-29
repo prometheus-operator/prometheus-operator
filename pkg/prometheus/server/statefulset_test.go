@@ -2605,6 +2605,54 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 	}
 }
 
+func TestGRPCServerTLSCurves(t *testing.T) {
+	curves := []string{"CurveP256", "X25519"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		curves        []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with curve preferences",
+			version:       "0.42.0",
+			curves:        curves,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with curve preferences",
+			version:       "0.41.0",
+			curves:        curves,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without curve preferences",
+			version:       "0.42.0",
+			curves:        nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					Thanos: &monitoringv1.ThanosSpec{
+						Version: ptr.To(tc.version),
+						GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+							Curves: tc.curves,
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
+			expectedArg := "--grpc-server-tls-curves=CurveP256,X25519"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+		})
+	}
+}
+
 func TestThanosAdditionalArgsNoError(t *testing.T) {
 	expectedThanosArgs := []string{
 		"sidecar",
