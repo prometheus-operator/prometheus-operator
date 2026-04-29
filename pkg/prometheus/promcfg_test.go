@@ -14335,6 +14335,130 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 	}
 }
 
+func TestTopologyShardingRelabeling(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	basicServiceMonitor := func() map[string]*monitoringv1.ServiceMonitor {
+		return map[string]*monitoringv1.ServiceMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{Port: "web", Interval: "30s"},
+					},
+				},
+			},
+		}
+	}
+
+	basicPodMonitor := func() map[string]*monitoringv1.PodMonitor {
+		return map[string]*monitoringv1.PodMonitor{
+			"test": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{Port: ptr.To("web"), Interval: "30s"},
+					},
+				},
+			},
+		}
+	}
+
+	for _, tc := range []struct {
+		name           string
+		shards         int32
+		zones          []string
+		serviceMonitor map[string]*monitoringv1.ServiceMonitor
+		podMonitor     map[string]*monitoringv1.PodMonitor
+		attachMetadata *monitoringv1.AttachMetadata
+		golden         string
+	}{
+		{
+			name:           "service_monitor_4shards_2zones",
+			shards:         4,
+			zones:          []string{"zone-a", "zone-b"},
+			serviceMonitor: basicServiceMonitor(),
+			golden:         "TopologySharding_ServiceMonitor_4shards_2zones.golden",
+		},
+		{
+			name:       "pod_monitor_4shards_2zones",
+			shards:     4,
+			zones:      []string{"zone-a", "zone-b"},
+			podMonitor: basicPodMonitor(),
+			golden:     "TopologySharding_PodMonitor_4shards_2zones.golden",
+		},
+		{
+			name:   "service_monitor_6shards_3zones",
+			shards: 6,
+			zones:  []string{"zone-a", "zone-b", "zone-c"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_6shards_3zones.golden",
+		},
+		{
+			name:   "service_monitor_force_attach_metadata_nil",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				sm["test"].Spec.AttachMetadata = nil
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_nil.golden",
+		},
+		{
+			name:   "service_monitor_force_attach_metadata_false",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: ptr.To(false)}
+				return sm
+			}(),
+			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_false.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Shards = ptr.To(tc.shards)
+			p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: tc.zones},
+			}
+
+			cg := mustNewConfigGenerator(t, p, WithPrometheusTopologySharding())
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				tc.serviceMonitor,
+				tc.podMonitor,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 	for _, tc := range []struct {
 		name             string
@@ -14405,6 +14529,176 @@ func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 			)
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestTopologyZoneForShard(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+	addressMode := monitoringv1.AddressShardingStrategyMode
+
+	for _, tc := range []struct {
+		name                       string
+		shardingStrategy           *monitoringv1.ShardingStrategy
+		prometheusTopologySharding bool
+		shardIndex                 int32
+		expectedZone               string
+	}{
+		{
+			name:                       "prometheusTopologySharding=false returns empty",
+			prometheusTopologySharding: false,
+			expectedZone:               "",
+		},
+		{
+			name: "address mode returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: ptr.To(addressMode),
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "",
+		},
+		{
+			name: "topology mode with no values returns empty",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "",
+		},
+		{
+			name: "shard 0 gets first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedZone:               "zone-a",
+		},
+		{
+			name: "shard 1 gets second zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 1,
+			expectedZone:               "zone-b",
+		},
+		{
+			name: "shard 2 wraps around to first zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 2,
+			expectedZone:               "zone-a",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+			opts := []ConfigGeneratorOption{}
+			if tc.prometheusTopologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg, err := NewConfigGenerator(nil, p, opts...)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedZone, cg.TopologyZoneForShard(tc.shardIndex))
+		})
+	}
+}
+
+func TestInzoneShardForShard(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name                       string
+		shardingStrategy           *monitoringv1.ShardingStrategy
+		prometheusTopologySharding bool
+		// expected[i] is the expected inzone shard for shard index i.
+		expected []int32
+	}{
+		{
+			name:                       "topology not active returns shard index",
+			prometheusTopologySharding: false,
+			expected:                   []int32{0, 1, 2, 3},
+		},
+		{
+			name: "2 shards 2 zones",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			expected:                   []int32{0, 0},
+		},
+		{
+			name: "2 shards 1 zone",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a"}},
+			},
+			prometheusTopologySharding: true,
+			expected:                   []int32{0, 1},
+		},
+		{
+			name: "3 shards 2 zones",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			expected:                   []int32{0, 0, 1},
+		},
+		{
+			name: "4 shards 2 zones",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			expected:                   []int32{0, 0, 1, 1},
+		},
+		{
+			name: "6 shards 3 zones",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
+			},
+			prometheusTopologySharding: true,
+			expected:                   []int32{0, 0, 0, 1, 1, 1},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+			opts := []ConfigGeneratorOption{}
+			if tc.prometheusTopologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg, err := NewConfigGenerator(nil, p, opts...)
+			require.NoError(t, err)
+
+			for i, exp := range tc.expected {
+				require.Equal(t, exp, cg.InzoneShardForShard(int32(i)))
+			}
 		})
 	}
 }

@@ -59,45 +59,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 	// Deploy an application with 10 replicas to ensure that targets will be
 	// spread across the 2 shards.
-	dep, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-	require.NoError(t, err)
-	dep.Spec.Replicas = ptr.To(int32(10))
-
-	framework.CreateDeployment(context.Background(), ns, dep)
-	require.NoError(t, err)
-
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "app",
-			Labels: map[string]string{
-				"group": "app",
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: dep.Spec.Template.ObjectMeta.Labels,
-			Ports: []corev1.ServicePort{
-				{
-					Name: "web",
-					Port: 8080,
-				},
-			},
-		},
-	}
-	_, err = framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "auth",
-			Namespace: ns,
-		},
-		StringData: map[string]string{
-			"user": "user",
-			"pass": "pass",
-		},
-		Type: corev1.SecretTypeOpaque,
-	}
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+	err = framework.DeployBasicAuthApp(ctx, ns, 10)
 	require.NoError(t, err)
 
 	// Create a service monitor for the app deployment.

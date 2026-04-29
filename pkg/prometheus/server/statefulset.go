@@ -262,6 +262,13 @@ func makeStatefulSetSpec(
 	}
 
 	topologyZone := cg.TopologyZoneForShard(shard)
+	reloaderOpts := []operator.ReloaderOption{
+		operator.Shard(shard),
+		operator.Zone(topologyZone),
+	}
+	if topologyZone != "" {
+		reloaderOpts = append(reloaderOpts, operator.InzoneShard(ptr.To(cg.InzoneShardForShard(shard))))
+	}
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
 			p,
@@ -269,8 +276,7 @@ func makeStatefulSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
-			operator.Zone(topologyZone),
+			reloaderOpts...,
 		),
 	)
 
@@ -318,9 +324,7 @@ func makeStatefulSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
-			operator.WebConfigFile(configReloaderWebConfigFile),
-			operator.Zone(topologyZone),
+			append(reloaderOpts, operator.WebConfigFile(configReloaderWebConfigFile))...,
 		),
 	}, additionalContainers...)
 

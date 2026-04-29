@@ -60,6 +60,11 @@ const (
 
 	hashLabelNameForSharding          = "__tmp_hash"
 	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
+
+	topologyTmpLabel           = "__tmp_topology"
+	nodeZoneMetaLabel          = "__meta_kubernetes_node_label_topology_kubernetes_io_zone"
+	nodeZonePresentMetaLabel   = "__meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone"
+	endpointSliceZoneMetaLabel = "__meta_kubernetes_endpointslice_endpoint_zone"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -1380,6 +1385,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.35.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -1882,6 +1888,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
+	//TODO(simonpasquier): don't add node metadata if service discovery role ==
+	//EndpointSlice because it already carries topology zone information.
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.37.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -2228,7 +2237,39 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 				{Key: "source_labels", Value: []string{"__tmp_current_shard"}},
 				{Key: "regex", Value: generateInRangeShardPattern(shards)},
 				{Key: "action", Value: "keep"},
-			})
+			},
+		)
+	}
+
+	modulus := shards
+	shardEnvVar := operator.ShardEnvVar
+	if cg.isTopologyShardingActive() {
+		modulus = cg.shardsPerZone(shards)
+		shardEnvVar = operator.InzoneShardEnvVar
+		relabelings = append(relabelings,
+			// Populate __tmp_topology from endpointslice zone label (no-op for pod role).
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
+				{Key: "target_label", Value: topologyTmpLabel},
+				{Key: "regex", Value: "(.+);"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+			// Fallback to node topology label (requires attach_metadata: {node: true}).
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
+				{Key: "target_label", Value: topologyTmpLabel},
+				{Key: "regex", Value: "(.+);true;"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+			// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+				{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+				{Key: "action", Value: "keep"},
+			},
+		)
 	}
 
 	return append(relabelings,
@@ -2243,11 +2284,11 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
 			{Key: "target_label", Value: hashLabelNameForSharding},
-			{Key: "modulus", Value: shards},
+			{Key: "modulus", Value: modulus},
 			{Key: "action", Value: "hashmod"},
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding, hashLabelNameForDisablingSharding}},
-			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.ShardEnvVar)},
+			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", shardEnvVar)},
 			{Key: "action", Value: "keep"},
 		})
 }
@@ -5200,32 +5241,88 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	return cfg
 }
 
+// TopologyZoneForShard returns the zone assigned to the shard index.
+// It returns an empty string if topology sharding isn't enabled.
 func (cg *ConfigGenerator) TopologyZoneForShard(shardIndex int32) string {
-	if !cg.prometheusTopologySharding {
+	if !cg.isTopologyShardingActive() {
 		return ""
 	}
+
 	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
-	if ss == nil ||
-		ss.Mode == nil ||
-		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
-		ss.Topology == nil ||
-		len(ss.Topology.Values) == 0 {
-		return ""
-	}
 	numZones := int32(len(ss.Topology.Values))
 	return ss.Topology.Values[shardIndex%numZones]
 }
 
+// NodeSelectorWithTopologyZone returns the pod's node selector for the given
+// shard index taking into account topology sharding if enabled.
 func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
 	cpf := cg.prom.GetCommonPrometheusFields()
+
 	zone := cg.TopologyZoneForShard(shardIndex)
 	if zone == "" {
 		return cpf.NodeSelector
 	}
+
 	result := maps.Clone(cpf.NodeSelector)
 	if result == nil {
 		result = make(map[string]string)
 	}
 	result[corev1.LabelTopologyZone] = zone
+
 	return result
+}
+
+// isTopologyShardingActive returns true when the topology sharding feature gate
+// is enabled and the Prometheus resource is configured with mode=Topology.
+func (cg *ConfigGenerator) isTopologyShardingActive() bool {
+	if !cg.prometheusTopologySharding {
+		return false
+	}
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	return ss != nil &&
+		ss.Mode != nil &&
+		*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+		ss.Topology != nil &&
+		len(ss.Topology.Values) > 0
+}
+
+// shardsPerZone returns max(1, floor(totalShards / numZones)).
+// Only call when isTopologyShardingActive() is true.
+func (cg *ConfigGenerator) shardsPerZone(totalShards int32) int32 {
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+
+	numZones := int32(len(ss.Topology.Values))
+	return max(totalShards/numZones, 1)
+}
+
+// InzoneShardForShard returns floor(shardIndex / numZones), which is the
+// position of the shard within its zone (0-indexed). Returns shardIndex
+// unmodified when topology sharding is not active.
+func (cg *ConfigGenerator) InzoneShardForShard(shardIndex int32) int32 {
+	if !cg.isTopologyShardingActive() {
+		return shardIndex
+	}
+
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	numZones := int32(len(ss.Topology.Values))
+	return shardIndex / numZones
+}
+
+// mergeAttachMetadataForTopology forces attach_metadata.node=true when topology
+// sharding is active. Node metadata is required to determine the target's zone via
+// the __meta_kubernetes_node_label_topology_kubernetes_io_zone label.
+// Returns amc unchanged when topology sharding is not active or node is already true.
+func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataConfig, minimumVersion string) *attachMetadataConfig {
+	if !cg.isTopologyShardingActive() {
+		return amc
+	}
+	if amc != nil && amc.node() {
+		return amc
+	}
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		attachMetadata: &monitoringv1.AttachMetadata{
+			Node: ptr.To(true),
+		},
+	}
 }
