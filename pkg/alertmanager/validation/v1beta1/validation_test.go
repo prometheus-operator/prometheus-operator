@@ -17,6 +17,7 @@ package v1beta1
 import (
 	"testing"
 
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -566,6 +567,27 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									Expire: ptr.To("5m"),
 								},
 							},
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "testA",
+									Labels:    []string{"aa", "bb"},
+									IssueType: "bug",
+									Fields: []monitoringv1beta1.JiraField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
 						},
 					},
 					Route: &monitoringv1beta1.Route{
@@ -589,6 +611,52 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			expectErr: false,
+		},
+		{
+			name: "Test validate on Jira config",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    ptr.To(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on Jira config - API URL validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	}
 
