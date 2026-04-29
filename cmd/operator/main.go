@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -730,7 +731,7 @@ func start() int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation, parser.Options{})
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)
