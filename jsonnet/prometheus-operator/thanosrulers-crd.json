@@ -4862,6 +4862,11 @@
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
+                            "externalId": {
+                              "description": "externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.",
+                              "minLength": 1,
+                              "type": "string"
+                            },
                             "profile": {
                               "description": "profile defines the named AWS profile used to authenticate.",
                               "type": "string"
@@ -4902,7 +4907,13 @@
                               "type": "boolean"
                             }
                           },
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "externalId can only be used when roleArn is specified",
+                              "rule": "!has(self.externalId) || has(self.roleArn)"
+                            }
+                          ]
                         },
                         "tlsConfig": {
                           "description": "tlsConfig to use for the URL.",

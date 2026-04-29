@@ -3547,6 +3547,104 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
 		},
 		{
+			name:      "CR with SNS Receiver with roleARN and externalId",
+			amVersion: &semver.Version{Major: 0, Minor: 33},
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:     "us-east-2",
+										RoleArn:    "test-roleARN",
+										ExternalID: "test-externalId",
+									},
+									TopicARN: ptr.To("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId.golden",
+		},
+		{
+			name:      "CR with SNS Receiver with roleARN and externalId in old am version",
+			amVersion: &semver.Version{Major: 0, Minor: 31},
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:     "us-east-2",
+										RoleArn:    "test-roleARN",
+										ExternalID: "test-externalId",
+									},
+									TopicARN: ptr.To("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId_in_old_amVersion.golden",
+		},
+		{
 			name:    "CR with Mute Time Intervals",
 			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
@@ -8477,6 +8575,7 @@ func TestSanitizeWebexConfig(t *testing.T) {
 func TestSanitizeSNSConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
+	versionV33 := semver.Version{Major: 0, Minor: 33}
 
 	for _, tc := range []struct {
 		name           string
@@ -8518,6 +8617,80 @@ func TestSanitizeSNSConfig(t *testing.T) {
 				},
 			},
 			golden: "sns_valid_url_passes.golden",
+		},
+		{
+			name:           "sns valid sigv4.externalid passes in support amVersion",
+			againstVersion: versionV33,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									RoleARN:    "arn:dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "sns_valid_sigv4_externalId_passes_in_support_amVersion.golden",
+		},
+		{
+			name:           "sns valid sigv4.externalid passes in unsupport amVersion",
+			againstVersion: versionSNSAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									RoleARN:    "arn:dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "sns_valid_sigv4_externalId_passes_in_unsupport_amVersion.golden",
+		},
+		{
+			name:           "sns sigv4.externalid without role_arn returns error",
+			againstVersion: versionV33,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SNSConfigs: []*snsConfig{
+							{
+								APIUrl:   "https://sns.us-east-1.amazonaws.com",
+								TopicARN: "arn:aws:sns:us-east-1:123456789012:test",
+								Sigv4: sigV4Config{
+									Region:     "us-west-2",
+									AccessKey:  "key",
+									SecretKey:  "secret",
+									Profile:    "dev",
+									ExternalID: "my-external-id",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
