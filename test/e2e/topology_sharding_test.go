@@ -66,6 +66,7 @@ func testPrometheusTopologySharding(t *testing.T) {
 		prometheusName = "topology-sharding"
 	)
 	p := framework.MakeBasicPrometheus(ns, prometheusName, testFramework.AppGroupLabel, 1)
+	p.Spec.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
 	p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 		Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 		Topology: &monitoringv1.TopologyShardingStrategy{
