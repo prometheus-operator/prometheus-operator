@@ -301,9 +301,10 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, int32(1), p.Status.Shards)
 
-			sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).List(ctx, metav1.ListOptions{LabelSelector: p.Status.Selector})
-			require.NoError(t, err)
-			require.Len(t, sts.Items, 1)
+			// The retention reconciler runs once per minute and the
+			// API server still needs to process the StatefulSet deletion
+			// so poll until only the active shard remains.
+			require.NoError(t, framework.WaitForStatefulSetReplicas(ctx, ns, metav1.ListOptions{LabelSelector: p.Status.Selector}, 1))
 		})
 	}
 }
