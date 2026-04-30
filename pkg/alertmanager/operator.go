@@ -1406,18 +1406,30 @@ func checkSlackConfigs(
 			return err
 		}
 
+		slackAPIURL := ""
 		if config.APIURL != nil {
-			url, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
+			slackAPIURL, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			if err := validation.ValidateSecretURL(strings.TrimSpace(slackAPIURL)); err != nil {
 				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
 		}
 
 		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
 			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		}
+
+		if config.UpdateMessage != nil {
+			if amVersion.LT(semver.MustParse("0.32.0")) {
+				return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+			}
+			if *config.UpdateMessage && slackAPIURL != "" {
+				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
+					return fmt.Errorf(`updateMessage' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+				}
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
