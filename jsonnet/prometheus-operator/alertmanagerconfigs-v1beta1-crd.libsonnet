@@ -10038,6 +10038,11 @@
                             minimum: 0,
                             type: 'integer',
                           },
+                          payload: {
+                            description: 'payload define custom payload to be sent to the webhook endpoint.\nThis is an advanced configuration option that allows you\nto define a custom payload using Go templates.\nIt requires Alertmanager >= v0.32.0.',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           sendResolved: {
                             description: 'sendResolved defines whether or not to notify about resolved alerts.',
                             type: 'boolean',

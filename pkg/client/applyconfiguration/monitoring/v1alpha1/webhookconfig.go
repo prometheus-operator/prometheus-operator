@@ -46,6 +46,11 @@ type WebhookConfigApplyConfiguration struct {
 	// before failing the request and allowing it to be retried.
 	// It requires Alertmanager >= v0.28.0.
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// payload define custom payload to be sent to the webhook endpoint.
+	// This is an advanced configuration option that allows you
+	// to define a custom payload using Go templates.
+	// It requires Alertmanager >= v0.32.0.
+	Payload *string `json:"payload,omitempty"`
 }
 
 // WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with
@@ -99,5 +104,13 @@ func (b *WebhookConfigApplyConfiguration) WithMaxAlerts(value int32) *WebhookCon
 // If called multiple times, the Timeout field is set to the value of the last call.
 func (b *WebhookConfigApplyConfiguration) WithTimeout(value monitoringv1.Duration) *WebhookConfigApplyConfiguration {
 	b.Timeout = &value
+	return b
+}
+
+// WithPayload sets the Payload field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Payload field is set to the value of the last call.
+func (b *WebhookConfigApplyConfiguration) WithPayload(value string) *WebhookConfigApplyConfiguration {
+	b.Payload = &value
 	return b
 }
