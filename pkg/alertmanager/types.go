@@ -188,7 +188,6 @@ type opsgenieConfig struct {
 type weChatConfig struct {
 	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
 	APISecret     string            `yaml:"api_secret,omitempty"`
-	APISecretFile string            `yaml:"api_secret_file,omitempty"`
 	APIURL        string            `yaml:"api_url,omitempty"`
 	CorpID        string            `yaml:"corp_id,omitempty"`
 	AgentID       string            `yaml:"agent_id,omitempty"`
@@ -198,6 +197,7 @@ type weChatConfig struct {
 	Message       string            `yaml:"message,omitempty"`
 	MessageType   string            `yaml:"message_type,omitempty"`
 	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
+	APISecretFile string            `yaml:"api_secret_file,omitempty"`
 }
 
 type slackConfig struct {
