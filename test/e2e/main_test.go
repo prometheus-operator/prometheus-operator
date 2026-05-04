@@ -275,6 +275,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromAdditionalScrapeConfig":                testPromAdditionalScrapeConfig,
 		"PromAdditionalAlertManagerConfig":          testPromAdditionalAlertManagerConfig,
 		"PromReloadRules":                           testPromReloadRules,
+		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
 		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,

@@ -64,11 +64,12 @@ var MaxConfigMapDataSize = int(float64(corev1.MaxSecretSize) * 0.5)
 // PrometheusRuleSelector selects PrometheusRule resources and translates them
 // to Prometheus/Thanos configuration format.
 type PrometheusRuleSelector struct {
-	ruleFormat   RuleConfigurationFormat
-	version      semver.Version
-	ruleSelector labels.Selector
-	nsLabeler    *namespacelabeler.Labeler
-	ruleInformer *informers.ForResource
+	ruleFormat    RuleConfigurationFormat
+	version       semver.Version
+	ruleSelector  labels.Selector
+	nsLabeler     *namespacelabeler.Labeler
+	ruleInformer  *informers.ForResource
+	parserOptions parser.Options
 
 	eventRecorder *EventRecorder
 
@@ -97,7 +98,7 @@ func (prs *PrometheusRuleSelection) RejectedLen() int {
 }
 
 // NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger, parserOptions parser.Options) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -114,6 +115,7 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 		ruleSelector:  ruleSelector,
 		nsLabeler:     nsLabeler,
 		ruleInformer:  ruleInformer,
+		parserOptions: parserOptions,
 		eventRecorder: eventRecorder,
 		logger:        logger,
 	}, nil
@@ -137,7 +139,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 		validationScheme = ValidationSchemeForPrometheus(prs.version)
 	}
 
-	errs := ValidateRule(promRuleSpec, validationScheme, parser.Options{})
+	errs := ValidateRule(promRuleSpec, validationScheme, prs.parserOptions)
 	if len(errs) != 0 {
 		const m = "invalid rule"
 		logger.Debug(m, "content", content)
