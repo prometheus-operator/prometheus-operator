@@ -274,6 +274,11 @@ func (in *ConsulSDConfig) DeepCopyInto(out *ConsulSDConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.HealthFilter != nil {
+		in, out := &in.HealthFilter, &out.HealthFilter
+		*out = new(string)
+		**out = **in
+	}
 	if in.AllowStale != nil {
 		in, out := &in.AllowStale, &out.AllowStale
 		*out = new(bool)
