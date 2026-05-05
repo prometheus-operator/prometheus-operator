@@ -267,7 +267,7 @@ func makeStatefulSetSpec(
 		operator.Zone(topologyZone),
 	}
 	if topologyZone != "" {
-		reloaderOpts = append(reloaderOpts, operator.InzoneShard(ptr.To(cg.InzoneShardForShard(shard))))
+		reloaderOpts = append(reloaderOpts, operator.InzoneShard(new(cg.InzoneShardForShard(shard))))
 	}
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
@@ -311,8 +311,8 @@ func makeStatefulSetSpec(
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &corev1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   new(true),
+				AllowPrivilegeEscalation: new(false),
 				Capabilities: &corev1.Capabilities{
 					Drop: []corev1.Capability{"ALL"},
 				},
@@ -359,11 +359,11 @@ func makeStatefulSetSpec(
 				InitContainers:                initContainers,
 				SecurityContext:               cpf.SecurityContext,
 				ServiceAccountName:            cpf.ServiceAccountName,
-				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
+				AutomountServiceAccountToken:  new(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
 				NodeSelector:                  cg.NodeSelectorWithTopologyZone(shard),
 				SchedulerName:                 cpf.SchedulerName,
 				PriorityClassName:             cpf.PriorityClassName,
-				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
+				TerminationGracePeriodSeconds: new(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
@@ -480,7 +480,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, vo
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},
-					Optional: ptr.To(true),
+					Optional: new(true),
 				},
 			},
 		})
@@ -577,8 +577,8 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		ImagePullPolicy:          cpf.ImagePullPolicy,
 		TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		SecurityContext: &corev1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},

@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -298,9 +297,9 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 	return discoveryv1.Endpoint{
 		Addresses: []string{na.ipAddress},
 		Conditions: discoveryv1.EndpointConditions{
-			Ready: ptr.To(true),
+			Ready: new(true),
 		},
-		NodeName: ptr.To(na.name),
+		NodeName: new(na.name),
 		TargetRef: &corev1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
@@ -313,7 +312,7 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 func (na *nodeAddress) v1EndpointAddress() corev1.EndpointAddress {
 	return corev1.EndpointAddress{
 		IP:       na.ipAddress,
-		NodeName: ptr.To(na.name),
+		NodeName: new(na.name),
 		TargetRef: &corev1.ObjectReference{
 			Kind:       "Node",
 			Name:       na.name,
@@ -607,8 +606,8 @@ func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service,
 					}),
 					OwnerReferences: []metav1.OwnerReference{{
 						APIVersion:         "v1",
-						BlockOwnerDeletion: ptr.To(true),
-						Controller:         ptr.To(true),
+						BlockOwnerDeletion: new(true),
+						Controller:         new(true),
 						Kind:               "Service",
 						Name:               c.kubeletObjectName,
 						UID:                svc.UID,
@@ -718,19 +717,19 @@ func (c *Controller) endpointPorts() []corev1.EndpointPort {
 func (c *Controller) endpointSlicePorts() []discoveryv1.EndpointPort {
 	ports := []discoveryv1.EndpointPort{
 		{
-			Name: ptr.To(httpsPortName),
-			Port: ptr.To(httpsPort),
+			Name: new(httpsPortName),
+			Port: new(httpsPort),
 		},
 		{
-			Name: ptr.To(cAdvisorPortName),
-			Port: ptr.To(cAdvisorPort),
+			Name: new(cAdvisorPortName),
+			Port: new(cAdvisorPort),
 		},
 	}
 
 	if c.httpMetricsEnabled {
 		ports = append(ports, discoveryv1.EndpointPort{
-			Name: ptr.To(httpPortName),
-			Port: ptr.To(httpPort),
+			Name: new(httpPortName),
+			Port: new(httpPort),
 		})
 	}
 

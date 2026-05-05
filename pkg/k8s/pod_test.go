@@ -19,7 +19,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -31,11 +30,11 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		Options: []monitoringv1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
-				Value: ptr.To("5"),
+				Value: new("5"),
 			},
 			{
 				Name:  "timeout",
-				Value: ptr.To("1"),
+				Value: new("1"),
 			},
 		},
 	}

@@ -447,14 +447,14 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 		scenario: "no timeout for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: new(uint32(50)),
 		},
 		expectTimeoutArg: false,
 	}, {
 		scenario: "timeout arg set if specified",
 		version:  operator.DefaultAlertmanagerVersion,
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: new(uint32(50)),
 		},
 		expectTimeoutArg: true,
 	}}
@@ -462,7 +462,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
@@ -493,7 +493,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		scenario: "no get-concurrency for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: new(uint32(50)),
 		},
 		expectGetConcurrencyArg: false,
 	}, {
@@ -501,7 +501,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		version:  operator.DefaultAlertmanagerVersion,
 
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: new(uint32(50)),
 		},
 		expectGetConcurrencyArg: true,
 	}}
@@ -509,7 +509,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
@@ -540,14 +540,14 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 			scenario: "no maxSilencesfor old version",
 			version:  "0.27.9",
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(int32(50)),
+				MaxSilences: new(int32(50)),
 			},
 			expectMaxSilencesArg: false,
 		}, {
 			scenario: "maxSilencesfor arg set if specified",
 			version:  operator.DefaultAlertmanagerVersion,
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(int32(50)),
+				MaxSilences: new(int32(50)),
 			},
 			expectMaxSilencesArg: true,
 		},
@@ -556,7 +556,7 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
@@ -603,7 +603,7 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
@@ -1073,7 +1073,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = ptr.To(int32(3))
+	a.Spec.Replicas = new(int32(3))
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
@@ -1081,7 +1081,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	a.Spec.MinReadySeconds = ptr.To(int32(5))
+	a.Spec.MinReadySeconds = new(int32(5))
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
@@ -1146,7 +1146,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
 			SchedulerName:      schedulerName,
-			HostUsers:          ptr.To(true),
+			HostUsers:          new(true),
 			HostNetwork:        hostNetwork,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
@@ -1262,7 +1262,7 @@ func TestClusterLabel(t *testing.T) {
 					Namespace: "monitoring",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas: toPtr(int32(1)),
+					Replicas: new(int32(1)),
 					Version:  ts.version,
 				},
 			}
@@ -1392,8 +1392,9 @@ func containsString(sub string) func(string) bool {
 	}
 }
 
+//go:fix inline
 func toPtr[T any](t T) *T {
-	return &t
+	return new(t)
 }
 
 func TestEnableFeatures(t *testing.T) {
@@ -1428,7 +1429,7 @@ func TestEnableFeatures(t *testing.T) {
 			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
 					Version:        test.version,
-					Replicas:       toPtr(int32(1)),
+					Replicas:       new(int32(1)),
 					EnableFeatures: test.features,
 				},
 			}, defaultTestConfig, &operator.ShardedSecret{})
@@ -1453,7 +1454,7 @@ func TestValidateAdditionalArgs(t *testing.T) {
 
 	statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
-			Replicas:       toPtr(int32(1)),
+			Replicas:       new(int32(1)),
 			AdditionalArgs: additionalArgs,
 		},
 	}, defaultTestConfig, &operator.ShardedSecret{})
@@ -1477,7 +1478,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 				Options: []monitoringv1.PodDNSConfigOption{
 					{
 						Name:  "ndots",
-						Value: ptr.To("5"),
+						Value: new("5"),
 					},
 				},
 			},
@@ -1493,7 +1494,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 			Options: []corev1.PodDNSConfigOption{
 				{
 					Name:  "ndots",
-					Value: ptr.To("5"),
+					Value: new("5"),
 				},
 			},
 		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
@@ -1525,8 +1526,8 @@ func TestStatefulSetEnableServiceLinks(t *testing.T) {
 		enableServiceLinks    *bool
 		expectedEnableService *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableService: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableService: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableService: new(false)},
+		{enableServiceLinks: new(true), expectedEnableService: new(true)},
 		{enableServiceLinks: nil, expectedEnableService: nil},
 	}
 
@@ -1600,13 +1601,13 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
 				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 		},
@@ -1652,17 +1653,17 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 		},
 		{
 			version:         "v0.29.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			expNotContains:  "dispatch.start-delay",
 		},
 		{
 			version:         "v0.30.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			expContains:     "--dispatch.start-delay=60s",
 		},
 		{
 			version:         "v0.30.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			additionalArgs:  []monitoringv1.Argument{{Name: "dispatch.start-delay", Value: "10s"}},
 			expContains:     "--dispatch.start-delay=10s",
 		},
@@ -1670,7 +1671,7 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			a := monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas:        ptr.To(int32(1)),
+					Replicas:        new(int32(1)),
 					Version:         tc.version,
 					MinReadySeconds: tc.minReadySeconds,
 					AdditionalArgs:  tc.additionalArgs,

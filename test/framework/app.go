@@ -19,7 +19,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -39,7 +38,7 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 	if err != nil {
 		return err
 	}
-	dep.Spec.Replicas = ptr.To(replicas)
+	dep.Spec.Replicas = new(replicas)
 
 	if err := f.CreateDeployment(ctx, ns, dep); err != nil {
 		return err
