@@ -189,16 +189,15 @@ func (s *crdsList) String() string {
 	return strings.Join(*s, ",")
 }
 
-func (s *crdsList) Set(value string) error {
-	parts := strings.Split(value, ",")
+func (s *crdsList) Set(values string) error {
+	vals := strings.Split(values, ",")
 
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		p = strings.ToLower(p)
-		if slices.Contains([]string{"storageclass", "scrapeconfig", "prometheus", "prometheusagent", "alertmanager", "thanosruler"}, p) {
-			*s = append(*s, p)
+	for _, val := range vals {
+		normalizedVal := strings.Join(strings.Fields(strings.ToLower(val)), "")
+		if slices.Contains([]string{"storageclass", "scrapeconfig", "prometheus", "prometheusagent", "alertmanager", "thanosruler"}, normalizedVal) {
+			*s = append(*s, normalizedVal)
 		} else {
-			return fmt.Errorf("Unknown CRD: %q. Valid CRDs include storageclass, scrapeconfig, prometheus, prometheusagent, alertmanager, thanosruler", p)
+			return fmt.Errorf("Unknown CRD: %q. Valid CRDs include storageclass, scrapeconfig, prometheus, prometheusagent, alertmanager, thanosruler", val)
 		}
 	}
 
