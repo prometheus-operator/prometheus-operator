@@ -96,7 +96,7 @@ func TestWaitForCRDInstalled(t *testing.T) {
 }
 
 func TestSetCRDToWaitFor(t *testing.T) {
-	var crds *crdsList
+	crds := &crdsList{}
 
 	require.NoError(t, crds.Set("storage class"))
 	require.NoError(t, crds.Set("Scrape Config"))
