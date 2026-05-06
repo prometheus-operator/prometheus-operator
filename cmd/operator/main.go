@@ -43,7 +43,6 @@ import (
 	"k8s.io/client-go/rest"
 	k8sflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 
 	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"

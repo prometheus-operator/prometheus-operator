@@ -19,7 +19,6 @@ import (
 
 	"github.com/prometheus/prometheus/model/relabel"
 	"github.com/stretchr/testify/require"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
