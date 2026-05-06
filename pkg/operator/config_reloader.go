@@ -24,7 +24,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -199,7 +198,7 @@ func ImagePullPolicy(imagePullPolicy corev1.PullPolicy) ReloaderOption {
 func WithDaemonSetMode() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.withNodeNameEnv = true
-		c.shard = ptr.To(int32(0))
+		c.shard = new(int32(0))
 	}
 }
 
@@ -367,8 +366,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
 		SecurityContext: &corev1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},

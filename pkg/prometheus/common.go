@@ -398,7 +398,7 @@ func BuildConfigReloader(
 }
 
 func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
-	return ptr.To(
+	return new(
 		ptr.Deref(
 			p.GetCommonPrometheusFields().ReloadStrategy,
 			monitoringv1.HTTPReloadStrategyType,

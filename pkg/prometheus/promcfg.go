@@ -5333,7 +5333,7 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
 		attachMetadata: &monitoringv1.AttachMetadata{
-			Node: ptr.To(true),
+			Node: new(true),
 		},
 	}
 }

@@ -184,8 +184,8 @@ func TestGlobalSettings(t *testing.T) {
 				"prometheus":         "prometheus-k8s-1",
 				"some-other-key":     "some-value",
 			},
-			PrometheusExternalLabelName: ptr.To("prometheus"),
-			ReplicaExternalLabelName:    ptr.To("prometheus_replica"),
+			PrometheusExternalLabelName: new("prometheus"),
+			ReplicaExternalLabelName:    new("prometheus_replica"),
 			Golden:                      "external_label_specified_along_with_reserved_labels.golden",
 		},
 		{
@@ -201,7 +201,7 @@ func TestGlobalSettings(t *testing.T) {
 			Version:              "v2.55.0",
 			ScrapeInterval:       "30s",
 			EvaluationInterval:   "30s",
-			ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			ScrapeFailureLogFile: new("/tmp/file.log"),
 			Golden:               "scrape_failure_log_file.golden",
 		},
 		{
@@ -209,7 +209,7 @@ func TestGlobalSettings(t *testing.T) {
 			Version:              "v2.55.0",
 			ScrapeInterval:       "30s",
 			EvaluationInterval:   "30s",
-			ScrapeFailureLogFile: ptr.To("file.log"),
+			ScrapeFailureLogFile: new("file.log"),
 			Golden:               "scrape_failure_log_file_empty_path.golden",
 		},
 		{
@@ -217,7 +217,7 @@ func TestGlobalSettings(t *testing.T) {
 			Version:              "v2.54.0",
 			ScrapeInterval:       "30s",
 			EvaluationInterval:   "30s",
-			ScrapeFailureLogFile: ptr.To("file.log"),
+			ScrapeFailureLogFile: new("file.log"),
 			Golden:               "scrape_failure_log_file_unsupported_version.golden",
 		},
 		{
@@ -385,7 +385,7 @@ func TestTopologyZoneExternalLabel(t *testing.T) {
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{
-					ExternalLabelName: ptr.To("topology_zone"),
+					ExternalLabelName: new("topology_zone"),
 					Values:            []string{"zone-a", "zone-b"},
 				},
 			},
@@ -397,7 +397,7 @@ func TestTopologyZoneExternalLabel(t *testing.T) {
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{
-					ExternalLabelName: ptr.To(""),
+					ExternalLabelName: new(""),
 					Values:            []string{"zone-a", "zone-b"},
 				},
 			},
@@ -486,7 +486,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 						MatchNames: []string{"test1", "test2"},
 					},
 					AttachMetadata: &monitoringv1.AttachMetadata{
-						Node: ptr.To(true),
+						Node: new(true),
 					},
 				},
 			},
@@ -605,7 +605,7 @@ func TestNamespaceSetCorrectlyForPodMonitor(t *testing.T) {
 				MatchNames: []string{"test"},
 			},
 			AttachMetadata: &monitoringv1.AttachMetadata{
-				Node: ptr.To(true),
+				Node: new(true),
 			},
 		},
 	}
@@ -830,7 +830,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: ptr.To("bar"),
+									Replacement: new("bar"),
 									Action:      "replace",
 								},
 							},
@@ -853,7 +853,7 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 
 func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 	p := defaultPrometheus()
-	p.Spec.Shards = ptr.To(int32(2))
+	p.Spec.Shards = new(int32(2))
 
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
@@ -889,7 +889,7 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: ptr.To("bar"),
+									Replacement: new("bar"),
 									Action:      "replace",
 								},
 							},
@@ -947,7 +947,7 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 							RelabelConfigs: []monitoringv1.RelabelConfig{
 								{
 									TargetLabel: "foo",
-									Replacement: ptr.To("bar"),
+									Replacement: new("bar"),
 									Action:      "replace",
 								},
 							},
@@ -1146,7 +1146,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:            "alertmanager-main",
-				Namespace:       ptr.To("default"),
+				Namespace:       new("default"),
 				Port:            intstr.FromString("web"),
 				BearerTokenFile: "/some/file/on/disk",
 			},
@@ -1203,7 +1203,7 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 					Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 						{
 							Name:      "alertmanager-main",
-							Namespace: ptr.To("default"),
+							Namespace: new("default"),
 							Port:      intstr.FromString("web"),
 							BasicAuth: &monitoringv1.BasicAuth{
 								Username: corev1.SecretKeySelector{
@@ -1279,7 +1279,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 				{
 					Name:      "alertmanager-main",
-					Namespace: ptr.To("default"),
+					Namespace: new("default"),
 					Port:      intstr.FromString("web"),
 					Sigv4: &monitoringv1.Sigv4{
 						Profile: "profilename",
@@ -1345,7 +1345,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 					},
@@ -1360,7 +1360,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 					},
@@ -1375,7 +1375,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 					},
@@ -1390,7 +1390,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 					},
@@ -1405,7 +1405,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion1),
 					},
@@ -1420,7 +1420,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 					},
@@ -1462,7 +1462,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:       "alertmanager-main",
-				Namespace:  ptr.To("default"),
+				Namespace:  new("default"),
 				Port:       intstr.FromString("web"),
 				APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 				Timeout:    ptr.To(monitoringv1.Duration("60s")),
@@ -1520,10 +1520,10 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:        "alertmanager-main",
-						Namespace:   ptr.To("default"),
+						Namespace:   new("default"),
 						Port:        intstr.FromString("web"),
 						APIVersion:  ptr.To(monitoringv1.AlertmanagerAPIVersion2),
-						EnableHttp2: ptr.To(tc.enableHTTP2),
+						EnableHttp2: new(tc.enableHTTP2),
 					},
 				},
 			}
@@ -1554,24 +1554,24 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 			Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 				{
 					Name:       "alertmanager-main",
-					Namespace:  ptr.To("default"),
+					Namespace:  new("default"),
 					Port:       intstr.FromString("web"),
 					APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "namespace",
-							Replacement: ptr.To("ns1"),
+							Replacement: new("ns1"),
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.+)(?::d+)",
-							Replacement:  ptr.To("$1:9537"),
+							Replacement:  new("$1:9537"),
 							SourceLabels: []monitoringv1.LabelName{"__address__"},
 							TargetLabel:  "__address__",
 						},
 						{
 							Action:      "replace",
-							Replacement: ptr.To("crio"),
+							Replacement: new("crio"),
 							TargetLabel: "job",
 						},
 					},
@@ -1621,13 +1621,13 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:       "alertmanager-main",
-						Namespace:  ptr.To("default"),
+						Namespace:  new("default"),
 						Port:       intstr.FromString("web"),
 						APIVersion: ptr.To(monitoringv1.AlertmanagerAPIVersion2),
 						AlertRelabelConfigs: []monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "namespace",
-								Replacement: ptr.To("ns1"),
+								Replacement: new("ns1"),
 							},
 						},
 					},
@@ -1688,12 +1688,12 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 		},
 		{
 			name:   "one prometheus shard",
-			result: getCfg(ptr.To(int32(1))),
+			result: getCfg(new(int32(1))),
 			golden: "AdditionalScrapeConfigs_one_prometheus_shard.golden",
 		},
 		{
 			name:   "sharded prometheus",
-			result: getCfg(ptr.To(int32(3))),
+			result: getCfg(new(int32(3))),
 			golden: "AdditionalScrapeConfigs_sharded prometheus.golden",
 		},
 	}
@@ -1711,7 +1711,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:      "alertmanager-main",
-				Namespace: ptr.To("default"),
+				Namespace: new("default"),
 				Port:      intstr.FromString("web"),
 			},
 		},
@@ -1768,13 +1768,13 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  ptr.To("$1:9537"),
+									Replacement:  new("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "replace",
-									Replacement: ptr.To("crio"),
+									Replacement: new("crio"),
 									TargetLabel: "job",
 								},
 							},
@@ -1905,7 +1905,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -1919,7 +1919,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
+									Replacement:  new("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 									TargetLabel:  "pod_ready",
 								},
@@ -1973,7 +1973,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -1987,7 +1987,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
+									Replacement:  new("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 									TargetLabel:  "pod_ready",
 								},
@@ -2051,7 +2051,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
+									Replacement:  new("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 									TargetLabel:  "pod_ready",
 								},
@@ -2123,7 +2123,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 								{
 									Action:       "replace",
 									Regex:        "(.*)",
-									Replacement:  ptr.To("$1"),
+									Replacement:  new("$1"),
 									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 									TargetLabel:  "pod_ready",
 								},
@@ -2152,7 +2152,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
 				Name:      "alertmanager-main",
-				Namespace: ptr.To("default"),
+				Namespace: new("default"),
 				Port:      intstr.FromString("web"),
 			},
 		},
@@ -2195,7 +2195,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: ptr.To(false),
+							HonorTimestamps: new(false),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -2233,8 +2233,8 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							HonorTimestamps: ptr.To(false),
-							Port:            ptr.To("web"),
+							HonorTimestamps: new(false),
+							Port:            new("web"),
 							Interval:        "30s",
 						},
 					},
@@ -2269,7 +2269,7 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							TrackTimestampsStaleness: ptr.To(false),
+							TrackTimestampsStaleness: new(false),
 							Port:                     "web",
 							Interval:                 "30s",
 						},
@@ -2307,8 +2307,8 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							TrackTimestampsStaleness: ptr.To(false),
-							Port:                     ptr.To("web"),
+							TrackTimestampsStaleness: new(false),
+							Port:                     new("web"),
 							Interval:                 "30s",
 						},
 					},
@@ -2371,7 +2371,7 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 							ScrapeProtocols: tc.scrape,
 							Endpoints: []monitoringv1.Endpoint{
 								{
-									HonorTimestamps: ptr.To(false),
+									HonorTimestamps: new(false),
 									Port:            "web",
 									Interval:        "30s",
 								},
@@ -2432,7 +2432,7 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							Endpoints: []monitoringv1.Endpoint{
 								{
-									HonorTimestamps: ptr.To(false),
+									HonorTimestamps: new(false),
 									Port:            "web",
 									Interval:        "30s",
 								},
@@ -2500,8 +2500,8 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 							ScrapeProtocols: tc.scrape,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
-									TrackTimestampsStaleness: ptr.To(false),
-									Port:                     ptr.To("web"),
+									TrackTimestampsStaleness: new(false),
+									Port:                     new("web"),
 									Interval:                 "30s",
 								},
 							},
@@ -2561,8 +2561,8 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
 							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 								{
-									TrackTimestampsStaleness: ptr.To(false),
-									Port:                     ptr.To("web"),
+									TrackTimestampsStaleness: new(false),
+									Port:                     new("web"),
 									Interval:                 "30s",
 								},
 							},
@@ -2600,7 +2600,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							HonorTimestamps: ptr.To(true),
+							HonorTimestamps: new(true),
 							Port:            "web",
 							Interval:        "30s",
 						},
@@ -2761,7 +2761,7 @@ func TestEndpointOAuth2(t *testing.T) {
 			"param2": "value2",
 		},
 		TLSConfig: &monitoringv1.SafeTLSConfig{
-			InsecureSkipVerify: ptr.To(true),
+			InsecureSkipVerify: new(true),
 			CA: monitoringv1.SecretOrConfigMap{
 				Secret: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
@@ -2772,9 +2772,9 @@ func TestEndpointOAuth2(t *testing.T) {
 			},
 		},
 		ProxyConfig: monitoringv1.ProxyConfig{
-			ProxyURL:             ptr.To("http://no-proxy.com"),
-			NoProxy:              ptr.To("0.0.0.0"),
-			ProxyFromEnvironment: ptr.To(false),
+			ProxyURL:             new("http://no-proxy.com"),
+			NoProxy:              new("0.0.0.0"),
+			ProxyFromEnvironment: new(false),
 			ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 				"header": {
 					{
@@ -2881,7 +2881,7 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.PodMonitorSpec{
 						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 							{
-								Port: ptr.To("web"),
+								Port: new("web"),
 								HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 									HTTPConfig: monitoringv1.HTTPConfig{
 										HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
@@ -3007,7 +3007,7 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -3047,7 +3047,7 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 					PodTargetLabels: []string{"local"},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -3117,7 +3117,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "alertmanager-main",
-						Namespace: ptr.To("default"),
+						Namespace: new("default"),
 						Port:      intstr.FromString("web"),
 					},
 				},
@@ -3128,7 +3128,7 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 					"label2": "value2",
 				},
 				Version:  version,
-				Replicas: ptr.To(int32(1)),
+				Replicas: new(int32(1)),
 				ServiceMonitorSelector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{
 						"group": "group1",
@@ -3308,14 +3308,14 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  ptr.To("$1"),
+							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  ptr.To("$1"),
+							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -3347,7 +3347,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 				},
 			},
@@ -3371,7 +3371,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 				},
 			},
@@ -3395,7 +3395,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 					Path:     "/federate",
 					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
@@ -3421,7 +3421,7 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
@@ -3457,20 +3457,20 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  ptr.To("$1"),
+							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
 							Regex:        "(.*)",
-							Replacement:  ptr.To("$1"),
+							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
 						},
@@ -3550,22 +3550,22 @@ func TestHonorTimestamps(t *testing.T) {
 			Expected:                "{}\n",
 		},
 		{
-			UserHonorTimestamps:     ptr.To(false),
+			UserHonorTimestamps:     new(false),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     ptr.To(false),
+			UserHonorTimestamps:     new(false),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     ptr.To(true),
+			UserHonorTimestamps:     new(true),
 			OverrideHonorTimestamps: true,
 			Expected:                "honor_timestamps: false\n",
 		},
 		{
-			UserHonorTimestamps:     ptr.To(true),
+			UserHonorTimestamps:     new(true),
 			OverrideHonorTimestamps: false,
 			Expected:                "honor_timestamps: true\n",
 		},
@@ -3600,11 +3600,11 @@ func TestTrackTimestampsStaleness(t *testing.T) {
 			Expected:                     "{}\n",
 		},
 		{
-			UserTrackTimestampsStaleness: ptr.To(false),
+			UserTrackTimestampsStaleness: new(false),
 			Expected:                     "track_timestamps_staleness: false\n",
 		},
 		{
-			UserTrackTimestampsStaleness: ptr.To(true),
+			UserTrackTimestampsStaleness: new(true),
 			Expected:                     "track_timestamps_staleness: true\n",
 		},
 	}
@@ -3694,7 +3694,7 @@ func TestSampleLimits(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			if tc.globalLimit >= 0 {
-				p.Spec.SampleLimit = ptr.To(uint64(tc.globalLimit))
+				p.Spec.SampleLimit = new(uint64(tc.globalLimit))
 			}
 
 			if tc.golden == "SampleLimits_GlobalLimit1000_Enforce2000.golden" {
@@ -3921,7 +3921,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.25.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:             "http://example.com",
-				FollowRedirects: ptr.To(true),
+				FollowRedirects: new(true),
 			},
 			golden: "RemoteReadConfig_v2.25.0.golden",
 		},
@@ -3929,7 +3929,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:             "http://example.com",
-				FollowRedirects: ptr.To(false),
+				FollowRedirects: new(false),
 			},
 			golden: "RemoteReadConfig_v2.26.0_NotFollowRedirects.golden",
 		},
@@ -3937,7 +3937,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.26.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: ptr.To(true),
+				FilterExternalLabels: new(true),
 			},
 			golden: "RemoteReadConfig_v2.26.0_FilterExternalLabels.golden",
 		},
@@ -3952,7 +3952,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: ptr.To(false),
+				FilterExternalLabels: new(false),
 			},
 			golden: "RemoteReadConfig_v2.34.0_NotFilterExternalLabels.golden",
 		},
@@ -3960,7 +3960,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			version: "v2.34.0",
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL:                  "http://example.com",
-				FilterExternalLabels: ptr.To(true),
+				FilterExternalLabels: new(true),
 			},
 			golden: "RemoteReadConfig_v2.34.0_FilterExternalLabels.golden",
 		},
@@ -3986,9 +3986,9 @@ func TestRemoteReadConfig(t *testing.T) {
 			remoteRead: monitoringv1.RemoteReadSpec{
 				URL: "http://example.com",
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -4197,9 +4197,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
+						ClientID: new("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
@@ -4210,7 +4210,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "00000000-0000-0000-0000-000000000000",
@@ -4230,9 +4230,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						TenantID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 				},
 			},
@@ -4243,9 +4243,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("00000000-0000-0000-0000-000000000000"),
+						ClientID: new("00000000-0000-0000-0000-000000000000"),
 					},
 				},
 			},
@@ -4256,7 +4256,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
 						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
@@ -4521,9 +4521,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL:             "http://example.com",
 				FollowRedirects: &followRedirects,
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -4544,9 +4544,9 @@ func TestRemoteWriteConfig(t *testing.T) {
 				URL:             "http://example.com",
 				FollowRedirects: &followRedirects,
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -4588,7 +4588,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:            "http://example.com",
 				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
-				RoundRobinDNS:  ptr.To(true),
+				RoundRobinDNS:  new(true),
 			},
 			golden: "RemoteWriteConfig_v3.1.0.golden",
 		},
@@ -4597,7 +4597,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				MetadataConfig: &monitoringv1.MetadataConfig{
-					MaxSamplesPerSend: ptr.To(int32(10)),
+					MaxSamplesPerSend: new(int32(10)),
 				},
 			},
 			golden: "RemoteWriteConfig_v2.28.0_MaxSamplesPerSendMetadataConfig.golden",
@@ -4607,7 +4607,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				MetadataConfig: &monitoringv1.MetadataConfig{
-					MaxSamplesPerSend: ptr.To(int32(10)),
+					MaxSamplesPerSend: new(int32(10)),
 				},
 			},
 			golden: "RemoteWriteConfig_v2.29.0_MaxSamplesPerSendMetadataConfig.golden",
@@ -4632,7 +4632,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 						Key: "secret-key",
 					},
 					Region:             "us-central-0",
-					UseFIPSSTSEndpoint: ptr.To(true),
+					UseFIPSSTSEndpoint: new(true),
 				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
@@ -4671,7 +4671,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 						Key: "secret-key",
 					},
 					Region:             "us-central-0",
-					UseFIPSSTSEndpoint: ptr.To(true),
+					UseFIPSSTSEndpoint: new(true),
 				},
 				QueueConfig: &monitoringv1.QueueConfig{
 					Capacity:          1000,
@@ -4703,11 +4703,11 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzurePublic"),
+					Cloud: new("AzurePublic"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						ClientID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
-					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+					Scope: new("https://custom.monitor.azure.com/.default"),
 				},
 			},
 			golden: "RemoteWriteConfig_AzureADScope_v3.8.0.golden",
@@ -4717,11 +4717,11 @@ func TestRemoteWriteConfig(t *testing.T) {
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL: "http://example.com",
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzurePublic"),
+					Cloud: new("AzurePublic"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						ClientID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
-					Scope: ptr.To("https://custom.monitor.azure.com/.default"),
+					Scope: new("https://custom.monitor.azure.com/.default"),
 				},
 			},
 			golden: "RemoteWriteConfig_AzureADScope_v3.9.0.golden",
@@ -4890,7 +4890,7 @@ func TestLabelLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelLimit >= 0 {
-				p.Spec.EnforcedLabelLimit = ptr.To(uint64(tc.enforcedLabelLimit))
+				p.Spec.EnforcedLabelLimit = new(uint64(tc.enforcedLabelLimit))
 			}
 
 			serviceMonitor := monitoringv1.ServiceMonitor{
@@ -4997,7 +4997,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelNameLengthLimit >= 0 {
-				p.Spec.EnforcedLabelNameLengthLimit = ptr.To(uint64(tc.enforcedLabelNameLengthLimit))
+				p.Spec.EnforcedLabelNameLengthLimit = new(uint64(tc.enforcedLabelNameLengthLimit))
 			}
 
 			podMonitor := monitoringv1.PodMonitor{
@@ -5011,7 +5011,7 @@ func TestLabelNameLengthLimits(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -5104,7 +5104,7 @@ func TestLabelValueLengthLimits(t *testing.T) {
 			p.Spec.CommonPrometheusFields.Version = tc.version
 
 			if tc.enforcedLabelValueLengthLimit >= 0 {
-				p.Spec.EnforcedLabelValueLengthLimit = ptr.To(uint64(tc.enforcedLabelValueLengthLimit))
+				p.Spec.EnforcedLabelValueLengthLimit = new(uint64(tc.enforcedLabelValueLengthLimit))
 			}
 
 			probe := monitoringv1.Probe{
@@ -5121,9 +5121,9 @@ func TestLabelValueLengthLimits(t *testing.T) {
 						URL:    "blackbox.exporter.io",
 						Path:   "/probe",
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -5197,20 +5197,20 @@ func TestKeepDroppedTargets(t *testing.T) {
 	}{
 		{
 			version:                    "v2.46.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(50)),
+			enforcedKeepDroppedTargets: new(uint64(1000)),
+			keepDroppedTargets:         new(uint64(50)),
 			golden:                     "KeepDroppedTargetsNotAddedInConfig.golden",
 		},
 		{
 			version:                    "v2.47.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(2000)),
+			enforcedKeepDroppedTargets: new(uint64(1000)),
+			keepDroppedTargets:         new(uint64(2000)),
 			golden:                     "KeepDroppedTargetsOverridedWithEnforcedValue.golden",
 		},
 		{
 			version:                    "v2.47.0",
-			enforcedKeepDroppedTargets: ptr.To(uint64(1000)),
-			keepDroppedTargets:         ptr.To(uint64(500)),
+			enforcedKeepDroppedTargets: new(uint64(1000)),
+			keepDroppedTargets:         new(uint64(500)),
 			golden:                     "KeepDroppedTargets.golden",
 		},
 	} {
@@ -5270,79 +5270,79 @@ func TestNativeHistogramConfig(t *testing.T) {
 		{
 			version: "v3.0.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "NativeHistogramConfig.golden",
 		},
 		{
 			version: "v2.54.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "native-histograms/NativeHistogramConfigMissConvertClassicHistogramsToNHCB.golden",
 		},
 		{
 			version: "v2.46.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "native-histograms/NativeHistogramConfigWithMissNativeHistogramMinBucketFactor.golden",
 		},
 		{
 			version: "v2.44.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "NativeHistogramConfigWithMissALL.golden",
 		},
 		{
 			version: "3.0.0-rc.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "NativeHistogramConfigAlwaysScrapeClassicHistograms.golden",
 		},
 		{
 			version: "v3.8.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				ScrapeNativeHistograms:         ptr.To(true),
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				ScrapeNativeHistograms:         new(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "NativeHistogramConfigWithScrapeNativeHistograms.golden",
 		},
 		{
 			version: "v3.7.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				ScrapeNativeHistograms:         ptr.To(true),
-				NativeHistogramBucketLimit:     ptr.To(uint64(10)),
-				ScrapeClassicHistograms:        ptr.To(true),
-				NativeHistogramMinBucketFactor: ptr.To(resource.MustParse("12.124")),
-				ConvertClassicHistogramsToNHCB: ptr.To(true),
+				ScrapeNativeHistograms:         new(true),
+				NativeHistogramBucketLimit:     new(uint64(10)),
+				ScrapeClassicHistograms:        new(true),
+				NativeHistogramMinBucketFactor: new(resource.MustParse("12.124")),
+				ConvertClassicHistogramsToNHCB: new(true),
 			},
 			golden: "NativeHistogramConfigMissScrapeNativeHistograms.golden",
 		},
 		{
 			version: "v3.8.0",
 			nativeHistogramConfig: monitoringv1.NativeHistogramConfig{
-				ScrapeNativeHistograms: ptr.To(true),
+				ScrapeNativeHistograms: new(true),
 			},
 			golden: "NativeHistogramConfigOnlyScrapeNativeHistograms.golden",
 		},
@@ -5609,7 +5609,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-										FollowRedirects: ptr.To(tc.followRedirects),
+										FollowRedirects: new(tc.followRedirects),
 									},
 								},
 							},
@@ -5681,12 +5681,12 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 								HTTPConfig: monitoringv1.HTTPConfig{
 									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-										FollowRedirects: ptr.To(tc.followRedirects),
+										FollowRedirects: new(tc.followRedirects),
 									},
 								},
 							},
@@ -5764,7 +5764,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-										EnableHTTP2: ptr.To(tc.enableHTTP2),
+										EnableHTTP2: new(tc.enableHTTP2),
 									},
 								},
 							},
@@ -5813,8 +5813,8 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							FilterRunning: ptr.To(false),
-							Port:          ptr.To("test"),
+							FilterRunning: new(false),
+							Port:          new("test"),
 						},
 					},
 				},
@@ -5874,12 +5874,12 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.PodMonitorSpec{
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
 								HTTPConfig: monitoringv1.HTTPConfig{
 									HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-										EnableHTTP2: ptr.To(tc.enableHTTP2),
+										EnableHTTP2: new(tc.enableHTTP2),
 									},
 								},
 							},
@@ -5920,7 +5920,7 @@ func TestRuntimeConfig(t *testing.T) {
 			Scenario: "Runtime GoGC is set to 25",
 			Version:  "v2.53.0",
 			Runtime: &monitoringv1.RuntimeConfig{
-				GoGC: ptr.To(int32(25)),
+				GoGC: new(int32(25)),
 			},
 			Golden: "RuntimeConfig_GoGC25.golden",
 		},
@@ -5928,7 +5928,7 @@ func TestRuntimeConfig(t *testing.T) {
 			Scenario: "Runtime GoGC is set to 25 but unsupported Prometheus Version",
 			Version:  "v2.52.0",
 			Runtime: &monitoringv1.RuntimeConfig{
-				GoGC: ptr.To(int32(25)),
+				GoGC: new(int32(25)),
 			},
 			Golden: "RuntimeConfig_GoGC_Not_Set.golden",
 		},
@@ -5972,7 +5972,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 		{
 			Scenario: "Exemplars maxSize is set to 5000000",
 			Exemplars: &monitoringv1.Exemplars{
-				MaxSize: ptr.To(int64(5000000)),
+				MaxSize: new(int64(5000000)),
 			},
 			Golden: "StorageSettingMaxExemplars_MaxSize5000000.golden",
 		},
@@ -5980,7 +5980,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 			Scenario: "max_exemplars is not set if version is less than v2.29.0",
 			Version:  "v2.28.0",
 			Exemplars: &monitoringv1.Exemplars{
-				MaxSize: ptr.To(int64(5000000)),
+				MaxSize: new(int64(5000000)),
 			},
 			Golden: "StorageSettingMaxExemplars_MaxSizeNotSet_v2.29.0.golden",
 		},
@@ -6143,21 +6143,21 @@ func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
 		{
 			name:                 "PrometheusAgent version < v2.55.0",
 			version:              "v2.54.0",
-			scrapeFailureLogFile: ptr.To("file.log"),
+			scrapeFailureLogFile: new("file.log"),
 			golden:               "PrometheusAgent_scrapeFailureLogFile_less_than_v2.54.0.golden",
 		},
 		{
 
 			name:                 "PrometheusAgent version >= v2.55.0",
 			version:              "v2.55.0",
-			scrapeFailureLogFile: ptr.To("/tmp/file.log"),
+			scrapeFailureLogFile: new("/tmp/file.log"),
 			golden:               "PrometheusAgent_scrapeFailureLogFile_greater_than_or_equal_to_v2.55.0.golden",
 		},
 		{
 
 			name:                 "PrometheusAgent version >= v2.55.0 and scrapeFailureLogFile with empty path",
 			version:              "v2.55.0",
-			scrapeFailureLogFile: ptr.To("file.log"),
+			scrapeFailureLogFile: new("file.log"),
 			golden:               "PrometheusAgent_scrapeFailureLogFile_empty_path_v2.55.0.golden",
 		},
 	} {
@@ -6235,7 +6235,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								{
 									// Test empty replacement
 									Action:      "Replace",
-									Replacement: ptr.To(""),
+									Replacement: new(""),
 									TargetLabel: "job",
 								},
 							},
@@ -6248,19 +6248,19 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								{
 									Action:       "Replace",
 									Regex:        "(.+)(?::d+)",
-									Replacement:  ptr.To("$1:9537"),
+									Replacement:  new("$1:9537"),
 									SourceLabels: []monitoringv1.LabelName{"__address__"},
 									TargetLabel:  "__address__",
 								},
 								{
 									Action:      "Replace",
-									Replacement: ptr.To("crio"),
+									Replacement: new("crio"),
 									TargetLabel: "job",
 								},
 								{
 									// Test empty replacement
 									Action:      "Replace",
-									Replacement: ptr.To(""),
+									Replacement: new(""),
 									TargetLabel: "job",
 								},
 							},
@@ -6307,9 +6307,9 @@ func TestProbeSpecConfig(t *testing.T) {
 					URL:    "example.com",
 					Path:   "/probe",
 					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
+						ProxyURL:             new("http://no-proxy.com"),
+						NoProxy:              new("0.0.0.0"),
+						ProxyFromEnvironment: new(false),
 						ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 							"header": {
 								{
@@ -6340,13 +6340,13 @@ func TestProbeSpecConfig(t *testing.T) {
 						RelabelConfigs: []monitoringv1.RelabelConfig{
 							{
 								TargetLabel: "foo",
-								Replacement: ptr.To("bar"),
+								Replacement: new("bar"),
 								Action:      "replace",
 							},
 							// Empty replacement case
 							{
 								TargetLabel: "foobar",
-								Replacement: ptr.To(""),
+								Replacement: new(""),
 								Action:      "replace",
 							},
 						},
@@ -6477,19 +6477,19 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "explicit_job_name",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				JobName: ptr.To("explicit-test-scrape-config3"),
+				JobName: new("explicit-test-scrape-config3"),
 			},
 			golden: "ScrapeConfigSpecConfig_WithJobName.golden",
 		},
 		{
 			name: "explicit_job_name_with_relabel_config",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				JobName: ptr.To("explicit-test-scrape-config5"),
+				JobName: new("explicit-test-scrape-config5"),
 				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
-						Replacement:  ptr.To("$1:9537"),
+						Replacement:  new("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
 					},
@@ -6500,7 +6500,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "shard_config",
 			patchProm: func(p *monitoringv1.Prometheus) {
-				p.Spec.Shards = ptr.To(int32(2))
+				p.Spec.Shards = new(int32(2))
 			},
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
@@ -6517,7 +6517,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "already_sharded_config",
 			patchProm: func(p *monitoringv1.Prometheus) {
-				p.Spec.Shards = ptr.To(int32(2))
+				p.Spec.Shards = new(int32(2))
 			},
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				StaticConfigs: []monitoringv1alpha1.StaticConfig{
@@ -6578,9 +6578,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 						URL:             "http://localhost:9100/sd.json",
 						RefreshInterval: &refreshInterval,
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -6600,7 +6600,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "metrics_path",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: ptr.To("/metrics"),
+				MetricsPath: new("/metrics"),
 			},
 			golden: "ScrapeConfigSpecConfig_MetricPath.golden",
 		},
@@ -6618,7 +6618,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Action:       "Replace",
 						Regex:        "(.+)(?::d+)",
-						Replacement:  ptr.To("$1:9537"),
+						Replacement:  new("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
 					},
@@ -6629,21 +6629,21 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "honor_timestamp",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				HonorTimestamps: ptr.To(true),
+				HonorTimestamps: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorTimeStamp.golden",
 		},
 		{
 			name: "track_timestamps_staleness",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				TrackTimestampsStaleness: ptr.To(true),
+				TrackTimestampsStaleness: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_TrackTimestampsStaleness.golden",
 		},
 		{
 			name: "honor_labels",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				HonorLabels: ptr.To(true),
+				HonorLabels: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_HonorLabels.golden",
 		},
@@ -6744,7 +6744,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL: "http://localhost:9100/sd.json",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
-							InsecureSkipVerify: ptr.To(false),
+							InsecureSkipVerify: new(false),
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -6791,7 +6791,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						URL: "http://localhost:9100/sd.json",
 						TLSConfig: &monitoringv1.SafeTLSConfig{
-							InsecureSkipVerify: ptr.To(true),
+							InsecureSkipVerify: new(true),
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
@@ -6816,18 +6816,18 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "limits",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				SampleLimit:           ptr.To(uint64(10000)),
-				TargetLimit:           ptr.To(uint64(1000)),
-				LabelLimit:            ptr.To(uint64(50)),
-				LabelNameLengthLimit:  ptr.To(uint64(40)),
-				LabelValueLengthLimit: ptr.To(uint64(30)),
+				SampleLimit:           new(uint64(10000)),
+				TargetLimit:           new(uint64(1000)),
+				LabelLimit:            new(uint64(50)),
+				LabelNameLengthLimit:  new(uint64(40)),
+				LabelValueLengthLimit: new(uint64(30)),
 			},
 			golden: "ScrapeConfigSpecConfig_Limits.golden",
 		},
 		{
 			name: "params",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				MetricsPath: ptr.To("/federate"),
+				MetricsPath: new("/federate"),
 				Params:      map[string][]string{"match[]": {"{job=\"prometheus\"}", "{__name__=~\"job:.*\"}"}},
 			},
 			golden: "ScrapeConfigSpecConfig_Params.golden",
@@ -6890,9 +6890,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name: "proxy_settings",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -6911,9 +6911,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name: "proxy_settings_with_muti_proxy_connect_header_values",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -6961,9 +6961,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			},
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ProxyConfig: monitoringv1.ProxyConfig{
-					ProxyURL:             ptr.To("http://no-proxy.com"),
-					NoProxy:              ptr.To("0.0.0.0"),
-					ProxyFromEnvironment: ptr.To(false),
+					ProxyURL:             new("http://no-proxy.com"),
+					NoProxy:              new("0.0.0.0"),
+					ProxyFromEnvironment: new(false),
 					ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 						"header": {
 							{
@@ -6996,7 +6996,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
 						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeA),
-						Port:  ptr.To(int32(9100)),
+						Port:  new(int32(9100)),
 					},
 				},
 			},
@@ -7010,7 +7010,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
 						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
-						Port:  ptr.To(int32(9100)),
+						Port:  new(int32(9100)),
 					},
 				},
 			},
@@ -7024,7 +7024,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
 						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
-						Port:  ptr.To(int32(9100)),
+						Port:  new(int32(9100)),
 					},
 				},
 			},
@@ -7038,7 +7038,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
 						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeMX),
-						Port:  ptr.To(int32(9100)),
+						Port:  new(int32(9100)),
 					},
 				},
 			},
@@ -7052,7 +7052,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					{
 						Names: []string{"node.demo.do.prometheus.io"},
 						Type:  ptr.To(monitoringv1alpha1.DNSRecordTypeNS),
-						Port:  ptr.To(int32(9100)),
+						Port:  new(int32(9100)),
 					},
 				},
 			},
@@ -7061,14 +7061,14 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 		{
 			name: "enable_compression_is_set_to_true",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableCompression: ptr.To(true),
+				EnableCompression: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableCompression_True.golden",
 		},
 		{
 			name: "enable_compression_is_set_to_false",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableCompression: ptr.To(false),
+				EnableCompression: new(false),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableCompression_False.golden",
 		},
@@ -7076,7 +7076,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "enable_http2_is_set_to_true_unsupported",
 			version: "v2.34.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableHTTP2: ptr.To(true),
+				EnableHTTP2: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_Unsupported.golden",
 		},
@@ -7084,7 +7084,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "enable_http2_is_set_to_false_unsupported",
 			version: "v2.34.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableHTTP2: ptr.To(false),
+				EnableHTTP2: new(false),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_Unsupported.golden",
 		},
@@ -7092,7 +7092,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "enable_http2_is_set_to_true",
 			version: "v2.35.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableHTTP2: ptr.To(true),
+				EnableHTTP2: new(true),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_True.golden",
 		},
@@ -7100,7 +7100,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			name:    "enable_http2_is_set_to_false",
 			version: "v2.35.0",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				EnableHTTP2: ptr.To(false),
+				EnableHTTP2: new(false),
 			},
 			golden: "ScrapeConfigSpecConfig_EnableHTTP2_False.golden",
 		},
@@ -7346,12 +7346,12 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 				HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
 					{
 						URL:             "http://localhost:9100/sd.json",
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -7558,11 +7558,11 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role:      monitoringv1alpha1.KubernetesRoleNode,
-						APIServer: ptr.To("https://kubernetes.default.svc"),
+						APIServer: new("https://kubernetes.default.svc"),
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -7574,8 +7574,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 					},
 				},
 			},
@@ -7588,7 +7588,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRolePod,
 						Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-							IncludeOwnNamespace: ptr.To(true),
+							IncludeOwnNamespace: new(true),
 							Names:               []string{"ns1", "ns2"},
 						},
 					},
@@ -7617,7 +7617,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRolePod,
 						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
-							Node: ptr.To(true),
+							Node: new(true),
 						},
 					},
 				},
@@ -7631,7 +7631,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRoleService,
 						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
-							Node: ptr.To(true),
+							Node: new(true),
 						},
 					},
 				},
@@ -7647,7 +7647,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  monitoringv1alpha1.KubernetesRoleNode,
-								Label: ptr.To("component=executor"),
+								Label: new("component=executor"),
 							},
 						},
 					},
@@ -7665,8 +7665,8 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  monitoringv1alpha1.KubernetesRoleNode,
-								Label: ptr.To("type=infra"),
-								Field: ptr.To("spec.unschedulable=false"),
+								Label: new("type=infra"),
+								Field: new("spec.unschedulable=false"),
 							},
 						},
 					},
@@ -7681,7 +7681,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role:      monitoringv1alpha1.KubernetesRoleNode,
-						APIServer: ptr.To("https://kubernetes.default.svc"),
+						APIServer: new("https://kubernetes.default.svc"),
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -7706,7 +7706,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role:      monitoringv1alpha1.KubernetesRoleNode,
-						APIServer: ptr.To("https://kubernetes.default.svc"),
+						APIServer: new("https://kubernetes.default.svc"),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -7725,7 +7725,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role:      monitoringv1alpha1.KubernetesRoleNode,
-						APIServer: ptr.To("https://kubernetes.default.svc"),
+						APIServer: new("https://kubernetes.default.svc"),
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &corev1.ConfigMapKeySelector{
@@ -7758,7 +7758,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 					{
 						Role:      monitoringv1alpha1.KubernetesRoleNode,
-						APIServer: ptr.To("https://kubernetes.default.svc"),
+						APIServer: new("https://kubernetes.default.svc"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -7869,23 +7869,23 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:       "localhost",
-						Datacenter:   ptr.To("we1"),
-						Namespace:    ptr.To("observability"),
-						Partition:    ptr.To("1"),
+						Datacenter:   new("we1"),
+						Namespace:    new("observability"),
+						Partition:    new("1"),
 						Scheme:       ptr.To(monitoringv1.SchemeHTTPS),
 						Services:     []string{"prometheus", "alertmanager"},
 						Tags:         []string{"tag1"},
-						TagSeparator: ptr.To(";"),
+						TagSeparator: new(";"),
 						NodeMeta: map[string]string{
 							"service": "service_name",
 							"name":    "node_name",
 						},
-						AllowStale:      ptr.To(false),
+						AllowStale:      new(false),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -7897,8 +7897,8 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHttp2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHttp2:     new(true),
 						TokenRef: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "foo",
@@ -7916,7 +7916,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server: "localhost",
-						Filter: ptr.To("Meta.env == \"qa\""),
+						Filter: new("Meta.env == \"qa\""),
 					},
 				},
 			},
@@ -7928,7 +7928,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:       "localhost",
-						HealthFilter: ptr.To("Service.Meta.env == \"prod\""),
+						HealthFilter: new("Service.Meta.env == \"prod\""),
 					},
 				},
 			},
@@ -8048,7 +8048,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:     "server",
-						PathPrefix: ptr.To("example-path-prefix"),
+						PathPrefix: new("example-path-prefix"),
 					},
 				},
 			},
@@ -8061,7 +8061,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:     "server",
-						PathPrefix: ptr.To("example-path-prefix"),
+						PathPrefix: new("example-path-prefix"),
 					},
 				},
 			},
@@ -8074,7 +8074,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:    "server",
-						Namespace: ptr.To("example-namespace"),
+						Namespace: new("example-namespace"),
 					},
 				},
 			},
@@ -8087,7 +8087,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 					{
 						Server:    "server",
-						Namespace: ptr.To("example-namespace"),
+						Namespace: new("example-namespace"),
 					},
 				},
 			},
@@ -8198,7 +8198,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region: ptr.To("us-east-1"),
+						Region: new("us-east-1"),
 						AccessKey: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aws-access-api",
@@ -8212,7 +8212,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 							Key: "secretKey",
 						},
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -8223,10 +8223,10 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region:          ptr.To("us-east-1"),
-						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						Region:          new("us-east-1"),
+						RoleARN:         new("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -8237,10 +8237,10 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region:          ptr.To("us-east-1"),
-						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						Region:          new("us-east-1"),
+						RoleARN:         new("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "tag:environment",
@@ -8262,10 +8262,10 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region:          ptr.To("us-east-1"),
-						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						Region:          new("us-east-1"),
+						RoleARN:         new("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "tag:environment",
@@ -8287,7 +8287,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region: ptr.To("us-east-1"),
+						Region: new("us-east-1"),
 						AccessKey: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong-secret-name",
@@ -8317,11 +8317,11 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region: ptr.To("us-east-1"),
+						Region: new("us-east-1"),
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -8333,9 +8333,9 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 								},
 							},
 						},
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 					},
 				},
 			},
@@ -8346,7 +8346,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region: ptr.To("us-east-1"),
+						Region: new("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -8371,8 +8371,8 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 								Key: "private-key",
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 					},
 				},
 			},
@@ -8384,7 +8384,7 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 					{
-						Region: ptr.To("us-east-1"),
+						Region: new("us-east-1"),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -8409,8 +8409,8 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 								Key: "private-key",
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 					},
 				},
 			},
@@ -8466,20 +8466,20 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						Environment:          ptr.To("AzurePublicCloud"),
+						Environment:          new("AzurePublicCloud"),
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
-						TenantID:             ptr.To("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
-						ClientID:             ptr.To("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
+						TenantID:             new("BBBB222B-B2B2-2B22-B222-2BB2222BB2B2"),
+						ClientID:             new("333333CC-3C33-3333-CCC3-33C3CCCCC33C"),
 						ClientSecret: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "clientSecret",
 						},
-						ResourceGroup:   ptr.To("my-resource-group"),
+						ResourceGroup:   new("my-resource-group"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -8490,12 +8490,12 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						Environment:          ptr.To("AzurePublicCloud"),
+						Environment:          new("AzurePublicCloud"),
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
-						ResourceGroup:        ptr.To("my-resource-group"),
+						ResourceGroup:        new("my-resource-group"),
 						RefreshInterval:      ptr.To(monitoringv1.Duration("30s")),
-						Port:                 ptr.To(int32(9100)),
+						Port:                 new(int32(9100)),
 					},
 				},
 			},
@@ -8506,7 +8506,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						Environment:          ptr.To("AzurePublicCloud"),
+						Environment:          new("AzurePublicCloud"),
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeManagedIdentity),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 					},
@@ -8558,9 +8558,9 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -8572,8 +8572,8 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 					},
 				},
 			},
@@ -8675,7 +8675,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 					{
-						Environment:          ptr.To("AzurePublicCloud"),
+						Environment:          new("AzurePublicCloud"),
 						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeWorkloadIdentity),
 						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
 					},
@@ -8777,7 +8777,7 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 						Project:         "devops-dev",
 						Zone:            "us-west-1",
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -8791,9 +8791,9 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 						Project:         "devops-dev",
 						Zone:            "us-west-1",
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
-						Filter:          ptr.To("filter-expression"),
-						TagSeparator:    ptr.To("tag-value"),
+						Port:            new(int32(9100)),
+						Filter:          new("filter-expression"),
+						TagSeparator:    new("tag-value"),
 					},
 				},
 			},
@@ -8879,16 +8879,16 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 						Role:             monitoringv1alpha1.OpenStackRoleInstance,
 						Region:           "region-1",
 						IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://identity.example.com:5000/v2.0")),
-						Username:         ptr.To("nova-user-1"),
+						Username:         new("nova-user-1"),
 						Password: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "openstack-access-secret",
 							},
 							Key: "password",
 						},
-						DomainName:      ptr.To("devops-project-1"),
+						DomainName:      new("devops-project-1"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -8976,9 +8976,9 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -8990,9 +8990,9 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						Port:            new(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
 					},
 				},
@@ -9160,9 +9160,9 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -9174,11 +9174,11 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects:    ptr.To(true),
-						EnableHTTP2:        ptr.To(true),
-						Port:               ptr.To(int32(9100)),
+						FollowRedirects:    new(true),
+						EnableHTTP2:        new(true),
+						Port:               new(int32(9100)),
 						RefreshInterval:    ptr.To(monitoringv1.Duration("30s")),
-						HostNetworkingHost: ptr.To("localhost"),
+						HostNetworkingHost: new("localhost"),
 						Filters: []monitoringv1alpha1.Filter{
 							{Name: "dummy_label_1",
 								Values: []string{"dummy_value_1"}},
@@ -9385,7 +9385,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								Key: "password",
 							},
 						},
-						MatchFirstNetwork: ptr.To(true),
+						MatchFirstNetwork: new(true),
 					},
 				},
 			},
@@ -9442,7 +9442,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 								Key: "password",
 							},
 						},
-						MatchFirstNetwork: ptr.To(true),
+						MatchFirstNetwork: new(true),
 					},
 				},
 			},
@@ -9535,9 +9535,9 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -9549,11 +9549,11 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						Port:            ptr.To(int32(9100)),
-						TagSeparator:    ptr.To(","),
+						FollowRedirects: new(true),
+						Port:            new(int32(9100)),
+						TagSeparator:    new(","),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-						EnableHTTP2:     ptr.To(true),
+						EnableHTTP2:     new(true),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -9610,9 +9610,9 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 								"param2": "value2",
 							},
 						},
-						TagSeparator:    ptr.To(","),
+						TagSeparator:    new(","),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-						EnableHTTP2:     ptr.To(true),
+						EnableHTTP2:     new(true),
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -9719,9 +9719,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					{
 						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -9733,9 +9733,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						Port:            new(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 					},
 				},
@@ -9750,9 +9750,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					{
 						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -9764,11 +9764,11 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						Port:            new(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-						LabelSelector:   ptr.To("label_value"),
+						LabelSelector:   new("label_value"),
 					},
 				},
 			},
@@ -9782,9 +9782,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 					{
 						Role: "hcloud",
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -9796,11 +9796,11 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						Port:            new(int32(9100)),
 						RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
-						LabelSelector:   ptr.To("label_value"),
+						LabelSelector:   new("label_value"),
 					},
 				},
 			},
@@ -10113,19 +10113,19 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 		{
 			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 3.4",
 			version:                        "v3.4.0",
-			convertClassicHistogramsToNHCB: ptr.To(true),
+			convertClassicHistogramsToNHCB: new(true),
 			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusV3.golden",
 		},
 		{
 			name:                           "ConvertClassicHistogramsToNHCB false with Prometheus Version 3.4",
 			version:                        "v3.4.0",
-			convertClassicHistogramsToNHCB: ptr.To(false),
+			convertClassicHistogramsToNHCB: new(false),
 			expectedCfg:                    "ConvertClassicHistogramsToNHCBFalseWithPrometheusV3.golden",
 		},
 		{
 			name:                           "ConvertClassicHistogramsToNHCB true with Prometheus Version 2",
 			version:                        "v2.55.0",
-			convertClassicHistogramsToNHCB: ptr.To(true),
+			convertClassicHistogramsToNHCB: new(true),
 			expectedCfg:                    "ConvertClassicHistogramsToNHCBTrueWithPrometheusLowerThanV3.golden",
 		},
 	}
@@ -10239,7 +10239,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config KeepIdentifyingResourceAttributes",
 			version: "v3.1.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				KeepIdentifyingResourceAttributes: ptr.To(true),
+				KeepIdentifyingResourceAttributes: new(true),
 			},
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes.golden",
 		},
@@ -10247,7 +10247,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config ConvertHistogramsToNHCB old version",
 			version: "v3.0.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				KeepIdentifyingResourceAttributes: ptr.To(false),
+				KeepIdentifyingResourceAttributes: new(false),
 			},
 			golden: "OTLPConfig_Config_keep_identifying_resource_attributes_with_old_version.golden",
 		},
@@ -10271,7 +10271,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config ConvertHistogramsToNHCB",
 			version: "v3.4.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				ConvertHistogramsToNHCB: ptr.To(true),
+				ConvertHistogramsToNHCB: new(true),
 			},
 			golden: "OTLPConfig_Config_convert_histograms_to_nhcb.golden",
 		},
@@ -10279,7 +10279,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config ConvertHistogramsToNHCB with old version",
 			version: "v3.3.1",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				ConvertHistogramsToNHCB: ptr.To(true),
+				ConvertHistogramsToNHCB: new(true),
 			},
 			golden: "OTLPConfig_Config_convert_histograms_to_nhcb_with_old_version.golden",
 		},
@@ -10288,7 +10288,7 @@ func TestOTLPConfig(t *testing.T) {
 			version: "v3.5.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				IgnoreResourceAttributes:     []string{"aa", "bb", "cc"},
-				PromoteAllResourceAttributes: ptr.To(true),
+				PromoteAllResourceAttributes: new(true),
 			},
 			golden: "OTLPConfig_Config_ignore_resource_attributes_and_promote_all_resource_attributes.golden",
 		},
@@ -10312,7 +10312,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config PromoteAllResourceAttributes with correct prometheus version",
 			version: "v3.5.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				PromoteAllResourceAttributes: ptr.To(true),
+				PromoteAllResourceAttributes: new(true),
 			},
 			golden: "OTLPConfig_Config_promote_all_resource_attributes.golden",
 		},
@@ -10321,7 +10321,7 @@ func TestOTLPConfig(t *testing.T) {
 			version: "v3.5.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes:    []string{"aa", "bb", "cc"},
-				PromoteAllResourceAttributes: ptr.To(true),
+				PromoteAllResourceAttributes: new(true),
 			},
 			expectedErr: true,
 		},
@@ -10329,7 +10329,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config PromoteAllResourceAttributes with old prometheus version",
 			version: "v3.4.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				PromoteAllResourceAttributes: ptr.To(true),
+				PromoteAllResourceAttributes: new(true),
 			},
 			golden: "OTLPConfig_Config_promote_all_resource_attributes_wrong_prom.golden",
 		},
@@ -10337,7 +10337,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config PromoteScopeMetadata with compatible versiopn",
 			version: "v3.6.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				PromoteScopeMetadata: ptr.To(true),
+				PromoteScopeMetadata: new(true),
 			},
 			golden: "OTLPConfig_Config_promote_scope_metadata.golden",
 		},
@@ -10345,7 +10345,7 @@ func TestOTLPConfig(t *testing.T) {
 			name:    "Config PromoteScopeMetadata with wrong version",
 			version: "v3.5.0",
 			otlpConfig: &monitoringv1.OTLPConfig{
-				PromoteScopeMetadata: ptr.To(true),
+				PromoteScopeMetadata: new(true),
 			},
 			golden: "OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
 		},
@@ -10405,15 +10405,15 @@ func TestTracingConfig(t *testing.T) {
 		},
 		{
 			tracingConfig: &monitoringv1.TracingConfig{
-				ClientType:       ptr.To("grpc"),
+				ClientType:       new("grpc"),
 				Endpoint:         "https://otel-collector.default.svc.local:3333",
 				SamplingFraction: &samplingTwo,
 				Headers: map[string]string{
 					"custom": "header",
 				},
-				Compression: ptr.To("gzip"),
+				Compression: new("gzip"),
 				Timeout:     ptr.To(monitoringv1.Duration("10s")),
-				Insecure:    ptr.To(false),
+				Insecure:    new(false),
 			},
 			name:        "Expect valid config",
 			expectedErr: false,
@@ -10471,9 +10471,9 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -10485,12 +10485,12 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 						Server:          "http://127.0.0.1:5681",
-						ClientID:        ptr.To("client"),
-						FetchTimeout:    (*monitoringv1.Duration)(ptr.To("5s")),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						ClientID:        new("client"),
+						FetchTimeout:    (*monitoringv1.Duration)(new("5s")),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -10758,7 +10758,7 @@ func defaultPodMonitor() *monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 				},
 			},
@@ -10781,9 +10781,9 @@ func defaultScrapeConfig() *monitoringv1alpha1.ScrapeConfig {
 					URL:             "http://localhost:9100/sd.json",
 					RefreshInterval: ptr.To(monitoringv1.Duration("5m")),
 					ProxyConfig: monitoringv1.ProxyConfig{
-						ProxyURL:             ptr.To("http://no-proxy.com"),
-						NoProxy:              ptr.To("0.0.0.0"),
-						ProxyFromEnvironment: ptr.To(false),
+						ProxyURL:             new("http://no-proxy.com"),
+						NoProxy:              new("0.0.0.0"),
+						ProxyFromEnvironment: new(false),
 					},
 				},
 			},
@@ -10823,7 +10823,7 @@ func TestScrapeClass(t *testing.T) {
 			scrapeClass: []monitoringv1.ScrapeClass{
 				{
 					Name:    "test-tls-scrape-class",
-					Default: ptr.To(true),
+					Default: new(true),
 					TLSConfig: &monitoringv1.TLSConfig{
 						TLSFilesConfig: monitoringv1.TLSFilesConfig{
 							CAFile:   "/etc/prometheus/secrets/default/ca.crt",
@@ -10847,10 +10847,10 @@ func TestScrapeClass(t *testing.T) {
 			for _, sc := range tc.scrapeClass {
 				p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 				if !ptr.Deref(sc.Default, false) {
-					serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-					podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
-					probe.Spec.ScrapeClassName = ptr.To(sc.Name)
-					scrapeConfig.Spec.ScrapeClassName = ptr.To(sc.Name)
+					serviceMonitor.Spec.ScrapeClassName = new(sc.Name)
+					podMonitor.Spec.ScrapeClassName = new(sc.Name)
+					probe.Spec.ScrapeClassName = new(sc.Name)
+					scrapeConfig.Spec.ScrapeClassName = new(sc.Name)
 				}
 			}
 
@@ -10965,7 +10965,7 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 		for _, sc := range tc.scrapeClass {
 			p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
-				serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				serviceMonitor.Spec.ScrapeClassName = new(sc.Name)
 			}
 		}
 
@@ -11077,7 +11077,7 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 		for _, sc := range tc.scrapeClass {
 			p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
 			if sc.Default == nil {
-				podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+				podMonitor.Spec.ScrapeClassName = new(sc.Name)
 			}
 		}
 		podMonitor.Spec.PodMetricsEndpoints[0].TLSConfig = tc.tlsConfig
@@ -11138,10 +11138,10 @@ func TestPodMonitorPortNumber(t *testing.T) {
 		p := defaultPrometheus()
 		podMonitor := defaultPodMonitor()
 
-		podMonitor.Spec.PodMetricsEndpoints[0].Port = ptr.To(tc.port)
-		podMonitor.Spec.PodMetricsEndpoints[0].PortNumber = ptr.To(tc.portNumber)
+		podMonitor.Spec.PodMetricsEndpoints[0].Port = new(tc.port)
+		podMonitor.Spec.PodMetricsEndpoints[0].PortNumber = new(tc.portNumber)
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		podMonitor.Spec.PodMetricsEndpoints[0].TargetPort = ptr.To(tc.targetPort)
+		podMonitor.Spec.PodMetricsEndpoints[0].TargetPort = new(tc.targetPort)
 
 		cg := mustNewConfigGenerator(t, p)
 
@@ -11171,7 +11171,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 	p.Spec.ScrapeClasses = []monitoringv1.ScrapeClass{
 		{
 			Name:    "test-default-scrape-class",
-			Default: ptr.To(true),
+			Default: new(true),
 			TLSConfig: &monitoringv1.TLSConfig{
 				TLSFilesConfig: monitoringv1.TLSFilesConfig{
 					CAFile:   "/etc/prometheus/secrets/ca.crt",
@@ -11182,7 +11182,7 @@ func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
 		},
 		{
 			Name:    "test-default-scrape-class-2",
-			Default: ptr.To(true),
+			Default: new(true),
 			TLSConfig: &monitoringv1.TLSConfig{
 				TLSFilesConfig: monitoringv1.TLSFilesConfig{
 					CAFile:   "/etc/prometheus/secrets/ca.crt",
@@ -11304,9 +11304,9 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11318,10 +11318,10 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
 						Server:          "http://localhost:8761/eureka",
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -11485,9 +11485,9 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11499,14 +11499,14 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						AllowStale:      ptr.To(true),
-						TagSeparator:    ptr.To(","),
-						Namespace:       ptr.To("default"),
-						Region:          ptr.To("default"),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						AllowStale:      new(true),
+						TagSeparator:    new(","),
+						Namespace:       new("default"),
+						Region:          new("default"),
 						Server:          "http://127.0.0.1:4646",
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -11672,9 +11672,9 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11686,9 +11686,9 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 						Filters: []monitoringv1alpha1.Filter{
 							{
 								Name:   "foo",
@@ -11723,9 +11723,9 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11737,9 +11737,9 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -11907,9 +11907,9 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11921,9 +11921,9 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -11952,9 +11952,9 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -11966,9 +11966,9 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12125,8 +12125,8 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:   ptr.To("us-east-1"),
-						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Region:   new("us-east-1"),
+						Endpoint: new("https://lightsail.us-east-1.amazonaws.com/"),
 						AccessKey: &corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "aws-access-api",
@@ -12140,7 +12140,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 							Key: "secretKey",
 						},
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -12151,11 +12151,11 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:          ptr.To("us-east-1"),
-						Endpoint:        ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
-						RoleARN:         ptr.To("arn:aws:iam::123456789:role/prometheus-role"),
+						Region:          new("us-east-1"),
+						Endpoint:        new("https://lightsail.us-east-1.amazonaws.com/"),
+						RoleARN:         new("arn:aws:iam::123456789:role/prometheus-role"),
 						RefreshInterval: ptr.To(monitoringv1.Duration("30s")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -12166,8 +12166,8 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:   ptr.To("us-east-1"),
-						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Region:   new("us-east-1"),
+						Endpoint: new("https://lightsail.us-east-1.amazonaws.com/"),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -12177,9 +12177,9 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -12191,9 +12191,9 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12204,8 +12204,8 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:   ptr.To("us-east-1"),
-						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Region:   new("us-east-1"),
+						Endpoint: new("https://lightsail.us-east-1.amazonaws.com/"),
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -12221,9 +12221,9 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -12235,9 +12235,9 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12248,8 +12248,8 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:   ptr.To("us-east-1"),
-						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Region:   new("us-east-1"),
+						Endpoint: new("https://lightsail.us-east-1.amazonaws.com/"),
 
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
@@ -12283,8 +12283,8 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 					{
-						Region:   ptr.To("us-east-1"),
-						Endpoint: ptr.To("https://lightsail.us-east-1.amazonaws.com/"),
+						Region:   new("us-east-1"),
+						Endpoint: new("https://lightsail.us-east-1.amazonaws.com/"),
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -12422,8 +12422,8 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 							Key: "ck",
 						},
 						Service:         monitoringv1alpha1.OVHServiceDedicatedServer,
-						Endpoint:        ptr.To("127.0.0.1"),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						Endpoint:        new("127.0.0.1"),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12494,15 +12494,15 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 						},
 						ProjectID:  "00000000-0000-0000-0000-000000000001",
 						Role:       monitoringv1alpha1.ScalewayRoleInstance,
-						Zone:       ptr.To("fr-par-1"),
-						Port:       ptr.To(int32(23456)),
+						Zone:       new("fr-par-1"),
+						Port:       new(int32(23456)),
 						ApiURL:     ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
-						NameFilter: ptr.To("name"),
+						NameFilter: new("name"),
 						TagsFilter: []string{"aa", "bb"},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -12514,9 +12514,9 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12648,9 +12648,9 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 							},
 						},
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -12662,10 +12662,10 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 								},
 							},
 						},
-						FollowRedirects: ptr.To(true),
-						EnableHTTP2:     ptr.To(true),
-						Port:            ptr.To(int32(9100)),
-						RefreshInterval: (*monitoringv1.Duration)(ptr.To("30s")),
+						FollowRedirects: new(true),
+						EnableHTTP2:     new(true),
+						Port:            new(int32(9100)),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
 					},
 				},
 			},
@@ -12817,7 +12817,7 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
 			Name:    "default",
-			Default: ptr.To(true),
+			Default: new(true),
 			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
@@ -12872,7 +12872,7 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	}
 
 	p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
-	serviceMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	serviceMonitor.Spec.ScrapeClassName = new(sc.Name)
 	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
@@ -12897,7 +12897,7 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	scrapeClasses := []monitoringv1.ScrapeClass{
 		{
 			Name:    "default",
-			Default: ptr.To(true),
+			Default: new(true),
 			Relabelings: []monitoringv1.RelabelConfig{
 				{
 					Action:       "replace",
@@ -12952,7 +12952,7 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 	}
 
 	p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, sc)
-	podMonitor.Spec.ScrapeClassName = ptr.To(sc.Name)
+	podMonitor.Spec.ScrapeClassName = new(sc.Name)
 	cg := mustNewConfigGenerator(t, p)
 
 	cfg, err := cg.GenerateServerConfiguration(
@@ -12973,9 +12973,9 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 
 func TestScrapeClassMetricRelabelings(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
-	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-extra-relabelings-scrape-class")
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-extra-relabelings-scrape-class")
 	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
-	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-extra-relabelings-scrape-class")
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-extra-relabelings-scrape-class")
 	for _, tc := range []struct {
 		name            string
 		scrapeClasses   []monitoringv1.ScrapeClass
@@ -12990,19 +12990,19 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 							Regex:        "tenant1-.*",
 							TargetLabel:  "tenant",
-							Replacement:  ptr.To("tenant1"),
+							Replacement:  new("tenant1"),
 						},
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 							Regex:        "tenant2-.*",
 							TargetLabel:  "tenant",
-							Replacement:  ptr.To("tenant2"),
+							Replacement:  new("tenant2"),
 						},
 					},
 				},
@@ -13011,7 +13011,7 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "tenant",
-							Replacement: ptr.To("not-default"),
+							Replacement: new("not-default"),
 						},
 					},
 				},
@@ -13027,7 +13027,7 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "extra",
-							Replacement: ptr.To("value1"),
+							Replacement: new("value1"),
 						},
 					},
 				},
@@ -13040,19 +13040,19 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 							Regex:        "tenant1-.*",
 							TargetLabel:  "tenant",
-							Replacement:  ptr.To("tenant1"),
+							Replacement:  new("tenant1"),
 						},
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 							Regex:        "tenant2-.*",
 							TargetLabel:  "tenant",
-							Replacement:  ptr.To("tenant2"),
+							Replacement:  new("tenant2"),
 						},
 					},
 				},
@@ -13061,7 +13061,7 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "tenant",
-							Replacement: ptr.To("not-default"),
+							Replacement: new("not-default"),
 						},
 					},
 				},
@@ -13077,7 +13077,7 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							TargetLabel: "extra",
-							Replacement: ptr.To("value1"),
+							Replacement: new("value1"),
 						},
 					},
 				},
@@ -13177,7 +13177,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials",
 					},
@@ -13218,7 +13218,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials/default",
 					},
@@ -13265,7 +13265,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials/default",
 					},
@@ -13312,7 +13312,7 @@ func TestScrapeClassAuthorization(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:    "default",
-					Default: ptr.To(true),
+					Default: new(true),
 					Authorization: &monitoringv1.Authorization{
 						CredentialsFile: "/etc/secret/credentials/default",
 					},
@@ -13387,9 +13387,9 @@ func TestScrapeClassAuthorization(t *testing.T) {
 
 func TestScrapeClassAttachMetadata(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
-	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attachmetadata-scrape-class")
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-attachmetadata-scrape-class")
 	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
-	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-attachmetadata-scrape-class")
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-attachmetadata-scrape-class")
 	for _, tc := range []struct {
 		name            string
 		scrapeClasses   []monitoringv1.ScrapeClass
@@ -13404,8 +13404,8 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:           "default",
-					Default:        ptr.To(true),
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					Default:        new(true),
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
 			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": defaultServiceMonitor()},
@@ -13416,7 +13416,7 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:           "test-attachmetadata-scrape-class",
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
 			serviceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitorWithNonDefaultScrapeClass},
@@ -13427,12 +13427,12 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:           "default",
-					Default:        ptr.To(true),
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					Default:        new(true),
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 				{
 					Name:           "not-default",
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": defaultPodMonitor()},
@@ -13443,7 +13443,7 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:           "test-attachmetadata-scrape-class",
-					AttachMetadata: &monitoringv1.AttachMetadata{Node: ptr.To(true)},
+					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
@@ -13478,13 +13478,13 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 
 func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 	serviceMonitorWithNonDefaultScrapeClass := defaultServiceMonitor()
-	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	serviceMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-fallback-scrapeprotocol-scrape-class")
 	podMonitorWithNonDefaultScrapeClass := defaultPodMonitor()
-	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-fallback-scrapeprotocol-scrape-class")
 	probeWithNonDefaultScrapeClass := defaultProbe()
-	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	probeWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-fallback-scrapeprotocol-scrape-class")
 	scrapeConfigWithNonDefaultScrapeClass := defaultScrapeConfig()
-	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = ptr.To("test-fallback-scrapeprotocol-scrape-class")
+	scrapeConfigWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-fallback-scrapeprotocol-scrape-class")
 	for _, tc := range []struct {
 		name            string
 		scrapeClasses   []monitoringv1.ScrapeClass
@@ -13499,7 +13499,7 @@ func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:                   "default",
-					Default:                ptr.To(true),
+					Default:                new(true),
 					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 				},
 			},
@@ -13522,7 +13522,7 @@ func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:                   "default",
-					Default:                ptr.To(true),
+					Default:                new(true),
 					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 				},
 			},
@@ -13545,7 +13545,7 @@ func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:                   "default",
-					Default:                ptr.To(true),
+					Default:                new(true),
 					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 				},
 			},
@@ -13568,7 +13568,7 @@ func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 			scrapeClasses: []monitoringv1.ScrapeClass{
 				{
 					Name:                   "default",
-					Default:                ptr.To(true),
+					Default:                new(true),
 					FallbackScrapeProtocol: ptr.To(monitoringv1.OpenMetricsText1_0_0),
 				},
 			},
@@ -13628,7 +13628,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						Port:      intstr.FromString("web"),
 					},
 				},
@@ -13640,12 +13640,12 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("default"),
+						Namespace: new("default"),
 						Port:      intstr.FromString("web"),
 						ProxyConfig: monitoringv1.ProxyConfig{
-							ProxyURL:             ptr.To("http://no-proxy.com"),
-							NoProxy:              ptr.To("0.0.0.0"),
-							ProxyFromEnvironment: ptr.To(false),
+							ProxyURL:             new("http://no-proxy.com"),
+							NoProxy:              new("0.0.0.0"),
+							ProxyFromEnvironment: new(false),
 							ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
 								"header": {
 									{
@@ -13667,7 +13667,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("default"),
+						Namespace: new("default"),
 						Port:      intstr.FromString("web"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
@@ -13705,7 +13705,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						Port:      intstr.FromString("web"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
@@ -13743,7 +13743,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("default"),
+						Namespace: new("default"),
 						Port:      intstr.FromString("web"),
 					},
 				},
@@ -13813,7 +13813,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -13854,7 +13854,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -13895,7 +13895,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -13936,7 +13936,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 				Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 					{
 						Name:      "foo",
-						Namespace: ptr.To("other"),
+						Namespace: new("other"),
 						TLSConfig: &monitoringv1.TLSConfig{
 							SafeTLSConfig: monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -14186,7 +14186,7 @@ func TestPodMonitorSelectors(t *testing.T) {
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -14217,7 +14217,7 @@ func TestPodMonitorSelectors(t *testing.T) {
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -14244,7 +14244,7 @@ func TestPodMonitorSelectors(t *testing.T) {
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -14282,7 +14282,7 @@ func TestPodMonitorSelectors(t *testing.T) {
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 						{
-							Port:     ptr.To("web"),
+							Port:     new("web"),
 							Interval: "30s",
 						},
 					},
@@ -14321,19 +14321,19 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 		{
 			name:                    "ScrapeClassicHistograms true with Prometheus Version 3.5",
 			version:                 "v3.5.0",
-			ScrapeClassicHistograms: ptr.To(true),
+			ScrapeClassicHistograms: new(true),
 			expectedCfg:             "ScrapeClassicHistogramsTrueProperPromVersion.golden",
 		},
 		{
 			name:                    "ScrapeClassicHistograms false with Prometheus Version 3.5",
 			version:                 "v3.5.0",
-			ScrapeClassicHistograms: ptr.To(false),
+			ScrapeClassicHistograms: new(false),
 			expectedCfg:             "ScrapeClassicHistogramsFalseProperPromVersion.golden",
 		},
 		{
 			name:                    "ScrapeClassicHistograms true with Prometheus Version 2",
 			version:                 "v2.45.0",
-			ScrapeClassicHistograms: ptr.To(true),
+			ScrapeClassicHistograms: new(true),
 			expectedCfg:             "ScrapeClassicHistogramsTrueWrongPromVersion.golden",
 		},
 	}
@@ -14378,19 +14378,19 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 		{
 			name:                   "ScrapeNativeHistograms true with Prometheus Version 3.8",
 			version:                "v3.8.0",
-			ScrapeNativeHistograms: ptr.To(true),
+			ScrapeNativeHistograms: new(true),
 			expectedCfg:            "ScrapeNativeHistogramsTrueProperPromVersion.golden",
 		},
 		{
 			name:                   "ScrapeNativeHistograms false with Prometheus Version 3.8",
 			version:                "v3.8.0",
-			ScrapeNativeHistograms: ptr.To(false),
+			ScrapeNativeHistograms: new(false),
 			expectedCfg:            "ScrapeNativeHistogramsFalseProperPromVersion.golden",
 		},
 		{
 			name:                   "ScrapeNativeHistograms true with Lower Prometheus version",
 			version:                "v3.7.0",
-			ScrapeNativeHistograms: ptr.To(true),
+			ScrapeNativeHistograms: new(true),
 			expectedCfg:            "ScrapeNativeHistogramsTrueWrongPromVersion.golden",
 		},
 	}
@@ -14459,7 +14459,7 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 						MatchLabels: map[string]string{"foo": "bar"},
 					},
 					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{Port: ptr.To("web"), Interval: "30s"},
+						{Port: new("web"), Interval: "30s"},
 					},
 				},
 			},
@@ -14516,7 +14516,7 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 			zones:  []string{"zone-a", "zone-b"},
 			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
 				sm := basicServiceMonitor()
-				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: ptr.To(false)}
+				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: new(false)}
 				return sm
 			}(),
 			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_false.golden",
@@ -14524,9 +14524,9 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
-			p.Spec.Shards = ptr.To(tc.shards)
+			p.Spec.Shards = new(tc.shards)
 			p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: tc.zones},
 			}
 
@@ -14577,7 +14577,7 @@ func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
-			p.Spec.Shards = ptr.To(tc.shards)
+			p.Spec.Shards = new(tc.shards)
 
 			opts := []ConfigGeneratorOption{}
 			if tc.retentionEnabled {
@@ -14642,7 +14642,7 @@ func TestTopologyZoneForShard(t *testing.T) {
 		{
 			name: "address mode returns empty",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode: ptr.To(addressMode),
+				Mode: new(addressMode),
 			},
 			prometheusTopologySharding: true,
 			shardIndex:                 0,
@@ -14651,7 +14651,7 @@ func TestTopologyZoneForShard(t *testing.T) {
 		{
 			name: "topology mode with no values returns empty",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
 			},
 			prometheusTopologySharding: true,
@@ -14661,7 +14661,7 @@ func TestTopologyZoneForShard(t *testing.T) {
 		{
 			name: "shard 0 gets first zone",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14671,7 +14671,7 @@ func TestTopologyZoneForShard(t *testing.T) {
 		{
 			name: "shard 1 gets second zone",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14681,7 +14681,7 @@ func TestTopologyZoneForShard(t *testing.T) {
 		{
 			name: "shard 2 wraps around to first zone",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14727,7 +14727,7 @@ func TestInzoneShardForShard(t *testing.T) {
 		{
 			name: "2 shards 2 zones",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14736,7 +14736,7 @@ func TestInzoneShardForShard(t *testing.T) {
 		{
 			name: "2 shards 1 zone",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a"}},
 			},
 			prometheusTopologySharding: true,
@@ -14745,7 +14745,7 @@ func TestInzoneShardForShard(t *testing.T) {
 		{
 			name: "3 shards 2 zones",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14754,7 +14754,7 @@ func TestInzoneShardForShard(t *testing.T) {
 		{
 			name: "4 shards 2 zones",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -14763,7 +14763,7 @@ func TestInzoneShardForShard(t *testing.T) {
 		{
 			name: "6 shards 3 zones",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
 			},
 			prometheusTopologySharding: true,

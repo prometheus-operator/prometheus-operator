@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -76,7 +75,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 		{
 			TargetLabel: "__tmp_disable_sharding",
 			Action:      "Replace",
-			Replacement: ptr.To("true"),
+			Replacement: new("true"),
 		},
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
@@ -88,7 +87,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// the Delete strategy because the second shard will not exist anymore in
 	// case of scale down.
 	prom := framework.MakeBasicPrometheus(ns, prometheusName, prometheusGroupLabel, 1)
-	prom.Spec.Shards = ptr.To(int32(1))
+	prom.Spec.Shards = new(int32(1))
 	prom.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
@@ -100,7 +99,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	}
 
 	prom.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
-		WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+		WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 	}
 
 	shardServices := make([]*corev1.Service, 2)
@@ -208,11 +207,11 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 	}{
 		{
 			name:           "delete policy",
-			whenScaledDown: ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+			whenScaledDown: new(monitoringv1.DeleteWhenScaledRetentionType),
 		},
 		{
 			name:           "retain policy",
-			whenScaledDown: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+			whenScaledDown: new(monitoringv1.RetainWhenScaledRetentionType),
 		},
 	}
 
@@ -223,7 +222,7 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
 				WhenScaled: tc.whenScaledDown,
 			}
-			p.Spec.Shards = ptr.To(int32(2))
+			p.Spec.Shards = new(int32(2))
 			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 			require.NoError(t, err)
 

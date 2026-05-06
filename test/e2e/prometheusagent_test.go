@@ -35,7 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -140,7 +139,7 @@ func testAgentCheckStorageClass(t *testing.T) {
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 						Spec: corev1.PersistentVolumeClaimSpec{
-							StorageClassName: ptr.To("unknown-storage-class"),
+							StorageClassName: new("unknown-storage-class"),
 							Resources: corev1.VolumeResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceStorage: resource.MustParse("200Mi"),
@@ -686,7 +685,7 @@ func testDaemonSetInvalidReplicas(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// no replicas should be set in Daemonsets
-	p.Spec.Replicas = ptr.To(int32(3))
+	p.Spec.Replicas = new(int32(3))
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -717,7 +716,7 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
 		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: ptr.To("standard"),
+				StorageClassName: new("standard"),
 				Resources: corev1.VolumeResourceRequirements{
 					Requests: corev1.ResourceList{
 						corev1.ResourceStorage: resource.MustParse("200Mi"),
@@ -753,7 +752,7 @@ func testDaemonSetInvalidShards(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// shards cannot be greater than 1 in DaemonSets
-	p.Spec.Shards = ptr.To(int32(2))
+	p.Spec.Shards = new(int32(2))
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)

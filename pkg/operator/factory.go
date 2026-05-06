@@ -20,7 +20,6 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -68,8 +67,8 @@ func WithManagingOwner(owner Owner) ObjectOption {
 				o.GetOwnerReferences(),
 				metav1.OwnerReference{
 					APIVersion:         owner.GroupVersionKind().GroupVersion().String(),
-					BlockOwnerDeletion: ptr.To(true),
-					Controller:         ptr.To(true),
+					BlockOwnerDeletion: new(true),
+					Controller:         new(true),
 					Kind:               owner.GroupVersionKind().Kind,
 					Name:               owner.GetObjectMeta().GetName(),
 					UID:                owner.GetObjectMeta().GetUID(),

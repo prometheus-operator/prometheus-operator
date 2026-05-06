@@ -76,7 +76,7 @@ func testPrometheusTopologySharding(t *testing.T) {
 			Values: []string{"zone-a", "zone-b"},
 		},
 	}
-	p.Spec.Shards = ptr.To(int32(2))
+	p.Spec.Shards = new(int32(2))
 
 	shardServices := make([]*corev1.Service, 2)
 	for i := range shardServices {
