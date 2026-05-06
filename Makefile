@@ -374,8 +374,7 @@ check-docs: $(MDOX_BINARY) ## Check documentation formatting and links.
 ###########
 
 .PHONY: test
-test: ## Run all tests (unit, long, and e2e).
-	test-unit test-long test-e2e
+test: test-unit test-long test-e2e ## Run all tests (unit, long, and e2e).
 
 .PHONY: test-unit
 test-unit: test-prometheus-goldenfiles ## Run unit tests (short mode).
