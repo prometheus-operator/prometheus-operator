@@ -817,7 +817,7 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		return nil, nil, err
 	}
 	if len(nodes) == 1 {
-		deploy.Spec.Replicas = ptr.To(int32(1))
+		deploy.Spec.Replicas = new(int32(1))
 		deploy.Spec.Template.Spec.Affinity = nil
 		deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
 	}

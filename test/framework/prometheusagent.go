@@ -249,7 +249,7 @@ func (f *Framework) PatchPrometheusAgent(ctx context.Context, name, ns string, s
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)

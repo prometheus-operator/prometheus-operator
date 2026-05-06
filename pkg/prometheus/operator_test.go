@@ -116,7 +116,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 				},
 			},
 			expectErr: true,
@@ -126,9 +126,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("client-id"),
+						ClientID: new("client-id"),
 					},
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -149,12 +149,12 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("client-id"),
+						ClientID: new("client-id"),
 					},
 					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						TenantID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 				},
 			},
@@ -165,9 +165,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To(""),
+						ClientID: new(""),
 					},
 				},
 			},
@@ -179,9 +179,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To(""),
+						ClientID: new(""),
 					},
 				},
 			},
@@ -192,9 +192,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						TenantID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -215,7 +215,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "invalid",
@@ -235,7 +235,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
 						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
@@ -248,7 +248,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "invalid-uuid",
 						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
@@ -262,7 +262,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
 						TenantID: "invalid-uuid",
@@ -276,9 +276,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					ManagedIdentity: &monitoringv1.ManagedIdentity{
-						ClientID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						ClientID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -293,7 +293,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "00000000-0000-0000-0000-000000000000",
@@ -317,9 +317,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						TenantID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
@@ -334,7 +334,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 				},
 			},
 			expectErr: true,
@@ -345,7 +345,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					WorkloadIdentity: &monitoringv1.AzureWorkloadIdentity{
 						ClientID: "00000000-a12b-3cd4-e56f-000000000000",
 						TenantID: "11111111-a12b-3cd4-e56f-000000000000",
@@ -360,7 +360,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					OAuth: &monitoringv1.AzureOAuth{
 						TenantID: "00000000-a12b-3cd4-e56f-000000000000",
 						ClientID: "00000000-0000-0000-0000-000000000000",
@@ -381,9 +381,9 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			spec: monitoringv1.RemoteWriteSpec{
 				URL: monitoringv1.URL("http://example.com"),
 				AzureAD: &monitoringv1.AzureAD{
-					Cloud: ptr.To("AzureGovernment"),
+					Cloud: new("AzureGovernment"),
 					SDK: &monitoringv1.AzureSDK{
-						TenantID: ptr.To("00000000-a12b-3cd4-e56f-000000000000"),
+						TenantID: new("00000000-a12b-3cd4-e56f-000000000000"),
 					},
 				},
 			},
@@ -786,7 +786,7 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Replicas: ptr.To(int32(2)),
+						Replicas: new(int32(2)),
 					},
 				},
 			},
@@ -836,8 +836,8 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Replicas: ptr.To(int32(1)),
-						Shards:   ptr.To(int32(2)),
+						Replicas: new(int32(1)),
+						Shards:   new(int32(2)),
 					},
 				},
 			},
@@ -892,8 +892,8 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Replicas: ptr.To(int32(1)),
-						Shards:   ptr.To(int32(2)),
+						Replicas: new(int32(1)),
+						Shards:   new(int32(2)),
 					},
 				},
 			},
@@ -949,8 +949,8 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 				},
 				Spec: monitoringv1.PrometheusSpec{
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-						Replicas: ptr.To(int32(2)),
-						Shards:   ptr.To(int32(2)),
+						Replicas: new(int32(2)),
+						Shards:   new(int32(2)),
 					},
 				},
 			},

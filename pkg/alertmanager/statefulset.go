@@ -710,8 +710,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			ReadinessProbe:  readinessProbe,
 			Resources:       a.Spec.Resources,
 			SecurityContext: &corev1.SecurityContext{
-				AllowPrivilegeEscalation: ptr.To(false),
-				ReadOnlyRootFilesystem:   ptr.To(true),
+				AllowPrivilegeEscalation: new(false),
+				ReadOnlyRootFilesystem:   new(true),
 				Capabilities: &corev1.Capabilities{
 					Drop: []corev1.Capability{"ALL"},
 				},
@@ -802,7 +802,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 				NodeSelector:                  a.Spec.NodeSelector,
 				SchedulerName:                 a.Spec.SchedulerName,
 				PriorityClassName:             a.Spec.PriorityClassName,
-				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(a.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
+				TerminationGracePeriodSeconds: new(ptr.Deref(a.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
 				InitContainers:                initContainers,
 				Containers:                    containers,
 				Volumes:                       volumes,

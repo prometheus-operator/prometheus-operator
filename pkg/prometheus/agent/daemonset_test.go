@@ -200,8 +200,8 @@ func TestDaemonSetenableServiceLinks(t *testing.T) {
 		enableServiceLinks         *bool
 		expectedEnableServiceLinks *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableServiceLinks: new(false)},
+		{enableServiceLinks: new(true), expectedEnableServiceLinks: new(true)},
 		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
 	}
 
@@ -229,10 +229,10 @@ func TestHostUsersForDaemonSet(t *testing.T) {
 		hostUsers *bool
 	}{
 		{
-			hostUsers: ptr.To(true),
+			hostUsers: new(true),
 		},
 		{
-			hostUsers: ptr.To(false),
+			hostUsers: new(false),
 		},
 	} {
 		t.Run("", func(t *testing.T) {

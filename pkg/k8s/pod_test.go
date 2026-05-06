@@ -31,11 +31,11 @@ func TestConvertToK8sDNSConfig(t *testing.T) {
 		Options: []monitoringv1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
-				Value: ptr.To("5"),
+				Value: new("5"),
 			},
 			{
 				Name:  "timeout",
-				Value: ptr.To("1"),
+				Value: new("1"),
 			},
 		},
 	}

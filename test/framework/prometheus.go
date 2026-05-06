@@ -224,7 +224,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		URL:            monitoringv1.URL(url),
 		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
-			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
+			BatchSendDeadline: (*monitoringv1.Duration)(new("1s")),
 		},
 	}}
 
@@ -234,7 +234,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: ptr.To("caandserver.com"),
+			ServerName: new("caandserver.com"),
 		},
 	}
 
@@ -285,7 +285,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		}
 
 	case prwtc.InsecureSkipVerify:
-		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = ptr.To(true)
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = new(true)
 	}
 }
 
@@ -317,7 +317,7 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 					Key: PrivateKey,
 				},
 				// Liveness/readiness probes don't work when using "RequireAndVerifyClientCert".
-				ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+				ClientAuthType: new("VerifyClientCertIfGiven"),
 			},
 		},
 	}
@@ -327,7 +327,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
-				Namespace: ptr.To(ns),
+				Namespace: new(ns),
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},
@@ -375,7 +375,7 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 				},
 			},
@@ -450,7 +450,7 @@ func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Contex
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(replicas),
+				Replicas: new(replicas),
 			},
 		},
 	)
@@ -497,7 +497,7 @@ func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec m
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)

@@ -181,7 +181,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			require.Equal(t, a1Hash, a2Hash, "expected two Alertmanager CRDs to produce the same hash but got different hash")
 
-			a2Hash, err = createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
+			a2Hash, err = createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: new(int32(2))})
 			require.NoError(t, err)
 
 			require.NotEqual(t, a1Hash, a2Hash, "expected same Alertmanager CRDs with different statefulset specs to produce different hashes but got equal hash")
@@ -489,7 +489,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("http://test.example.com"),
+								URL: new("http://test.example.com"),
 							},
 						},
 					}},
@@ -511,7 +511,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("http:test.example.com"),
+								URL: new("http:test.example.com"),
 							},
 						},
 					}},
@@ -533,7 +533,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("{{ .labels.url }}"),
+								URL: new("{{ .labels.url }}"),
 							},
 						},
 					}},
@@ -555,7 +555,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 							{
-								URL: ptr.To("{{ .labels.value "),
+								URL: new("{{ .labels.value "),
 							},
 						},
 					}},
@@ -677,7 +677,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: ptr.To("testingCorpID"),
+								CorpID: new("testingCorpID"),
 							},
 						},
 					}},
@@ -699,7 +699,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: ptr.To("testingCorpID"),
+								CorpID: new("testingCorpID"),
 								APIURL: ptr.To(monitoringv1alpha1.URL("http://::invalid-url")),
 							},
 						},
@@ -722,7 +722,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: ptr.To("testingCorpID"),
+								CorpID: new("testingCorpID"),
 								APISecret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "not-existing",
@@ -748,7 +748,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						WeChatConfigs: []monitoringv1alpha1.WeChatConfig{
 							{
-								CorpID: ptr.To("testingCorpID"),
+								CorpID: new("testingCorpID"),
 								APISecret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "key1",
@@ -906,7 +906,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: ptr.To("my-action"),
+										Name: new("my-action"),
 									},
 								},
 							},
@@ -934,7 +934,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: ptr.To("my-action"),
+										Name: new("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "",
 										},
@@ -965,7 +965,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: ptr.To("my-action"),
+										Name: new("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -1075,7 +1075,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									{
 										Type: "type",
 										Text: "text",
-										Name: ptr.To("my-action"),
+										Name: new("my-action"),
 										ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 											Text: "text",
 										},
@@ -1108,7 +1108,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SlackConfigs: []monitoringv1alpha1.SlackConfig{
 							{
-								MessageText: ptr.To("test message text"),
+								MessageText: new("test message text"),
 							},
 						},
 					}},
@@ -1285,12 +1285,12 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						SNSConfigs: []monitoringv1alpha1.SNSConfig{
 							{
-								ApiURL: ptr.To("https:://sns.us-east-2.amazonaws.com"),
+								ApiURL: new("https:://sns.us-east-2.amazonaws.com"),
 								Sigv4: &monitoringv1.Sigv4{
 									Region:  "us-east-2",
 									RoleArn: "test-roleARN",
 								},
-								TopicARN: ptr.To("test-topicARN"),
+								TopicARN: new("test-topicARN"),
 							},
 						},
 					}},
@@ -1387,10 +1387,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						EmailConfigs: []monitoringv1alpha1.EmailConfig{
 							{
-								Smarthost:        ptr.To("example.com:587"),
-								From:             ptr.To("admin@example.com"),
-								To:               ptr.To("customers@example.com"),
-								ForceImplicitTLS: ptr.To(true),
+								Smarthost:        new("example.com:587"),
+								From:             new("admin@example.com"),
+								To:               new("customers@example.com"),
+								ForceImplicitTLS: new(true),
 							},
 						},
 					}},
@@ -1413,10 +1413,10 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						EmailConfigs: []monitoringv1alpha1.EmailConfig{
 							{
-								Smarthost:        ptr.To("example.com:587"),
-								From:             ptr.To("admin@example.com"),
-								To:               ptr.To("customers@example.com"),
-								ForceImplicitTLS: ptr.To(true),
+								Smarthost:        new("example.com:587"),
+								From:             new("admin@example.com"),
+								To:               new("customers@example.com"),
+								ForceImplicitTLS: new(true),
 							},
 						},
 					}},
@@ -1445,7 +1445,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 										Name: "secret",
 									},
 								},
-								BotTokenFile: ptr.To("/bot/token/file"),
+								BotTokenFile: new("/bot/token/file"),
 							},
 						},
 					}},
@@ -1468,7 +1468,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
 							{
-								BotTokenFile: ptr.To("/bot/token/file"),
+								BotTokenFile: new("/bot/token/file"),
 							},
 						},
 					}},
@@ -1491,9 +1491,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						EmailConfigs: []monitoringv1alpha1.EmailConfig{
 							{
-								Smarthost: ptr.To("example.com:587"),
-								From:      ptr.To("admin@example.com"),
-								To:        ptr.To("customers@example.com"),
+								Smarthost: new("example.com:587"),
+								From:      new("admin@example.com"),
+								To:        new("customers@example.com"),
 								Threading: &monitoringv1alpha1.EmailThreadingConfig{
 									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
 								},
@@ -1519,9 +1519,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						EmailConfigs: []monitoringv1alpha1.EmailConfig{
 							{
-								Smarthost: ptr.To("example.com:587"),
-								From:      ptr.To("admin@example.com"),
-								To:        ptr.To("customers@example.com"),
+								Smarthost: new("example.com:587"),
+								From:      new("admin@example.com"),
+								To:        new("customers@example.com"),
 								Threading: &monitoringv1alpha1.EmailThreadingConfig{
 									ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
 								},

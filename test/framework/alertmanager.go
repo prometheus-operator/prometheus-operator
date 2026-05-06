@@ -285,7 +285,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -303,7 +303,7 @@ func (f *Framework) UpdateAlertmanagerReplicasAndWaitUntilReady(ctx context.Cont
 		name,
 		ns,
 		monitoringv1.AlertmanagerSpec{
-			Replicas: ptr.To(replicas),
+			Replicas: new(replicas),
 		},
 	)
 }
@@ -508,7 +508,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 		}
 
 		for _, alert := range alerts {
-			if alert.Labels["alertname"] == alertName && alert.Status.State != ptr.To("firing") {
+			if alert.Labels["alertname"] == alertName && alert.Status.State != new("firing") {
 				return true, nil
 			}
 		}

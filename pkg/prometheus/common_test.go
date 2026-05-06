@@ -42,49 +42,49 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(0)),
+			maximumStartupDurationSeconds:   new(int32(0)),
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(1)),
+			maximumStartupDurationSeconds:   new(int32(1)),
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(60)),
+			maximumStartupDurationSeconds:   new(int32(60)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 1,
 			expectedMaxStartupDuration:      60,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   new(int32(600)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 10,
 			expectedMaxStartupDuration:      600,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(900)),
+			maximumStartupDurationSeconds:   new(int32(900)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 15,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(1200)),
+			maximumStartupDurationSeconds:   new(int32(1200)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 20,
 			expectedMaxStartupDuration:      1200,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(129)),
+			maximumStartupDurationSeconds:   new(int32(129)),
 			expectedStartupPeriodSeconds:    43,
 			expectedStartupFailureThreshold: 3,
 			expectedMaxStartupDuration:      129,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(322)),
+			maximumStartupDurationSeconds:   new(int32(322)),
 			expectedStartupPeriodSeconds:    54,
 			expectedStartupFailureThreshold: 6,
 			expectedMaxStartupDuration:      324,
@@ -180,28 +180,28 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		// OTLP receiver not supported.
 		{
 			version:                    "2.46.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver supported starting with v2.47.0.
 		{
 			version:                    "2.47.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: true,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver supported but not enabled.
 		{
 			version:                    "2.47.0",
-			enableOTLPReceiver:         ptr.To(false),
+			enableOTLPReceiver:         new(false),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver config supported but version not support
 		{
 			version:            "2.46.0",
-			enableOTLPReceiver: ptr.To(false),
+			enableOTLPReceiver: new(false),
 			OTLPConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb"},
 			},
@@ -231,21 +231,21 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		// Test higher version from which enable-feature available.
 		{
 			version:                    "2.54.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: true,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// Test higher version from which web.enable-otlp-receiver arg available.
 		{
 			version:                    "3.0.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   true,
 		},
 		// Test higher version but not enabled.
 		{
 			version:                    "3.0.0",
-			enableOTLPReceiver:         ptr.To(false),
+			enableOTLPReceiver:         new(false),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
@@ -304,7 +304,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			nodeSelector:               map[string]string{"foo": "bar"},
 			prometheusTopologySharding: false,
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			expectedSelector: map[string]string{"foo": "bar"},
@@ -335,7 +335,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode with no values returns original selector",
 			nodeSelector: map[string]string{"foo": "bar"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
 			},
 			prometheusTopologySharding: true,
@@ -345,7 +345,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode shard #0 with 2 zones assigns first zone",
 			nodeSelector: map[string]string{"foo": "bar"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -356,7 +356,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode shard #1 with 2 zones assigns second zone",
 			nodeSelector: map[string]string{"foo": "bar"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -367,7 +367,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode shard #2 with 2 zones assigns first zone",
 			nodeSelector: map[string]string{"foo": "bar"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -378,7 +378,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode shard #3 with 2 zones assigns second zone",
 			nodeSelector: map[string]string{"foo": "bar"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -389,7 +389,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode overrides existing topology.kubernetes.io/zone",
 			nodeSelector: map[string]string{"topology.kubernetes.io/zone": "will-be-replaced"},
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
 			},
 			prometheusTopologySharding: true,
@@ -400,7 +400,7 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 			name:         "Topology mode with nil nodeSelector creates new map",
 			nodeSelector: nil,
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode:     ptr.To(topologyMode),
+				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a"}},
 			},
 			prometheusTopologySharding: true,

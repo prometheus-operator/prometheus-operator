@@ -220,7 +220,7 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			require.Equal(t, p1Hash, p2Hash, "expected two Prometheus CRDs to produce the same hash but got different hash")
 
-			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))})
+			p2Hash, err = createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: new(int32(2))})
 			require.NoError(t, err)
 
 			require.NotEqual(t, p1Hash, p2Hash, "expected same Prometheus CRDs with different statefulset specs to produce different hashes but got equal hash")
@@ -303,7 +303,7 @@ func TestProcessShardRetention(t *testing.T) {
 			retentionPoliciesEnabled: true,
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.DeleteWhenScaledRetentionType),
 				},
 			},
 			expectedDelete: true,
@@ -313,7 +313,7 @@ func TestProcessShardRetention(t *testing.T) {
 			retentionPoliciesEnabled: true,
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDelete:           false,
@@ -325,7 +325,7 @@ func TestProcessShardRetention(t *testing.T) {
 			retentionPoliciesEnabled: true,
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			annotations:    map[string]string{deletionDeadlineAnnotation: time.Now().UTC().Add(24 * time.Hour).Format(annotationTimeFormat)},
@@ -338,7 +338,7 @@ func TestProcessShardRetention(t *testing.T) {
 			spec: monitoringv1.PrometheusSpec{
 				RetentionSize: "10Gi",
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDelete:         false,
@@ -350,7 +350,7 @@ func TestProcessShardRetention(t *testing.T) {
 			retentionPoliciesEnabled: true,
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			injectPatchError: true,
@@ -438,7 +438,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			name: "empty retention uses default (24h)",
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDuration: 24 * time.Hour,
@@ -447,7 +447,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			name: "explicit retain retention duration",
 			spec: monitoringv1.PrometheusSpec{
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 					Retain: &monitoringv1.RetainConfig{
 						RetentionPeriod: monitoringv1.Duration("15d"),
 					},
@@ -460,7 +460,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			spec: monitoringv1.PrometheusSpec{
 				Retention: "15d",
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDuration: 15 * 24 * time.Hour,
@@ -470,7 +470,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			spec: monitoringv1.PrometheusSpec{
 				RetentionSize: "10Gi",
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDuration: 0,
@@ -481,7 +481,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 				Retention:     "7d",
 				RetentionSize: "10Gi",
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedDuration: 7 * 24 * time.Hour,
@@ -491,7 +491,7 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			spec: monitoringv1.PrometheusSpec{
 				Retention: "invalid",
 				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
-					WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 				},
 			},
 			expectedErr: true,

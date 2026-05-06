@@ -117,7 +117,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			scenario: "replacement set for uppercase action",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "uppercase",
-				Replacement: ptr.To("some-replace-value"),
+				Replacement: new("some-replace-value"),
 			},
 			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
@@ -140,7 +140,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: ptr.To("some-name-value"),
+				Replacement: new("some-name-value"),
 			},
 			prometheus:  defaultPrometheusSpec,
 			expectedErr: true,
@@ -160,7 +160,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_service_label_(.+)",
-				Replacement: ptr.To("abc"),
+				Replacement: new("abc"),
 			},
 			prometheus: defaultPrometheusSpec,
 		},
@@ -197,7 +197,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			scenario: "valid replace config with empty replacement",
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "replace",
-				Replacement: ptr.To(""),
+				Replacement: new(""),
 				TargetLabel: "abc",
 			},
 			prometheus: defaultPrometheusSpec,
@@ -351,9 +351,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
 				TargetLabel:  "__port1",
-				Separator:    ptr.To("^"),
+				Separator:    new("^"),
 				Regex:        "validregex",
-				Replacement:  ptr.To("replacevalue"),
+				Replacement:  new("replacevalue"),
 				Action:       "keepequal",
 			},
 			prometheus: monitoringv1.Prometheus{
@@ -371,7 +371,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
 				TargetLabel:  "__port1",
-				Separator:    ptr.To(relabel.DefaultRelabelConfig.Separator),
+				Separator:    new(relabel.DefaultRelabelConfig.Separator),
 				Regex:        relabel.DefaultRelabelConfig.Regex.String(),
 				Modulus:      relabel.DefaultRelabelConfig.Modulus,
 				Replacement:  &relabel.DefaultRelabelConfig.Replacement,
@@ -390,7 +390,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "^(cluster)$",
-				Replacement: ptr.To("exported_${1}"),
+				Replacement: new("exported_${1}"),
 			},
 			prometheus: defaultPrometheusSpec,
 		},
@@ -399,7 +399,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 			relabelConfig: monitoringv1.RelabelConfig{
 				Action:      "labelmap",
 				Regex:       "__meta_kubernetes_(.*)",
-				Replacement: ptr.To("k8s_${1}"),
+				Replacement: new("k8s_${1}"),
 			},
 			prometheus: defaultPrometheusSpec,
 		},

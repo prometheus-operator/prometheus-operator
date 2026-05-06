@@ -231,7 +231,7 @@ func TestStatefulSetVolumes(t *testing.T) {
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
-									Optional: ptr.To(true),
+									Optional: new(true),
 								},
 							},
 						},
@@ -722,7 +722,7 @@ func TestRetention(t *testing.T) {
 func TestThanosGrpcArguments(t *testing.T) {
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		Spec: monitoringv1.ThanosRulerSpec{
-			Version:        ptr.To("0.37.0"),
+			Version:        new("0.37.0"),
 			QueryEndpoints: emptyQueryEndpoints,
 			GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
 				TLSConfig: monitoringv1.TLSConfig{
@@ -779,7 +779,7 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
-					Version:        ptr.To(tc.version),
+					Version:        new(tc.version),
 					QueryEndpoints: emptyQueryEndpoints,
 					GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
 						CipherSuites: tc.cipherSuites,
@@ -827,7 +827,7 @@ func TestGRPCServerTLSCurves(t *testing.T) {
 		t.Run(tc.scenario, func(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
-					Version:        ptr.To(tc.version),
+					Version:        new(tc.version),
 					QueryEndpoints: emptyQueryEndpoints,
 					GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
 						Curves: tc.curves,
@@ -909,7 +909,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			ImagePullPolicy:    imagePullPolicy,
 			AdditionalArgs:     additionalArgs,
 			SchedulerName:      schedulerName,
-			HostUsers:          ptr.To(true),
+			HostUsers:          new(true),
 		},
 	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
@@ -983,7 +983,7 @@ func TestStatefulSetMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	tr.Spec.MinReadySeconds = ptr.To(int32(5))
+	tr.Spec.MinReadySeconds = new(int32(5))
 	statefulSet, err = makeStatefulSetSpec(&tr, defaultTestConfig, nil, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
@@ -1127,7 +1127,7 @@ func TestThanosVersion(t *testing.T) {
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
 					QueryEndpoints: emptyQueryEndpoints,
-					Version:        ptr.To(tc.version),
+					Version:        new(tc.version),
 				},
 			}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
 
@@ -1155,7 +1155,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 				Options: []monitoringv1.PodDNSConfigOption{
 					{
 						Name:  "ndots",
-						Value: ptr.To("5"),
+						Value: new("5"),
 					},
 				},
 			},
@@ -1170,7 +1170,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		Options: []corev1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
-				Value: ptr.To("5"),
+				Value: new("5"),
 			},
 		},
 	}, sset.Spec.Template.Spec.DNSConfig, "expected DNS configuration to match")
@@ -1181,8 +1181,8 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		enableServiceLinks         *bool
 		expectedEnableServiceLinks *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableServiceLinks: new(false)},
+		{enableServiceLinks: new(true), expectedEnableServiceLinks: new(true)},
 		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
 	}
 
@@ -1585,13 +1585,13 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
 				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 		},

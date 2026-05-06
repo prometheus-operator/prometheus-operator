@@ -247,7 +247,7 @@ func testAMStorageUpdate(t *testing.T) {
 						},
 					},
 					Spec: corev1.PersistentVolumeClaimSpec{
-						StorageClassName: ptr.To("unknown-storage-class"),
+						StorageClassName: new("unknown-storage-class"),
 						Resources: corev1.VolumeResourceRequirements{
 							Requests: corev1.ResourceList{
 								corev1.ResourceStorage: resource.MustParse("200Mi"),
@@ -400,7 +400,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+					ClientAuthType: new("VerifyClientCertIfGiven"),
 				},
 				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
@@ -426,7 +426,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						Key: "key.pem",
 					},
 					// Since we cannot verify hostname in the cert.
-					InsecureSkipVerify: ptr.To(true),
+					InsecureSkipVerify: new(true),
 				},
 			},
 		},
@@ -1117,7 +1117,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: ptr.To("my-action"),
+							Name: new("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1131,7 +1131,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To("http://test.url"),
+					URL: new("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
 					APISecret: &corev1.SecretKeySelector{
@@ -1140,15 +1140,15 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: testingSecretKey,
 					},
-					CorpID: ptr.To("testingCorpID"),
+					CorpID: new("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					Smarthost: ptr.To("example.com:25"),
-					From:      ptr.To("admin@example.com"),
-					To:        ptr.To("test@example.com"),
+					Smarthost: new("example.com:25"),
+					From:      new("admin@example.com"),
+					To:        new("test@example.com"),
 					AuthPassword: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
@@ -1167,7 +1167,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					// HTML field with an empty string must appear as-is in the generated configuration.
 					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
-					HTML: ptr.To(""),
+					HTML: new(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
 					APIKey: &corev1.SecretKeySelector{
@@ -1204,7 +1204,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
-						ApiURL: ptr.To("https://sns.us-east-2.amazonaws.com"),
+						ApiURL: new("https://sns.us-east-2.amazonaws.com"),
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
 							AccessKey: &corev1.SecretKeySelector{
@@ -1220,7 +1220,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 								Key: testingSecretKey,
 							},
 						},
-						TopicARN: ptr.To("test-topicARN"),
+						TopicARN: new("test-topicARN"),
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
@@ -1303,7 +1303,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To("http://test.url"),
+					URL: new("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1358,7 +1358,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To("http://test.url"),
+					URL: new("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1804,7 +1804,7 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 					Receivers: []monitoringv1alpha1.Receiver{{
 						Name: "e2e",
 						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-							URL: ptr.To("http://example.com"),
+							URL: new("http://example.com"),
 						}},
 					}},
 				},
@@ -1917,27 +1917,27 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
 			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
-				From: ptr.To("from"),
+				From: new("from"),
 				SmartHost: &monitoringv1.HostPort{
 					Host: "smtp.example.org",
 					Port: "587",
 				},
-				Hello:        ptr.To("smtp.example.org"),
-				AuthUsername: ptr.To("dev@smtp.example.org"),
+				Hello:        new("smtp.example.org"),
+				AuthUsername: new("dev@smtp.example.org"),
 				AuthPassword: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "password",
 				},
-				AuthIdentity: ptr.To("dev@smtp.example.org"),
+				AuthIdentity: new("dev@smtp.example.org"),
 				AuthSecret: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "secret",
 				},
-				RequireTLS: ptr.To(true),
+				RequireTLS: new(true),
 			},
 			ResolveTimeout: "30s",
 			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
@@ -1964,7 +1964,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 								"some": "value",
 							},
 						},
-						FollowRedirects: ptr.To(true),
+						FollowRedirects: new(true),
 					},
 				},
 			},
@@ -2229,7 +2229,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 	sset, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
 	require.NoError(t, err)
 
-	sset.Spec.Replicas = ptr.To(int32(0))
+	sset.Spec.Replicas = new(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
@@ -2508,7 +2508,7 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
-	am.Spec.MinReadySeconds = ptr.To(int32(5))
+	am.Spec.MinReadySeconds = new(int32(5))
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
 
@@ -2517,7 +2517,7 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 
 	require.Equal(t, int32(5), amSS.Spec.MinReadySeconds)
 
-	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: ptr.To(int32(10))})
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: new(int32(10))})
 	require.NoError(t, err)
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
@@ -2614,7 +2614,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "ndots",
-							Value: ptr.To("5"),
+							Value: new("5"),
 						},
 					},
 				},
@@ -2640,11 +2640,11 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "ndots",
-							Value: ptr.To("5"),
+							Value: new("5"),
 						},
 						{
 							Name:  "timeout",
-							Value: ptr.To("2"),
+							Value: new("2"),
 						},
 					},
 				},
@@ -2671,7 +2671,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "", // Empty string violates MinLength constraint
-							Value: ptr.To("some-value"),
+							Value: new("some-value"),
 						},
 					},
 				},

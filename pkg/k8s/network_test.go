@@ -396,7 +396,7 @@ func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(int32(1)),
+				Replicas: new(int32(1)),
 			},
 		},
 	}

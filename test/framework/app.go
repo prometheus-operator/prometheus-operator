@@ -39,7 +39,7 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 	if err != nil {
 		return err
 	}
-	dep.Spec.Replicas = ptr.To(replicas)
+	dep.Spec.Replicas = new(replicas)
 
 	if err := f.CreateDeployment(ctx, ns, dep); err != nil {
 		return err

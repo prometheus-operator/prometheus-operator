@@ -51,8 +51,8 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 				{
 					URL:                  "http://example.com",
 					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
-					SendNativeHistograms: ptr.To(true),
-					RoundRobinDNS:        ptr.To(true),
+					SendNativeHistograms: new(true),
+					RoundRobinDNS:        new(true),
 				},
 			},
 			golden: "default_remote_write_config.golden",
@@ -74,8 +74,8 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 				{
 					URL:                  "http://example.com",
 					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
-					SendNativeHistograms: ptr.To(true),
-					RoundRobinDNS:        ptr.To(true),
+					SendNativeHistograms: new(true),
+					RoundRobinDNS:        new(true),
 					Sigv4: &monitoringv1.Sigv4{
 						Profile:    "profilename",
 						RoleArn:    "arn:aws:iam::123456789012:instance-profile/prometheus",
@@ -108,7 +108,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 					Namespace: "default",
 				},
 				Spec: monitoringv1.ThanosRulerSpec{
-					Version:     ptr.To(tc.version),
+					Version:     new(tc.version),
 					RemoteWrite: tc.remoteWrite,
 				},
 			}

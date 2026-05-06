@@ -131,7 +131,7 @@ var (
 	kubeletSyncPeriod    time.Duration
 	kubeletHTTPMetrics   bool
 
-	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
+	featureGates = k8sflag.NewMapStringBool(new(map[string]bool{}))
 )
 
 func parseFlags(fs *flag.FlagSet) {
