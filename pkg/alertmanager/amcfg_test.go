@@ -3442,6 +3442,65 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_with_MessageText.golden",
 		},
 		{
+			name: "CR with Slack Receiver with UpdateMessage",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "slack-standard-api-url",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiurl":   []byte("https://slack.com/api/chat.postMessage"),
+						"bottoken": []byte("abcdef123456"),
+					},
+				},
+			),
+			amVersion: &semver.Version{Major: 0, Minor: 32},
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								APIURL: &corev1.SecretKeySelector{
+									Key: "apiurl",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "slack-standard-api-url",
+									},
+								},
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									Authorization: &monitoringv1.SafeAuthorization{
+										Type: "Bearer",
+										Credentials: &corev1.SecretKeySelector{
+											Key: "bottoken",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "slack-standard-api-url",
+											},
+										},
+									},
+								},
+								UpdateMessage: ptr.To(true),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Slack_Receiver_with_UpdateMessage.golden",
+		},
+		{
 			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewClientset(
 				&corev1.Secret{

@@ -213,6 +213,9 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version29, err := semver.ParseTolerant("v0.29.0")
 	require.NoError(t, err)
 
+	version32, err := semver.ParseTolerant("v0.32.0")
+	require.NoError(t, err)
+
 	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1138,6 +1141,94 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					}},
 				},
 			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version31,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message-custom-api-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								APIURL: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message-custom-api-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								APIURL: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								UpdateMessage: ptr.To(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{

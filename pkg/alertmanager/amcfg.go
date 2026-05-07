@@ -979,6 +979,7 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		LinkNames:     ptr.Deref(in.LinkNames, false),
 		MrkdwnIn:      in.MrkdwnIn,
 		MessageText:   ptr.Deref(in.MessageText, ""),
+		UpdateMessage: in.UpdateMessage,
 	}
 
 	if in.APIURL != nil {
