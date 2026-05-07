@@ -1333,7 +1333,7 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 
 	if t := in.Threading; t != nil {
 		out.Threading = &emailThreadingConfig{
-			Enabled: ptr.To(true),
+			Enabled: new(true),
 		}
 		switch t.ThreadByDate {
 		case "Daily":
@@ -1550,6 +1550,10 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			Region:  in.Sigv4.Region,
 			Profile: in.Sigv4.Profile,
 			RoleARN: in.Sigv4.RoleArn,
+		}
+
+		if cb.amVersion.GTE(semver.MustParse("0.33.0")) {
+			out.Sigv4.ExternalID = in.Sigv4.ExternalID
 		}
 
 		if in.Sigv4.AccessKey != nil && in.Sigv4.SecretKey != nil {
@@ -3057,6 +3061,17 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 	if sc.APIUrl != "" {
 		if err := validation.ValidateTemplateURL(sc.APIUrl); err != nil {
 			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
+	if sc.Sigv4.ExternalID != "" {
+		if sc.Sigv4.RoleARN == "" {
+			return fmt.Errorf("'external_id' in sigv4 config requires 'role_arn' to be set")
+		}
+		if amVersion.LT(semver.MustParse("0.33.0")) {
+			msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
+			logger.Warn(msg)
+			sc.Sigv4.ExternalID = ""
 		}
 	}
 

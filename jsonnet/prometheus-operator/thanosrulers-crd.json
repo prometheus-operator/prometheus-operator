@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.20.1",
-      "operator.prometheus.io/version": "0.90.1"
+      "operator.prometheus.io/version": "0.91.0"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -1930,7 +1930,7 @@
                               "type": "boolean"
                             },
                             "procMount": {
-                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "string"
                             },
                             "readOnlyRootFilesystem": {
@@ -2399,7 +2399,7 @@
                     "type": "string"
                   },
                   "grpcServerTlsConfig": {
-                    "description": "grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads\nrecorded rule data.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.",
+                    "description": "grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads\nrecorded rule data.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.",
                     "properties": {
                       "ca": {
                         "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -2515,6 +2515,15 @@
                       },
                       "cipherSuites": {
                         "description": "cipherSuites defines the list of supported cipher suites for TLS\nversions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
+                      },
+                      "curves": {
+                        "description": "curves defines the list of preferred elliptic curves for\nTLS handshakes.\n\nIf not defined, the Go default curves are used.\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
                         "items": {
                           "type": "string"
                         },
@@ -3642,7 +3651,7 @@
                               "type": "boolean"
                             },
                             "procMount": {
-                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "string"
                             },
                             "readOnlyRootFilesystem": {
@@ -4853,6 +4862,11 @@
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
+                            "externalId": {
+                              "description": "externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.",
+                              "minLength": 1,
+                              "type": "string"
+                            },
                             "profile": {
                               "description": "profile defines the named AWS profile used to authenticate.",
                               "type": "string"
@@ -4893,7 +4907,13 @@
                               "type": "boolean"
                             }
                           },
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "externalId can only be used when roleArn is specified",
+                              "rule": "!has(self.externalId) || has(self.roleArn)"
+                            }
+                          ]
                         },
                         "tlsConfig": {
                           "description": "tlsConfig to use for the URL.",
@@ -7006,7 +7026,7 @@
                           "type": "object"
                         },
                         "image": {
-                          "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro) and non-executable files (noexec).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
+                          "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
                           "properties": {
                             "pullPolicy": {
                               "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
@@ -7149,7 +7169,7 @@
                           "type": "object"
                         },
                         "portworxVolume": {
-                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate\nis on.",
+                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver.",
                           "properties": {
                             "fsType": {
                               "description": "fSType represents the filesystem type to mount\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\". Implicitly inferred to be \"ext4\" if unspecified.",

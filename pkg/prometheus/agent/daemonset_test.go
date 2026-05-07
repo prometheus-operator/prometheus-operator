@@ -23,7 +23,6 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -200,8 +199,8 @@ func TestDaemonSetenableServiceLinks(t *testing.T) {
 		enableServiceLinks         *bool
 		expectedEnableServiceLinks *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableServiceLinks: new(false)},
+		{enableServiceLinks: new(true), expectedEnableServiceLinks: new(true)},
 		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
 	}
 
@@ -229,10 +228,10 @@ func TestHostUsersForDaemonSet(t *testing.T) {
 		hostUsers *bool
 	}{
 		{
-			hostUsers: ptr.To(true),
+			hostUsers: new(true),
 		},
 		{
-			hostUsers: ptr.To(false),
+			hostUsers: new(false),
 		},
 	} {
 		t.Run("", func(t *testing.T) {

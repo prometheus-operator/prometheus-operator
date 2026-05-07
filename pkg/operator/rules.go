@@ -64,11 +64,12 @@ var MaxConfigMapDataSize = int(float64(corev1.MaxSecretSize) * 0.5)
 // PrometheusRuleSelector selects PrometheusRule resources and translates them
 // to Prometheus/Thanos configuration format.
 type PrometheusRuleSelector struct {
-	ruleFormat   RuleConfigurationFormat
-	version      semver.Version
-	ruleSelector labels.Selector
-	nsLabeler    *namespacelabeler.Labeler
-	ruleInformer *informers.ForResource
+	ruleFormat    RuleConfigurationFormat
+	version       semver.Version
+	ruleSelector  labels.Selector
+	nsLabeler     *namespacelabeler.Labeler
+	ruleInformer  *informers.ForResource
+	parserOptions parser.Options
 
 	eventRecorder *EventRecorder
 
@@ -97,7 +98,7 @@ func (prs *PrometheusRuleSelection) RejectedLen() int {
 }
 
 // NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger, parserOptions parser.Options) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -114,6 +115,7 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 		ruleSelector:  ruleSelector,
 		nsLabeler:     nsLabeler,
 		ruleInformer:  ruleInformer,
+		parserOptions: parserOptions,
 		eventRecorder: eventRecorder,
 		logger:        logger,
 	}, nil
@@ -137,7 +139,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 		validationScheme = ValidationSchemeForPrometheus(prs.version)
 	}
 
-	errs := ValidateRule(promRuleSpec, validationScheme)
+	errs := ValidateRule(promRuleSpec, validationScheme, prs.parserOptions)
 	if len(errs) != 0 {
 		const m = "invalid rule"
 		logger.Debug(m, "content", content)
@@ -199,7 +201,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 }
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
-func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme) []error {
+func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme, parserOptions parser.Options) []error {
 	for i := range promRuleSpec.Groups {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
@@ -229,7 +231,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parser.Options{}))
+	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parserOptions))
 	return errs
 }
 

@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/prometheus/prometheus/promql/parser"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/ptr"
 
@@ -64,6 +65,7 @@ func (o *Operator) selectPrometheusRules(t *monitoringv1.ThanosRuler, logger *sl
 		o.ruleInfs,
 		o.newEventRecorder(t),
 		logger,
+		parser.Options{},
 	)
 	if err != nil {
 		return rules, fmt.Errorf("initializing PrometheusRules failed: %w", err)

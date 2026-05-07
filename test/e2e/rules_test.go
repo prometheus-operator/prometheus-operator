@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -360,4 +361,91 @@ func TestPrometheusRuleApply(t *testing.T) {
 			assert.Equal(t, tc.expected, res.Spec.Groups)
 		})
 	}
+}
+
+func testPrometheusRuleWithParserOptions(t *testing.T) {
+	t.Parallel()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+	// Skip the admission webhook because the test exercices PromQL features
+	// which aren't enabled by default.
+	ruleNamespaceSelector := map[string]string{"excludeFromWebhook": "true"}
+	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleNamespaceSelector)
+	require.NoError(t, err)
+
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	// Create a PrometheusRule with one group per parser option and an always-firing alert.
+	// The rules exercise syntax that would be rejected without the corresponding feature flag.
+	rule := framework.MakeBasicRule(ns, "parser-options-rule", []monitoringv1.RuleGroup{
+		{
+			Name: "always-firing",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "AlwaysFiring",
+					Expr:  intstr.FromString("vector(1) > 0"),
+				},
+			},
+		},
+		{
+			Name: "experimental-functions",
+			Rules: []monitoringv1.Rule{
+				{
+					Record: "test:limitk",
+					Expr:   intstr.FromString("limitk(5, up)"),
+				},
+			},
+		},
+		{
+			Name: "duration-expr",
+			Rules: []monitoringv1.Rule{
+				{
+					Record: "test:duration_expr",
+					Expr:   intstr.FromString("rate(up[2*1m])"),
+				},
+			},
+		},
+		{
+			Name: "extended-range-selectors",
+			Rules: []monitoringv1.Rule{
+				{
+					Record: "test:smoothed",
+					Expr:   intstr.FromString("rate(up[1m] smoothed)"),
+				},
+			},
+		},
+		{
+			Name: "binop-fill-modifiers",
+			Rules: []monitoringv1.Rule{
+				{
+					Record: "test:fill",
+					Expr:   intstr.FromString("up + fill(0) up"),
+				},
+			},
+		},
+	})
+	_, err = framework.CreateRule(context.Background(), ns, rule)
+	require.NoError(t, err)
+
+	// Deploy Prometheus with all promql-* features enabled so that the rules above are accepted.
+	p := framework.MakeBasicPrometheus(ns, "test", "test", 1)
+	p.Spec.EvaluationInterval = "1s"
+	p.Spec.EnableFeatures = []monitoringv1.EnableFeature{
+		"promql-experimental-functions",
+		"promql-duration-expr",
+		"promql-extended-range-selectors",
+		"promql-binop-fill-modifiers",
+	}
+	p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
+	require.NoError(t, err)
+
+	pSVC := framework.MakePrometheusService(p.Name, p.Name, corev1.ServiceTypeClusterIP)
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC)
+	require.NoError(t, err)
+
+	// Firing alert confirms the PrometheusRule was accepted and evaluated.
+	err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, "AlwaysFiring")
+	require.NoError(t, err)
 }

@@ -379,7 +379,7 @@ func TestStatefulSetVolumeInitial(t *testing.T) {
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "rules-configmap-one",
 									},
-									Optional: ptr.To(true),
+									Optional: new(true),
 								},
 							},
 						},
@@ -1551,7 +1551,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 			name:                    "Verify AllowOverlappingCompaction",
 			version:                 "v2.55.0",
 			outOfOrderTimeWindow:    "1s",
-			objectStorageConfigFile: ptr.To("/etc/thanos.cfg"),
+			objectStorageConfigFile: new("/etc/thanos.cfg"),
 			shouldContain:           true,
 		},
 	}
@@ -1563,7 +1563,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: test.version,
 						TSDB: &monitoringv1.TSDBSpec{
-							OutOfOrderTimeWindow: ptr.To(test.outOfOrderTimeWindow),
+							OutOfOrderTimeWindow: new(test.outOfOrderTimeWindow),
 						},
 					},
 					Thanos: &monitoringv1.ThanosSpec{
@@ -1773,7 +1773,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	sset, err = makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				MinReadySeconds: ptr.To(int32(5)),
+				MinReadySeconds: new(int32(5)),
 			},
 		},
 	})
@@ -2045,7 +2045,7 @@ func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ScrapeFailureLogFile: ptr.To("file.log"),
+				ScrapeFailureLogFile: new("file.log"),
 			},
 		},
 	})
@@ -2080,7 +2080,7 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+				ScrapeFailureLogFile: new("/tmp/file.log"),
 			},
 		},
 	})
@@ -2268,7 +2268,7 @@ func TestPodTemplateConfig(t *testing.T) {
 				ImagePullSecrets:   imagePullSecrets,
 				SchedulerName:      schedulerName,
 				HostNetwork:        hostNetwork,
-				HostUsers:          ptr.To(true),
+				HostUsers:          new(true),
 			},
 		},
 	})
@@ -2413,13 +2413,13 @@ func TestRuntimeGOGCEnvVar(t *testing.T) {
 		{
 			scenario:       "Prometheus < 2.53.0",
 			version:        "v2.51.2",
-			gogc:           ptr.To(int32(50)),
+			gogc:           new(int32(50)),
 			expectedEnvVar: true,
 		},
 		{
 			scenario:       "Prometheus > 2.53.0",
 			version:        "v2.54.0",
-			gogc:           ptr.To(int32(50)),
+			gogc:           new(int32(50)),
 			expectedEnvVar: false,
 		},
 	} {
@@ -2589,7 +2589,7 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 				Spec: monitoringv1.PrometheusSpec{
 					Thanos: &monitoringv1.ThanosSpec{
-						Version: ptr.To(tc.version),
+						Version: new(tc.version),
 						GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
 							CipherSuites: tc.cipherSuites,
 						},
@@ -2600,6 +2600,54 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 
 			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
 			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
+			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+		})
+	}
+}
+
+func TestGRPCServerTLSCurves(t *testing.T) {
+	curves := []string{"CurveP256", "X25519"}
+
+	for _, tc := range []struct {
+		scenario      string
+		version       string
+		curves        []string
+		shouldHaveArg bool
+	}{
+		{
+			scenario:      "version >= 0.42.0 with curve preferences",
+			version:       "0.42.0",
+			curves:        curves,
+			shouldHaveArg: true,
+		},
+		{
+			scenario:      "version < 0.42.0 with curve preferences",
+			version:       "0.41.0",
+			curves:        curves,
+			shouldHaveArg: false,
+		},
+		{
+			scenario:      "version >= 0.42.0 without curve preferences",
+			version:       "0.42.0",
+			curves:        nil,
+			shouldHaveArg: false,
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					Thanos: &monitoringv1.ThanosSpec{
+						Version: new(tc.version),
+						GRPCServerTLSConfig: &monitoringv1.GRPCServerTLSConfig{
+							Curves: tc.curves,
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
+			expectedArg := "--grpc-server-tls-curves=CurveP256,X25519"
 			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
 		})
 	}
@@ -2696,9 +2744,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "all values provided",
-			lookbackDelta:  ptr.To("2m"),
-			maxConcurrency: ptr.To(int32(10)),
-			maxSamples:     ptr.To(int32(10000)),
+			lookbackDelta:  new("2m"),
+			maxConcurrency: new(int32(10)),
+			maxSamples:     new(int32(10000)),
 			timeout:        ptr.To(monitoringv1.Duration("1m")),
 
 			expected: []string{
@@ -2710,9 +2758,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "zero values are skipped",
-			lookbackDelta:  ptr.To("2m"),
-			maxConcurrency: ptr.To(int32(0)),
-			maxSamples:     ptr.To(int32(0)),
+			lookbackDelta:  new("2m"),
+			maxConcurrency: new(int32(0)),
+			maxSamples:     new(int32(0)),
 			timeout:        ptr.To(monitoringv1.Duration("1m")),
 
 			expected: []string{
@@ -2722,7 +2770,7 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "maxConcurrency set to 1",
-			maxConcurrency: ptr.To(int32(1)),
+			maxConcurrency: new(int32(1)),
 
 			expected: []string{
 				"--query.max-concurrency=1",
@@ -2730,9 +2778,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples skipped if version < 2.5",
-			lookbackDelta:  ptr.To("2m"),
-			maxConcurrency: ptr.To(int32(10)),
-			maxSamples:     ptr.To(int32(10000)),
+			lookbackDelta:  new("2m"),
+			maxConcurrency: new(int32(10)),
+			maxSamples:     new(int32(10000)),
 			timeout:        ptr.To(monitoringv1.Duration("1m")),
 			version:        "v2.4.0",
 
@@ -2744,9 +2792,9 @@ func TestPrometheusQuerySpec(t *testing.T) {
 		},
 		{
 			name:           "max samples not skipped if version > 2.5",
-			lookbackDelta:  ptr.To("2m"),
-			maxConcurrency: ptr.To(int32(10)),
-			maxSamples:     ptr.To(int32(10000)),
+			lookbackDelta:  new("2m"),
+			maxConcurrency: new(int32(10)),
+			maxSamples:     new(int32(10000)),
 			timeout:        ptr.To(monitoringv1.Duration("1m")),
 			version:        "v2.5.0",
 
@@ -2826,7 +2874,7 @@ func TestSecurityContextCapabilities(t *testing.T) {
 			name: "Thanos sidecar with object storage",
 			spec: monitoringv1.PrometheusSpec{
 				Thanos: &monitoringv1.ThanosSpec{
-					ObjectStorageConfigFile: ptr.To("/etc/thanos.cfg"),
+					ObjectStorageConfigFile: new("/etc/thanos.cfg"),
 				},
 			},
 		},
@@ -3048,7 +3096,7 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   new(int32(600)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 10,
 		},
@@ -3151,12 +3199,12 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 		},
 		{
 			name:                         "automountServiceAccountToken set to true",
-			automountServiceAccountToken: ptr.To(true),
+			automountServiceAccountToken: new(true),
 			expectedValue:                true,
 		},
 		{
 			name:                         "automountServiceAccountToken set to false",
-			automountServiceAccountToken: ptr.To(false),
+			automountServiceAccountToken: new(false),
 			expectedValue:                false,
 		},
 	} {
@@ -3228,7 +3276,7 @@ func TestDNSPolicyAndDNSConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(test.dnsPolicy))
+			monitoringDNSPolicyPtr := new(monitoringv1.DNSPolicy(test.dnsPolicy))
 
 			var monitoringDNSConfig *monitoringv1.PodDNSConfig
 			if test.dnsConfig != nil {
@@ -3266,8 +3314,8 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		enableServiceLinks         *bool
 		expectedEnableServiceLinks *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableServiceLinks: new(false)},
+		{enableServiceLinks: new(true), expectedEnableServiceLinks: new(true)},
 		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
 	}
 
@@ -3346,13 +3394,13 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
 				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 		},
@@ -3392,7 +3440,7 @@ func TestConfigReloaderTopologyZoneEnvVar(t *testing.T) {
 		{
 			name: "shard 0 gets zone-a",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode: ptr.To(topologyMode),
+				Mode: new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{
 					Values: []string{"zone-a", "zone-b"},
 				},
@@ -3403,7 +3451,7 @@ func TestConfigReloaderTopologyZoneEnvVar(t *testing.T) {
 		{
 			name: "shard 1 gets zone-b",
 			shardingStrategy: &monitoringv1.ShardingStrategy{
-				Mode: ptr.To(topologyMode),
+				Mode: new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{
 					Values: []string{"zone-a", "zone-b"},
 				},

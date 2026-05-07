@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -45,6 +44,10 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 
+	const (
+		prometheusName       = "shard-retention"
+		prometheusGroupLabel = "test"
+	)
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
 
@@ -59,84 +62,20 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 	// Deploy an application with 10 replicas to ensure that targets will be
 	// spread across the 2 shards.
-	dep, err := testFramework.MakeDeployment("../../test/framework/resources/basic-auth-app-deployment.yaml")
-	require.NoError(t, err)
-	dep.Spec.Replicas = ptr.To(int32(10))
-
-	framework.CreateDeployment(context.Background(), ns, dep)
-	require.NoError(t, err)
-
-	svc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "app",
-			Labels: map[string]string{
-				"group": "app",
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			Selector: dep.Spec.Template.ObjectMeta.Labels,
-			Ports: []corev1.ServicePort{
-				{
-					Name: "web",
-					Port: 8080,
-				},
-			},
-		},
-	}
-	_, err = framework.KubeClient.CoreV1().Services(ns).Create(ctx, svc, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "auth",
-			Namespace: ns,
-		},
-		StringData: map[string]string{
-			"user": "user",
-			"pass": "pass",
-		},
-		Type: corev1.SecretTypeOpaque,
-	}
-	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+	err = framework.DeployBasicAuthApp(ctx, ns, 10)
 	require.NoError(t, err)
 
 	// Create a service monitor for the app deployment.
-	sm := framework.MakeBasicServiceMonitor("app")
-	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
-		Interval: monitoringv1.Duration("5s"),
-		Port:     "web",
-		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
-			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
-				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
-					BasicAuth: &monitoringv1.BasicAuth{
-						Username: corev1.SecretKeySelector{
-							Key: "user",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-						Password: corev1.SecretKeySelector{
-							Key: "pass",
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "auth",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	err = framework.DeployAppServiceMonitor(ctx, ns)
 	require.NoError(t, err)
 
 	// Create 1 service monitor for the Prometheus service.
-	sm = framework.MakeBasicServiceMonitor("test")
+	sm := framework.MakeBasicServiceMonitor(prometheusGroupLabel)
 	sm.Spec.Endpoints[0].RelabelConfigs = []monitoringv1.RelabelConfig{
 		{
 			TargetLabel: "__tmp_disable_sharding",
 			Action:      "Replace",
-			Replacement: ptr.To("true"),
+			Replacement: new("true"),
 		},
 	}
 	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
@@ -147,25 +86,25 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// We test only against the Retain strategy. There's no need to verify with
 	// the Delete strategy because the second shard will not exist anymore in
 	// case of scale down.
-	prom := framework.MakeBasicPrometheus(ns, "test", "test", 1)
-	prom.Spec.Shards = ptr.To(int32(1))
+	prom := framework.MakeBasicPrometheus(ns, prometheusName, prometheusGroupLabel, 1)
+	prom.Spec.Shards = new(int32(1))
 	prom.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "group",
 				Operator: metav1.LabelSelectorOpIn,
-				Values:   []string{"app", "test"},
+				Values:   []string{testFramework.AppGroupLabel, prometheusGroupLabel},
 			},
 		},
 	}
 
 	prom.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
-		WhenScaled: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+		WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
 	}
 
 	shardServices := make([]*corev1.Service, 2)
 	for i := range shardServices {
-		svc := framework.MakePrometheusService("test", "test", corev1.ServiceTypeClusterIP)
+		svc := framework.MakePrometheusService(prometheusName, prometheusGroupLabel, corev1.ServiceTypeClusterIP)
 		svc.Name += "-" + strconv.Itoa(i)
 		svc.Spec.Selector["operator.prometheus.io/shard"] = strconv.Itoa(i)
 
@@ -184,7 +123,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// Scale up the number of shards to 2 and ensure that
 	// * Each shard discovers more than 2 targets (at least 1 app pod + 2 prometheus pods).
 	// * The sum of targets is 10 app pods + 2*2 prometheus pods = 14.
-	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 2)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, prometheusName, ns, 2)
 	require.NoError(t, err)
 
 	t.Run("2 active shards", func(t *testing.T) {
@@ -222,7 +161,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 
 	// Scale down the number of shards to 1 and ensure that all targets are
 	// reaffected to the first shard.
-	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, "test", ns, 1)
+	_, err = framework.ScalePrometheusAndWaitUntilReady(ctx, prometheusName, ns, 1)
 	require.NoError(t, err)
 
 	t.Run("1 active shard", func(t *testing.T) {
@@ -268,11 +207,11 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 	}{
 		{
 			name:           "delete policy",
-			whenScaledDown: ptr.To(monitoringv1.DeleteWhenScaledRetentionType),
+			whenScaledDown: new(monitoringv1.DeleteWhenScaledRetentionType),
 		},
 		{
 			name:           "retain policy",
-			whenScaledDown: ptr.To(monitoringv1.RetainWhenScaledRetentionType),
+			whenScaledDown: new(monitoringv1.RetainWhenScaledRetentionType),
 		},
 	}
 
@@ -283,7 +222,7 @@ func testPrometheusRetentionPolicies(t *testing.T) {
 			p.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
 				WhenScaled: tc.whenScaledDown,
 			}
-			p.Spec.Shards = ptr.To(int32(2))
+			p.Spec.Shards = new(int32(2))
 			_, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 			require.NoError(t, err)
 

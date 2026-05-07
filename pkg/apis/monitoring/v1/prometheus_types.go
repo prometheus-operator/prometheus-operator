@@ -1654,7 +1654,7 @@ type ThanosSpec struct {
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
 	//
 	// +optional
 	GRPCServerTLSConfig *GRPCServerTLSConfig `json:"grpcServerTlsConfig,omitempty"`
@@ -1942,6 +1942,7 @@ type QueueConfig struct {
 
 // Sigv4 defines AWS's Signature Verification 4 signing process to
 // sign requests.
+// +kubebuilder:validation:XValidation:rule="!has(self.externalId) || has(self.roleArn)",message="externalId can only be used when roleArn is specified"
 // +k8s:openapi-gen=true
 type Sigv4 struct {
 	// region defines the AWS region. If blank, the region from the default credentials chain used.
@@ -1961,6 +1962,12 @@ type Sigv4 struct {
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
+	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ExternalID string `json:"externalId,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
 	//
