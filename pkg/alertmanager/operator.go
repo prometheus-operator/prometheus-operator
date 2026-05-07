@@ -1427,7 +1427,7 @@ func checkSlackConfigs(
 			}
 			if *config.UpdateMessage && slackAPIURL != "" {
 				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`updateMessage' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+					return fmt.Errorf(`updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
 				}
 			}
 		}
