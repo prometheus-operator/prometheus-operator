@@ -4456,9 +4456,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSlackAppConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionSlackAppConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
-	versionSlackMessageTextAllowed := semver.Version{Major: 0, Minor: 31}
-	versionSlackMessageTextNotAllowed := semver.Version{Major: 0, Minor: 30}
-
 	versionSlackUpdateMessageAllowed := semver.Version{Major: 0, Minor: 32}
 	versionSlackUpdateMessageNotAllowed := semver.Version{Major: 0, Minor: 31}
 
@@ -4670,39 +4667,6 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_mattermost_webhook_url_takes_precedence_over_mattermost_webhook_url_file_in_global_config.golden",
 		},
 		{
-			name:           "Test api_url takes precedence in slack config",
-			againstVersion: versionFileURLAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								APIURL:     "www.test.com",
-								APIURLFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_api_url_takes_precedence_in_slack_config.golden",
-		},
-		{
-			name:           "Test api_url_file is dropped in slack config for unsupported versions",
-			againstVersion: versionFileURLNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								APIURLFile: "/test",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_api_url_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
-		},
-		{
 			name:           "Test slack config happy path",
 			againstVersion: versionFileURLAllowed,
 			in: &alertmanagerConfig{
@@ -4720,70 +4684,6 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_config_happy_path.golden",
-		},
-		{
-			name:           "Test timeout is dropped in slack config for unsupported versions",
-			againstVersion: versionTimeoutConfigNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								Timeout: ptr.To(model.Duration(time.Minute)),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_timeout_is_dropped_in_slack_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test timeout is added in slack config for supported versions",
-			againstVersion: versionTimeoutConfigAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								Timeout: ptr.To(model.Duration(time.Minute)),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_timeout_is_added_in_slack_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test message_text is dropped in slack config for unsupported versions",
-			againstVersion: versionSlackMessageTextNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								MessageText: "test message text",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_message_text_is_dropped_in_slack_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test message_text is added in slack config for supported versions",
-			againstVersion: versionSlackMessageTextAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						SlackConfigs: []*slackConfig{
-							{
-								MessageText: "test message text",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_slack_message_text_is_added_in_slack_config_for_supported_versions.golden",
 		},
 		{
 			name:           "Test slack update_message supported version",
@@ -9140,6 +9040,142 @@ func TestSanitizeMSTeamsV2Config(t *testing.T) {
 				},
 			},
 			golden: "msteamsv2_config_with_webhook_config_file_set.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			if tc.golden != "" {
+				amConfigs, err := yaml.Marshal(tc.in)
+				require.NoError(t, err)
+
+				golden.Assert(t, string(amConfigs), tc.golden)
+			}
+		})
+	}
+}
+
+func TestSanitizeSlackConfig(t *testing.T) {
+	logger := newNopLogger(t)
+
+	versionFileURLAllowed := semver.Version{Major: 0, Minor: 22}
+	versionFileURLNotAllowed := semver.Version{Major: 0, Minor: 21}
+
+	versionSlackMessageTextAllowed := semver.Version{Major: 0, Minor: 31}
+	versionSlackMessageTextNotAllowed := semver.Version{Major: 0, Minor: 30}
+
+	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
+
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+
+		{
+			name:           "Test api_url takes precedence in slack config",
+			againstVersion: versionFileURLAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:     "www.test.com",
+								APIURLFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_api_url_takes_precedence_in_slack_config.golden",
+		},
+		{
+			name:           "Test api_url_file is dropped in slack config for unsupported versions",
+			againstVersion: versionFileURLNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURLFile: "/test",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_api_url_file_is_dropped_in_slack_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test timeout is dropped in slack config for unsupported versions",
+			againstVersion: versionTimeoutConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_timeout_is_dropped_in_slack_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test timeout is added in slack config for supported versions",
+			againstVersion: versionTimeoutConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								Timeout: ptr.To(model.Duration(time.Minute)),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_timeout_is_added_in_slack_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test message_text is dropped in slack config for unsupported versions",
+			againstVersion: versionSlackMessageTextNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								MessageText: "test message text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_message_text_is_dropped_in_slack_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test message_text is added in slack config for supported versions",
+			againstVersion: versionSlackMessageTextAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								MessageText: "test message text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_message_text_is_added_in_slack_config_for_supported_versions.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
