@@ -102,3 +102,7 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(INZONE_SHARD);|.+;.+
     action: keep
+storage:
+  tsdb:
+    retention:
+      time: 24h

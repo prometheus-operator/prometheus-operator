@@ -841,7 +841,6 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	store assets.StoreGetter,
 	safetls *monitoringv1.SafeTLSConfig,
 ) yaml.MapSlice {
-
 	if safetls == nil {
 		return cfg
 	}
@@ -911,7 +910,6 @@ func (cg *ConfigGenerator) addHTTPConfigToYAML(
 	store assets.StoreGetter,
 	httpConfig *monitoringv1.HTTPConfig,
 	scrapeClass monitoringv1.ScrapeClass,
-
 ) yaml.MapSlice {
 	if httpConfig == nil {
 		return cfg
@@ -1036,7 +1034,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1073,9 +1071,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(
+	cfg yaml.MapSlice,
+	exemplars *monitoringv1.Exemplars,
+	retention monitoringv1.Duration,
+	retentionSize monitoringv1.ByteSize,
+) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
+		tsdbSlice yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
 		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
@@ -1090,12 +1094,27 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 	}
 
 	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
+		tsdbSlice = cg.WithMinimumVersion("2.39.0").AppendMapItem(tsdbSlice, "out_of_order_time_window", *tsdb.OutOfOrderTimeWindow)
+	}
+
+	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
+		var retentionSlice yaml.MapSlice
+		retentionTime := string(retention)
+		if retentionTime == "" && retentionSize == "" {
+			// Matches defaultRetention
+			retentionTime = "24h"
+		}
+		if retentionTime != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
+		}
+		if retentionSize != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
+		}
+		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
+	}
+
+	if len(tsdbSlice) > 0 {
+		storage = append(storage, yaml.MapItem{Key: "tsdb", Value: tsdbSlice})
 	}
 
 	if len(storage) == 0 {
@@ -2364,7 +2383,8 @@ type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
 func (cg *ConfigGenerator) withK8SRoleSelectorConfig(
 	selector metav1.LabelSelector,
 	selectorMechanism *monitoringv1.SelectorMechanism,
-	roles []string) k8sSDConfigOptions {
+	roles []string,
+) k8sSDConfigOptions {
 	return func(k8sSDConfig yaml.MapSlice) yaml.MapSlice {
 		if ptr.Deref(selectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
 			return k8sSDConfig
@@ -3127,8 +3147,8 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	serviceMonitors map[string]*monitoringv1.ServiceMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
-	shards int32) []yaml.MapSlice {
-
+	shards int32,
+) []yaml.MapSlice {
 	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
@@ -3150,8 +3170,8 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	podMonitors map[string]*monitoringv1.PodMonitor,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
-	shards int32) []yaml.MapSlice {
-
+	shards int32,
+) []yaml.MapSlice {
 	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
@@ -3173,8 +3193,8 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	probes map[string]*monitoringv1.Probe,
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
-	shards int32) []yaml.MapSlice {
-
+	shards int32,
+) []yaml.MapSlice {
 	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
@@ -3289,12 +3309,11 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	slices []yaml.MapSlice,
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
-	shards int32) ([]yaml.MapSlice, error) {
-
+	shards int32,
+) ([]yaml.MapSlice, error) {
 	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
-
 		if err != nil {
 			return slices, err
 		}
@@ -3907,7 +3926,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			if config.ResourceGroup != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
-
 					Key:   "resource_group",
 					Value: config.ResourceGroup,
 				})
@@ -4295,7 +4313,8 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.HostNetworkingHost != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "host_networking_host",
-					Value: config.HostNetworkingHost})
+					Value: config.HostNetworkingHost,
+				})
 			}
 
 			if config.MatchFirstNetwork != nil {
@@ -5229,7 +5248,8 @@ func (cg *ConfigGenerator) addFiltersToYaml(cfg yaml.MapSlice, filters []monitor
 			{
 				Key:   "values",
 				Value: filter.Values,
-			}})
+			},
+		})
 	}
 
 	return cg.AppendMapItem(cfg, "filters", filtersYamlMap)

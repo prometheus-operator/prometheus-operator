@@ -403,12 +403,12 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 	}
 
 	if retentionTimeFlagValue != "" {
-		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
+		promArgs = cg.WithMaximumVersion("3.11.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
 
 	if p.Spec.RetentionSize != "" {
 		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
-		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
+		promArgs = cg.WithMinimumVersion("2.7.0").WithMaximumVersion("3.11.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
 
 	promArgs = append(promArgs,
