@@ -4818,6 +4818,23 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_slack_update_message_unsupported_version.golden",
 		},
 		{
+			name:           "Test slack update_message custom api url",
+			againstVersion: versionSlackUpdateMessageAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								AppToken:      "https://api.url",
+								UpdateMessage: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "Test inhibit rules error with unsupported syntax",
 			againstVersion: matcherV2SyntaxNotAllowed,
 			in: &alertmanagerConfig{
