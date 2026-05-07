@@ -26,8 +26,10 @@ import (
 const (
 	// AppGroupLabel is the value of the "group" label for the instrumented sample
 	// app resources.
-	AppGroupLabel     = "app"
-	appSecretAuthName = "auth"
+	AppGroupLabel        = "app"
+	appSecretAuthName    = "auth"
+	appSecretAuthUserKey = "user"
+	appSecretAuthPassKey = "pass"
 )
 
 // DeployBasicAuthApp deploys the instrumented sample app with the given number
@@ -39,6 +41,9 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 		return err
 	}
 	dep.Spec.Replicas = new(replicas)
+	dep.Labels = map[string]string{"group": AppGroupLabel}
+	dep.Spec.Selector.MatchLabels = dep.Labels
+	dep.Spec.Template.Labels = dep.Labels
 
 	if err := f.CreateDeployment(ctx, ns, dep); err != nil {
 		return err
@@ -46,10 +51,8 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: AppGroupLabel,
-			Labels: map[string]string{
-				"group": AppGroupLabel,
-			},
+			Name:   AppGroupLabel,
+			Labels: dep.Labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: dep.Spec.Template.Labels,
@@ -69,14 +72,42 @@ func (f *Framework) DeployBasicAuthApp(ctx context.Context, ns string, replicas 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      appSecretAuthName,
 			Namespace: ns,
+			Labels:    dep.Labels,
 		},
 		StringData: map[string]string{
-			"user": "user",
-			"pass": "pass",
+			appSecretAuthUserKey: "user",
+			appSecretAuthPassKey: "pass",
 		},
 		Type: corev1.SecretTypeOpaque,
 	}
 	_, err = f.KubeClient.CoreV1().Secrets(ns).Create(ctx, secret, metav1.CreateOptions{})
+	return err
+}
+
+// DeployAppPodMonitor creates a PodMonitor for the app deployed by DeployBasicAuthApp.
+func (f *Framework) DeployAppPodMonitor(ctx context.Context, ns string) error {
+	pm := f.MakeBasicPodMonitor(AppGroupLabel)
+	pm.Spec.PodMetricsEndpoints[0] = monitoringv1.PodMetricsEndpoint{
+		Interval: monitoringv1.Duration("5s"),
+		Port:     new("web"),
+		HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+			HTTPConfig: monitoringv1.HTTPConfig{
+				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+					BasicAuth: &monitoringv1.BasicAuth{
+						Username: corev1.SecretKeySelector{
+							Key:                  appSecretAuthUserKey,
+							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
+						},
+						Password: corev1.SecretKeySelector{
+							Key:                  appSecretAuthPassKey,
+							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
+						},
+					},
+				},
+			},
+		},
+	}
+	_, err := f.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
 	return err
 }
 
@@ -91,11 +122,11 @@ func (f *Framework) DeployAppServiceMonitor(ctx context.Context, ns string) erro
 				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
 					BasicAuth: &monitoringv1.BasicAuth{
 						Username: corev1.SecretKeySelector{
-							Key:                  "user",
+							Key:                  appSecretAuthUserKey,
 							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
 						},
 						Password: corev1.SecretKeySelector{
-							Key:                  "pass",
+							Key:                  appSecretAuthPassKey,
 							LocalObjectReference: corev1.LocalObjectReference{Name: appSecretAuthName},
 						},
 					},
