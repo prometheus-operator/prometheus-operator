@@ -587,14 +587,14 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 			scenario: "no maxPerSilenceBytes old version",
 			version:  "0.27.9",
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+				MaxPerSilenceBytes: new(monitoringv1.ByteSize("5MB")),
 			},
 			expectMaxPerSilenceBytesArg: false,
 		}, {
 			scenario: "maxPerSilenceBytes arg set if specified",
 			version:  operator.DefaultAlertmanagerVersion,
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+				MaxPerSilenceBytes: new(monitoringv1.ByteSize("5MB")),
 			},
 			expectMaxPerSilenceBytesArg: true,
 		},
@@ -1390,11 +1390,6 @@ func containsString(sub string) func(string) bool {
 	return func(x string) bool {
 		return strings.Contains(x, sub)
 	}
-}
-
-//go:fix inline
-func toPtr[T any](t T) *T {
-	return new(t)
 }
 
 func TestEnableFeatures(t *testing.T) {

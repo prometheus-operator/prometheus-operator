@@ -350,7 +350,7 @@ fix: fix-golang fix-api ## Fix all auto-fixable issues.
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint to fix issues.
-	$(GOLANGCILINTER_BINARY) run --fix
+	$(GOLANGCILINTER_BINARY) run --fix -v
 
 .PHONY: fix-api
 fix-api: $(GOLANGCIKUBEAPILINTER_BINARY) ## Run golangci-kube-api-linter to fix issues on API types.
