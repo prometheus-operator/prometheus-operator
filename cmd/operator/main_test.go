@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ type mockDiscoveryClient struct {
 
 func (m *mockDiscoveryClient) ServerResourcesForGroupVersion(_ string) (*metav1.APIResourceList, error) {
 	// Make the function runs for 10 second so that
-	// we can control how many time this is called until timeout
+	// we can control how many times this is called until timeout
 	time.Sleep(10 * time.Second)
 
 	polls++
@@ -60,7 +60,7 @@ func (m *mockDiscoveryClient) ServerResourcesForGroupVersion(_ string) (*metav1.
 	if polls >= 3 {
 		return &metav1.APIResourceList{
 			APIResources: []metav1.APIResource{
-				metav1.APIResource{
+				{
 					Name: "true",
 				},
 			},
@@ -69,7 +69,7 @@ func (m *mockDiscoveryClient) ServerResourcesForGroupVersion(_ string) (*metav1.
 
 	return &metav1.APIResourceList{
 		APIResources: []metav1.APIResource{
-			metav1.APIResource{
+			{
 				Name: "false",
 			},
 		},
@@ -81,14 +81,14 @@ func TestWaitForCRDInstalled(t *testing.T) {
 	client := newMockKubernetesClient()
 
 	// Because we set the timeout as 5 seconds here, and ServerResourcesForGroupVersion runs for 10 second,
-	// there will be only 1 poll, and we expectcheckInstalledWithTimeout to return false.
+	// there will be only 1 poll, and we expect checkInstalledWithTimeout to return false.
 	installed, err := checkInstalledWithTimeout(ctx, client, storagev1.SchemeGroupVersion, "true", 5*time.Second)
 	require.NoError(t, err)
 	require.Equal(t, polls, 1)
 	require.False(t, installed)
 
 	// Now the timeout is 50 seconds, ServerResourcesForGroupVersion will be polled more than 1 time.
-	// Because ServerResourcesForGroupVersion has already run at least 3 times now, we expectcheckInstalledWithTimeout to return true.
+	// Because ServerResourcesForGroupVersion has already run at least 3 times now, we expect checkInstalledWithTimeout to return true.
 	installed, err = checkInstalledWithTimeout(ctx, client, storagev1.SchemeGroupVersion, "true", 50*time.Second)
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, polls, 3)
@@ -98,8 +98,6 @@ func TestWaitForCRDInstalled(t *testing.T) {
 func TestSetCRDToWaitFor(t *testing.T) {
 	crds := &crdsList{}
 
-	require.NoError(t, crds.Set("storage class"))
-	require.NoError(t, crds.Set("Scrape Config"))
 	require.NoError(t, crds.Set("PROMETHEUS"))
 	require.NoError(t, crds.Set("proMeTheusAgent"))
 	require.NoError(t, crds.Set("ALERT MANAGER"))

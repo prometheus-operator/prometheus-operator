@@ -78,10 +78,15 @@ func checkPrerequisites(
 	installWaitingTime time.Duration,
 	attributes ...k8s.ResourceAttribute,
 ) (bool, error) {
-	installed, err := checkInstalled(kclient, groupVersion, resource)
+	var (
+		installed bool
+		err       error
+	)
 
 	if installWaitingTime > 0 {
 		installed, err = checkInstalledWithTimeout(ctx, kclient, groupVersion, resource, installWaitingTime)
+	} else {
+		installed, err = checkInstalled(kclient, groupVersion, resource)
 	}
 
 	if err != nil {
@@ -90,7 +95,7 @@ func checkPrerequisites(
 
 	if !installed {
 		if installWaitingTime > 0 {
-			logger.Warn(fmt.Sprintf("resource %q (group: %q) not installed in the cluster after %v retry", resource, groupVersion, installWaitingTime))
+			logger.Warn(fmt.Sprintf("resource %q (group: %q) not installed in the cluster after %v", resource, groupVersion, installWaitingTime))
 		} else {
 			logger.Warn(fmt.Sprintf("resource %q (group: %q) not installed in the cluster", resource, groupVersion))
 		}
@@ -168,8 +173,8 @@ var (
 
 	disableUnmanagedPrometheusConfiguration bool
 
-	crdInstalledWaitingTime time.Duration
-	crdsWaitToBeInstalled   crdsList
+	checkForCrdsOnStartupTimeout time.Duration
+	checkForCrdsOnStartup        crdsList
 
 	// Parameters for the kubelet endpoints controller.
 	kubeletObject        string
@@ -190,14 +195,12 @@ func (s *crdsList) String() string {
 }
 
 func (s *crdsList) Set(values string) error {
-	vals := strings.Split(values, ",")
-
-	for _, val := range vals {
+	for val := range strings.SplitSeq(values, ",") {
 		normalizedVal := strings.Join(strings.Fields(strings.ToLower(val)), "")
-		if slices.Contains([]string{"storageclass", "scrapeconfig", "prometheus", "prometheusagent", "alertmanager", "thanosruler"}, normalizedVal) {
+		if slices.Contains([]string{"prometheus", "prometheusagent", "alertmanager", "thanosruler"}, normalizedVal) {
 			*s = append(*s, normalizedVal)
 		} else {
-			return fmt.Errorf("Unknown CRD: %q. Valid CRDs include storageclass, scrapeconfig, prometheus, prometheusagent, alertmanager, thanosruler", val)
+			return fmt.Errorf("unknown CRD: %q. Valid CRDs include storageclass, prometheus, prometheusagent, alertmanager, thanosruler", val)
 		}
 	}
 
@@ -265,9 +268,8 @@ func parseFlags(fs *flag.FlagSet) {
 
 	fs.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	fs.BoolVar(&disableUnmanagedPrometheusConfiguration, "disable-unmanaged-prometheus-configuration", false, "Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.")
-	fs.DurationVar(&crdInstalledWaitingTime, "crd-installed-waiting-time", 0, "The waiting time for a CRD to be installed. During this time, the operator checks every second whether the CRD is installed. Need to be set together with --crds-wait-to-be-installed for the operator to know what CRDs to wait for.")
-	fs.Var(&crdsWaitToBeInstalled, "crds-wait-to-be-installed", "CRDs that the operator will wait to be installed. Valid values are storageclass, scrapeconfig, prometheus, prometheusagent, alertmanager, thanosruler. Need to be set with crd-installed-waiting-time so that the operator knows how long to wait for.")
-	cfg.RegisterFeatureGatesFlags(fs, featureGates)
+	fs.DurationVar(&checkForCrdsOnStartupTimeout, "check-for-crds-on-startup-timeout", 0, "How long the operator will wait for Custom Resource Definitions to be present on startup before exiting with error. Only relevant when --check-for-crds-on-startup is defined.")
+	fs.Var(&checkForCrdsOnStartup, "check-for-crds-on-startup", "Comma-separated list of Custom Resource Definitions that should be present in the cluster and which the operator should have access to. By default, no check is performed. Valid values are prometheuses, prometheusagents, alertmanagers, thanosrulers.")
 
 	logging.RegisterFlags(fs, &logConfig)
 	versionutil.RegisterFlags(fs)
@@ -427,15 +429,10 @@ func start() int {
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
 	}
 
-	if crdInstalledWaitingTime > 0 && crdsWaitToBeInstalled == nil {
-		logger.Error("crd-installed-waiting-time command line argument is set but crds-wait-to-be-installed is not. Need to be set together")
+	if checkForCrdsOnStartupTimeout > 0 && checkForCrdsOnStartup == nil {
+		logger.Error("--check-for-crds-on-startup-timeout is set but --check-for-crds-on-startup is not. Need to be set together")
 		cancel()
 		return 1
-	}
-
-	var storageClassInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "storageclass") {
-		storageClassInstallWaitTime = crdInstalledWaitingTime
 	}
 
 	// Check if we can read the storage classs
@@ -446,7 +443,7 @@ func start() int {
 		nil,
 		storagev1.SchemeGroupVersion,
 		storagev1.SchemeGroupVersion.WithResource("storageclasses").Resource,
-		storageClassInstallWaitTime,
+		0,
 		k8s.ResourceAttribute{
 			Group:    storagev1.GroupName,
 			Version:  storagev1.SchemeGroupVersion.Version,
@@ -486,11 +483,6 @@ func start() int {
 	}
 	cfg.EventRecorderFactory = operator.NewEventRecorderFactory(canEmitEvents)
 
-	var scrapeConfigInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "scrapeconfig") {
-		scrapeConfigInstallWaitTime = crdInstalledWaitingTime
-	}
-
 	scrapeConfigSupported, err := checkPrerequisites(
 		ctx,
 		logger,
@@ -498,7 +490,7 @@ func start() int {
 		cfg.Namespaces.AllowList.Slice(),
 		monitoringv1alpha1.SchemeGroupVersion,
 		monitoringv1alpha1.ScrapeConfigName,
-		scrapeConfigInstallWaitTime,
+		0,
 		k8s.ResourceAttribute{
 			Group:    monitoring.GroupName,
 			Version:  monitoringv1alpha1.Version,
@@ -525,8 +517,8 @@ func start() int {
 	}
 
 	var prometheusInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "prometheus") {
-		prometheusInstallWaitTime = crdInstalledWaitingTime
+	if checkForCrdsOnStartupTimeout > 0 && slices.Contains(checkForCrdsOnStartup, "prometheus") {
+		prometheusInstallWaitTime = checkForCrdsOnStartupTimeout
 	}
 
 	prometheusSupported, err := checkPrerequisites(
@@ -586,8 +578,8 @@ func start() int {
 	}
 
 	var prometheusAgentInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "prometheusagent") {
-		prometheusAgentInstallWaitTime = crdInstalledWaitingTime
+	if checkForCrdsOnStartupTimeout > 0 && slices.Contains(checkForCrdsOnStartup, "prometheusagent") {
+		prometheusAgentInstallWaitTime = checkForCrdsOnStartupTimeout
 	}
 
 	prometheusAgentSupported, err := checkPrerequisites(
@@ -672,8 +664,8 @@ func start() int {
 	}
 
 	var alertmanagerInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "alertmanager") {
-		alertmanagerInstallWaitTime = crdInstalledWaitingTime
+	if checkForCrdsOnStartupTimeout > 0 && slices.Contains(checkForCrdsOnStartup, "alertmanager") {
+		alertmanagerInstallWaitTime = checkForCrdsOnStartupTimeout
 	}
 
 	alertmanagerSupported, err := checkPrerequisites(
@@ -719,8 +711,8 @@ func start() int {
 	}
 
 	var thanosrulerInstallWaitTime time.Duration
-	if crdInstalledWaitingTime > 0 && slices.Contains(crdsWaitToBeInstalled, "thanosruler") {
-		thanosrulerInstallWaitTime = crdInstalledWaitingTime
+	if checkForCrdsOnStartupTimeout > 0 && slices.Contains(checkForCrdsOnStartup, "thanosruler") {
+		thanosrulerInstallWaitTime = checkForCrdsOnStartupTimeout
 	}
 
 	thanosRulerSupported, err := checkPrerequisites(
