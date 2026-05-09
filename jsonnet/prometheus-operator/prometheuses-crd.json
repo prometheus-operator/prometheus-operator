@@ -4944,6 +4944,14 @@
                         "description": "keepIdentifyingResourceAttributes enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
                         "type": "boolean"
                       },
+                      "labelNamePreserveMultipleUnderscores": {
+                        "description": "labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses\nunderscore escaping.\nWhen true (default), multiple consecutive underscores are preserved during label name sanitization.\n\nIt requires Prometheus >= v3.8.0.",
+                        "type": "boolean"
+                      },
+                      "labelNameUnderscoreSanitization": {
+                        "description": "labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.\nReserved labels starting with '__' are not modified.\nThis is only relevant when translation_strategy uses underscore escaping (e.g., \"UnderscoreEscapingWithSuffixes\" or \"UnderscoreEscapingWithoutSuffixes\").\n\nIt requires Prometheus >= v3.8.0.",
+                        "type": "boolean"
+                      },
                       "promoteAllResourceAttributes": {
                         "description": "promoteAllResourceAttributes promotes all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.\n\nCannot be true when `promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
                         "type": "boolean"

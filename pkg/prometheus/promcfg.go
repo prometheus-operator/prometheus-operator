@@ -5025,6 +5025,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.PromoteScopeMetadata)
 	}
 
+	if otlpConfig.LabelNameUnderscoreSanitization != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_underscore_sanitization",
+			otlpConfig.LabelNameUnderscoreSanitization)
+	}
+
+	if otlpConfig.LabelNamePreserveMultipleUnderscores != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_preserve_multiple_underscores",
+			otlpConfig.LabelNamePreserveMultipleUnderscores)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}
