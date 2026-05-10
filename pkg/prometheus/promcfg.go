@@ -65,6 +65,10 @@ const (
 	nodeZoneMetaLabel          = "__meta_kubernetes_node_label_topology_kubernetes_io_zone"
 	nodeZonePresentMetaLabel   = "__meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone"
 	endpointSliceZoneMetaLabel = "__meta_kubernetes_endpointslice_endpoint_zone"
+	// podZoneMetaLabel and podZonePresentMetaLabel are the SD meta labels for the
+	// topology.kubernetes.io/zone pod label injected by PodTopologyLabelsAdmission (K8s >= 1.35).
+	podZoneMetaLabel        = "__meta_kubernetes_pod_label_topology_kubernetes_io_zone"
+	podZonePresentMetaLabel = "__meta_kubernetes_pod_labelpresent_topology_kubernetes_io_zone"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -86,6 +90,7 @@ type ConfigGenerator struct {
 	daemonSet                   bool
 	prometheusTopologySharding  bool
 	prometheusRetentionPolicies bool
+	podTopologyLabelsSupported  bool // True when K8s >= 1.35 (PodTopologyLabelsAdmission).
 	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
@@ -114,6 +119,17 @@ func WithPrometheusTopologySharding() ConfigGeneratorOption {
 func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.prometheusRetentionPolicies = true
+	}
+}
+
+// WithPodTopologyLabelsSupport tells the config generator that K8s >= 1.35 is
+// available, meaning the PodTopologyLabelsAdmission feature gate automatically
+// injects topology.kubernetes.io/zone as a pod label. When enabled, the operator
+// no longer forces attach_metadata.node=true for topology sharding and instead
+// uses the pod label SD meta label for zone detection.
+func WithPodTopologyLabelsSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.podTopologyLabelsSupported = true
 	}
 }
 
@@ -270,6 +286,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 		daemonSet:                   cg.daemonSet,
 		prometheusTopologySharding:  cg.prometheusTopologySharding,
 		prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+		podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 		inlineTLSConfig:             cg.inlineTLSConfig,
 		bypassVersionCheck:          cg.bypassVersionCheck,
 	}
@@ -296,6 +313,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			daemonSet:                   cg.daemonSet,
 			prometheusTopologySharding:  cg.prometheusTopologySharding,
 			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 			inlineTLSConfig:             cg.inlineTLSConfig,
 			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
@@ -325,6 +343,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			daemonSet:                   cg.daemonSet,
 			prometheusTopologySharding:  cg.prometheusTopologySharding,
 			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 			inlineTLSConfig:             cg.inlineTLSConfig,
 			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
@@ -2268,30 +2287,52 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 	if cg.isTopologyShardingActive() {
 		modulus = cg.shardsPerZone(shards)
 		shardEnvVar = operator.InzoneShardEnvVar
-		relabelings = append(relabelings,
-			// Populate __tmp_topology from endpointslice zone label (no-op for pod role).
-			yaml.MapSlice{
-				{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
-				{Key: "target_label", Value: topologyTmpLabel},
-				{Key: "regex", Value: "(.+);"},
-				{Key: "replacement", Value: "$1"},
-				{Key: "action", Value: "replace"},
-			},
-			// Fallback to node topology label (requires attach_metadata: {node: true}).
-			yaml.MapSlice{
-				{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
-				{Key: "target_label", Value: topologyTmpLabel},
-				{Key: "regex", Value: "(.+);true;"},
-				{Key: "replacement", Value: "$1"},
-				{Key: "action", Value: "replace"},
-			},
-			// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
-			yaml.MapSlice{
-				{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
-				{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
-				{Key: "action", Value: "keep"},
-			},
-		)
+
+		if cg.podTopologyLabelsSupported {
+			// K8s >= 1.35: PodTopologyLabelsAdmission injects topology.kubernetes.io/zone
+			// as a pod label, so attach_metadata.node is not needed.
+			relabelings = append(relabelings,
+				// Populate __tmp_topology from the pod topology label (no-op for pod role targets without the label).
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{podZoneMetaLabel, podZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+				// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+					{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+					{Key: "action", Value: "keep"},
+				},
+			)
+		} else {
+			relabelings = append(relabelings,
+				// Populate __tmp_topology from endpointslice zone label (no-op for pod role).
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+				// Fallback to node topology label (requires attach_metadata: {node: true}).
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+				// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+					{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+					{Key: "action", Value: "keep"},
+				},
+			)
+		}
 	}
 
 	return append(relabelings,
@@ -5369,11 +5410,15 @@ func (cg *ConfigGenerator) InzoneShardForShard(shardIndex int32) int32 {
 }
 
 // mergeAttachMetadataForTopology forces attach_metadata.node=true when topology
-// sharding is active. Node metadata is required to determine the target's zone via
-// the __meta_kubernetes_node_label_topology_kubernetes_io_zone label.
+// sharding is active, unless K8s >= 1.35 (podTopologyLabelsSupported). In the
+// latter case, PodTopologyLabelsAdmission injects the zone label onto pods so
+// node metadata is no longer required.
 // Returns amc unchanged when topology sharding is not active or node is already true.
 func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataConfig, minimumVersion string) *attachMetadataConfig {
 	if !cg.isTopologyShardingActive() {
+		return amc
+	}
+	if cg.podTopologyLabelsSupported {
 		return amc
 	}
 	if amc != nil && amc.node() {
