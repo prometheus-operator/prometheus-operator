@@ -2004,7 +2004,29 @@ func (in *NativeHistogramConfig) DeepCopy() *NativeHistogramConfig {
 func (in *OAuth2) DeepCopyInto(out *OAuth2) {
 	*out = *in
 	in.ClientID.DeepCopyInto(&out.ClientID)
+	if in.GrantType != nil {
+		in, out := &in.GrantType, &out.GrantType
+		*out = new(OAuth2GrantType)
+		**out = **in
+	}
 	in.ClientSecret.DeepCopyInto(&out.ClientSecret)
+	if in.ClientCertificateKey != nil {
+		in, out := &in.ClientCertificateKey, &out.ClientCertificateKey
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.SignatureAlgorithm != nil {
+		in, out := &in.SignatureAlgorithm, &out.SignatureAlgorithm
+		*out = new(SignatureAlgorithm)
+		**out = **in
+	}
+	if in.Claims != nil {
+		in, out := &in.Claims, &out.Claims
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.Scopes != nil {
 		in, out := &in.Scopes, &out.Scopes
 		*out = make([]string, len(*in))

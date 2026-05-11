@@ -1472,3 +1472,150 @@ func TestAddObject(t *testing.T) {
 	err = store.AddObject(nil)
 	require.Error(t, err)
 }
+
+func TestAddOAuth2(t *testing.T) {
+	c := fake.NewClientset(
+		&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2-cm",
+				Namespace: "ns1",
+			},
+			Data: map[string]string{
+				"client_id": "test_client_id",
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "oauth2-secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"client_secret":          []byte("test_client_secret"),
+				"client_certificate_key": []byte("test_rsa_key"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		name   string
+		oauth2 *monitoringv1.OAuth2
+		err    bool
+	}{
+		{
+			name:   "nil oauth2",
+			oauth2: nil,
+			err:    false,
+		},
+		{
+			name: "client_credentials with clientSecret",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				ClientSecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-secret"},
+					Key:                  "client_secret",
+				},
+				TokenURL: "http://token.url",
+			},
+			err: false,
+		},
+		{
+			name: "client_credentials with missing clientSecret",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				TokenURL:  "http://token.url",
+				GrantType: new(monitoringv1.GrantTypeClientCredentials),
+			},
+			err: true,
+		},
+		{
+			name: "client_credentials with invalid clientSecret reference",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				ClientSecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "nonexistent-secret"},
+					Key:                  "client_secret",
+				},
+				TokenURL: "http://token.url",
+			},
+			err: true,
+		},
+		{
+			name: "jwt-bearer with clientCertificateKey",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				TokenURL:  "http://token.url",
+				GrantType: new(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-secret"},
+					Key:                  "client_certificate_key",
+				},
+			},
+			err: false,
+		},
+		{
+			name: "jwt-bearer with invalid clientCertificateKey reference",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				TokenURL:  "http://token.url",
+				GrantType: new(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "nonexistent-secret"},
+					Key:                  "client_certificate_key",
+				},
+			},
+			err: true,
+		},
+		{
+			name: "jwt-bearer missing clientCertificateKey fails validation",
+			oauth2: &monitoringv1.OAuth2{
+				ClientID: monitoringv1.SecretOrConfigMap{
+					ConfigMap: &corev1.ConfigMapKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-cm"},
+						Key:                  "client_id",
+					},
+				},
+				TokenURL:  "http://token.url",
+				GrantType: new(monitoringv1.GrantTypeJWTBearer),
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			err := store.AddOAuth2(context.Background(), "ns1", tc.oauth2)
+
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
