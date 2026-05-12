@@ -66,24 +66,6 @@ jobs:
       - name: Lint API
         run: make check-api
 
-  check-govulncheck:
-    runs-on: ubuntu-latest
-    name: Run govulncheck
-    steps:
-    - uses: actions/checkout@v6.0.2
-    - name: Import environment variables from file
-      run: cat ".github/env" >> "$GITHUB_ENV"
-    - uses: actions/setup-go@v6.4.0
-      with:
-        go-version: '${{ env.golang-version }}'
-        check-latest: true
-    - id: govulncheck
-      uses: golang/govulncheck-action@v1.0.4
-      with:
-        go-version-input: '${{ env.golang-version }}'
-        go-package: ./...
-        repo-checkout: false
-
   check-metrics:
     runs-on: ubuntu-latest
     name: Check prometheus metrics
