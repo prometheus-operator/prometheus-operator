@@ -34,6 +34,30 @@ func TestMap(t *testing.T) {
 	require.Equal(t, "foo=bar,foo2=bar2", m.String())
 
 	require.Equal(t, map[string]string{"foo": "bar", "foo2": "bar2", "foo3": "bar3"}, m.Merge(map[string]string{"foo": "xxx", "foo3": "bar3"}))
+
+	require.NoError(t, m.Set("k=v=with=equals"))
+	require.Equal(t, "v=with=equals", m["k"])
+}
+
+func TestMapSetInvalid(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value string
+	}{
+		{
+			name:  "missing value",
+			value: "key",
+		},
+		{
+			name:  "one valid one invalid",
+			value: "good=value,bad",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var m Map
+			require.Error(t, m.Set(tc.value))
+		})
+	}
 }
 
 func TestFieldSelector(t *testing.T) {
