@@ -200,4 +200,130 @@ spec:
       team: frontend
 ```
 
+## Deployment Modes
+
+PrometheusAgent supports two deployment modes that determine how the Prometheus Agent pods are deployed and managed.
+
+### StatefulSet Mode (Default)
+
+This is the default deployment mode where PrometheusAgent is deployed as a StatefulSet. This mode is suitable for:
+
+- **Cluster-wide monitoring**: One or more high-availability Prometheus Agents scrape metrics from the entire cluster.
+- **Persistent storage requirements**: When you need persistent volumes for WAL (Write-Ahead Log) storage.
+- **Centralized management**: Easier to manage fewer agent instances with predictable scaling.
+
+### DaemonSet Mode (Alpha)
+
+In DaemonSet mode, PrometheusAgent is deployed as a DaemonSet, running one pod per node. This mode is ideal for:
+
+- **Node-local monitoring**: Each agent only scrapes metrics from targets on the same node.
+- **Automatic scalability**: Agents automatically scale with node additions/removals.
+- **Load distribution**: Load is naturally distributed across nodes.
+- **Resource efficiency**: Lower memory usage and no persistent storage requirements.
+
+DaemonSet mode works best with `PodMonitor` resources since each agent naturally discovers and scrapes pods running on the same node.
+
+### Comparison of Deployment Modes
+
+| Feature               | StatefulSet Mode            | DaemonSet Mode            |
+|-----------------------|-----------------------------|---------------------------|
+| **Scaling**           | Manual shard management     | Automatic with node count |
+| **Scraping scope**    | Cluster-wide scraping       | Node-local scraping       |
+| **Storage**           | Supports persistent storage | Ephemeral storage only    |
+| **Target Discovery**  | ServiceMonitor & PodMonitor | PodMonitor recommended    |
+| **Resource Usage**    | Higher memory usage         | Lower memory per pod      |
+| **High Availability** | Multi-replica support       | One pod per node          |
+| **Use Case**          | Centralized monitoring      | Distributed monitoring    |
+
+## Enabling DaemonSet Mode
+
+To use DaemonSet mode, you need to:
+
+1. **Enable the feature gate** on the Prometheus Operator:
+
+   ```bash
+   --feature-gates=PrometheusAgentDaemonSet=true
+   ```
+
+2. **Ensure DaemonSet RBAC permissions** are granted to the operator. The operator needs permissions to manage DaemonSet resources:
+
+   ```yaml
+   - apiGroups:
+     - apps
+     resources:
+     - daemonsets
+     verbs:
+     - '*'
+   ```
+
+3. **Set the mode field** in your PrometheusAgent spec:
+
+   ```yaml
+   apiVersion: monitoring.coreos.com/v1alpha1
+   kind: PrometheusAgent
+   metadata:
+     name: prometheus-agent-daemonset
+   spec:
+     mode: DaemonSet
+     serviceAccountName: prometheus-agent
+     serviceMonitorSelector:
+       matchLabels:
+         team: frontend
+   ```
+
+## Field Restrictions in DaemonSet Mode
+
+When using DaemonSet mode, the following fields are **not allowed** and will be rejected by CEL validation:
+
+- `replicas`
+- `storage`
+- `shards` (cannot be greater than 1)
+- `persistentVolumeClaimRetentionPolicy`
+- `scrapeConfigSelector`
+- `scrapeConfigNamespaceSelector`
+- `probeSelector`
+- `probeNamespaceSelector`
+- `serviceMonitorSelector`
+- `serviceMonitorNamespaceSelector`
+- `additionalScrapeConfigs`
+
+## Target Discovery in DaemonSet Mode
+
+### PrometheusAgent Configuration
+
+Here's a minimal PrometheusAgent configuration for DaemonSet mode:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: PrometheusAgent
+metadata:
+  name: prometheus-agent-daemonset
+spec:
+  mode: DaemonSet
+  serviceAccountName: prometheus-agent
+  podMonitorSelector:
+    matchLabels:
+      team: backend
+  podMonitorNamespaceSelector:
+    matchLabels:
+      monitoring: enabled
+```
+
+### PodMonitor
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: app-podmonitor
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: my-application
+  podMetricsEndpoints:
+  - port: metrics
+    path: /metrics
+```
+
 Continue with the [Getting Started page]({{<ref "docs/developer/getting-started.md">}}) to learn how to monitor applications running on Kubernetes.
