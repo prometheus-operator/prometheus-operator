@@ -13,57 +13,54 @@
   * [Prometheus HTTPS & authentication guide](https://prometheus.io/docs/prometheus/latest/configuration/https/)
   * [exporter-toolkit web/handler.go](https://github.com/prometheus/exporter-toolkit/blob/master/web/handler.go) — implements `basic_auth_users` + auth cache
 
-> TL;DR: Expose Prometheus's existing `basic_auth_users` web-config setting through the `Prometheus`, `Alertmanager` and `ThanosRuler` CRDs by adding a `basicAuthUsers []BasicAuth` field to the existing `WebConfigFileFields` struct. Handle the downstream effects on liveness/readiness probes, prometheus-config-reloader, and the Thanos sidecar by minting an operator-managed internal user that all in-pod callers use.
+> TL;DR: Expose Prometheus's existing `basic_auth_users` web-config setting through the `Prometheus`, `Alertmanager` and `ThanosRuler` CRDs by adding two new fields to the existing `WebConfigFileFields` struct: an optional `basicAuthUsers []BasicAuth` list for external users, and a required (when basic auth is in use) `internalUser` field that the resource owner populates from a Secret. The internal user authenticates the in-pod callers — liveness/readiness probes, `prometheus-config-reloader`, and the Thanos sidecar — that would otherwise break under basic auth.
 
 ## Why
 
 Prometheus, Alertmanager and ThanosRuler all support HTTP basic authentication on their web servers via the `--web.config.file` flag. The operator already builds a web-config Secret for TLS settings but does not emit a `basic_auth_users:` section, so users who want to protect the web UI/API of these workloads have no operator-managed path.
 
-Today's workarounds are unsatisfying:
+Today's workarounds:
 
-* Mutual TLS — heavyweight, requires per-client cert management.
-* Ingress-level auth (typically ingress-nginx) — the most common workaround in the field, but it has two structural problems detailed below.
-* `spec.secrets` + `additionalArgs: --web.config.file=…` — rejected by the operator because `web.config.file` is a managed argument.
+* Mutual TLS — already supported via `WebTLSConfig`, but heavyweight, requires per-client cert management.
+* HTTP reverse-proxy sidecar with `spec.listenLocal: true` — running an authenticating proxy in the same Pod and exposing only it. Reported as a working approach by Hades32 in [#4652](https://github.com/prometheus-operator/prometheus-operator/pull/4652#issuecomment-1116810050). Adds an extra container per Pod to run and maintain.
+* Ingress-level auth (typically ingress-nginx) — basic auth terminated at the cluster edge.
 
-### Ingress-level auth is no longer a defensible answer
+We do not have data on the relative popularity of these patterns.
 
-The most popular existing workaround — and the one frequently recommended in [#4200](https://github.com/prometheus-operator/prometheus-operator/issues/4200)'s discussion — is to put ingress-nginx in front of Prometheus and configure basic auth at the ingress layer. As of 2026 this position is significantly weaker than it was when the issue was filed in 2021, for two independent reasons.
+### Proxy-based workarounds share a structural limitation
 
-**1. It only protects the perimeter, not the workload.** The Prometheus Pod itself remains unauthenticated. Anything with network reach to the ClusterIP — another workload, a compromised sidecar, a pod running with `hostNetwork`, a lateral attacker who has obtained any in-cluster credential — can read every metric, query the API, and (for Alertmanager) silence or fire alerts at will. The ingress is a thin shell around an open service. Native basic auth on the workload provides defense-in-depth: even an attacker who has bypassed the perimeter must still authenticate to reach the data plane.
+The reverse-proxy sidecar pattern, ingress-level auth, and similar approaches all put an authenticating proxy in front of an unauthenticated Prometheus. They differ in operational shape — sidecar vs. cluster-wide ingress vs. external load balancer — but share a common limitation: the Prometheus workload itself remains unauthenticated. Anything with network reach to the Pod or its ClusterIP — another workload, a compromised sidecar, a Pod with `hostNetwork`, a lateral attacker who has obtained any in-cluster credential — can read every metric, query the API, and (for Alertmanager) silence or fire alerts. Authenticating only at the perimeter leaves the data plane open.
 
-**2. ingress-nginx is being retired.** SIG Network and the Kubernetes Security Response Committee [announced the retirement of Ingress NGINX on 2025-11-11](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/), with the project to be retired in **March 2026**. From the announcement:
+Native basic auth on the workload is complementary to perimeter authentication, not redundant: an attacker who has bypassed the perimeter still has to present valid credentials to reach Prometheus's API.
 
-> "In March 2026, Ingress NGINX maintenance will be halted, and the project will be retired. […] After that time, there will be no further releases, no bugfixes, and no updates to resolve any security vulnerabilities that may be discovered."
+One specific data point worth noting: ingress-nginx, which is widely used as the perimeter-auth component in this pattern, is itself being [retired in March 2026](https://kubernetes.io/blog/2025/11/11/ingress-nginx-retirement/), so users relying on it will need a different solution regardless.
 
-A follow-up [statement from the Steering and Security Response Committees on 2026-01-29](https://kubernetes.io/blog/2026/01/29/ingress-nginx-statement/) reiterates:
+Basic auth is not, on its own, a complete security solution. Operators are encouraged to use layered defenses: NetworkPolicies to narrow which Pods can reach the Prometheus service, TLS (already supported via `WebTLSConfig`) to protect credentials in flight, and so on. This proposal makes basic auth one of those layers, not the only one.
 
-> "Choosing to remain with Ingress NGINX after its retirement leaves you and your users vulnerable to attack. Existing deployments will continue to work, so unless you proactively check, you may not know you are affected until you are compromised."
+### Pitfalls of the current solutions
 
-The committees recommend that all Ingress NGINX users begin migration immediately. There is no drop-in replacement; users are pointed at Gateway API or third-party controllers. For users whose only reason to run an ingress in front of Prometheus is "to get basic auth," telling them to migrate to Gateway API just to keep that workaround is a poor answer — particularly when the Prometheus binary itself has supported `basic_auth_users` for years and the operator only needs to expose it.
+Two community PRs (#4652 in 2022, #4942 in 2022) tried to add native basic-auth support to the operator and were closed unfinished. Both reached the same wall, not on the API design but on the second-order effects: once basic auth is on, the kubelet probes start failing, the `prometheus-config-reloader` cannot POST to `/-/reload`, and the Thanos sidecar cannot query `/api/v1/status/buildinfo`. Neither PR shipped a complete answer for those.
 
-This proposal does not deprecate ingress-level auth as a deployment pattern (organizations have many reasons to run an ingress), but it removes the situation where ingress-nginx is the only practical way to put a password on Prometheus.
+A separate workaround — supplying a hand-rolled web-config Secret via `spec.secrets` and `additionalArgs: --web.config.file=…` — is rejected by the operator because `web.config.file` is a managed argument. Users sometimes try this and are surprised when it fails.
 
-### Pitfalls of the current solution
-
-Two community PRs (#4652 in 2022, #4942 in 2022) tried to implement this and were closed unfinished. Both reached the same wall, not on the API design but on the second-order effects: once basic auth is on, the kubelet probes start failing, the `prometheus-config-reloader` cannot POST to `/-/reload`, and the Thanos sidecar cannot query `/api/v1/status/buildinfo`. Neither PR shipped a complete answer for those.
-
-This proposal addresses the operator-owned callers head-on so that turning on `basic_auth_users` does not break any operator-managed plumbing.
+This proposal addresses the operator-owned callers head-on so that turning on basic auth does not break any operator-managed plumbing, and avoids the managed-argument trap by giving users a first-class field.
 
 ## Goals
 
-* Add a `basicAuthUsers []BasicAuth` field to `WebConfigFileFields`, applicable to `Prometheus`, `Alertmanager` and `ThanosRuler`.
-* Reuse the existing `BasicAuth` type (Secret-backed; no plaintext in the CR).
+* Add `basicAuthUsers []BasicAuth` and `internalUser` fields to `WebConfigFileFields`, applicable to `Prometheus`, `Alertmanager` and `ThanosRuler`.
+* Reuse the existing `SecretKeySelector` pattern for credential references (no plaintext in the CR).
 * Keep all operator-internal callers (probes, config reloader, Thanos sidecar) functional when basic auth is enabled, transparently to the user.
-* Provide a documented, stable name for the operator-managed user's Secret so downstream charts (kube-prometheus, kube-prometheus-stack) can reference it.
+* Do not require the operator to generate or persist any credential material itself; credentials come from user-supplied Secrets only.
 
 ## Non-Goals
 
 * Updates to kube-prometheus's self-scrape ServiceMonitor — separate repo, follow-up PR.
 * Updates to the kube-prometheus-stack helm chart's `values.yaml` plumbing — separate repo, follow-up PR.
 * Grafana datasource credential plumbing — out of scope; helm-chart concern.
-* Inline plaintext credentials in the CR — explicitly not supported.
-* Removing the existing `spec.secrets` + `additionalArgs` workaround — kept as-is to avoid breaking existing users; the new field is the documented path.
-* Operator-side bcrypt hashing of plaintext passwords — see [Alternatives](#alternatives).
+* Inline plaintext credentials in the CR — explicitly not supported. All credentials live in Kubernetes Secrets and are referenced via `SecretKeySelector`.
+* Operator-generated credentials — the operator never creates usernames or passwords; the resource owner supplies them.
+* Operator-side bcrypt hashing of *external* user passwords — `basicAuthUsers` entries always supply bcrypt directly. The operator does bcrypt the internal user's plaintext when no `passwordBcrypt` is supplied, but the result is cached so reconciles where the plaintext is unchanged do not re-bcrypt.
+* Removing the existing `spec.secrets` + `additionalArgs` workaround — the managed-argument guard continues to reject it; the new fields are the documented path.
 * Waiting for [exporter-toolkit#151](https://github.com/prometheus/exporter-toolkit/pull/151) (path exclusion). Useful when it lands but we are not blocking on it.
 
 ## Audience
@@ -75,7 +72,7 @@ This proposal addresses the operator-owned callers head-on so that turning on `b
 
 ### API change
 
-Add one field to the existing `WebConfigFileFields`:
+Add two fields to the existing `WebConfigFileFields`:
 
 ```go
 // pkg/apis/monitoring/v1/types.go
@@ -84,23 +81,63 @@ type WebConfigFileFields struct {
 	TLSConfig  *WebTLSConfig  `json:"tlsConfig,omitempty"`
 	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
 
-	// basicAuthUsers configures HTTP basic-auth users for the web server.
-	//
-	// The Password Secret value MUST be a bcrypt hash (the format
+	// basicAuthUsers configures additional HTTP basic-auth users for the web
+	// server, intended for external callers (humans, Grafana, other scrape
+	// clients). The Password Secret value MUST be a bcrypt hash (the format
 	// exporter-toolkit requires). Supported prefixes are $2a$, $2b$, $2y$.
-	// Plaintext passwords are not accepted; the operator will not hash them.
+	// Plaintext passwords are not accepted; the operator will not hash these.
 	//
 	// Username and password references may point at different keys in the
-	// same Secret. Usernames must be unique across entries.
+	// same Secret. Usernames must be unique across entries and must not
+	// collide with internalUser.
+	//
+	// basicAuthUsers may only be set when internalUser is also set. Setting
+	// basicAuthUsers without internalUser is a reconcile error, because the
+	// in-pod callers (probes, config-reloader, Thanos sidecar) would have
+	// nothing to authenticate with.
 	// +optional
 	BasicAuthUsers []BasicAuth `json:"basicAuthUsers,omitempty"`
+
+	// internalUser configures the basic-auth credential used by the in-pod
+	// callers (kubelet probes, prometheus-config-reloader, Thanos sidecar)
+	// to authenticate back to the workload's web server. When set, basic
+	// auth is enabled on the web server.
+	//
+	// The user is also added to the rendered web-config, so external clients
+	// can authenticate as this user too if they know the plaintext.
+	// +optional
+	InternalUser *WebInternalUser `json:"internalUser,omitempty"`
+}
+
+// WebInternalUser configures the in-pod-caller basic-auth credential.
+type WebInternalUser struct {
+	// username is a reference to a Secret key whose value is the username
+	// for the internal user.
+	Username v1.SecretKeySelector `json:"username"`
+
+	// password is a reference to a Secret key whose value is the plaintext
+	// password for the internal user. The plaintext is mounted into the
+	// in-pod callers' containers and used to authenticate to the web server.
+	Password v1.SecretKeySelector `json:"password"`
+
+	// passwordBcrypt is an optional reference to a Secret key whose value is
+	// a bcrypt hash of password. When set, the operator passes the value
+	// through verbatim into the web-config after verifying that it matches
+	// the supplied plaintext. On verification mismatch, the operator falls
+	// back to computing bcrypt from password and emits a Warning event.
+	//
+	// When not set, the operator computes bcrypt of password at reconcile
+	// time and caches the result keyed on a hash of the plaintext. The
+	// operator re-bcrypts only when the plaintext changes.
+	// +optional
+	PasswordBcrypt *v1.SecretKeySelector `json:"passwordBcrypt,omitempty"`
 }
 ```
 
-`BasicAuth` already exists and uses `SecretKeySelector` for both fields, which keeps every credential out of the CR object itself. This satisfies both delivery paths users have asked for:
+`SecretKeySelector` is the established pattern for credential references in the operator's existing auth fields (`ServiceMonitor.basicAuth`, `RemoteWriteSpec.basicAuth`, etc.). Keeping it here means all credentials live in Kubernetes Secrets — never in the CR — and both delivery paths users have asked for compose naturally:
 
-* Helm-values path (e.g. kube-prometheus-stack): the chart renders a `Secret` from `values.yaml` and the CR references it.
-* External secret path (e.g. External Secrets Operator): the user/system creates the `Secret` directly and the CR references it.
+* Helm-values path (e.g. kube-prometheus-stack): the chart renders one or more Secrets from `values.yaml` content and the CR references them.
+* External secret path (e.g. External Secrets Operator): the user/system creates the Secret(s) directly and the CR references them.
 
 The operator does not need to know which path produced the Secret.
 
@@ -110,42 +147,58 @@ The operator does not need to know which path produced the Secret.
 
 ```yaml
 basic_auth_users:
-  <username>: <bcrypt-hash>
-  <username2>: <bcrypt-hash2>
+  <internal-username>: <bcrypt-hash>
+  <external-username-1>: <bcrypt-hash>
+  <external-username-2>: <bcrypt-hash>
 ```
 
-Duplicate usernames are rejected at config-generation time (Prometheus accepts the YAML map but silently overrides).
+The internal user's entry (when `internalUser` is set) is always present. External entries come from `basicAuthUsers`. Username collisions — either duplicates within `basicAuthUsers` or any `basicAuthUsers` entry whose username equals `internalUser.username` — are rejected at reconcile time with a clear error event (Prometheus would accept the YAML map but silently override).
 
-### Operator-managed internal user
+### Modes of operation
 
-When `basicAuthUsers` is non-empty, the operator reconciles one additional Secret per workload CR. The name is a stable, documented contract:
+| Inputs                                          | Result                                                                                                                                                                             |
+|-------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Neither `internalUser` nor `basicAuthUsers` set | No basic auth. All components run unauthenticated, identical to today.                                                                                                             |
+| `internalUser` only                             | Single-user mode. The internal user is the sole entry in the web-config. External clients can authenticate as that user; in-pod callers use that user's plaintext to authenticate. |
+| `internalUser` + `basicAuthUsers`               | Multi-user mode. The web-config contains all entries. External clients can authenticate as any of them; in-pod callers use *only* `internalUser`.                                  |
+| `basicAuthUsers` only, no `internalUser`        | Reconcile error. Probes, reloader, and Thanos sidecar would have nothing to authenticate with.                                                                                     |
 
+### Internal user
+
+The internal user is the credential the in-pod callers (kubelet probes, `prometheus-config-reloader`, Thanos sidecar) use to authenticate back to the workload's web server. It is also a regular entry in the web-config — any caller that knows its plaintext can authenticate as it.
+
+The resource owner supplies the internal user via three Secret key references:
+
+```yaml
+spec:
+  web:
+    internalUser:
+      username:       { name: my-secret, key: user }       # required
+      password:       { name: my-secret, key: plaintext }  # required, plaintext
+      passwordBcrypt: { name: my-secret, key: bcrypt }     # optional
 ```
-<PrefixedName>-web-auth
-```
 
-`<PrefixedName>` is the existing operator convention (`prometheus-<name>` for `Prometheus`, `alertmanager-<name>` for `Alertmanager`, `thanos-ruler-<name>` for `ThanosRuler`). The name is committed-to as part of this proposal so downstream consumers (kube-prometheus, kube-prometheus-stack) can rely on it.
+`username` is the username for the internal user. `password` is the plaintext form; the operator mounts it into the in-pod callers' containers via a Secret volume so they can send it in `Authorization: Basic` headers. `passwordBcrypt`, if set, is a bcrypt hash of the plaintext.
 
-The Secret contains three keys:
+**Default behavior** (when `passwordBcrypt` is not set): the operator computes bcrypt of the plaintext at reconcile time and renders it into the web-config. The result is cached in process memory, keyed on a hash of the plaintext, so reconciles where the plaintext is unchanged reuse the cached bcrypt and produce byte-identical web-config Secrets. The operator re-bcrypts only on plaintext rotation. The cache is rebuilt on operator restart (one bcrypt operation per workload after restart, then steady state).
 
-* `username` — a fixed value (e.g. `prometheus-operator`), so the in-pod callers can read a single key without coordination
-* `password` — a generated random plaintext, used by in-pod callers (probes, reloader, sidecar)
-* `password-bcrypt` — the bcrypt of `password`, used in the rendered web-config
+**Pass-through behavior** (when `passwordBcrypt` is set): the operator verifies that the supplied bcrypt matches the plaintext using `bcrypt.CompareHashAndPassword`, cached on first verification. On match, the user-supplied bcrypt is written verbatim into the web-config; the operator performs no further cryptographic operations on this credential. On mismatch, the operator emits a Warning event on the CR ("`internalUser.passwordBcrypt` does not match `internalUser.password`; falling back to operator-derived bcrypt") and logs the same message, then falls back to default behavior — bcrypts the plaintext and uses that. The system stays functional throughout; a mismatched bcrypt is loud but non-fatal.
 
-The Secret is owned by the workload CR (ownerReference) so it GCs on deletion. Its bcrypt-form is appended to the rendered `basic_auth_users:` map alongside the user-supplied entries. The password is regenerated only when the Secret is missing, not on every reconcile.
+The pass-through behavior lets organizations that want to minimize operator-side cryptography opt out, while keeping the default ergonomic. The fallback on mismatch is a deliberate choice: a stale or wrong bcrypt in a user-managed Secret should not bring down probes or block reloads.
 
 ### Liveness/readiness/startup probes
 
-When basic auth is on, the operator switches from `HTTPGetAction` probes to `ExecAction` probes built by `pkg/operator/prober.go`. The existing helper already shells out to `curl` (or `wget` as fallback); we extend it to add basic-auth arguments and inject `$U` / `$P` env vars from the operator-managed Secret via `valueFrom.secretKeyRef`. The plaintext password never appears in the pod spec or argv.
+When basic auth is on, the operator switches from `HTTPGetAction` probes to `ExecAction` probes built by `pkg/operator/prober.go`. The existing helper already shells out to `curl` (or `wget` as fallback); we extend it to add basic-auth arguments. The username and password are read from a file at probe-execution time (not from an environment variable), so that rotation of the `internalUser` Secret propagates to running pods without a restart — kubelet refreshes mounted Secret contents on its sync interval, and the probe reads on each invocation. The plaintext password never appears in the pod spec or argv.
 
 ```sh
 # generated probe command (conceptual)
-sh -c 'if [ -x "$(command -v curl)" ]; then exec curl --fail -u "$U:$P" http://…/-/ready; \
+sh -c 'U=$(cat /etc/prometheus/internal-auth/username); P=$(cat /etc/prometheus/internal-auth/password); \
+       if [ -x "$(command -v curl)" ]; then exec curl --fail -u "$U:$P" http://…/-/ready; \
        elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null --user="$U" --password="$P" http://…/-/ready; \
        else exit 1; fi'
 ```
 
-This works on every supported Prometheus / Alertmanager / ThanosRuler version regardless of whether [exporter-toolkit#151](https://github.com/prometheus/exporter-toolkit/pull/151) has merged. If/when that lands, we can simplify to path-excluded `HTTPGetAction` probes in a follow-up — the operator-managed user is still useful for the reloader and sidecar.
+This works on every supported Prometheus / Alertmanager / ThanosRuler version regardless of whether [exporter-toolkit#151](https://github.com/prometheus/exporter-toolkit/pull/151) has merged. If/when that lands, we can simplify to path-excluded `HTTPGetAction` probes in a follow-up — the internal user is still useful for the reloader and sidecar.
 
 #### Interaction with the strategic-merge-patch probe workaround
 
@@ -153,20 +206,22 @@ This works on every supported Prometheus / Alertmanager / ThanosRuler version re
 
 This proposal does not deprecate that workaround. Interaction precedence:
 
-* If `basicAuthUsers` is set **and** the user has not supplied a probe override → operator emits an exec probe with credentials. The probe still calls `/-/ready`, so unlike the `tcpSocket` workaround it remains accurate about WAL replay and TSDB initialization. This is a strict improvement over the documented workaround.
-* If `basicAuthUsers` is set **and** the user has supplied a probe override via strategic merge patch → the user's override wins, per the existing merge-patch semantics. The operator's exec probe is replaced. Users opting out this way are responsible for handling auth themselves (e.g. by sticking with `tcpSocket`).
+* If `internalUser` is set **and** the user has not supplied a probe override → operator emits an exec probe with credentials. The probe still calls `/-/ready`, so unlike the `tcpSocket` workaround it remains accurate about WAL replay and TSDB initialization. This is a strict improvement over the documented workaround.
+* If `internalUser` is set **and** the user has supplied a probe override via strategic merge patch → the user's override wins, per the existing merge-patch semantics. The operator's exec probe is replaced. Users opting out this way are responsible for handling auth themselves (e.g. by sticking with `tcpSocket`).
 * The note in `strategic-merge-patch.md` about exec-probes being needed "when prioritizing credential security over granular readiness checks" is no longer the only path — users who do nothing get a granular readiness check *and* credential security. The doc will be updated in PR #3 (not invalidated; cross-referenced).
 
 ### prometheus-config-reloader
 
 The reloader binary today has no outbound basic-auth support, so it cannot reach `/-/reload` or `/api/v1/status/runtimeinfo` once auth is on. We add two flags:
 
-```
+```text
 --reload-basic-auth-username=<value>
 --reload-basic-auth-password-file=<path>
 ```
 
-Both are read from a Secret-mounted env var or file so the password never lands in argv. When the operator detects basic auth on the workload, it adds the flags and a `secretKeyRef`-sourced env var to the reloader container, pointing at the operator-managed Secret.
+The password is read from a file path pointing at the mounted `internalUser` Secret volume; it never lands in argv or in `/proc/PID/environ`. The username is non-sensitive and is passed as a flag value. Both files are auto-refreshed by kubelet when the underlying Secret rotates, and the reloader re-reads them on each authenticated request, so rotation does not require a pod restart.
+
+When the operator detects `internalUser` is set on the workload, it adds the flags and mounts the Secret volume into the reloader container.
 
 This change also closes [#5836](https://github.com/prometheus-operator/prometheus-operator/issues/5836) for users running the reloader against a separately-protected Prometheus.
 
@@ -176,27 +231,35 @@ The sidecar communicates with Prometheus via the YAML file referenced by `--prom
 
 ```yaml
 basic_auth:
-  username: <operator-managed>
+  username: <internal-username>
   password_file: /etc/thanos/auth/password
 ```
 
-…and mount the operator-managed Secret at that path. The thanos-sidecar http-client format already supports this natively.
+…and mount the `internalUser` Secret at that path. The thanos-sidecar http-client format already supports this natively.
+
+**Thanos version gate.** The `--prometheus.http-client-file` flag is only supported in Thanos ≥ 0.24.0 (already tracked by the operator as `thanosSupportedVersionHTTPClientFlag`). When `internalUser` is set and the configured Thanos image is older than 0.24.0, the operator must fail reconcile with a clear error rather than silently produce a broken sidecar. The same applies if the user later downgrades the Thanos image while basic auth is enabled.
 
 ### bcrypt performance
 
-bcrypt is cited as a concern because it is intentionally slow (~50 ms per verify at the default cost of 10) and Prometheus's web handler serializes bcrypt comparisons through a global mutex. Two factors make this acceptable in practice:
+bcrypt is intentionally slow (~50 ms per verify at the default cost of 10) and Prometheus's web handler serializes bcrypt comparisons through a global mutex. There are two places it shows up in this design — once on the Prometheus side at authentication time, and once on the operator side when computing or verifying the internal user's bcrypt.
 
-1. **exporter-toolkit caches successful authentications.** See [`web/handler.go`](https://github.com/prometheus/exporter-toolkit/blob/master/web/handler.go) (`cache.go` LRU, size 100, key = `user + hash + plaintext`). After the first request per `(user, hash, password)` tuple, subsequent verifications are map lookups (~µs). The operator-managed callers use stable credentials, so they are cache hits for the life of the process.
+**Prometheus-side (at authentication).** exporter-toolkit caches successful authentications — see [`web/handler.go`](https://github.com/prometheus/exporter-toolkit/blob/master/web/handler.go) and `cache.go` (LRU, size 100, key = `user + hash + plaintext`). After the first request per `(user, hash, password)` tuple, subsequent verifications are map lookups (~µs). The in-pod callers (probes, reloader, sidecar) use stable credentials, so they are cache hits for the life of the process. The bounded cold-start window — distinct first-time authentications queueing on the global mutex — affects at most a handful of callers per pod restart, totaling well under a second.
 
-2. **The cold-start window is bounded.** Distinct first-time authentications immediately after a pod restart queue on the global mutex at ~50 ms each. With ten concurrent cold scrapers that is ~500 ms of slow auth, then steady state.
+**Operator-side (when generating bcrypt for the internal user).** In default mode the operator bcrypts the internal user's plaintext at reconcile time. The result is cached in-process keyed on a hash of the plaintext, so reconciles where the plaintext is unchanged reuse the cached value and produce byte-identical web-config Secrets — no Secret churn, no etcd writes, no kubelet syncs, no auth-cache invalidation on the Prometheus side. The operator pays one ~50 ms bcrypt per workload at startup and one per plaintext rotation thereafter. In pass-through mode the cost is one `bcrypt.CompareHashAndPassword` per workload at startup and per rotation, same order of magnitude.
 
-If cold-start latency turns out to be a real problem in production reports, the fallback (not pursued in v1) is to switch the operator-managed internal callers from basic auth to mTLS, reusing the existing `WebTLSConfig` infrastructure. External callers would continue to use basic auth. This approximately doubles the implementation surface and is deferred unless needed.
+If cold-start latency on the Prometheus side ever turns out to be a real problem in production reports, the fallback (not pursued in v1) is to switch the in-pod callers from basic auth to mTLS, reusing the existing `WebTLSConfig` infrastructure. External callers would continue to use basic auth. This approximately doubles the implementation surface and is deferred unless needed.
 
 ### Validation and error surfaces
 
-* The operator validates each referenced Secret/key exists at reconcile time using the existing `assets.StoreBuilder.AddBasicAuth` path.
-* Duplicate usernames in `basicAuthUsers` fail reconcile with a clear error rather than silently dropping entries.
-* Obviously malformed password values (no `$2[aby]$` prefix) produce a warning event so users do not waste hours debugging plaintext-in-Secret.
+* CEL on the CR enforces the structural rule that `basicAuthUsers` requires `internalUser`.
+* The operator validates that each referenced Secret/key exists at reconcile time using the existing `assets.StoreBuilder.AddBasicAuth` path.
+* Duplicate usernames within `basicAuthUsers`, or a collision between any `basicAuthUsers[].username` value and `internalUser.username`, fail reconcile with a clear error event rather than silently dropping entries.
+* `basicAuthUsers[].password` values that do not look like bcrypt (no `$2[aby]$` prefix) produce a Warning event — heuristic, surfacing the common plaintext-in-Secret mistake.
+* `internalUser.password` values that *do* look like bcrypt produce a Warning event — heuristic, surfacing the inverse mistake.
+* `internalUser.passwordBcrypt` mismatch with `internalUser.password` is handled at runtime (not validation): the operator emits a Warning event and falls back to default-mode bcrypting. See "Internal user" above.
+* When `internalUser` is set and the configured Thanos image is older than 0.24.0, reconcile fails with an explicit version-incompatibility error.
+
+CEL cannot inspect Secret values, so all content-based validations (bcrypt format heuristics, plaintext/bcrypt match, collision detection) happen at reconcile time as Warning events rather than at admission.
 
 ### Migration / compatibility
 
@@ -221,11 +284,7 @@ In addition to the per-component user-guide additions in the implementation PRs,
 
 ### Open questions
 
-1. **Opt-out of the operator-managed user.** Should users be able to disable it, e.g. when they want to manage probes/reloader auth themselves via exporter-toolkit path exclusion once that lands? Recommendation: no opt-out in v1; revisit if exporter-toolkit#151 merges.
-
-2. **Validation surface.** Recent CRD work (v0.91.0, [#8480](https://github.com/prometheus-operator/prometheus-operator/pull/8480)) has moved toward CEL/admission-time enforcement of structural rules (e.g. mutual exclusion in `ScrapeConfig`). Should obviously-malformed bcrypt values fail admission (CEL on the Secret value at resolve time) rather than emitting a runtime warning event? Recommendation: runtime warning event for v1 (the Secret value is not visible to admission), but open to maintainer preference.
-
-3. **Status condition / metric for "basic auth active".** Cheap to add; useful for users debugging "why is my scrape 401'ing". Defer to maintainer preference.
+1. **Path-exclusion follow-up.** If [exporter-toolkit#151](https://github.com/prometheus/exporter-toolkit/pull/151) merges and exposes `/-/healthy`/`/-/ready` without auth, do we want to make the probe-via-exec behavior optional and revert to `HTTPGetAction` probes by default? The internal user would still be needed for the reloader and Thanos sidecar regardless. Recommendation: revisit when that PR lands; no opt-out machinery in v1.
 
 ## Alternatives
 
@@ -233,13 +292,25 @@ In addition to the per-component user-guide additions in the implementation PRs,
 
 2. **Mutual TLS only.** Already supported via `WebTLSConfig`. Heavyweight for the common "I just want a password on the UI" use case. Not a replacement for basic auth.
 
-3. **Ingress-level auth.** Only protects perimeter traffic, leaving the in-cluster ClusterIP unauthenticated; and the most-used implementation (ingress-nginx) is being retired in March 2026 with no further security patches. See "Ingress-level auth is no longer a defensible answer" above.
+3. **Ingress-level auth, reverse-proxy sidecar, and similar proxy-based patterns.** All share the structural limitation that the Prometheus workload itself remains unauthenticated. See "Proxy-based workarounds share a structural limitation" above.
 
-4. **Operator-side bcrypt of plaintext.** Lets users supply plaintext in a Secret and have the operator hash it. Rejected because:
-   * Every reconcile would produce a fresh salt, causing a rolling restart on each reconcile, OR
-   * The operator would have to persist its own derived Secret and track whether the source changed — significantly more state machinery for marginal UX gain.
+4. **Operator-side bcrypt of every user's plaintext password.** Lets users supply plaintext for all entries in `basicAuthUsers` and have the operator hash them. Rejected for the general case because:
+   * Every reconcile would produce a fresh salt, causing churn unless caches are maintained per entry.
+   * The operator would have to persist its own derived state and track whether each source changed — significantly more state machinery for marginal UX gain.
+   * It exposes the operator to potential security issues that maintainers don't want to deal with.
 
-5. **Sidecar nginx / custom auth proxy.** What this proposal aims to make unnecessary. Mentioned only because it is what users do today.
+   Note: this proposal does perform operator-side bcrypt for the single `internalUser` credential in default mode (see "Internal user" above). The objections above are weaker when scoped to one credential with a cache keyed on the plaintext, and the pass-through mode lets organizations that want to avoid even this opt out.
+
+5. **Secret-as-user-list form for `basicAuthUsers`.** An alternative shape where the CR points at a Secret by name (e.g. `basicAuthUsersSecret: prom-users`) and the operator interprets every key in that Secret as a username and the corresponding value as that user's bcrypt hash. More ergonomic for organizations using GitOps with External Secrets Operator or similar tooling, where the user list naturally lives in one external store and is synced to a single Secret — with the per-entry form, the CR (or chart `values.yaml`) needs to keep a parallel list of key names in sync with the Secret's contents.
+
+   Rejected for v1 because:
+   * It diverges from the project pattern of `SecretKeySelector` for every credential reference. Adding a second pattern for one field increases API surface and maintenance burden.
+   * The same use case is addressable today via per-entry references plus chart templating, just less elegantly.
+   * There is no demand signal yet; choosing between possible conventions (one-key-per-user, htpasswd format, YAML list) is premature without observed usage.
+
+   The per-entry shape is forward-compatible with this addition: a `basicAuthUsersSecret` field can be added later as a mutually-exclusive alternative to `basicAuthUsers`, with the convention chosen based on observed usage.
+
+6. **Sidecar nginx / custom auth proxy.** What this proposal aims to make unnecessary. Mentioned only because it is what users do today.
 
 ## Action Plan
 
@@ -259,10 +330,10 @@ Implementation is split into four upstream PRs, opened sequentially from a singl
 
   <gh issue="5836">
 
-* [ ] **PR #3** — Prometheus end-to-end: add `WebConfigFileFields.BasicAuthUsers`; extend `pkg/webconfig` to emit `basic_auth_users:`; reconcile the operator-managed Secret per Prometheus CR; switch probes to exec; wire reloader env + flags; inject `basic_auth:` into the Thanos sidecar http-client file; user guide; e2e tests. Closes [#4200](https://github.com/prometheus-operator/prometheus-operator/issues/4200).
+* [ ] **PR #3** — Prometheus end-to-end: add `WebConfigFileFields.BasicAuthUsers` and `WebConfigFileFields.InternalUser`; extend `pkg/webconfig` to emit `basic_auth_users:` (with cached bcrypt for the internal user and pass-through-with-verify for user-supplied bcrypt); switch probes to exec reading credentials from a mounted Secret volume; add basic-auth flags to `prometheus-config-reloader` and wire them; inject `basic_auth:` into the Thanos sidecar http-client file with the version gate; CEL validation for the structural rules; user guide; e2e tests. Closes [#4200](https://github.com/prometheus-operator/prometheus-operator/issues/4200).
 
   <gh issue="4200">
 
-* [ ] **PR #4** — Alertmanager and ThanosRuler: wire the same field for the remaining two CRDs, with operator-managed Secrets, probes, and reloader for each. May be split into two PRs (AM, TR) if review scope demands.
+* [ ] **PR #4** — Alertmanager and ThanosRuler: wire the same fields for the remaining two CRDs, including probes, config reloader, and the corresponding sidecar/version gates where applicable. May be split into two PRs (AM, TR) if review scope demands.
 
   <gh issue="4200">
