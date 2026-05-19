@@ -41,7 +41,7 @@ A follow-up [statement from the Steering and Security Response Committees on 202
 
 The committees recommend that all Ingress NGINX users begin migration immediately. There is no drop-in replacement; users are pointed at Gateway API or third-party controllers. For users whose only reason to run an ingress in front of Prometheus is "to get basic auth," telling them to migrate to Gateway API just to keep that workaround is a poor answer — particularly when the Prometheus binary itself has supported `basic_auth_users` for years and the operator only needs to expose it.
 
-This proposal does not deprecate ingress-level auth as a deployment pattern (organisations have many reasons to run an ingress), but it removes the situation where ingress-nginx is the only practical way to put a password on Prometheus.
+This proposal does not deprecate ingress-level auth as a deployment pattern (organizations have many reasons to run an ingress), but it removes the situation where ingress-nginx is the only practical way to put a password on Prometheus.
 
 ### Pitfalls of the current solution
 
@@ -81,19 +81,19 @@ Add one field to the existing `WebConfigFileFields`:
 // pkg/apis/monitoring/v1/types.go
 
 type WebConfigFileFields struct {
-    TLSConfig   *WebTLSConfig  `json:"tlsConfig,omitempty"`
-    HTTPConfig  *WebHTTPConfig `json:"httpConfig,omitempty"`
+	TLSConfig  *WebTLSConfig  `json:"tlsConfig,omitempty"`
+	HTTPConfig *WebHTTPConfig `json:"httpConfig,omitempty"`
 
-    // basicAuthUsers configures HTTP basic-auth users for the web server.
-    //
-    // The Password Secret value MUST be a bcrypt hash (the format
-    // exporter-toolkit requires). Supported prefixes are $2a$, $2b$, $2y$.
-    // Plaintext passwords are not accepted; the operator will not hash them.
-    //
-    // Username and password references may point at different keys in the
-    // same Secret. Usernames must be unique across entries.
-    // +optional
-    BasicAuthUsers []BasicAuth `json:"basicAuthUsers,omitempty"`
+	// basicAuthUsers configures HTTP basic-auth users for the web server.
+	//
+	// The Password Secret value MUST be a bcrypt hash (the format
+	// exporter-toolkit requires). Supported prefixes are $2a$, $2b$, $2y$.
+	// Plaintext passwords are not accepted; the operator will not hash them.
+	//
+	// Username and password references may point at different keys in the
+	// same Secret. Usernames must be unique across entries.
+	// +optional
+	BasicAuthUsers []BasicAuth `json:"basicAuthUsers,omitempty"`
 }
 ```
 
@@ -208,7 +208,7 @@ If cold-start latency turns out to be a real problem in production reports, the 
 ### Testing and verification
 
 * Unit tests: `pkg/webconfig/config_test.go` (YAML output golden tests), reloader flag wiring, ExecAction generation.
-* e2e tests: boot a Prometheus / Alertmanager / ThanosRuler with `basicAuthUsers` set, verify probes pass, reloader can trigger a reload, scrape with correct creds returns 200, scrape without creds returns 401.
+* e2e tests: boot a Prometheus / Alertmanager / ThanosRuler with `basicAuthUsers` set, verify probes pass, reloader can trigger a reload, scrape with correct credentials returns 200, scrape without credentials returns 401.
 
 ### Documentation impact
 
