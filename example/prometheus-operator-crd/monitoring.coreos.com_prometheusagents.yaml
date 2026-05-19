@@ -5060,6 +5060,26 @@ spec:
 
                       It requires Prometheus >= v3.1.0.
                     type: boolean
+                  labelNamePreserveMultipleUnderscores:
+                    description: |-
+                      labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+                      underscore escaping.
+                      When true (default), multiple consecutive underscores are preserved during label name sanitization.
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
+                    type: boolean
+                  labelNameUnderscoreSanitization:
+                    description: |-
+                      labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+                      Reserved labels starting with '__' are not modified.
+                      This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
+                    type: boolean
                   promoteAllResourceAttributes:
                     description: |-
                       promoteAllResourceAttributes promotes all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.

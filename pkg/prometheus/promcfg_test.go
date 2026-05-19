@@ -10423,6 +10423,38 @@ func TestOTLPConfig(t *testing.T) {
 			},
 			golden: "OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
 		},
+		{
+			name:    "Config LabelNameUnderscoreSanitization with compatible version",
+			version: "v3.8.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNameUnderscoreSanitization: new(true),
+			},
+			golden: "OTLPConfig_Config_label_name_underscore_sanitization.golden",
+		},
+		{
+			name:    "Config LabelNameUnderscoreSanitization with old version",
+			version: "v3.7.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNameUnderscoreSanitization: new(true),
+			},
+			golden: "OTLPConfig_Config_label_name_underscore_sanitization_wrong_version.golden",
+		},
+		{
+			name:    "Config LabelNamePreserveMultipleUnderscores with compatible version",
+			version: "v3.8.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNamePreserveMultipleUnderscores: new(false),
+			},
+			golden: "OTLPConfig_Config_label_name_preserve_multiple_underscores.golden",
+		},
+		{
+			name:    "Config LabelNamePreserveMultipleUnderscores with old version",
+			version: "v3.7.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNamePreserveMultipleUnderscores: new(false),
+			},
+			golden: "OTLPConfig_Config_label_name_preserve_multiple_underscores_wrong_version.golden",
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -2711,6 +2711,26 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.6.0.
 	// +optional
 	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"` // nolint:kubeapilinter
+
+	// labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+	// Reserved labels starting with '__' are not modified.
+	// This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNameUnderscoreSanitization *bool `json:"labelNameUnderscoreSanitization,omitempty"` // nolint:kubeapilinter
+
+	// labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+	// underscore escaping.
+	// When true (default), multiple consecutive underscores are preserved during label name sanitization.
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNamePreserveMultipleUnderscores *bool `json:"labelNamePreserveMultipleUnderscores,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate semantically validates the given OTLPConfig section.
