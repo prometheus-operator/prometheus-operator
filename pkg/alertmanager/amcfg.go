@@ -1901,7 +1901,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
-			TokenURL:       in.OAuth2.TokenURL,
+			TokenURL:       string(in.OAuth2.TokenURL),
 			EndpointParams: in.OAuth2.EndpointParams,
 			proxyConfig:    proxyConfig,
 		}
