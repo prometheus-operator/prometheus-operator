@@ -1515,7 +1515,7 @@ func TestAddOAuth2(t *testing.T) {
 						Key:                  "client_id",
 					},
 				},
-				ClientSecret: corev1.SecretKeySelector{
+				ClientSecret: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{Name: "oauth2-secret"},
 					Key:                  "client_secret",
 				},
@@ -1546,7 +1546,7 @@ func TestAddOAuth2(t *testing.T) {
 						Key:                  "client_id",
 					},
 				},
-				ClientSecret: corev1.SecretKeySelector{
+				ClientSecret: &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{Name: "nonexistent-secret"},
 					Key:                  "client_secret",
 				},

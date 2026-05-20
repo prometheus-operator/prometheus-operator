@@ -5818,7 +5818,7 @@ spec:
                           x-kubernetes-map-type: atomic
                         clientCertificateKeyId:
                           description: |-
-                            clientCertificateKeyId defines the JWT kid header value to include
+                            clientCertificateKeyId defines the JWT key identifier to include
                             in the JWT token header.
                             Only used when grantType is set to "JWTBearer".
 
@@ -5926,9 +5926,9 @@ spec:
                           - JWTBearer
                           minLength: 1
                           type: string
-                        iss:
+                        issuer:
                           description: |-
-                            iss defines the issuer claim for JWT tokens.
+                            issuer defines the issuer claim for JWT tokens.
                             Only used when grantType is set to "JWTBearer".
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
@@ -6177,7 +6177,6 @@ spec:
                           description: tokenUrl defines the URL to fetch the token
                             from.
                           minLength: 1
-                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId

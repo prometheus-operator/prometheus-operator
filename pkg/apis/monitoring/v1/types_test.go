@@ -486,7 +486,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "SafeTLSConfig nil",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				TLSConfig:    nil,
 			},
@@ -496,7 +496,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "SafeTLSConfig not nil",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				TLSConfig: &SafeTLSConfig{
 					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
@@ -521,7 +521,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "default grantType with clientSecret",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 			},
 			err: false,
@@ -538,7 +538,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "client_credentials with clientSecret",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				GrantType:    new(GrantTypeClientCredentials),
 			},
@@ -557,12 +557,12 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "client_credentials with jwt fields passes go validation (CEL enforces at API level)",
 			config: &OAuth2{
 				ClientID:               SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret:           v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				ClientSecret:           &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:               "http://tokenurl.org",
 				GrantType:              new(GrantTypeClientCredentials),
 				ClientCertificateKeyID: "my-key-id",
 				SignatureAlgorithm:     new(SignatureAlgorithmRS256),
-				Iss:                    "my-issuer",
+				Issuer:                 "my-issuer",
 				Audience:               "my-audience",
 				Claims:                 map[string]string{"sub": "user"},
 			},
@@ -596,7 +596,7 @@ func TestValidateOAuth2(t *testing.T) {
 				ClientCertificateKey:   &v1.SecretKeySelector{},
 				ClientCertificateKeyID: "my-key-id",
 				SignatureAlgorithm:     new(SignatureAlgorithmRS256),
-				Iss:                    "my-issuer",
+				Issuer:                 "my-issuer",
 				Audience:               "my-audience",
 				Claims:                 map[string]string{"sub": "user"},
 			},

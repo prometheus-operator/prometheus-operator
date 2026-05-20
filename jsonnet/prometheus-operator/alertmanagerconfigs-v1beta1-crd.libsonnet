@@ -303,7 +303,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -398,8 +398,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -627,7 +627,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -1366,7 +1365,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -1461,8 +1460,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -1690,7 +1689,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -2149,7 +2147,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -2244,8 +2242,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -2473,7 +2471,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -2995,7 +2992,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -3090,8 +3087,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -3319,7 +3316,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -3858,7 +3854,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -3953,8 +3949,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -4182,7 +4178,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -4722,7 +4717,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -4817,8 +4812,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -5046,7 +5041,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -5628,7 +5622,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -5723,8 +5717,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -5952,7 +5946,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -6607,7 +6600,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -6702,8 +6695,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -6931,7 +6924,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -7432,7 +7424,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -7527,8 +7519,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -7756,7 +7748,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -8319,7 +8310,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -8414,8 +8405,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -8643,7 +8634,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -9139,7 +9129,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -9234,8 +9224,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -9463,7 +9453,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -9912,7 +9901,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -10007,8 +9996,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -10236,7 +10225,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -10669,7 +10657,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -10764,8 +10752,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -10993,7 +10981,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -11484,7 +11471,7 @@
                                     'x-kubernetes-map-type': 'atomic',
                                   },
                                   clientCertificateKeyId: {
-                                    description: 'clientCertificateKeyId defines the JWT kid header value to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                    description: 'clientCertificateKeyId defines the JWT key identifier to include\nin the JWT token header.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -11579,8 +11566,8 @@
                                     minLength: 1,
                                     type: 'string',
                                   },
-                                  iss: {
-                                    description: 'iss defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
+                                  issuer: {
+                                    description: 'issuer defines the issuer claim for JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     minLength: 1,
                                     type: 'string',
                                   },
@@ -11808,7 +11795,6 @@
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
                                     minLength: 1,
-                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },

@@ -45,7 +45,7 @@ type OAuth2ApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	ClientCertificateKey *corev1.SecretKeySelector `json:"clientCertificateKey,omitempty"`
-	// clientCertificateKeyId defines the JWT kid header value to include
+	// clientCertificateKeyId defines the JWT key identifier to include
 	// in the JWT token header.
 	// Only used when grantType is set to "JWTBearer".
 	//
@@ -57,11 +57,11 @@ type OAuth2ApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	SignatureAlgorithm *monitoringv1.SignatureAlgorithm `json:"signatureAlgorithm,omitempty"`
-	// iss defines the issuer claim for JWT tokens.
+	// issuer defines the issuer claim for JWT tokens.
 	// Only used when grantType is set to "JWTBearer".
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
-	Iss *string `json:"iss,omitempty"`
+	Issuer *string `json:"issuer,omitempty"`
 	// audience defines the intended audience of the JWT token request.
 	// If empty, the value of TokenURL is used as the intended audience.
 	// Only used when grantType is set to "JWTBearer".
@@ -142,11 +142,11 @@ func (b *OAuth2ApplyConfiguration) WithSignatureAlgorithm(value monitoringv1.Sig
 	return b
 }
 
-// WithIss sets the Iss field in the declarative configuration to the given value
+// WithIssuer sets the Issuer field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Iss field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithIss(value string) *OAuth2ApplyConfiguration {
-	b.Iss = &value
+// If called multiple times, the Issuer field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithIssuer(value string) *OAuth2ApplyConfiguration {
+	b.Issuer = &value
 	return b
 }
 

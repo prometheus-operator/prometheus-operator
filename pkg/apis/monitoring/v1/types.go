@@ -707,7 +707,7 @@ type OAuth2 struct {
 	// Only used when grantType is set to "ClientCredentials" or empty.
 	//
 	// +optional
-	ClientSecret v1.SecretKeySelector `json:"clientSecret,omitempty"`
+	ClientSecret *v1.SecretKeySelector `json:"clientSecret,omitempty"`
 
 	// clientCertificateKey defines a key of a Secret containing the RSA
 	// private key used to sign JWT tokens.
@@ -718,7 +718,7 @@ type OAuth2 struct {
 	// +optional
 	ClientCertificateKey *v1.SecretKeySelector `json:"clientCertificateKey,omitempty"`
 
-	// clientCertificateKeyId defines the JWT kid header value to include
+	// clientCertificateKeyId defines the JWT key identifier to include
 	// in the JWT token header.
 	// Only used when grantType is set to "JWTBearer".
 	//
@@ -737,14 +737,14 @@ type OAuth2 struct {
 	// +optional
 	SignatureAlgorithm *SignatureAlgorithm `json:"signatureAlgorithm,omitempty"`
 
-	// iss defines the issuer claim for JWT tokens.
+	// issuer defines the issuer claim for JWT tokens.
 	// Only used when grantType is set to "JWTBearer".
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	Iss string `json:"iss,omitempty"`
+	Issuer string `json:"issuer,omitempty"`
 
 	// audience defines the intended audience of the JWT token request.
 	// If empty, the value of TokenURL is used as the intended audience.
@@ -766,7 +766,6 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	TokenURL string `json:"tokenUrl"`
@@ -814,7 +813,7 @@ func (o *OAuth2) Validate() error {
 		grantType = *o.GrantType
 	}
 
-	if grantType == GrantTypeClientCredentials && o.ClientSecret == (v1.SecretKeySelector{}) {
+	if grantType == GrantTypeClientCredentials && o.ClientSecret == nil {
 		return errors.New("OAuth2 clientSecret must be specified for ClientCredentials grant type")
 	}
 

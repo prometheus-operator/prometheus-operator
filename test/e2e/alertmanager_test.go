@@ -1952,7 +1952,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 									Key: "test",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webhook-client-secret",
 								},

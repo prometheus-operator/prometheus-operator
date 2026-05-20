@@ -177,8 +177,8 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 
 	switch grantType {
 	case monitoringv1.GrantTypeClientCredentials:
-		if oauth2.ClientSecret != (corev1.SecretKeySelector{}) {
-			if _, err := s.GetSecretKey(ctx, ns, oauth2.ClientSecret); err != nil {
+		if oauth2.ClientSecret != nil {
+			if _, err := s.GetSecretKey(ctx, ns, *oauth2.ClientSecret); err != nil {
 				return fmt.Errorf("failed to get oauth2 client secret: %w", err)
 			}
 		}

@@ -2733,8 +2733,8 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 	cgOauth2Config := cg.WithMinimumVersion("3.9.0")
 	switch *grantType {
 	case monitoringv1.GrantTypeClientCredentials:
-		if oauth2.ClientSecret != (corev1.SecretKeySelector{}) {
-			clientSecret, err := store.GetSecretKey(oauth2.ClientSecret)
+		if oauth2.ClientSecret != nil {
+			clientSecret, err := store.GetSecretKey(*oauth2.ClientSecret)
 			if err != nil {
 				cg.logger.Error("invalid OAuth2 client secret reference", "err", err)
 				return cfg
@@ -2757,8 +2757,8 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		if oauth2.SignatureAlgorithm != nil {
 			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "signature_algorithm", string(*oauth2.SignatureAlgorithm))
 		}
-		if oauth2.Iss != "" {
-			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "iss", oauth2.Iss)
+		if oauth2.Issuer != "" {
+			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "iss", oauth2.Issuer)
 		}
 		if oauth2.Audience != "" {
 			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "audience", oauth2.Audience)

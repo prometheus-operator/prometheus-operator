@@ -1889,7 +1889,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			return nil, fmt.Errorf("failed to get clientID: %w", err)
 		}
 
-		clientSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, in.OAuth2.ClientSecret)
+		clientSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OAuth2.ClientSecret)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}

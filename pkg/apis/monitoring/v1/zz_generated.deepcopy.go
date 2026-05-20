@@ -2009,7 +2009,11 @@ func (in *OAuth2) DeepCopyInto(out *OAuth2) {
 		*out = new(OAuth2GrantType)
 		**out = **in
 	}
-	in.ClientSecret.DeepCopyInto(&out.ClientSecret)
+	if in.ClientSecret != nil {
+		in, out := &in.ClientSecret, &out.ClientSecret
+		*out = new(corev1.SecretKeySelector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ClientCertificateKey != nil {
 		in, out := &in.ClientCertificateKey, &out.ClientCertificateKey
 		*out = new(corev1.SecretKeySelector)
