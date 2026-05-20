@@ -682,7 +682,7 @@ const (
 // +kubebuilder:validation:XValidation:rule="!has(self.clientCertificateKey) || self.grantType == 'JWTBearer'",message="clientCertificateKey is only allowed when grantType is 'JWTBearer'"
 // +kubebuilder:validation:XValidation:rule="!has(self.clientCertificateKeyId) || self.grantType == 'JWTBearer'",message="clientCertificateKeyId is only allowed when grantType is 'JWTBearer'"
 // +kubebuilder:validation:XValidation:rule="!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",message="signatureAlgorithm is only allowed when grantType is 'JWTBearer'"
-// +kubebuilder:validation:XValidation:rule="!has(self.iss) || self.grantType == 'JWTBearer'",message="iss is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.issuer) || self.grantType == 'JWTBearer'",message="issuer is only allowed when grantType is 'JWTBearer'"
 // +kubebuilder:validation:XValidation:rule="!has(self.audience) || self.grantType == 'JWTBearer'",message="audience is only allowed when grantType is 'JWTBearer'"
 // +kubebuilder:validation:XValidation:rule="!has(self.claims) || self.grantType == 'JWTBearer'",message="claims is only allowed when grantType is 'JWTBearer'"
 // +k8s:openapi-gen=true

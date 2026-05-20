@@ -653,8 +653,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -1715,8 +1715,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -2497,8 +2497,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -3342,8 +3342,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -4204,8 +4204,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -5067,8 +5067,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -5972,8 +5972,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -6950,8 +6950,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -7774,8 +7774,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -8660,8 +8660,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -9479,8 +9479,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -10251,8 +10251,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -11007,8 +11007,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
@@ -11821,8 +11821,8 @@
                                     rule: "!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",
                                   },
                                   {
-                                    message: "iss is only allowed when grantType is 'JWTBearer'",
-                                    rule: "!has(self.iss) || self.grantType == 'JWTBearer'",
+                                    message: "issuer is only allowed when grantType is 'JWTBearer'",
+                                    rule: "!has(self.issuer) || self.grantType == 'JWTBearer'",
                                   },
                                   {
                                     message: "audience is only allowed when grantType is 'JWTBearer'",
