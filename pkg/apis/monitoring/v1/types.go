@@ -1080,7 +1080,7 @@ func (tc *TracingConfig) Validate() error {
 	if tc.SamplingFraction != nil {
 		v := tc.SamplingFraction.AsApproximateFloat64()
 		if v < 0 || v > 1 {
-			return fmt.Errorf("`samplingFraction` must be between 0 and 1. The current value is %s", tc.SamplingFraction.String())
+			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}
 
