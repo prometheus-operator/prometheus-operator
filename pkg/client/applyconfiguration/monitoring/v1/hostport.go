@@ -16,6 +16,10 @@
 
 package v1
 
+import (
+	intstr "k8s.io/apimachinery/pkg/util/intstr"
+)
+
 // HostPortApplyConfiguration represents a declarative configuration of the HostPort type for use
 // with apply.
 //
@@ -24,7 +28,7 @@ type HostPortApplyConfiguration struct {
 	// host defines the host's address, it can be a DNS name or a literal IP address.
 	Host *string `json:"host,omitempty"`
 	// port defines the host's port, it can be a literal port number or a port name.
-	Port *string `json:"port,omitempty"`
+	Port *intstr.IntOrString `json:"port,omitempty"`
 }
 
 // HostPortApplyConfiguration constructs a declarative configuration of the HostPort type for use with
@@ -44,7 +48,7 @@ func (b *HostPortApplyConfiguration) WithHost(value string) *HostPortApplyConfig
 // WithPort sets the Port field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Port field is set to the value of the last call.
-func (b *HostPortApplyConfiguration) WithPort(value string) *HostPortApplyConfiguration {
+func (b *HostPortApplyConfiguration) WithPort(value intstr.IntOrString) *HostPortApplyConfiguration {
 	b.Port = &value
 	return b
 }

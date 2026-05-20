@@ -602,8 +602,16 @@
                           "type": "string"
                         },
                         "port": {
+                          "anyOf": [
+                            {
+                              "type": "integer"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
                           "description": "port defines the name of the Service port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
-                          "type": "string"
+                          "x-kubernetes-int-or-string": true
                         },
                         "proxyConnectHeader": {
                           "additionalProperties": {

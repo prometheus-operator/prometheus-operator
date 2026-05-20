@@ -19,6 +19,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -793,9 +794,8 @@ type HostPort struct {
 	// +required
 	Host string `json:"host"`
 	// port defines the host's port, it can be a literal port number or a port name.
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	Port string `json:"port"`
+	Port intstr.IntOrString `json:"port"`
 }
 
 // AlertmanagerList is a list of Alertmanagers.

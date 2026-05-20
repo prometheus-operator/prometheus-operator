@@ -710,11 +710,14 @@ spec:
                         If empty, Prometheus uses the default value (e.g. `/metrics`).
                       type: string
                     port:
+                      anyOf:
+                      - type: integer
+                      - type: string
                       description: |-
                         port defines the name of the Service port which this endpoint refers to.
 
                         It takes precedence over `targetPort`.
-                      type: string
+                      x-kubernetes-int-or-string: true
                     proxyConnectHeader:
                       additionalProperties:
                         items:

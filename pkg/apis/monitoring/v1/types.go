@@ -551,7 +551,7 @@ type Endpoint struct {
 	//
 	// It takes precedence over `targetPort`.
 	// +optional
-	Port string `json:"port,omitempty"`
+	Port *intstr.IntOrString `json:"port,omitempty"`
 
 	// targetPort defines the name or number of the target port of the `Pod` object behind the
 	// Service. The port must be specified with the container's port property.

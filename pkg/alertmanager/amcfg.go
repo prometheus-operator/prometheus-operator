@@ -1788,7 +1788,7 @@ func (cb *ConfigBuilder) convertSMTPConfig(ctx context.Context, out *globalConfi
 
 	if in.SmartHost != nil {
 		out.SMTPSmarthost.Host = in.SmartHost.Host
-		out.SMTPSmarthost.Port = in.SmartHost.Port
+		out.SMTPSmarthost.Port = in.SmartHost.Port.String()
 	}
 
 	if in.TLSConfig != nil {
