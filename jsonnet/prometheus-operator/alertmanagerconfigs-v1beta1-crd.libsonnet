@@ -563,7 +563,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -1534,7 +1533,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -2225,7 +2223,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -2979,7 +2976,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -3750,7 +3746,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -4522,7 +4517,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -5336,7 +5330,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -6223,7 +6216,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -6956,7 +6948,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -7751,7 +7742,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -8479,7 +8469,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -9160,7 +9149,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -9825,7 +9813,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
@@ -10548,7 +10535,6 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
                                     pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },

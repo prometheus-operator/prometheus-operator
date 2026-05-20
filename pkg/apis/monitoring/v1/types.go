@@ -673,7 +673,6 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +required
 	TokenURL URL `json:"tokenUrl"`
 
