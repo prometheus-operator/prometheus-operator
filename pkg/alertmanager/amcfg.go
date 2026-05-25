@@ -2990,12 +2990,24 @@ func (tc *msTeamsConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
 	}
 
-	if tc.WebhookURL == "" {
-		return fmt.Errorf("mandatory field %q is empty", "webhook_url")
+	if tc.WebhookURLFile != "" && amVersion.LT(semver.MustParse("0.28.0")) {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.28.0 only - dropping field `webhook_url_file` from msteams config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		tc.WebhookURLFile = ""
 	}
 
-	if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
-		return fmt.Errorf("invalid 'webhook_url': %w", err)
+	if tc.WebhookURL == "" && tc.WebhookURLFile == "" {
+		return fmt.Errorf("mandatory field %q or %q is empty", "webhook_url", "webhook_url_file")
+	}
+
+	if tc.WebhookURL != "" && tc.WebhookURLFile != "" {
+		return fmt.Errorf("fields %q and %q are mutually exclusive", "webhook_url", "webhook_url_file")
+	}
+
+	if tc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(tc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
 	}
 
 	if tc.Summary != "" && amVersion.LT(semver.MustParse("0.27.0")) {
@@ -3142,6 +3154,18 @@ func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		msg := "'avatar_url' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		dc.AvatarURL = ""
+	}
+
+	if dc.WebhookURLFile != "" && lessThanV0_28 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.WebhookURLFile = ""
+	}
+
+	if dc.WebhookURL != "" && dc.WebhookURLFile != "" {
+		msg := "'webhook_url' and 'webhook_url_file' cannot both be specified"
+		logger.Error(msg)
+		return errors.New(msg)
 	}
 
 	return dc.HTTPConfig.sanitize(amVersion, logger)
