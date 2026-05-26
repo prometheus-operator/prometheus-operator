@@ -35,6 +35,7 @@ linters:
               - "statusoptional"
               - "nophase"
               - "nonullable"
+              - "notimestamp"
               - "forbiddenmarkers"
               - "nomaps"
             disable:
