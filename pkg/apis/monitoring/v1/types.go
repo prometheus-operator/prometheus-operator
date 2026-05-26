@@ -1187,10 +1187,8 @@ func (tc *TracingConfig) Validate() error {
 	}
 
 	if tc.SamplingFraction != nil {
-		min, _ := resource.ParseQuantity("0")
-		max, _ := resource.ParseQuantity("1")
-
-		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+		v := tc.SamplingFraction.AsApproximateFloat64()
+		if v < 0 || v > 1 {
 			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}

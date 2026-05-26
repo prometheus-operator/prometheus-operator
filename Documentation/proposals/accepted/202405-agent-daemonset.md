@@ -135,7 +135,7 @@ CEL validation will provide immediate feedback during `kubectl apply` but we wil
 
 This is mainly because :
 1. CEL validation will require Kubernetes version 1.25+ and hence not all users might have CEL supported clusters.
-2. This will provide an in-depth defense mechamnism against misconfigurations.
+2. This will provide an in-depth defense mechanism against misconfigurations.
 3. More detailed error response in case the first layer of defense fails.
 
 ```go
