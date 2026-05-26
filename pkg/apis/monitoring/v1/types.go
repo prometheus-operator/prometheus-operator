@@ -673,9 +673,8 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	TokenURL string `json:"tokenUrl"`
+	TokenURL URL `json:"tokenUrl"`
 
 	// scopes defines the OAuth2 scopes used for the token request.
 	//
@@ -707,7 +706,7 @@ func (o *OAuth2) Validate() error {
 		return nil
 	}
 
-	if o.TokenURL == "" {
+	if string(o.TokenURL) == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
 
