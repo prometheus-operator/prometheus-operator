@@ -1541,7 +1541,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store, nil)
 			if tc.ok {
 				require.NoError(t, err)
 				return
