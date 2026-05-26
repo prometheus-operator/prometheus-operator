@@ -4273,6 +4273,14 @@
                         "description": "keepIdentifyingResourceAttributes enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
                         "type": "boolean"
                       },
+                      "labelNamePreserveMultipleUnderscores": {
+                        "description": "labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses\nunderscore escaping.\nWhen true (default), multiple consecutive underscores are preserved during label name sanitization.\n\nNotice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.\n\nIt requires Prometheus >= v3.8.0.",
+                        "type": "boolean"
+                      },
+                      "labelNameUnderscoreSanitization": {
+                        "description": "labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.\nReserved labels starting with '__' are not modified.\nThis is only relevant when translation_strategy uses underscore escaping (e.g., \"UnderscoreEscapingWithSuffixes\" or \"UnderscoreEscapingWithoutSuffixes\").\n\nNotice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.\n\nIt requires Prometheus >= v3.8.0.",
+                        "type": "boolean"
+                      },
                       "promoteAllResourceAttributes": {
                         "description": "promoteAllResourceAttributes promotes all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.\n\nCannot be true when `promoteResourceAttributes` is defined.\nIt requires Prometheus >= v3.5.0.",
                         "type": "boolean"
@@ -5193,7 +5201,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -7533,6 +7541,19 @@
                         "description": "outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with\nrespect to the TSDB max time.\n\nAn out-of-order/out-of-bounds sample is ingested into the TSDB as long as\nthe timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nIt requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.",
                         "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
+                      },
+                      "staleSeriesCompactionThreshold": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ],
+                        "description": "staleSeriesCompactionThreshold configures the trigger point for compacting\nstale series from memory into persistent blocks and removing those stale\nseries from memory.\n\nThe threshold is a number between 0.0 and 1.0. It represents the ratio of\nstale series in memory to the total series in memory. The stale series\ncompaction is triggered when this ratio crosses the configured threshold.\nIt may not trigger the stale series compaction if the usual head compaction\nis about to happen soon.\n\nIf set to 0, stale series compaction is disabled.\n\nIt requires Prometheus >= v3.10.0.",
+                        "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                        "x-kubernetes-int-or-string": true
                       }
                     },
                     "type": "object"

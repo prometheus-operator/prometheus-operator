@@ -74,7 +74,7 @@ type OAuth2ApplyConfiguration struct {
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	Claims map[string]string `json:"claims,omitempty"`
 	// tokenUrl defines the URL to fetch the token from.
-	TokenURL *string `json:"tokenUrl,omitempty"`
+	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
 	// scopes defines the OAuth2 scopes used for the token request.
 	Scopes []string `json:"scopes,omitempty"`
 	// endpointParams configures the HTTP parameters to append to the token
@@ -175,7 +175,7 @@ func (b *OAuth2ApplyConfiguration) WithClaims(entries map[string]string) *OAuth2
 // WithTokenURL sets the TokenURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TokenURL field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithTokenURL(value string) *OAuth2ApplyConfiguration {
+func (b *OAuth2ApplyConfiguration) WithTokenURL(value monitoringv1.URL) *OAuth2ApplyConfiguration {
 	b.TokenURL = &value
 	return b
 }
