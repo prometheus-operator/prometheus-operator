@@ -5060,6 +5060,26 @@ spec:
 
                       It requires Prometheus >= v3.1.0.
                     type: boolean
+                  labelNamePreserveMultipleUnderscores:
+                    description: |-
+                      labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+                      underscore escaping.
+                      When true (default), multiple consecutive underscores are preserved during label name sanitization.
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
+                    type: boolean
+                  labelNameUnderscoreSanitization:
+                    description: |-
+                      labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+                      Reserved labels starting with '__' are not modified.
+                      This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
+                    type: boolean
                   promoteAllResourceAttributes:
                     description: |-
                       promoteAllResourceAttributes promotes all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
@@ -6087,7 +6107,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -9020,6 +9040,26 @@ spec:
                       It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  staleSeriesCompactionThreshold:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      staleSeriesCompactionThreshold configures the trigger point for compacting
+                      stale series from memory into persistent blocks and removing those stale
+                      series from memory.
+
+                      The threshold is a number between 0.0 and 1.0. It represents the ratio of
+                      stale series in memory to the total series in memory. The stale series
+                      compaction is triggered when this ratio crosses the configured threshold.
+                      It may not trigger the stale series compaction if the usual head compaction
+                      is about to happen soon.
+
+                      If set to 0, stale series compaction is disabled.
+
+                      It requires Prometheus >= v3.10.0.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
                 type: object
               updateStrategy:
                 description: |-

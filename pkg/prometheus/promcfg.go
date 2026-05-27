@@ -1080,6 +1080,11 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
 
+	err := tsdb.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
 	if exemplars != nil && exemplars.MaxSize != nil {
 		storage = cgStorage.AppendMapItem(storage, "exemplars", yaml.MapSlice{
 			{
@@ -1089,13 +1094,24 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "out_of_order_time_window",
+					Value: *tsdb.OutOfOrderTimeWindow,
+				},
+			})
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			storage = cg.WithMinimumVersion("3.10.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "stale_series_compaction_threshold",
+					Value: tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64(),
+				},
+			})
+		}
 	}
 
 	if len(storage) == 0 {
@@ -3266,15 +3282,34 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// TSDB
 	tsdb := cpf.TSDB
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		var storage yaml.MapSlice
-		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
-		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+
+	err = tsdb.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "out_of_order_time_window",
+					Value: *tsdb.OutOfOrderTimeWindow,
+				},
+			})
+			cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "stale_series_compaction_threshold",
+					Value: tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64(),
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "storage", storage)
+		}
 	}
 
 	// Remote write config
@@ -5035,6 +5070,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.6.0").AppendMapItem(otlp,
 			"promote_scope_metadata",
 			otlpConfig.PromoteScopeMetadata)
+	}
+
+	if otlpConfig.LabelNameUnderscoreSanitization != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_underscore_sanitization",
+			otlpConfig.LabelNameUnderscoreSanitization)
+	}
+
+	if otlpConfig.LabelNamePreserveMultipleUnderscores != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_preserve_multiple_underscores",
+			otlpConfig.LabelNamePreserveMultipleUnderscores)
 	}
 
 	if len(otlp) == 0 {

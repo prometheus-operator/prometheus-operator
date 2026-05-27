@@ -1049,6 +1049,10 @@ func testPromStorageUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(context.Background(), metav1.ListOptions{LabelSelector: p.Status.Selector})
+	require.NoError(t, err)
+	require.Len(t, sts.Items, 1)
+
 	p, err = framework.PatchPrometheusAndWaitUntilReady(
 		context.Background(),
 		p.Name,
@@ -1076,6 +1080,11 @@ func testPromStorageUpdate(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
+	updatedSts, err := framework.KubeClient.AppsV1().StatefulSets(ns).List(context.Background(), metav1.ListOptions{LabelSelector: p.Status.Selector})
+	require.NoError(t, err)
+	require.Len(t, updatedSts.Items, 1)
+	require.NotEqual(t, sts.Items[0].UID, updatedSts.Items[0].UID, "StatefulSet should have different UIDs because the statefulset has been recreated")
 
 	err = framework.WaitForBoundPVC(context.Background(), ns, "test=testPromStorageUpdate", 1)
 	require.NoError(t, err)
