@@ -2624,6 +2624,59 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "skeleton_base_multiple_alertmanagerconfigs.golden",
 		},
 		{
+			name:    "skeleton base, multiple CRs with namespaceMatcher disabled",
+			kclient: fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route:     &route{Receiver: "null"},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{
+				Type: "None",
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"ns1/amc1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc1",
+						Namespace: "ns1",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test"}},
+					},
+				},
+				"ns2/amc1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc1",
+						Namespace: "ns2",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test2",
+							GroupBy:  []string{"job"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test2"}},
+					},
+				},
+				"ns2/amc2": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "amc2",
+						Namespace: "ns2",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test2",
+							GroupBy:  []string{"job", "instance"},
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{Name: "test2"}},
+					},
+				},
+			},
+			golden: "skeleton_base_multiple_CRs_with_namespaceMatcher_disabled.golden",
+		},
+		{
 			name:    "skeleton base, simple CR with namespaceMatcher disabled",
 			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{

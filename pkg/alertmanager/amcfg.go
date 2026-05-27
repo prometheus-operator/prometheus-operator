@@ -1299,7 +1299,12 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 	}
 
 	if ptr.Deref(in.Smarthost, "") != "" {
-		out.Smarthost.Host, out.Smarthost.Port, _ = net.SplitHostPort(*in.Smarthost)
+		host, port, err := net.SplitHostPort(*in.Smarthost)
+		if err != nil {
+			return nil, fmt.Errorf("invalid SMTP smarthost %q: %w", *in.Smarthost, err)
+		}
+		out.Smarthost.Host = host
+		out.Smarthost.Port = port
 	}
 
 	if in.AuthPassword != nil {
@@ -1901,7 +1906,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			Scopes:         in.OAuth2.Scopes,
-			TokenURL:       in.OAuth2.TokenURL,
+			TokenURL:       string(in.OAuth2.TokenURL),
 			EndpointParams: in.OAuth2.EndpointParams,
 			proxyConfig:    proxyConfig,
 		}

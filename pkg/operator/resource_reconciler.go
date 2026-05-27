@@ -396,6 +396,7 @@ func (rr *ResourceReconciler) FindOwner(obj metav1.Object) metav1.Object {
 		o, err := meta.Accessor(owner)
 		if err != nil {
 			rr.logger.Error("failed to get owner meta", "err", err, "gvk", owner.GetObjectKind().GroupVersionKind().String(), "namespace", obj.GetNamespace(), "name", obj.GetName(), "kind", rr.resourceKind)
+			return nil
 		}
 
 		return o

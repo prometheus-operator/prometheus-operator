@@ -6019,11 +6019,12 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 
 func TestTSDBConfig(t *testing.T) {
 	for _, tc := range []struct {
-		name    string
-		p       *monitoringv1.Prometheus
-		version string
-		tsdb    *monitoringv1.TSDBSpec
-		golden  string
+		name      string
+		p         *monitoringv1.Prometheus
+		version   string
+		tsdb      *monitoringv1.TSDBSpec
+		golden    string
+		expectErr bool
 	}{
 		{
 			name:   "no TSDB config",
@@ -6045,6 +6046,36 @@ func TestTSDBConfig(t *testing.T) {
 			},
 			golden: "TSDB_config_greater_than_or_equal_to_v2.39.0.golden",
 		},
+		{
+			name:    "TSDB StaleSeriesCompactionThreshold < v3.10.0",
+			version: "v3.9.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(1, resource.DecimalSI),
+			},
+			golden: "TSDB_StaleSeriesCompactionThreshold_less_than_v3.10.0.golden",
+		},
+		{
+			name:    "TSDB StaleSeriesCompactionThreshold >= v3.10.0",
+			version: "v3.10.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(1, resource.DecimalSI),
+			},
+			golden: "TSDB_StaleSeriesCompactionThreshold_greater_than_or_equal_to_v3.10.0.golden",
+		},
+		{
+			name: "TSDB StaleSeriesCompactionThreshold > 1",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(2, resource.DecimalSI),
+			},
+			expectErr: true,
+		},
+		{
+			name: "TSDB StaleSeriesCompactionThreshold < 0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(-1, resource.DecimalSI),
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -6053,6 +6084,12 @@ func TestTSDBConfig(t *testing.T) {
 			}
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
+			}
+
+			err := p.Spec.TSDB.Validate()
+			if tc.expectErr {
+				require.Error(t, err)
+				return
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6076,11 +6113,12 @@ func TestTSDBConfig(t *testing.T) {
 
 func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	for _, tc := range []struct {
-		name    string
-		p       *monitoringv1.Prometheus
-		version string
-		tsdb    *monitoringv1.TSDBSpec
-		golden  string
+		name      string
+		p         *monitoringv1.Prometheus
+		version   string
+		tsdb      *monitoringv1.TSDBSpec
+		golden    string
+		expectErr bool
 	}{
 		{
 			name:   "PrometheusAgent no TSDB config",
@@ -6103,6 +6141,36 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			},
 			golden: "PrometheusAgent_TSDB_config_greater_than_or_equal_to_v2.54.0.golden",
 		},
+		{
+			name:    "PrometheusAgent TSDB StaleSeriesCompactionThreshold < v3.10.0",
+			version: "v2.54.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(1, resource.DecimalSI),
+			},
+			golden: "PrometheusAgent_TSDB_StaleSeriesCompactionThreshold_less_than_v3.10.0.golden",
+		},
+		{
+			name:    "PrometheusAgent TSDB StaleSeriesCompactionThreshold >= v3.10.0",
+			version: "v3.10.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(1, resource.DecimalSI),
+			},
+			golden: "PrometheusAgent_TSDB_StaleSeriesCompactionThreshold_greater_than_or_equal_to_v3.10.0.golden",
+		},
+		{
+			name: "PrometheusAgent TSDB StaleSeriesCompactionThreshold > 1",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(2, resource.DecimalSI),
+			},
+			expectErr: true,
+		},
+		{
+			name: "PrometheusAgent TSDB StaleSeriesCompactionThreshold < 0",
+			tsdb: &monitoringv1.TSDBSpec{
+				StaleSeriesCompactionThreshold: resource.NewQuantity(-1, resource.DecimalSI),
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -6111,6 +6179,12 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			}
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
+			}
+
+			err := p.Spec.TSDB.Validate()
+			if tc.expectErr {
+				require.Error(t, err)
+				return
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -10348,6 +10422,38 @@ func TestOTLPConfig(t *testing.T) {
 				PromoteScopeMetadata: new(true),
 			},
 			golden: "OTLPConfig_Config_promote_scope_metadata_wrong_version.golden",
+		},
+		{
+			name:    "Config LabelNameUnderscoreSanitization with compatible version",
+			version: "v3.8.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNameUnderscoreSanitization: new(true),
+			},
+			golden: "OTLPConfig_Config_label_name_underscore_sanitization.golden",
+		},
+		{
+			name:    "Config LabelNameUnderscoreSanitization with old version",
+			version: "v3.7.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNameUnderscoreSanitization: new(true),
+			},
+			golden: "OTLPConfig_Config_label_name_underscore_sanitization_wrong_version.golden",
+		},
+		{
+			name:    "Config LabelNamePreserveMultipleUnderscores with compatible version",
+			version: "v3.8.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNamePreserveMultipleUnderscores: new(false),
+			},
+			golden: "OTLPConfig_Config_label_name_preserve_multiple_underscores.golden",
+		},
+		{
+			name:    "Config LabelNamePreserveMultipleUnderscores with old version",
+			version: "v3.7.0",
+			otlpConfig: &monitoringv1.OTLPConfig{
+				LabelNamePreserveMultipleUnderscores: new(false),
+			},
+			golden: "OTLPConfig_Config_label_name_preserve_multiple_underscores_wrong_version.golden",
 		},
 	}
 	for _, tc := range testCases {
