@@ -22,6 +22,7 @@ import (
 	"math/big"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/blang/semver/v4"
@@ -251,6 +252,10 @@ type pollBasedListerWatcher struct {
 	ctx context.Context
 	l   *slog.Logger
 
+	mtx        sync.Mutex
+	cancelPoll context.CancelFunc
+	pollWg     sync.WaitGroup
+
 	cache map[string]cacheEntry
 }
 
@@ -319,18 +324,47 @@ func (pblw *pollBasedListerWatcher) Watch(_ metav1.ListOptions) (watch.Interface
 	return pblw, nil
 }
 
-func (pblw *pollBasedListerWatcher) Stop() {}
+func (pblw *pollBasedListerWatcher) Stop() {
+	pblw.mtx.Lock()
+	if pblw.cancelPoll != nil {
+		pblw.cancelPoll()
+		pblw.cancelPoll = nil
+	}
+	pblw.mtx.Unlock()
+	pblw.pollWg.Wait()
+}
 
 func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
+	// Cancel any previous polling goroutine to prevent goroutine leaks
+	// when the watch is re-established after a reconnection.
+	pblw.mtx.Lock()
+	if pblw.cancelPoll != nil {
+		pblw.cancelPoll()
+	}
+	pblw.mtx.Unlock()
+	pblw.pollWg.Wait()
+
+	pollCtx, cancel := context.WithCancel(pblw.ctx)
+	pblw.mtx.Lock()
+	pblw.cancelPoll = cancel
+	pblw.mtx.Unlock()
+
+	pblw.pollWg.Add(1)
 	go func() {
+		defer pblw.pollWg.Done()
+
 		jitter, err := rand.Int(rand.Reader, big.NewInt(int64(pollInterval)))
 		if err == nil {
-			time.Sleep(time.Duration(jitter.Int64()))
+			select {
+			case <-time.After(time.Duration(jitter.Int64())):
+			case <-pollCtx.Done():
+				return
+			}
 		} else {
 			pblw.l.Info("failed to generate random jitter", "err", err)
 		}
 
-		_ = wait.PollUntilContextCancel(pblw.ctx, pollInterval, false, pblw.poll)
+		_ = wait.PollUntilContextCancel(pollCtx, pollInterval, false, pblw.poll)
 	}()
 
 	return pblw.ch
@@ -343,6 +377,10 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 	)
 
 	for ns, entry := range pblw.cache {
+		if ctx.Err() != nil {
+			return false, ctx.Err()
+		}
+
 		var resourceVersion string
 		if entry.ns != nil {
 			// The resource is in the cache.
@@ -370,9 +408,13 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 	for _, ns := range deleted {
 		entry := pblw.cache[ns]
 
-		pblw.ch <- watch.Event{
+		select {
+		case pblw.ch <- watch.Event{
 			Type:   watch.Deleted,
 			Object: entry.ns,
+		}:
+		case <-ctx.Done():
+			return false, ctx.Err()
 		}
 
 		pblw.cache[ns] = cacheEntry{
@@ -393,9 +435,13 @@ func (pblw *pollBasedListerWatcher) poll(ctx context.Context) (bool, error) {
 			continue
 		}
 
-		pblw.ch <- watch.Event{
+		select {
+		case pblw.ch <- watch.Event{
 			Type:   eventType,
 			Object: ns,
+		}:
+		case <-ctx.Done():
+			return false, ctx.Err()
 		}
 
 		pblw.cache[ns.Name] = cacheEntry{
