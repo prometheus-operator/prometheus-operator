@@ -2288,11 +2288,22 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 		modulus = cg.shardsPerZone(shards)
 		shardEnvVar = operator.InzoneShardEnvVar
 
+		// Step 1: populate __tmp_topology from endpointslice zone (no-op for pod role).
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
+				{Key: "target_label", Value: topologyTmpLabel},
+				{Key: "regex", Value: "(.+);"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+		)
+
+		// Step 2: if __tmp_topology is still empty, use the pod topology label
+		// (K8s >= 1.35, PodTopologyLabelsAdmission) or the node label (older clusters,
+		// requires attach_metadata: {node: true}) as fallback.
 		if cg.podTopologyLabelsSupported {
-			// K8s >= 1.35: PodTopologyLabelsAdmission injects topology.kubernetes.io/zone
-			// as a pod label, so attach_metadata.node is not needed.
 			relabelings = append(relabelings,
-				// Populate __tmp_topology from the pod topology label (no-op for pod role targets without the label).
 				yaml.MapSlice{
 					{Key: "source_labels", Value: []string{podZoneMetaLabel, podZonePresentMetaLabel, topologyTmpLabel}},
 					{Key: "target_label", Value: topologyTmpLabel},
@@ -2300,24 +2311,9 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 					{Key: "replacement", Value: "$1"},
 					{Key: "action", Value: "replace"},
 				},
-				// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
-				yaml.MapSlice{
-					{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
-					{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
-					{Key: "action", Value: "keep"},
-				},
 			)
 		} else {
 			relabelings = append(relabelings,
-				// Populate __tmp_topology from endpointslice zone label (no-op for pod role).
-				yaml.MapSlice{
-					{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
-					{Key: "target_label", Value: topologyTmpLabel},
-					{Key: "regex", Value: "(.+);"},
-					{Key: "replacement", Value: "$1"},
-					{Key: "action", Value: "replace"},
-				},
-				// Fallback to node topology label (requires attach_metadata: {node: true}).
 				yaml.MapSlice{
 					{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
 					{Key: "target_label", Value: topologyTmpLabel},
@@ -2325,14 +2321,17 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 					{Key: "replacement", Value: "$1"},
 					{Key: "action", Value: "replace"},
 				},
-				// Keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
-				yaml.MapSlice{
-					{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
-					{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
-					{Key: "action", Value: "keep"},
-				},
 			)
 		}
+
+		// Step 3: keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+				{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+				{Key: "action", Value: "keep"},
+			},
+		)
 	}
 
 	return append(relabelings,

@@ -45,6 +45,13 @@ scrape_configs:
   - target_label: endpoint
     replacement: web
   - source_labels:
+    - __meta_kubernetes_endpointslice_endpoint_zone
+    - __tmp_topology
+    target_label: __tmp_topology
+    regex: (.+);
+    replacement: $1
+    action: replace
+  - source_labels:
     - __meta_kubernetes_pod_label_topology_kubernetes_io_zone
     - __meta_kubernetes_pod_labelpresent_topology_kubernetes_io_zone
     - __tmp_topology

@@ -14573,14 +14573,13 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		name                   string
-		shards                 int32
-		zones                  []string
-		serviceMonitor         map[string]*monitoringv1.ServiceMonitor
-		podMonitor             map[string]*monitoringv1.PodMonitor
-		attachMetadata         *monitoringv1.AttachMetadata
-		podTopologyLabels      bool
-		golden                 string
+		name              string
+		shards            int32
+		zones             []string
+		serviceMonitor    map[string]*monitoringv1.ServiceMonitor
+		podMonitor        map[string]*monitoringv1.PodMonitor
+		podTopologyLabels bool
+		golden            string
 	}{
 		{
 			name:           "service_monitor_4shards_2zones",
