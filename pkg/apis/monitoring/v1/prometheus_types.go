@@ -21,6 +21,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -2466,6 +2467,35 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	// +optional
 	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
+
+	// staleSeriesCompactionThreshold configures the trigger point for compacting
+	// stale series from memory into persistent blocks and removing those stale
+	// series from memory.
+	//
+	// The threshold is a number between 0.0 and 1.0. It represents the ratio of
+	// stale series in memory to the total series in memory. The stale series
+	// compaction is triggered when this ratio crosses the configured threshold.
+	// It may not trigger the stale series compaction if the usual head compaction
+	// is about to happen soon.
+	//
+	// If set to 0, stale series compaction is disabled.
+	//
+	// It requires Prometheus >= v3.10.0.
+	// +optional
+	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
+}
+
+// Validate semantically validates the given TSDBSpec.
+func (ts *TSDBSpec) Validate() error {
+	if ts == nil || ts.StaleSeriesCompactionThreshold == nil {
+		return nil
+	}
+	v := ts.StaleSeriesCompactionThreshold.AsApproximateFloat64()
+	if v < 0 || v > 1 {
+		return fmt.Errorf("`staleSeriesCompactionThreshold` must be between 0 and 1. The current value is %s", ts.StaleSeriesCompactionThreshold.String())
+	}
+
+	return nil
 }
 
 type Exemplars struct {
@@ -2681,6 +2711,26 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.6.0.
 	// +optional
 	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"` // nolint:kubeapilinter
+
+	// labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+	// Reserved labels starting with '__' are not modified.
+	// This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNameUnderscoreSanitization *bool `json:"labelNameUnderscoreSanitization,omitempty"` // nolint:kubeapilinter
+
+	// labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+	// underscore escaping.
+	// When true (default), multiple consecutive underscores are preserved during label name sanitization.
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNamePreserveMultipleUnderscores *bool `json:"labelNamePreserveMultipleUnderscores,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate semantically validates the given OTLPConfig section.

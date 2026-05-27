@@ -54,6 +54,22 @@ type OTLPConfigApplyConfiguration struct {
 	// As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
 	// It requires Prometheus >= v3.6.0.
 	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"`
+	// labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+	// Reserved labels starting with '__' are not modified.
+	// This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	LabelNameUnderscoreSanitization *bool `json:"labelNameUnderscoreSanitization,omitempty"`
+	// labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+	// underscore escaping.
+	// When true (default), multiple consecutive underscores are preserved during label name sanitization.
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	LabelNamePreserveMultipleUnderscores *bool `json:"labelNamePreserveMultipleUnderscores,omitempty"`
 }
 
 // OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
@@ -119,5 +135,21 @@ func (b *OTLPConfigApplyConfiguration) WithConvertHistogramsToNHCB(value bool) *
 // If called multiple times, the PromoteScopeMetadata field is set to the value of the last call.
 func (b *OTLPConfigApplyConfiguration) WithPromoteScopeMetadata(value bool) *OTLPConfigApplyConfiguration {
 	b.PromoteScopeMetadata = &value
+	return b
+}
+
+// WithLabelNameUnderscoreSanitization sets the LabelNameUnderscoreSanitization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNameUnderscoreSanitization field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithLabelNameUnderscoreSanitization(value bool) *OTLPConfigApplyConfiguration {
+	b.LabelNameUnderscoreSanitization = &value
+	return b
+}
+
+// WithLabelNamePreserveMultipleUnderscores sets the LabelNamePreserveMultipleUnderscores field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNamePreserveMultipleUnderscores field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithLabelNamePreserveMultipleUnderscores(value bool) *OTLPConfigApplyConfiguration {
+	b.LabelNamePreserveMultipleUnderscores = &value
 	return b
 }
