@@ -602,7 +602,7 @@
                           "type": "string"
                         },
                         "port": {
-                          "description": "port defines the name of the Service port which this endpoint refers to.\n\nIt takes precedence over `targetPort`.",
+                          "description": "port defines the name of the Service port which this endpoint refers to.\nThis matches the port `name` on the Service resource (`.spec.ports[].name`),\nnot the numeric Service port or the Pod container port.\n\nIt takes precedence over `targetPort`.",
                           "type": "string"
                         },
                         "proxyConnectHeader": {
@@ -737,7 +737,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "targetPort defines the name or number of the target port of the `Pod` object behind the\nService. The port must be specified with the container's port property.",
+                          "description": "targetPort defines the name or number of a container port on Pods selected\nby the Service. If a name, it must match a port declared in the container's\n`ports` list; if a number, it targets that port directly on the Pod.\nThis is not the Service's `.spec.ports[].port` value.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {

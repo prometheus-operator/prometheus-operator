@@ -68,6 +68,90 @@ spec:
     interval: 15s
 ```
 
+## ServiceMonitor `port` and `targetPort`
+
+A `ServiceMonitor` discovers scrape targets from Kubernetes `Endpoints` (or
+`EndpointSlice`) objects behind the selected Services. The endpoint fields
+refer to different levels of the Kubernetes Service abstraction:
+
+- **`port`**: the **name** of a port on the `Service` (`.spec.ports[].name`).
+  Use this when the Service declares named ports, as in the example above
+  (`port: http-metrics`).
+- **`targetPort`**: the **name or number of a container port** on the Pods
+  behind the Service. If a name, it must match a port declared in
+  `spec.containers[].ports`; if a number, it targets that port directly on
+  the Pod. It is **not** the Service's `.spec.ports[].port` number.
+
+A common misconfiguration is setting `targetPort` to the Service port number
+(for example `8080`) when the Pod does not declare a container port with that
+number. In that case Prometheus filters on
+`__meta_kubernetes_pod_container_port_number` and discovers no targets.
+
+Prefer `port` with the Service port name when possible. Use `targetPort` only
+when you need to scrape a specific container port by name or number.
+
+### Examples
+
+The `kube-state-metrics` Service above exposes port name `http-metrics` on the
+Service and forwards to container port name `metrics`. These configurations
+are equivalent for that Service:
+
+```yaml
+# Recommended: match the Service port name.
+endpoints:
+- port: http-metrics
+```
+
+```yaml
+# Match the Pod container port by name (must exist in spec.containers[].ports).
+endpoints:
+- targetPort: metrics
+```
+
+```yaml
+# Match the Pod container port by number (the container must declare this port).
+endpoints:
+- targetPort: 9090
+```
+
+```yaml
+# Incorrect for kube-state-metrics: 8080 is the Service's port number. Pods
+# expose container port name "metrics", so Prometheus discovers no targets.
+endpoints:
+- targetPort: 8080
+```
+
+When a Service has multiple container ports behind it, `targetPort` selects
+which container port to scrape:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: web
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+  selector:
+    app: my-app
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: my-app-metrics
+spec:
+  selector:
+    matchLabels:
+      app: my-app
+  endpoints:
+  - targetPort: metrics  # scrape the container port named "metrics", not port 9090
+```
+
 ## Default Labels
 
 By default, the `PodMonitor` and `ServiceMonitor` objects include runtime metadata in the scraped results.
