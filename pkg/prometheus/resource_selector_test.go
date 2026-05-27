@@ -318,6 +318,29 @@ func TestSelectProbes(t *testing.T) {
 			valid: true,
 		},
 		{
+			scenario: "valid static target labels",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.Labels = map[string]string{"owner": "team-a"}
+			},
+			valid: true,
+		},
+		{
+			scenario: "invalid static target label with prom2",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.Labels = map[string]string{"cluster-id": "xxx"}
+			},
+			promVersion: "2.55.0",
+			valid:       false,
+		},
+		{
+			scenario:    "static target label with prom3",
+			promVersion: "3.0.0",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.Targets.StaticConfig.Labels = map[string]string{"cluster-id": "xxx"}
+			},
+			valid: true,
+		},
+		{
 			scenario: "utf-8 static relabeling config with prom2",
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
 				ps.Targets.StaticConfig.RelabelConfigs = []monitoringv1.RelabelConfig{
