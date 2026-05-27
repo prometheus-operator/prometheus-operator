@@ -24,7 +24,8 @@ import (
 // with apply.
 type AuthorizationApplyConfiguration struct {
 	SafeAuthorizationApplyConfiguration `json:",inline"`
-	CredentialsFile                     *string `json:"credentialsFile,omitempty"`
+	// credentialsFile defines the file to read a secret from, mutually exclusive with `credentials`.
+	CredentialsFile *string `json:"credentialsFile,omitempty"`
 }
 
 // AuthorizationApplyConfiguration constructs a declarative configuration of the Authorization type for use with

@@ -1,4 +1,4 @@
-// Copyright 2025 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,43 @@ const (
 type TLSConfig struct {
 	SafeTLSConfig  `json:",inline"`
 	TLSFilesConfig `json:",inline"`
+}
+
+// GRPCServerTLSConfig defines TLS configuration for a gRPC server.
+// +k8s:openapi-gen=true
+type GRPCServerTLSConfig struct {
+	TLSConfig `json:",inline"`
+
+	// cipherSuites defines the list of supported cipher suites for TLS
+	// versions up to TLS 1.2.
+	//
+	// If not defined, the Go default cipher suites are used.
+	// Available cipher suites are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	//
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	//
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	CipherSuites []string `json:"cipherSuites,omitempty"`
+
+	// curves defines the list of preferred elliptic curves for
+	// TLS handshakes.
+	//
+	// If not defined, the Go default curves are used.
+	// Available curves are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	//
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	Curves []string `json:"curves,omitempty"`
 }
 
 // Validate semantically validates the given TLSConfig.

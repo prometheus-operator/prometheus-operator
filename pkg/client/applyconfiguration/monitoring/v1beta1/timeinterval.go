@@ -18,8 +18,12 @@ package v1beta1
 
 // TimeIntervalApplyConfiguration represents a declarative configuration of the TimeInterval type for use
 // with apply.
+//
+// TimeInterval specifies the periods in time when notifications will be muted or active.
 type TimeIntervalApplyConfiguration struct {
-	Name          *string                        `json:"name,omitempty"`
+	// name of the time interval.
+	Name *string `json:"name,omitempty"`
+	// timeIntervals defines a list of TimePeriod.
 	TimeIntervals []TimePeriodApplyConfiguration `json:"timeIntervals,omitempty"`
 }
 

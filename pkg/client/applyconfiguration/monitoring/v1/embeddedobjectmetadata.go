@@ -18,9 +18,26 @@ package v1
 
 // EmbeddedObjectMetadataApplyConfiguration represents a declarative configuration of the EmbeddedObjectMetadata type for use
 // with apply.
+//
+// EmbeddedObjectMetadata contains a subset of the fields included in k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta
+// Only fields which are relevant to embedded resources are included.
 type EmbeddedObjectMetadataApplyConfiguration struct {
-	Name        *string           `json:"name,omitempty"`
-	Labels      map[string]string `json:"labels,omitempty"`
+	// name must be unique within a namespace. Is required when creating resources, although
+	// some resources may allow a client to request the generation of an appropriate name
+	// automatically. Name is primarily intended for creation idempotence and configuration
+	// definition.
+	// Cannot be updated.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+	Name *string `json:"name,omitempty"`
+	// labels define the map of string keys and values that can be used to organize and categorize
+	// (scope and select) objects. May match selectors of replication controllers
+	// and services.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+	Labels map[string]string `json:"labels,omitempty"`
+	// annotations defines an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 

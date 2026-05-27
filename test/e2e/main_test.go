@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -275,6 +275,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromAdditionalScrapeConfig":                testPromAdditionalScrapeConfig,
 		"PromAdditionalAlertManagerConfig":          testPromAdditionalAlertManagerConfig,
 		"PromReloadRules":                           testPromReloadRules,
+		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
 		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,
@@ -450,7 +451,9 @@ func TestGatedFeatures(t *testing.T) {
 		"PromAgentReconcileDaemonSetResourceDelete":            testPromAgentReconcileDaemonSetResourceDelete,
 		"PrometheusAgentDaemonSetSelectPodMonitor":             testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
+		"PrometheusTargetDistributionOnResharding":             testPrometheusTargetDistributionOnResharding,
 		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
+		"ShardingStrategyCELValidations":                       testPrometheusShardingStrategyCELValidations,
 		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
 		"ServiceMonitorStatusSubresource":                      testServiceMonitorStatusSubresource,
 		"ServiceMonitorStatusWithMultipleWorkloads":            testServiceMonitorStatusWithMultipleWorkloads,
@@ -473,6 +476,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusRuleStatusSubresourceForThanosRuler":        testPrometheusRuleStatusSubresourceForThanosRuler,
 		"GarbageCollectionOfPromRuleBindingForThanosRuler":     testGarbageCollectionOfPromRuleBindingForThanosRuler,
 		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler": testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"PrometheusTopologySharding":                           testPrometheusTopologySharding,
 	}
 
 	for name, f := range testFuncs {

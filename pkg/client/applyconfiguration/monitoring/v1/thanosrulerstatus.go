@@ -18,13 +18,27 @@ package v1
 
 // ThanosRulerStatusApplyConfiguration represents a declarative configuration of the ThanosRulerStatus type for use
 // with apply.
+//
+// ThanosRulerStatus is the most recent observed status of the ThanosRuler. Read-only.
+// More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type ThanosRulerStatusApplyConfiguration struct {
-	Paused              *bool                         `json:"paused,omitempty"`
-	Replicas            *int32                        `json:"replicas,omitempty"`
-	UpdatedReplicas     *int32                        `json:"updatedReplicas,omitempty"`
-	AvailableReplicas   *int32                        `json:"availableReplicas,omitempty"`
-	UnavailableReplicas *int32                        `json:"unavailableReplicas,omitempty"`
-	Conditions          []ConditionApplyConfiguration `json:"conditions,omitempty"`
+	// paused defines whether any actions on the underlying managed objects are
+	// being performed. Only delete actions will be performed.
+	Paused *bool `json:"paused,omitempty"`
+	// replicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
+	// (their labels match the selector).
+	Replicas *int32 `json:"replicas,omitempty"`
+	// updatedReplicas defines the total number of non-terminated pods targeted by this ThanosRuler deployment
+	// that have the desired version spec.
+	UpdatedReplicas *int32 `json:"updatedReplicas,omitempty"`
+	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
+	// targeted by this ThanosRuler deployment.
+	AvailableReplicas *int32 `json:"availableReplicas,omitempty"`
+	// unavailableReplicas defines the total number of unavailable pods targeted by this ThanosRuler deployment.
+	UnavailableReplicas *int32 `json:"unavailableReplicas,omitempty"`
+	// conditions defines the current state of the ThanosRuler object.
+	Conditions []ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // ThanosRulerStatusApplyConfiguration constructs a declarative configuration of the ThanosRulerStatus type for use with

@@ -306,7 +306,7 @@ Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) 
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck docs ## Format all files.
+format: go-fmt jsonnet-fmt fix-license shellcheck docs ## Format all files.
 
 .PHONY: go-fmt
 go-fmt: ## Run go fmt against code.
@@ -318,7 +318,13 @@ jsonnet-fmt: $(JSONNETFMT_BINARY)
 
 .PHONY: check-license
 check-license: ## Check license headers.
-	./scripts/check_license.sh
+	@echo ">> checking license header"
+	cd scripts && go run ./check-license/ -check -root ..
+
+.PHONY: fix-license
+fix-license: ## Fix missing or non-compliant license headers.
+	@echo ">> adding license header where it's missing"
+	cd scripts && go run ./check-license/ -fix -root ..
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY) ## Run shellcheck on shell scripts.
@@ -329,8 +335,7 @@ check-metrics: $(PROMLINTER_BINARY) ## Lint Prometheus metrics.
 	$(PROMLINTER_BINARY) lint .
 
 .PHONY: check
-check: ## Run all checks.
-	check-golang check-api
+check: check-golang check-api ## Run all checks.
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint checks.
@@ -341,12 +346,11 @@ check-api: $(GOLANGCIKUBEAPILINTER_BINARY) ## Run golangci-kube-api-linter check
 	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
 
 .PHONY: fix
-fix: ## Fix all auto-fixable issues.
-	fix-golang fix-api
+fix: fix-golang fix-api ## Fix all auto-fixable issues.
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint to fix issues.
-	$(GOLANGCILINTER_BINARY) run --fix
+	$(GOLANGCILINTER_BINARY) run --fix -v
 
 .PHONY: fix-api
 fix-api: $(GOLANGCIKUBEAPILINTER_BINARY) ## Run golangci-kube-api-linter to fix issues on API types.
@@ -370,8 +374,7 @@ check-docs: $(MDOX_BINARY) ## Check documentation formatting and links.
 ###########
 
 .PHONY: test
-test: ## Run all tests (unit, long, and e2e).
-	test-unit test-long test-e2e
+test: test-unit test-long test-e2e ## Run all tests (unit, long, and e2e).
 
 .PHONY: test-unit
 test-unit: test-prometheus-goldenfiles ## Run unit tests (short mode).

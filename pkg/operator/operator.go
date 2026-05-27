@@ -1,4 +1,4 @@
-// Copyright 2019 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,8 +113,8 @@ func (rt *ReconciliationTracker) init() {
 // HasRefTo returns true if the object identified by key has a direct or
 // indirect reference to obj (secret or configmap).
 func (rt *ReconciliationTracker) HasRefTo(key string, obj runtime.Object) bool {
-	rt.mtx.Lock()
-	defer rt.mtx.Unlock()
+	rt.mtx.RLock()
+	defer rt.mtx.RUnlock()
 
 	refTracker, found := rt.refTracker[key]
 	if !found {
@@ -169,8 +169,8 @@ func (rt *ReconciliationTracker) SetReasonAndMessage(key string, reason, message
 // GetStatus returns the last reconciliation status for the given object.
 // The second value indicates whether the object is known or not.
 func (rt *ReconciliationTracker) getStatus(k string) (ReconciliationStatus, bool) {
-	rt.mtx.Lock()
-	defer rt.mtx.Unlock()
+	rt.mtx.RLock()
+	defer rt.mtx.RUnlock()
 
 	s, found := rt.statusByObject[k]
 	if !found {

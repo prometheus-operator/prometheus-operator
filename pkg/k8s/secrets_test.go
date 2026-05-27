@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/ptr"
 )
 
 func TestLoadSecretRef(t *testing.T) {
@@ -86,7 +85,7 @@ func TestLoadSecretRef(t *testing.T) {
 					Name: "secret2",
 				},
 				Key:      "key1",
-				Optional: ptr.To(true),
+				Optional: new(true),
 			},
 			expected: nil,
 		},
@@ -97,7 +96,7 @@ func TestLoadSecretRef(t *testing.T) {
 					Name: "secret",
 				},
 				Key:      "key2",
-				Optional: ptr.To(true),
+				Optional: new(true),
 			},
 			expected: nil,
 		},

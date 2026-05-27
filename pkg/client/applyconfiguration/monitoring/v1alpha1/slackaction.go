@@ -18,13 +18,32 @@ package v1alpha1
 
 // SlackActionApplyConfiguration represents a declarative configuration of the SlackAction type for use
 // with apply.
+//
+// SlackAction configures a single Slack action that is sent with each
+// notification.
+// See https://api.slack.com/docs/message-attachments#action_fields and
+// https://api.slack.com/docs/message-buttons for more information.
 type SlackActionApplyConfiguration struct {
-	Type         *string                                   `json:"type,omitempty"`
-	Text         *string                                   `json:"text,omitempty"`
-	URL          *string                                   `json:"url,omitempty"`
-	Style        *string                                   `json:"style,omitempty"`
-	Name         *string                                   `json:"name,omitempty"`
-	Value        *string                                   `json:"value,omitempty"`
+	// type defines the type of interactive component.
+	// Common values include "button" for clickable buttons and "select" for dropdown menus.
+	Type *string `json:"type,omitempty"`
+	// text defines the user-visible label displayed on the action element.
+	// For buttons, this is the button text. For select menus, this is the placeholder text.
+	Text *string `json:"text,omitempty"`
+	// url defines the URL to open when the action is triggered.
+	// Only applicable for button-type actions. When set, clicking the button opens this URL.
+	URL *string `json:"url,omitempty"`
+	// style defines the visual appearance of the action element.
+	// Valid values include "default", "primary" (green), and "danger" (red).
+	Style *string `json:"style,omitempty"`
+	// name defines a unique identifier for the action within the message.
+	// This value is sent back to your application when the action is triggered.
+	Name *string `json:"name,omitempty"`
+	// value defines the payload sent when the action is triggered.
+	// This data is included in the callback sent to your application.
+	Value *string `json:"value,omitempty"`
+	// confirm defines an optional confirmation dialog that appears before the action is executed.
+	// When set, users must confirm their intent before the action proceeds.
 	ConfirmField *SlackConfirmationFieldApplyConfiguration `json:"confirm,omitempty"`
 }
 

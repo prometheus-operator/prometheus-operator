@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		URL:            monitoringv1.URL(url),
 		MessageVersion: prwtc.RemoteWriteMessageVersion,
 		QueueConfig: &monitoringv1.QueueConfig{
-			BatchSendDeadline: (*monitoringv1.Duration)(ptr.To("1s")),
+			BatchSendDeadline: (*monitoringv1.Duration)(new("1s")),
 		},
 	}}
 
@@ -234,7 +234,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: ptr.To("caandserver.com"),
+			ServerName: new("caandserver.com"),
 		},
 	}
 
@@ -285,7 +285,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 		}
 
 	case prwtc.InsecureSkipVerify:
-		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = ptr.To(true)
+		p.Spec.RemoteWrite[0].TLSConfig.InsecureSkipVerify = new(true)
 	}
 }
 
@@ -317,7 +317,7 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 					Key: PrivateKey,
 				},
 				// Liveness/readiness probes don't work when using "RequireAndVerifyClientCert".
-				ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+				ClientAuthType: new("VerifyClientCertIfGiven"),
 			},
 		},
 	}
@@ -327,7 +327,7 @@ func (f *Framework) AddAlertingToPrometheus(p *monitoringv1.Prometheus, ns, name
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
 		Alertmanagers: []monitoringv1.AlertmanagerEndpoints{
 			{
-				Namespace: ptr.To(ns),
+				Namespace: new(ns),
 				Name:      fmt.Sprintf("alertmanager-%s", name),
 				Port:      intstr.FromString("web"),
 			},
@@ -375,7 +375,7 @@ func (f *Framework) MakeBasicPodMonitor(name string) *monitoringv1.PodMonitor {
 			},
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Port:     ptr.To("web"),
+					Port:     new("web"),
 					Interval: "30s",
 				},
 			},
@@ -450,12 +450,13 @@ func (f *Framework) UpdatePrometheusReplicasAndWaitUntilReady(ctx context.Contex
 		ns,
 		monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(replicas),
+				Replicas: new(replicas),
 			},
 		},
 	)
 }
 
+// ScalePrometheusAndWaitUntilReady scales the number of shards.
 func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, ns string, shards int32) (*monitoringv1.Prometheus, error) {
 	promClient := f.MonClientV1.Prometheuses(ns)
 	scale, err := promClient.GetScale(ctx, name, metav1.GetOptions{})
@@ -468,6 +469,7 @@ func (f *Framework) ScalePrometheusAndWaitUntilReady(ctx context.Context, name, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to scale Prometheus %s/%s: %w", ns, name, err)
 	}
+
 	p, err := promClient.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Prometheus %s/%s: %w", ns, name, err)
@@ -495,7 +497,7 @@ func (f *Framework) PatchPrometheus(ctx context.Context, name, ns string, spec m
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -633,21 +635,35 @@ func (f *Framework) WaitForActiveTargets(ctx context.Context, ns, svcName string
 // WaitForHealthyTargets waits for a number of targets to be configured and
 // healthy.
 func (f *Framework) WaitForHealthyTargets(ctx context.Context, ns, svcName string, amount int) error {
+	return f.WaitForHealthyTargetsWithCondition(
+		ctx,
+		ns,
+		svcName,
+		func(targets []*Target) error {
+			if len(targets) != amount {
+				return fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
+			}
+
+			return nil
+		},
+	)
+}
+
+// WaitForHealthyTargetsWithCondition queries healthy targets from the
+// Prometheus API endpoint and waits for the condition function to return no
+// error.
+func (f *Framework) WaitForHealthyTargetsWithCondition(ctx context.Context, ns, svcName string, cond func([]*Target) error) error {
 	var loopErr error
 
-	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(ctx context.Context) (bool, error) {
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*1, true, func(_ context.Context) (bool, error) {
 		var targets []*Target
-		targets, loopErr = f.GetHealthyTargets(ctx, ns, svcName)
+		targets, loopErr = f.GetHealthyTargets(context.Background(), ns, svcName)
 		if loopErr != nil {
 			return false, nil
 		}
 
-		if len(targets) == amount {
-			return true, nil
-		}
-
-		loopErr = fmt.Errorf("expected %d, found %d healthy targets", amount, len(targets))
-		return false, nil
+		loopErr = cond(targets)
+		return loopErr == nil, nil
 	})
 	if err != nil {
 		return fmt.Errorf("%s: waiting for healthy targets failed: %v: %v", svcName, err, loopErr)

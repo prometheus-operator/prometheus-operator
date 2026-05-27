@@ -55,7 +55,7 @@ func NewAlertmanagerInformer(client versioned.Interface, namespace string, resyn
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredAlertmanagerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -80,7 +80,7 @@ func NewFilteredAlertmanagerInformer(client versioned.Interface, namespace strin
 				}
 				return client.MonitoringV1().Alertmanagers(namespace).Watch(ctx, options)
 			},
-		},
+		}, client),
 		&apismonitoringv1.Alertmanager{},
 		resyncPeriod,
 		indexers,

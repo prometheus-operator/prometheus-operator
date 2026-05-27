@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -42,7 +43,6 @@ import (
 	"k8s.io/client-go/rest"
 	k8sflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 
 	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -130,7 +130,7 @@ var (
 	kubeletSyncPeriod    time.Duration
 	kubeletHTTPMetrics   bool
 
-	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
+	featureGates = k8sflag.NewMapStringBool(new(map[string]bool{}))
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -291,7 +291,6 @@ func start() int {
 		"watch_referenced_objects_in_all_namespaces", cfg.WatchObjectRefsInAllNamespaces,
 		"controller_id", cfg.ControllerID,
 		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
-	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
@@ -731,7 +730,7 @@ func start() int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation, parser.Options{})
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)

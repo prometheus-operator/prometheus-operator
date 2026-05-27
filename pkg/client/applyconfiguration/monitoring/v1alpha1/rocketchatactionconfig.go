@@ -18,10 +18,18 @@ package v1alpha1
 
 // RocketChatActionConfigApplyConfiguration represents a declarative configuration of the RocketChatActionConfig type for use
 // with apply.
+//
+// RocketChatActionConfig defines actions for RocketChat messages.
 type RocketChatActionConfigApplyConfiguration struct {
+	// text defines the button text displayed to users.
+	// This is the label that appears on the interactive button.
 	Text *string `json:"text,omitempty"`
-	URL  *string `json:"url,omitempty"`
-	Msg  *string `json:"msg,omitempty"`
+	// url defines the URL the button links to when clicked.
+	// This creates a clickable button that opens the specified URL.
+	URL *string `json:"url,omitempty"`
+	// msg defines the message to send when the button is clicked.
+	// This allows the button to post a predefined message to the channel.
+	Msg *string `json:"msg,omitempty"`
 }
 
 // RocketChatActionConfigApplyConfiguration constructs a declarative configuration of the RocketChatActionConfig type for use with

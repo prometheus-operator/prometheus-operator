@@ -18,7 +18,12 @@ package v1
 
 // ConfigResourceStatusApplyConfiguration represents a declarative configuration of the ConfigResourceStatus type for use
 // with apply.
+//
+// ConfigResourceStatus is the most recent observed status of the Configuration Resource (ServiceMonitor, PodMonitor, Probes, ScrapeConfig, PrometheusRule or AlertmanagerConfig). Read-only.
+// More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type ConfigResourceStatusApplyConfiguration struct {
+	// bindings defines the list of workload resources (Prometheus, PrometheusAgent, ThanosRuler or Alertmanager) which select the configuration resource.
 	Bindings []WorkloadBindingApplyConfiguration `json:"bindings,omitempty"`
 }
 

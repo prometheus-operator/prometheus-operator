@@ -22,12 +22,19 @@ import (
 
 // TimeIntervalApplyConfiguration represents a declarative configuration of the TimeInterval type for use
 // with apply.
+//
+// TimeInterval describes intervals of time
 type TimeIntervalApplyConfiguration struct {
-	Times       []TimeRangeApplyConfiguration       `json:"times,omitempty"`
-	Weekdays    []monitoringv1alpha1.WeekdayRange   `json:"weekdays,omitempty"`
+	// times defines a list of TimeRange
+	Times []TimeRangeApplyConfiguration `json:"times,omitempty"`
+	// weekdays defines a list of WeekdayRange
+	Weekdays []monitoringv1alpha1.WeekdayRange `json:"weekdays,omitempty"`
+	// daysOfMonth defines a list of DayOfMonthRange
 	DaysOfMonth []DayOfMonthRangeApplyConfiguration `json:"daysOfMonth,omitempty"`
-	Months      []monitoringv1alpha1.MonthRange     `json:"months,omitempty"`
-	Years       []monitoringv1alpha1.YearRange      `json:"years,omitempty"`
+	// months defines a list of MonthRange
+	Months []monitoringv1alpha1.MonthRange `json:"months,omitempty"`
+	// years defines a list of YearRange
+	Years []monitoringv1alpha1.YearRange `json:"years,omitempty"`
 }
 
 // TimeIntervalApplyConfiguration constructs a declarative configuration of the TimeInterval type for use with

@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -237,8 +237,11 @@ func (m *Map) Set(value string) error {
 	}
 
 	for pair := range strings.SplitSeq(value, ",") {
-		pair := strings.Split(pair, "=")
-		(*m)[pair[0]] = pair[1]
+		k, v, ok := strings.Cut(pair, "=")
+		if !ok {
+			return fmt.Errorf("invalid key=value pair: %q", pair)
+		}
+		(*m)[k] = v
 	}
 
 	return nil

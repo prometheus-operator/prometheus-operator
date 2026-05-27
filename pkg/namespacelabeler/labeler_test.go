@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -296,13 +295,13 @@ func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
 				MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						TargetLabel: "namespace",
-						Replacement: ptr.To("bar"),
+						Replacement: new("bar"),
 					},
 				},
 				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						TargetLabel: "namespace",
-						Replacement: ptr.To("bar"),
+						Replacement: new("bar"),
 					},
 				},
 			}),

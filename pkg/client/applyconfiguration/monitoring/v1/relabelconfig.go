@@ -22,14 +22,43 @@ import (
 
 // RelabelConfigApplyConfiguration represents a declarative configuration of the RelabelConfig type for use
 // with apply.
+//
+// RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+// scraped samples and remote write samples.
+//
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 type RelabelConfigApplyConfiguration struct {
+	// sourceLabels defines the source labels select values from existing labels. Their content is
+	// concatenated using the configured Separator and matched against the
+	// configured regular expression.
 	SourceLabels []monitoringv1.LabelName `json:"sourceLabels,omitempty"`
-	Separator    *string                  `json:"separator,omitempty"`
-	TargetLabel  *string                  `json:"targetLabel,omitempty"`
-	Regex        *string                  `json:"regex,omitempty"`
-	Modulus      *uint64                  `json:"modulus,omitempty"`
-	Replacement  *string                  `json:"replacement,omitempty"`
-	Action       *string                  `json:"action,omitempty"`
+	// separator defines the string between concatenated SourceLabels.
+	Separator *string `json:"separator,omitempty"`
+	// targetLabel defines the label to which the resulting string is written in a replacement.
+	//
+	// It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
+	// `KeepEqual` and `DropEqual` actions.
+	//
+	// Regex capture groups are available.
+	TargetLabel *string `json:"targetLabel,omitempty"`
+	// regex defines the regular expression against which the extracted value is matched.
+	Regex *string `json:"regex,omitempty"`
+	// modulus to take of the hash of the source label values.
+	//
+	// Only applicable when the action is `HashMod`.
+	Modulus *uint64 `json:"modulus,omitempty"`
+	// replacement value against which a Replace action is performed if the
+	// regular expression matches.
+	//
+	// Regex capture groups are available.
+	Replacement *string `json:"replacement,omitempty"`
+	// action to perform based on the regex matching.
+	//
+	// `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
+	// `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
+	//
+	// Default: "Replace"
+	Action *string `json:"action,omitempty"`
 }
 
 // RelabelConfigApplyConfiguration constructs a declarative configuration of the RelabelConfig type for use with

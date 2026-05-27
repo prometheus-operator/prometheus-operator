@@ -22,19 +22,70 @@ import (
 
 // WebTLSConfigApplyConfiguration represents a declarative configuration of the WebTLSConfig type for use
 // with apply.
+//
+// WebTLSConfig defines the TLS parameters for HTTPS.
 type WebTLSConfigApplyConfiguration struct {
-	Cert                     *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
-	CertFile                 *string                              `json:"certFile,omitempty"`
-	KeySecret                *corev1.SecretKeySelector            `json:"keySecret,omitempty"`
-	KeyFile                  *string                              `json:"keyFile,omitempty"`
-	ClientCA                 *SecretOrConfigMapApplyConfiguration `json:"client_ca,omitempty"`
-	ClientCAFile             *string                              `json:"clientCAFile,omitempty"`
-	ClientAuthType           *string                              `json:"clientAuthType,omitempty"`
-	MinVersion               *string                              `json:"minVersion,omitempty"`
-	MaxVersion               *string                              `json:"maxVersion,omitempty"`
-	CipherSuites             []string                             `json:"cipherSuites,omitempty"`
-	PreferServerCipherSuites *bool                                `json:"preferServerCipherSuites,omitempty"`
-	CurvePreferences         []string                             `json:"curvePreferences,omitempty"`
+	// cert defines the Secret or ConfigMap containing the TLS certificate for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `certFile`.
+	Cert *SecretOrConfigMapApplyConfiguration `json:"cert,omitempty"`
+	// certFile defines the path to the TLS certificate file in the container for the web server.
+	//
+	// Either `keySecret` or `keyFile` must be defined.
+	//
+	// It is mutually exclusive with `cert`.
+	CertFile *string `json:"certFile,omitempty"`
+	// keySecret defines the secret containing the TLS private key for the web server.
+	//
+	// Either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keyFile`.
+	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
+	// keyFile defines the path to the TLS private key file in the container for the web server.
+	//
+	// If defined, either `cert` or `certFile` must be defined.
+	//
+	// It is mutually exclusive with `keySecret`.
+	KeyFile *string `json:"keyFile,omitempty"`
+	// client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate
+	// authentication to the server.
+	//
+	// It is mutually exclusive with `clientCAFile`.
+	ClientCA *SecretOrConfigMapApplyConfiguration `json:"client_ca,omitempty"`
+	// clientCAFile defines the path to the CA certificate file for client certificate authentication to
+	// the server.
+	//
+	// It is mutually exclusive with `client_ca`.
+	ClientCAFile *string `json:"clientCAFile,omitempty"`
+	// clientAuthType defines the server policy for client TLS authentication.
+	//
+	// For more detail on clientAuth options:
+	// https://golang.org/pkg/crypto/tls/#ClientAuthType
+	ClientAuthType *string `json:"clientAuthType,omitempty"`
+	// minVersion defines the minimum TLS version that is acceptable.
+	MinVersion *string `json:"minVersion,omitempty"`
+	// maxVersion defines the Maximum TLS version that is acceptable.
+	MaxVersion *string `json:"maxVersion,omitempty"`
+	// cipherSuites defines the list of supported cipher suites for TLS versions up to TLS 1.2.
+	//
+	// If not defined, the Go default cipher suites are used.
+	// Available cipher suites are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#pkg-constants
+	CipherSuites []string `json:"cipherSuites,omitempty"`
+	// preferServerCipherSuites defines whether the server selects the client's most preferred cipher
+	// suite, or the server's most preferred cipher suite.
+	//
+	// If true then the server's preference, as expressed in
+	// the order of elements in cipherSuites, is used.
+	PreferServerCipherSuites *bool `json:"preferServerCipherSuites,omitempty"`
+	// curvePreferences defines elliptic curves that will be used in an ECDHE handshake, in preference
+	// order.
+	//
+	// Available curves are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
 
 // WebTLSConfigApplyConfiguration constructs a declarative configuration of the WebTLSConfig type for use with

@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -557,6 +557,10 @@ type AlertmanagerGlobalConfig struct {
 	// wechat defines the default WeChat Config
 	// +optional
 	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
+
+	// mattermost defines the default Mattermost Config
+	// +optional
+	MattermostConfig *GlobalMattermostConfig `json:"mattermost,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -770,6 +774,16 @@ type GlobalVictorOpsConfig struct {
 	//
 	// +optional
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
+}
+
+// GlobalMattermostConfig configures global Mattermost parameters.
+type GlobalMattermostConfig struct {
+	// webhookURL defines the default Mattermost Webhook URL.
+	//
+	// It requires Alertmanager >= v0.32.0.
+	//
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
 }
 
 // HostPort represents a "host:port" network address.

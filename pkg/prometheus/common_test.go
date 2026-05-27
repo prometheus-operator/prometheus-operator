@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/utils/ptr"
@@ -41,49 +42,49 @@ func TestStartupProbeTimeoutSeconds(t *testing.T) {
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(0)),
+			maximumStartupDurationSeconds:   new(int32(0)),
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(1)),
+			maximumStartupDurationSeconds:   new(int32(1)),
 			expectedStartupPeriodSeconds:    15,
 			expectedStartupFailureThreshold: 60,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(60)),
+			maximumStartupDurationSeconds:   new(int32(60)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 1,
 			expectedMaxStartupDuration:      60,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   new(int32(600)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 10,
 			expectedMaxStartupDuration:      600,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(900)),
+			maximumStartupDurationSeconds:   new(int32(900)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 15,
 			expectedMaxStartupDuration:      900,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(1200)),
+			maximumStartupDurationSeconds:   new(int32(1200)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 20,
 			expectedMaxStartupDuration:      1200,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(129)),
+			maximumStartupDurationSeconds:   new(int32(129)),
 			expectedStartupPeriodSeconds:    43,
 			expectedStartupFailureThreshold: 3,
 			expectedMaxStartupDuration:      129,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(322)),
+			maximumStartupDurationSeconds:   new(int32(322)),
 			expectedStartupPeriodSeconds:    54,
 			expectedStartupFailureThreshold: 6,
 			expectedMaxStartupDuration:      324,
@@ -179,28 +180,28 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		// OTLP receiver not supported.
 		{
 			version:                    "2.46.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver supported starting with v2.47.0.
 		{
 			version:                    "2.47.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: true,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver supported but not enabled.
 		{
 			version:                    "2.47.0",
-			enableOTLPReceiver:         ptr.To(false),
+			enableOTLPReceiver:         new(false),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// OTLP receiver config supported but version not support
 		{
 			version:            "2.46.0",
-			enableOTLPReceiver: ptr.To(false),
+			enableOTLPReceiver: new(false),
 			OTLPConfig: &monitoringv1.OTLPConfig{
 				PromoteResourceAttributes: []string{"aa", "bb"},
 			},
@@ -230,21 +231,21 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 		// Test higher version from which enable-feature available.
 		{
 			version:                    "2.54.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: true,
 			expectedOTLPReceiverFlag:   false,
 		},
 		// Test higher version from which web.enable-otlp-receiver arg available.
 		{
 			version:                    "3.0.0",
-			enableOTLPReceiver:         ptr.To(true),
+			enableOTLPReceiver:         new(true),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   true,
 		},
 		// Test higher version but not enabled.
 		{
 			version:                    "3.0.0",
-			enableOTLPReceiver:         ptr.To(false),
+			enableOTLPReceiver:         new(false),
 			expectedOTLPFeatureEnabled: false,
 			expectedOTLPReceiverFlag:   false,
 		},
@@ -283,6 +284,148 @@ func TestBuildCommonPrometheusArgsWithOTLPReceiver(t *testing.T) {
 
 			require.Equal(t, tc.expectedOTLPReceiverFlag, argsEnabled)
 			require.Equal(t, tc.expectedOTLPFeatureEnabled, featureEnabled)
+		})
+	}
+}
+
+func TestNodeSelectorWithTopologyZone(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name                       string
+		nodeSelector               map[string]string
+		shardingStrategy           *monitoringv1.ShardingStrategy
+		prometheusTopologySharding bool
+		shardIndex                 int32
+		expectedSelector           map[string]string
+	}{
+		{
+			name:                       "prometheusTopologySharding=false returns original selector",
+			nodeSelector:               map[string]string{"foo": "bar"},
+			prometheusTopologySharding: false,
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			expectedSelector: map[string]string{"foo": "bar"},
+		},
+		{
+			name:                       "shardingStrategy=nil returns original selector",
+			nodeSelector:               map[string]string{"foo": "bar"},
+			prometheusTopologySharding: true,
+			shardingStrategy:           nil,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			// This case isn't possible in practice because the API enforces
+			// the "topology can only be defined when strategy = topology
+			// sharding" invariant.
+			name:         "Topology mode with no values returns original selector",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(monitoringv1.AddressShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			// This case isn't possible in practice because the API enforces
+			// the "shards >= number of zones" invariant.
+			name:         "Topology mode with no values returns original selector",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			prometheusTopologySharding: true,
+			expectedSelector:           map[string]string{"foo": "bar"},
+		},
+		{
+			name:         "Topology mode shard #0 with 2 zones assigns first zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode shard #1 with 2 zones assigns second zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 1,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-b"},
+		},
+		{
+			name:         "Topology mode shard #2 with 2 zones assigns first zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 2,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode shard #3 with 2 zones assigns second zone",
+			nodeSelector: map[string]string{"foo": "bar"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 3,
+			expectedSelector:           map[string]string{"foo": "bar", corev1.LabelTopologyZone: "zone-b"},
+		},
+		{
+			name:         "Topology mode overrides existing topology.kubernetes.io/zone",
+			nodeSelector: map[string]string{"topology.kubernetes.io/zone": "will-be-replaced"},
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{corev1.LabelTopologyZone: "zone-a"},
+		},
+		{
+			name:         "Topology mode with nil nodeSelector creates new map",
+			nodeSelector: nil,
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a"}},
+			},
+			prometheusTopologySharding: true,
+			shardIndex:                 0,
+			expectedSelector:           map[string]string{corev1.LabelTopologyZone: "zone-a"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						NodeSelector:     tc.nodeSelector,
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+			opts := []ConfigGeneratorOption{}
+			if tc.prometheusTopologySharding {
+				opts = append(opts, WithPrometheusTopologySharding())
+			}
+			cg, err := NewConfigGenerator(nil, p, opts...)
+			require.NoError(t, err)
+			got := cg.NodeSelectorWithTopologyZone(tc.shardIndex)
+			require.Equal(t, tc.expectedSelector, got)
 		})
 	}
 }

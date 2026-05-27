@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ func TestWALCompression(t *testing.T) {
 		shouldContain bool
 	}{
 		// Nil should not have either flag.
-		{"v2.30.0", ptr.To(false), "--storage.agent.wal-compression", false},
+		{"v2.30.0", new(false), "--storage.agent.wal-compression", false},
 		{"v2.32.0", nil, "--storage.agent.wal-compression", false},
-		{"v2.32.0", ptr.To(false), "--no-storage.agent.wal-compression", true},
-		{"v2.32.0", ptr.To(true), "--storage.agent.wal-compression", true},
+		{"v2.32.0", new(false), "--no-storage.agent.wal-compression", true},
+		{"v2.32.0", new(true), "--storage.agent.wal-compression", true},
 	}
 
 	for _, test := range tests {
@@ -232,11 +232,11 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 		Options: []monitoringv1.PodDNSConfigOption{
 			{
 				Name:  "ndots",
-				Value: ptr.To("5"),
+				Value: new("5"),
 			},
 		},
 	}
-	monitoringDNSPolicyPtr := ptr.To(monitoringv1.DNSPolicy(monitoringDNSPolicy))
+	monitoringDNSPolicyPtr := new(monitoringv1.DNSPolicy(monitoringDNSPolicy))
 
 	// Create the PrometheusAgent object with DNS settings
 	prometheusAgent := monitoringv1alpha1.PrometheusAgent{
@@ -272,7 +272,7 @@ func TestScrapeFailureLogFileVolumeMountPresent(t *testing.T) {
 	sset, err := makeDaemonSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
 		Spec: monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ScrapeFailureLogFile: ptr.To("file.log"),
+				ScrapeFailureLogFile: new("file.log"),
 			},
 		},
 	})
@@ -307,7 +307,7 @@ func TestScrapeFailureLogFileVolumeMountNotPresent(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1alpha1.PrometheusAgent{
 		Spec: monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				ScrapeFailureLogFile: ptr.To("/tmp/file.log"),
+				ScrapeFailureLogFile: new("/tmp/file.log"),
 			},
 		},
 	})
@@ -393,8 +393,8 @@ func TestStatefulSetenableServiceLinks(t *testing.T) {
 		enableServiceLinks         *bool
 		expectedEnableServiceLinks *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableServiceLinks: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableServiceLinks: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableServiceLinks: new(false)},
+		{enableServiceLinks: new(true), expectedEnableServiceLinks: new(true)},
 		{enableServiceLinks: nil, expectedEnableServiceLinks: nil},
 	}
 
@@ -473,13 +473,13 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
 				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 		},
@@ -503,6 +503,97 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, tc.exp, sset.Spec.UpdateStrategy)
+		})
+	}
+}
+
+func TestConfigReloaderTopologyZoneEnvVar(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name             string
+		shardingStrategy *monitoringv1.ShardingStrategy
+		shardIndex       int32
+		expectedZone     string
+	}{
+		{
+			name: "shard 0 gets zone-a",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			shardIndex:   0,
+			expectedZone: "zone-a",
+		},
+		{
+			name: "shard 1 gets zone-b",
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode: new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{
+					Values: []string{"zone-a", "zone-b"},
+				},
+			},
+			shardIndex:   1,
+			expectedZone: "zone-b",
+		},
+		{
+			name:             "no topology mode means no zone env var",
+			shardingStrategy: nil,
+			shardIndex:       0,
+			expectedZone:     "",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := monitoringv1alpha1.PrometheusAgent{
+				Spec: monitoringv1alpha1.PrometheusAgentSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+
+			logger := prompkg.NewLogger()
+			cg, err := prompkg.NewConfigGenerator(logger, &p, prompkg.WithPrometheusTopologySharding())
+			require.NoError(t, err)
+
+			sset, err := makeStatefulSet(
+				"test",
+				&p,
+				defaultTestConfig,
+				cg,
+				"",
+				tc.shardIndex,
+				&operator.ShardedSecret{},
+			)
+			require.NoError(t, err)
+
+			checkZoneEnvVar := func(containers []corev1.Container, containerName string) {
+				t.Helper()
+				for _, c := range containers {
+					if c.Name != containerName {
+						continue
+					}
+					var found bool
+					for _, env := range c.Env {
+						if env.Name == operator.TopologyZoneEnvVar {
+							assert.Equal(t, tc.expectedZone, env.Value)
+							found = true
+						}
+					}
+					if tc.expectedZone == "" {
+						assert.False(t, found, "unexpected %s env var in %s", operator.TopologyZoneEnvVar, containerName)
+					} else {
+						assert.True(t, found, "missing %s env var in %s", operator.TopologyZoneEnvVar, containerName)
+					}
+					return
+				}
+				t.Errorf("container %q not found", containerName)
+			}
+
+			checkZoneEnvVar(sset.Spec.Template.Spec.Containers, "config-reloader")
+			checkZoneEnvVar(sset.Spec.Template.Spec.InitContainers, "init-config-reloader")
 		})
 	}
 }

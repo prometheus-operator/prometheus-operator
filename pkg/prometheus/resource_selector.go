@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -770,6 +770,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
 		}
 
+		if config.HealthFilter != nil && rs.version.LT(semver.MustParse("3.11.2")) {
+			return fmt.Errorf("field `config.HealthFilter` is only supported for Prometheus version >= 3.11.2")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
@@ -877,12 +881,16 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
+		if authMethod == "WorkloadIdentity" && rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("[%d]: WorkloadIdentity authentication is only supported from Prometheus version 3.11.0", i)
+		}
+
 		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
 			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
 		}
 
 		// Since Prometheus uses default authentication method as "OAuth"
-		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
+		if authMethod == "ManagedIdentity" || authMethod == "SDK" || authMethod == "WorkloadIdentity" {
 			continue
 		}
 

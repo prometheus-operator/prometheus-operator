@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -982,6 +982,12 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		if rw.AzureAD != nil && rw.AzureAD.Scope != nil {
 			reset := resetFieldFn("none")
 			reset("azureAD.scope", &rw.AzureAD.Scope)
+		}
+
+		// Thanos does not support sigv4.externalId in any version
+		if rw.Sigv4 != nil && rw.Sigv4.ExternalID != "" {
+			o.logger.Warn("ignoring \"sigv4.externalId\" not supported by Thanos", "minimum_version", "none")
+			rw.Sigv4.ExternalID = ""
 		}
 
 		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.

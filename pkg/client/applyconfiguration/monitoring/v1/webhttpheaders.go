@@ -18,11 +18,30 @@ package v1
 
 // WebHTTPHeadersApplyConfiguration represents a declarative configuration of the WebHTTPHeaders type for use
 // with apply.
+//
+// WebHTTPHeaders defines the list of headers that can be added to HTTP responses.
 type WebHTTPHeadersApplyConfiguration struct {
-	ContentSecurityPolicy   *string `json:"contentSecurityPolicy,omitempty"`
-	XFrameOptions           *string `json:"xFrameOptions,omitempty"`
-	XContentTypeOptions     *string `json:"xContentTypeOptions,omitempty"`
-	XXSSProtection          *string `json:"xXSSProtection,omitempty"`
+	// contentSecurityPolicy defines the Content-Security-Policy header to HTTP responses.
+	// Unset if blank.
+	ContentSecurityPolicy *string `json:"contentSecurityPolicy,omitempty"`
+	// xFrameOptions defines the X-Frame-Options header to HTTP responses.
+	// Unset if blank. Accepted values are deny and sameorigin.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+	XFrameOptions *string `json:"xFrameOptions,omitempty"`
+	// xContentTypeOptions defines the X-Content-Type-Options header to HTTP responses.
+	// Unset if blank. Accepted value is nosniff.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+	XContentTypeOptions *string `json:"xContentTypeOptions,omitempty"`
+	// xXSSProtection defines the X-XSS-Protection header to all responses.
+	// Unset if blank.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+	XXSSProtection *string `json:"xXSSProtection,omitempty"`
+	// strictTransportSecurity defines the Strict-Transport-Security header to HTTP responses.
+	// Unset if blank.
+	// Please make sure that you use this with care as this header might force
+	// browsers to load Prometheus and the other applications hosted on the same
+	// domain and subdomains over HTTPS.
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
 	StrictTransportSecurity *string `json:"strictTransportSecurity,omitempty"`
 }
 
