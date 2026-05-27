@@ -1238,7 +1238,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
 					APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
 					RoomID:  "testingRoomID",
-					Message: ptr.To("testingMessage"),
+					Message: new("testingMessage"),
 					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 						Authorization: &monitoringv1.SafeAuthorization{
 							Type: "Bearer",
@@ -1258,7 +1258,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 						Key: "webhook-url",
 					},
-					Title: ptr.To("Alert"),
+					Title: new("Alert"),
 				}},
 			}},
 		},
@@ -1997,7 +1997,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 					},
 					Key: "apisecret",
 				},
-				APICorpID: ptr.To("abc123"),
+				APICorpID: new("abc123"),
 			},
 			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
