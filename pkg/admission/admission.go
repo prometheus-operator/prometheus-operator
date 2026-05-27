@@ -180,13 +180,14 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 	responseAdmissionReview.Kind = requestedAdmissionReview.Kind
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
-
-	a.logger.Debug("sending response", "content", string(respBytes))
-
 	if err != nil {
 		a.logger.Error("Cannot serialize response", "err", err)
 		http.Error(w, fmt.Sprintf("could not serialize response: %v", err), http.StatusInternalServerError)
+		return
 	}
+
+	a.logger.Debug("sending response", "content", string(respBytes))
+
 	if _, err := w.Write(respBytes); err != nil {
 		a.logger.Error("Cannot write response", "err", err)
 		http.Error(w, fmt.Sprintf("could not write response: %v", err), http.StatusInternalServerError)
