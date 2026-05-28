@@ -7051,7 +7051,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to query from.
+                      description: |-
+                        url defines the URL of the endpoint to query from.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                   required:
                   - url

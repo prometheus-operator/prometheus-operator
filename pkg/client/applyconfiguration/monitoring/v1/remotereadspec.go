@@ -28,7 +28,9 @@ import (
 // from a remote endpoint.
 type RemoteReadSpecApplyConfiguration struct {
 	// url defines the URL of the endpoint to query from.
-	URL *string `json:"url,omitempty"`
+	//
+	// It must use the HTTP or HTTPS scheme.
+	URL *monitoringv1.URL `json:"url,omitempty"`
 	// name of the remote read queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate read
 	// configurations.
@@ -94,7 +96,7 @@ func RemoteReadSpec() *RemoteReadSpecApplyConfiguration {
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *RemoteReadSpecApplyConfiguration) WithURL(value string) *RemoteReadSpecApplyConfiguration {
+func (b *RemoteReadSpecApplyConfiguration) WithURL(value monitoringv1.URL) *RemoteReadSpecApplyConfiguration {
 	b.URL = &value
 	return b
 }
