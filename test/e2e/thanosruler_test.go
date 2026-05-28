@@ -574,9 +574,9 @@ func testThanosRulerStateless(t *testing.T) {
 	// remote-write receiver for Thanos ruler.
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prometheus.Spec.EnableRemoteWriteReceiver = true
-	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
-	// Ensure that the Promehteus resource selects no rule.
+	// Ensure that Prometheus does not evaluate rules; only Thanos Ruler should.
 	prometheus.Spec.RuleSelector = nil
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
 	require.NoError(t, err)
 
 	promSVC := framework.MakePrometheusService(prometheus.Name, name, corev1.ServiceTypeClusterIP)
