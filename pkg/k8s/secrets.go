@@ -40,7 +40,7 @@ func LoadSecretRef(ctx context.Context, logger *slog.Logger, client typedcorev1.
 	secret, err := client.Get(ctx, sks.Name, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) && optional {
-			logger.Debug(fmt.Sprintf("secret %v could not be found", sks.Name))
+			logger.Debug("secret could not be found", "secret", sks.Name)
 			return nil, nil
 		}
 
@@ -50,7 +50,7 @@ func LoadSecretRef(ctx context.Context, logger *slog.Logger, client typedcorev1.
 	b, found := secret.Data[sks.Key]
 	if !found {
 		if optional {
-			logger.Debug(fmt.Sprintf("secret %v could not be found", sks.Name))
+			logger.Debug("secret could not be found", "secret", sks.Name)
 			return nil, nil
 		}
 
