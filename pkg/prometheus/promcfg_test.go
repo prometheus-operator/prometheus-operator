@@ -1754,7 +1754,7 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:        "https-metrics",
+							Port:        new(intstr.FromString("https-metrics")),
 							HonorLabels: true,
 							Interval:    "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
@@ -1855,7 +1855,7 @@ func TestServiceMonitorWithServiceDiscoveryRole(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -2037,7 +2037,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -2109,7 +2109,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -2196,7 +2196,7 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 					Endpoints: []monitoringv1.Endpoint{
 						{
 							HonorTimestamps: new(false),
-							Port:            "web",
+							Port:            new(intstr.FromString("web")),
 							Interval:        "30s",
 						},
 					},
@@ -2270,7 +2270,7 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 					Endpoints: []monitoringv1.Endpoint{
 						{
 							TrackTimestampsStaleness: new(false),
-							Port:                     "web",
+							Port:                     new(intstr.FromString("web")),
 							Interval:                 "30s",
 						},
 					},
@@ -2372,7 +2372,7 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: new(false),
-									Port:            "web",
+									Port:            new(intstr.FromString("web")),
 									Interval:        "30s",
 								},
 							},
@@ -2433,7 +2433,7 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: new(false),
-									Port:            "web",
+									Port:            new(intstr.FromString("web")),
 									Interval:        "30s",
 								},
 							},
@@ -2601,7 +2601,7 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 					Endpoints: []monitoringv1.Endpoint{
 						{
 							HonorTimestamps: new(true),
-							Port:            "web",
+							Port:            new(intstr.FromString("web")),
 							Interval:        "30s",
 						},
 					},
@@ -2641,7 +2641,7 @@ func TestSettingHonorLabels(t *testing.T) {
 					Endpoints: []monitoringv1.Endpoint{
 						{
 							HonorLabels: true,
-							Port:        "web",
+							Port:        new(intstr.FromString("web")),
 							Interval:    "30s",
 						},
 					},
@@ -2682,7 +2682,7 @@ func TestHonorLabelsOverriding(t *testing.T) {
 					Endpoints: []monitoringv1.Endpoint{
 						{
 							HonorLabels: true,
-							Port:        "web",
+							Port:        new(intstr.FromString("web")),
 							Interval:    "30s",
 						},
 					},
@@ -2718,7 +2718,7 @@ func TestTargetLabels(t *testing.T) {
 					TargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -2852,7 +2852,7 @@ func TestEndpointOAuth2(t *testing.T) {
 					Spec: monitoringv1.ServiceMonitorSpec{
 						Endpoints: []monitoringv1.Endpoint{
 							{
-								Port: "web",
+								Port: new(intstr.FromString("web")),
 								HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 									HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 										HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
@@ -2967,7 +2967,7 @@ func TestPodTargetLabels(t *testing.T) {
 					PodTargetLabels: []string{"example", "env"},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -3192,7 +3192,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 				},
 			},
@@ -3216,7 +3216,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 				},
 			},
@@ -3240,7 +3240,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 					Path:     "/federate",
 					Params:   map[string][]string{"metrics[]": {"{__name__=~\"job:.*\"}"}},
@@ -3266,7 +3266,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
@@ -3302,7 +3302,7 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
@@ -3717,7 +3717,7 @@ func TestSampleLimits(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -3826,7 +3826,7 @@ func TestTargetLimits(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -4904,7 +4904,7 @@ func TestLabelLimits(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -5231,7 +5231,7 @@ func TestKeepDroppedTargets(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -5362,7 +5362,7 @@ func TestNativeHistogramConfig(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -5442,7 +5442,7 @@ func TestBodySizeLimits(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -5540,7 +5540,7 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -5604,7 +5604,7 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
@@ -5759,7 +5759,7 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 				Spec: monitoringv1.ServiceMonitorSpec{
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
@@ -6298,7 +6298,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "https-metrics",
+							Port:     new(intstr.FromString("https-metrics")),
 							Interval: "30s",
 							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 								{
@@ -10801,7 +10801,7 @@ func defaultServiceMonitor() *monitoringv1.ServiceMonitor {
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 				},
 			},
@@ -14141,7 +14141,7 @@ func TestServiceMonitorSelectors(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -14173,7 +14173,7 @@ func TestServiceMonitorSelectors(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -14201,7 +14201,7 @@ func TestServiceMonitorSelectors(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -14236,7 +14236,7 @@ func TestServiceMonitorSelectors(t *testing.T) {
 					},
 					Endpoints: []monitoringv1.Endpoint{
 						{
-							Port:     "web",
+							Port:     new(intstr.FromString("web")),
 							Interval: "30s",
 						},
 					},
@@ -14546,7 +14546,7 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 						MatchLabels: map[string]string{"foo": "bar"},
 					},
 					Endpoints: []monitoringv1.Endpoint{
-						{Port: "web", Interval: "30s"},
+						{Port: new(intstr.FromString("web")), Interval: "30s"},
 					},
 				},
 			},
@@ -14707,7 +14707,7 @@ func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 							},
 							Endpoints: []monitoringv1.Endpoint{
 								{
-									Port:     "web",
+									Port:     new(intstr.FromString("web")),
 									Interval: "30s",
 								},
 							},
@@ -14895,6 +14895,147 @@ func TestInzoneShardForShard(t *testing.T) {
 			for i, exp := range tc.expected {
 				require.Equal(t, exp, cg.InzoneShardForShard(int32(i)))
 			}
+		})
+	}
+}
+
+func TestServiceMonitorPortRelabeling(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		smon   *monitoringv1.ServiceMonitor
+		prom   *monitoringv1.Prometheus
+		golden string
+	}{
+		{
+			name: "port as string with endpoints role",
+			prom: defaultPrometheus(),
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port: new(intstr.FromString("web")),
+						},
+					},
+				},
+			},
+			golden: "ServiceMonitorPortRelabeling_PortString_Endpoints.golden",
+		},
+		{
+			name: "port as string with endpointslice role",
+			prom: func() *monitoringv1.Prometheus {
+				p := defaultPrometheus()
+				p.Spec.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
+				return p
+			}(),
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port: new(intstr.FromString("web")),
+						},
+					},
+				},
+			},
+			golden: "ServiceMonitorPortRelabeling_PortString_EndpointSlice.golden",
+		},
+		{
+			name: "port as int with endpoints role",
+			prom: defaultPrometheus(),
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port: new(intstr.FromInt(8080)),
+						},
+					},
+				},
+			},
+			golden: "ServiceMonitorPortRelabeling_PortInt_Endpoints.golden",
+		},
+		{
+			name: "port as int with endpointslice role",
+			prom: func() *monitoringv1.Prometheus {
+				p := defaultPrometheus()
+				p.Spec.ServiceDiscoveryRole = ptr.To(monitoringv1.EndpointSliceRole)
+				return p
+			}(),
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port: new(intstr.FromInt(8080)),
+						},
+					},
+				},
+			},
+			golden: "ServiceMonitorPortRelabeling_PortInt_EndpointSlice.golden",
+		},
+		{
+			name: "targetPort as int",
+			prom: defaultPrometheus(),
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							TargetPort: new(intstr.FromInt(9090)),
+						},
+					},
+				},
+			},
+			golden: "ServiceMonitorPortRelabeling_TargetPortInt.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cg := mustNewConfigGenerator(t, tc.prom)
+			cfg, err := cg.GenerateServerConfiguration(
+				tc.prom,
+				map[string]*monitoringv1.ServiceMonitor{"test": tc.smon},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }

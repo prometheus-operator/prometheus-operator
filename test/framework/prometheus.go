@@ -351,7 +351,7 @@ func (f *Framework) MakeBasicServiceMonitor(name string) *monitoringv1.ServiceMo
 			},
 			Endpoints: []monitoringv1.Endpoint{
 				{
-					Port:     "web",
+					Port:     new(intstr.FromString("web")),
 					Interval: "30s",
 				},
 			},

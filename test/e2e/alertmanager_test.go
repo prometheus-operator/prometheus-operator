@@ -1938,7 +1938,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 				From: new("from"),
 				SmartHost: &monitoringv1.HostPort{
 					Host: "smtp.example.org",
-					Port: "587",
+					Port: intstr.FromString("587"),
 				},
 				Hello:        new("smtp.example.org"),
 				AuthUsername: new("dev@smtp.example.org"),
