@@ -10,7 +10,7 @@ scrape_configs:
   - role: service
     attach_metadata:
       node: true
-      namespace: false
+      namespace: true
   relabel_configs:
   - source_labels:
     - job
