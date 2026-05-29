@@ -117,6 +117,8 @@ func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
 	}
 }
 
+// WithInlineTLSConfig is an API only used by
+// https://github.com/open-telemetry/opentelemetry-operator.
 func WithInlineTLSConfig() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.inlineTLSConfig = true
