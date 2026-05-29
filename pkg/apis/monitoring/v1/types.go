@@ -661,8 +661,34 @@ type AttachMetadata struct {
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
 
+// OAuth2GrantType defines the OAuth2 grant type.
+// +kubebuilder:validation:Enum=ClientCredentials;JWTBearer
+type OAuth2GrantType string
+
+const (
+	GrantTypeClientCredentials OAuth2GrantType = "ClientCredentials"
+	GrantTypeJWTBearer         OAuth2GrantType = "JWTBearer"
+)
+
+// SignatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+// +kubebuilder:validation:Enum=RS256;RS384;RS512
+type SignatureAlgorithm string
+
+const (
+	SignatureAlgorithmRS256 SignatureAlgorithm = "RS256"
+	SignatureAlgorithmRS384 SignatureAlgorithm = "RS384"
+	SignatureAlgorithmRS512 SignatureAlgorithm = "RS512"
+)
+
 // OAuth2 configures OAuth2 settings.
 //
+// +kubebuilder:validation:XValidation:rule="!has(self.clientSecret) || !has(self.grantType) || self.grantType == 'ClientCredentials'",message="clientSecret is only allowed when grantType is 'ClientCredentials' or empty"
+// +kubebuilder:validation:XValidation:rule="!has(self.clientCertificateKey) || self.grantType == 'JWTBearer'",message="clientCertificateKey is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.clientCertificateKeyId) || self.grantType == 'JWTBearer'",message="clientCertificateKeyId is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.signatureAlgorithm) || self.grantType == 'JWTBearer'",message="signatureAlgorithm is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.issuer) || self.grantType == 'JWTBearer'",message="issuer is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.audience) || self.grantType == 'JWTBearer'",message="audience is only allowed when grantType is 'JWTBearer'"
+// +kubebuilder:validation:XValidation:rule="!has(self.claims) || self.grantType == 'JWTBearer'",message="claims is only allowed when grantType is 'JWTBearer'"
 // +k8s:openapi-gen=true
 type OAuth2 struct {
 	// clientId defines a key of a Secret or ConfigMap containing the
@@ -670,10 +696,77 @@ type OAuth2 struct {
 	// +required
 	ClientID SecretOrConfigMap `json:"clientId"`
 
+	// grantType defines the OAuth2 grant type to use. It can be one of
+	// "ClientCredentials" or "JWTBearer".
+	// If empty, defaults to "ClientCredentials".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	GrantType *OAuth2GrantType `json:"grantType,omitempty"`
+
 	// clientSecret defines a key of a Secret containing the OAuth2
 	// client's secret.
-	// +required
-	ClientSecret v1.SecretKeySelector `json:"clientSecret"`
+	// Only used when grantType is set to "ClientCredentials" or empty.
+	//
+	// +optional
+	ClientSecret *v1.SecretKeySelector `json:"clientSecret,omitempty"`
+
+	// clientCertificateKey defines a key of a Secret containing the RSA
+	// private key used to sign JWT tokens.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +optional
+	ClientCertificateKey *v1.SecretKeySelector `json:"clientCertificateKey,omitempty"`
+
+	// clientCertificateKeyId defines the JWT key identifier to include
+	// in the JWT token header.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ClientCertificateKeyID string `json:"clientCertificateKeyId,omitempty"`
+
+	// signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+	// Valid values are RS256, RS384, RS512. Defaults to RS256.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +optional
+	SignatureAlgorithm *SignatureAlgorithm `json:"signatureAlgorithm,omitempty"`
+
+	// issuer defines the issuer claim for JWT tokens.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Issuer string `json:"issuer,omitempty"`
+
+	// audience defines the intended audience of the JWT token request.
+	// If empty, the value of TokenURL is used as the intended audience.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Audience string `json:"audience,omitempty"`
+
+	// claims defines a map of additional claims to include in the JWT token.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	//
+	// +optional
+	Claims map[string]string `json:"claims,omitempty"` //nolint:kubeapilinter
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
@@ -722,8 +815,25 @@ func (o *OAuth2) Validate() error {
 		return fmt.Errorf("invalid OAuth2 clientID: %w", err)
 	}
 
+	grantType := GrantTypeClientCredentials
+	if o.GrantType != nil {
+		grantType = *o.GrantType
+	}
+
+	if grantType == GrantTypeClientCredentials && o.ClientSecret == nil {
+		return errors.New("OAuth2 clientSecret must be specified for ClientCredentials grant type")
+	}
+
+	if grantType == GrantTypeJWTBearer && o.ClientCertificateKey == nil {
+		return errors.New("OAuth2 clientCertificateKey must be specified for JWTBearer grant type")
+	}
+
 	if err := o.TLSConfig.Validate(); err != nil {
 		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
+	}
+
+	if err := o.ProxyConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid OAuth2 proxyConfig: %w", err)
 	}
 
 	return nil

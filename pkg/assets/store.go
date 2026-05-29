@@ -166,23 +166,35 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 		return err
 	}
 
-	_, err := s.GetKey(ctx, ns, oauth2.ClientID)
-	if err != nil {
+	if _, err := s.GetKey(ctx, ns, oauth2.ClientID); err != nil {
 		return fmt.Errorf("failed to get oauth2 client id: %w", err)
 	}
 
-	_, err = s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
-	if err != nil {
-		return fmt.Errorf("failed to get oauth2 client secret: %w", err)
+	grantType := monitoringv1.GrantTypeClientCredentials
+	if oauth2.GrantType != nil {
+		grantType = *oauth2.GrantType
 	}
 
-	err = s.AddProxyConfig(ctx, ns, oauth2.ProxyConfig)
-	if err != nil {
+	switch grantType {
+	case monitoringv1.GrantTypeClientCredentials:
+		if oauth2.ClientSecret != nil {
+			if _, err := s.GetSecretKey(ctx, ns, *oauth2.ClientSecret); err != nil {
+				return fmt.Errorf("failed to get oauth2 client secret: %w", err)
+			}
+		}
+	case monitoringv1.GrantTypeJWTBearer:
+		if oauth2.ClientCertificateKey != nil {
+			if _, err := s.GetSecretKey(ctx, ns, *oauth2.ClientCertificateKey); err != nil {
+				return fmt.Errorf("failed to get oauth2 client certificate key: %w", err)
+			}
+		}
+	}
+
+	if err := s.AddProxyConfig(ctx, ns, oauth2.ProxyConfig); err != nil {
 		return fmt.Errorf("failed to get oauth2 proxyConfig: %w", err)
 	}
 
-	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
-	if err != nil {
+	if err := s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig); err != nil {
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
 	}
 
