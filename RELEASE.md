@@ -22,7 +22,7 @@ The release cycle for cutting releases is every 6 weeks
 | v0.96   | 2026-11-25                       | **searching for volunteer**               |
 | v0.95   | 2026-10-14                       | **searching for volunteer**               |
 | v0.94   | 2026-09-02                       | **searching for volunteer**               |
-| v0.93   | 2026-07-22                       | **searching for volunteer**               |
+| v0.93   | 2026-07-22                       | Simon Pasquier (GitHub: @simonpasquier)   |
 | v0.92   | 2026-06-10                       | Jayapriya Pai (Github: @slashpai)         |
 | v0.91   | 2026-04-29                       | Simon Pasquier (GitHub: @simonpasquier)   |
 | v0.90   | 2026-03-18                       | Jayapriya Pai (Github: @slashpai)         |
