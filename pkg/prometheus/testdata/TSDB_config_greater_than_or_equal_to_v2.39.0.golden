@@ -8,3 +8,5 @@ scrape_configs: []
 storage:
   tsdb:
     out_of_order_time_window: 10m
+    retention:
+      time: 24h
