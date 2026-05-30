@@ -300,7 +300,7 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 
 		if config.URL != "" {
 			if err := validation.ValidateTemplateURL(config.URL); err != nil {
-				fmt.Errorf("[%d]: 'url': %w", i, err)
+				return fmt.Errorf("[%d]: 'url': %w", i, err)
 			}
 		}
 
