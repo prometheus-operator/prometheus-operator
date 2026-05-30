@@ -14653,12 +14653,12 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 			golden:            "TopologySharding_PodTopologyLabels_ServiceMonitor_6shards_3zones.golden",
 		},
 		{
-			name:  "pod_topology_labels_attach_metadata_false_is_respected",
+			name:   "pod_topology_labels_attach_metadata_false_is_respected",
 			shards: 4,
 			zones:  []string{"zone-a", "zone-b"},
 			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
 				sm := basicServiceMonitor()
-				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: ptr.To(false)}
+				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: new(bool)}
 				return sm
 			}(),
 			podTopologyLabels: true,
