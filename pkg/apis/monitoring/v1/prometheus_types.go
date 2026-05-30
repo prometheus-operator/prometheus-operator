@@ -2069,8 +2069,10 @@ type AzureWorkloadIdentity struct {
 // +k8s:openapi-gen=true
 type RemoteReadSpec struct {
 	// url defines the URL of the endpoint to query from.
+	//
+	// It must use the HTTP or HTTPS scheme.
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 
 	// name of the remote read queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate read

@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [BUGFIX] Validate target labels in `Probe` static configuration to prevent invalid Prometheus scrape configs. #7901
+
 ## 0.91.0 / 2026-05-05
 
 * [CHANGE] Enforce mutual exclusion of `basicAuth`, `authorization` and `oauth2` in `ScrapeConfig` CRD. #8480
