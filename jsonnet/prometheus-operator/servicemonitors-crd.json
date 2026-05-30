@@ -48,7 +48,7 @@
                     "description": "attachMetadata defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.37.0.",
                     "properties": {
                       "node": {
-                        "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
+                        "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nNode metadata labels are not automatically added to scraped metrics. They are\nexposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries\nwith relabeling configuration.",
                         "type": "boolean"
                       }
                     },
@@ -576,7 +576,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },

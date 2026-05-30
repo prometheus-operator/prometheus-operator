@@ -18,6 +18,7 @@ package v1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 )
 
 // TSDBSpecApplyConfiguration represents a declarative configuration of the TSDBSpec type for use
@@ -34,6 +35,20 @@ type TSDBSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	OutOfOrderTimeWindow *monitoringv1.Duration `json:"outOfOrderTimeWindow,omitempty"`
+	// staleSeriesCompactionThreshold configures the trigger point for compacting
+	// stale series from memory into persistent blocks and removing those stale
+	// series from memory.
+	//
+	// The threshold is a number between 0.0 and 1.0. It represents the ratio of
+	// stale series in memory to the total series in memory. The stale series
+	// compaction is triggered when this ratio crosses the configured threshold.
+	// It may not trigger the stale series compaction if the usual head compaction
+	// is about to happen soon.
+	//
+	// If set to 0, stale series compaction is disabled.
+	//
+	// It requires Prometheus >= v3.10.0.
+	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
 }
 
 // TSDBSpecApplyConfiguration constructs a declarative configuration of the TSDBSpec type for use with
@@ -47,5 +62,13 @@ func TSDBSpec() *TSDBSpecApplyConfiguration {
 // If called multiple times, the OutOfOrderTimeWindow field is set to the value of the last call.
 func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value monitoringv1.Duration) *TSDBSpecApplyConfiguration {
 	b.OutOfOrderTimeWindow = &value
+	return b
+}
+
+// WithStaleSeriesCompactionThreshold sets the StaleSeriesCompactionThreshold field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the StaleSeriesCompactionThreshold field is set to the value of the last call.
+func (b *TSDBSpecApplyConfiguration) WithStaleSeriesCompactionThreshold(value resource.Quantity) *TSDBSpecApplyConfiguration {
+	b.StaleSeriesCompactionThreshold = &value
 	return b
 }

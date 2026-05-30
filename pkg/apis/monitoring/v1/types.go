@@ -653,6 +653,10 @@ type AttachMetadata struct {
 	// The Prometheus service account must have the `list` and `watch`
 	// permissions on the `Nodes` objects.
 	//
+	// Node metadata labels are not automatically added to scraped metrics. They are
+	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+	// with relabeling configuration.
+	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
@@ -673,9 +677,8 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	TokenURL string `json:"tokenUrl"`
+	TokenURL URL `json:"tokenUrl"`
 
 	// scopes defines the OAuth2 scopes used for the token request.
 	//
@@ -707,7 +710,7 @@ func (o *OAuth2) Validate() error {
 		return nil
 	}
 
-	if o.TokenURL == "" {
+	if string(o.TokenURL) == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
 
@@ -1078,10 +1081,8 @@ func (tc *TracingConfig) Validate() error {
 	}
 
 	if tc.SamplingFraction != nil {
-		min, _ := resource.ParseQuantity("0")
-		max, _ := resource.ParseQuantity("1")
-
-		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+		v := tc.SamplingFraction.AsApproximateFloat64()
+		if v < 0 || v > 1 {
 			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}

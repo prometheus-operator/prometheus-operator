@@ -17,6 +17,7 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -32,7 +33,7 @@ type OAuth2ApplyConfiguration struct {
 	// client's secret.
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
 	// tokenUrl defines the URL to fetch the token from.
-	TokenURL *string `json:"tokenUrl,omitempty"`
+	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
 	// scopes defines the OAuth2 scopes used for the token request.
 	Scopes []string `json:"scopes,omitempty"`
 	// endpointParams configures the HTTP parameters to append to the token
@@ -71,7 +72,7 @@ func (b *OAuth2ApplyConfiguration) WithClientSecret(value corev1.SecretKeySelect
 // WithTokenURL sets the TokenURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TokenURL field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithTokenURL(value string) *OAuth2ApplyConfiguration {
+func (b *OAuth2ApplyConfiguration) WithTokenURL(value monitoringv1.URL) *OAuth2ApplyConfiguration {
 	b.TokenURL = &value
 	return b
 }
