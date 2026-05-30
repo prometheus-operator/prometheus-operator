@@ -31,7 +31,7 @@ import (
 )
 
 func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slog.Logger) (operator.PrometheusRuleSelection, error) {
-	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector, c.nsMonInf)
+	namespaces, err := operator.SelectNamespacesFromCache(p, p.Spec.RuleNamespaceSelector.AsLabelSelector(), c.nsMonInf)
 	var rules operator.PrometheusRuleSelection
 	if err != nil {
 		return rules, err
@@ -73,7 +73,7 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(
 		operator.PrometheusFormat,
 		promVersion,
-		p.Spec.RuleSelector,
+		p.Spec.RuleSelector.AsLabelSelector(),
 		nsLabeler,
 		c.ruleInfs,
 		c.newEventRecorder(p),

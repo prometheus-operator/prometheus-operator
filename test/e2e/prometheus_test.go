@@ -1493,9 +1493,9 @@ func testPromMultiplePrometheusRulesDifferentNS(t *testing.T) {
 
 	p := framework.MakeBasicPrometheus(rootNS, name, name, 1)
 	p.Spec.EvaluationInterval = "1s"
-	p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.RuleNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: ruleFilesNamespaceSelector,
-	}
+	})
 	p, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), rootNS, p)
 	if err != nil {
 		t.Fatal(err)
@@ -2561,11 +2561,11 @@ func testPromOpMatchPromAndServMonInDiffNSs(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(prometheusNSName, prometheusName, group, 1)
-	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"team": "frontend",
 		},
-	}
+	})
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), prometheusNSName, p); err != nil {
 		t.Fatal(err)
 	}
@@ -2791,9 +2791,9 @@ func testPromGetAuthSecret(t *testing.T) {
 			}
 
 			prometheusCRD := framework.MakeBasicPrometheus(ns, name, name, 1)
-			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+			prometheusCRD.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 				MatchLabels: matchLabels,
-			}
+			})
 			prometheusCRD.Spec.ScrapeInterval = "1s"
 			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
 				t.Fatal(err)
@@ -2856,9 +2856,9 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		p := framework.MakeBasicPrometheus(mainNS, name, name, 1)
-		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+		p.Spec.RuleNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: prometheusNamespaceSelector,
-		}
+		})
 		p.Spec.EvaluationInterval = "1s"
 		p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), mainNS, p)
 		if err != nil {
@@ -2922,9 +2922,9 @@ func testOperatorNSScope(t *testing.T) {
 		}
 
 		p := framework.MakeBasicPrometheus(prometheusNS, name, name, 1)
-		p.Spec.RuleNamespaceSelector = &metav1.LabelSelector{
+		p.Spec.RuleNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: prometheusNamespaceSelector,
-		}
+		})
 		p.Spec.EvaluationInterval = "1s"
 		p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), prometheusNS, p)
 		if err != nil {
@@ -3466,11 +3466,11 @@ func testPromStaticProbe(t *testing.T) {
 	}
 
 	p := framework.MakeBasicPrometheus(ns, prometheusName, group, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": group,
 		},
-	}
+	})
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
 		t.Fatal(err)
 	}
@@ -4368,6 +4368,43 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 	}
 }
 
+func assertPrometheusCreateRejected(t *testing.T, name, ns string, spec monitoringv1.PrometheusSpec) {
+	t.Helper()
+
+	prom := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+		},
+		Spec: spec,
+	}
+
+	_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), prom, metav1.CreateOptions{})
+	if err == nil {
+		t.Fatal("expected error but got nil")
+	}
+	if !apierrors.IsInvalid(err) {
+		t.Fatalf("expected Invalid error but got %v", err)
+	}
+}
+
+func assertPrometheusCreateAccepted(t *testing.T, name, ns string, spec monitoringv1.PrometheusSpec) {
+	t.Helper()
+
+	prom := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+		},
+		Spec: spec,
+	}
+
+	_, err := framework.MonClientV1.Prometheuses(ns).Create(context.Background(), prom, metav1.CreateOptions{})
+	if err != nil {
+		t.Fatalf("expected create to succeed but got: %v", err)
+	}
+}
+
 func testPrometheusCRDValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
@@ -4964,6 +5001,276 @@ func testPrometheusCRDValidation(t *testing.T) {
 	}
 }
 
+func testPrometheusLabelSelectorCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	replicas := int32(1)
+
+	longMatchLabelKey := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				strings.Repeat("y", 88): "xxx",
+			},
+		},
+	}
+	longMatchExpressionKey := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchExpressions: []metav1.LabelSelectorRequirement{
+				{
+					Key:      strings.Repeat("k", 64),
+					Operator: metav1.LabelSelectorOpIn,
+					Values:   []string{"prod"},
+				},
+			},
+		},
+	}
+	longPrefixedNameSegment := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				"valid-prefix.example.com/" + strings.Repeat("n", 64): "xxx",
+			},
+		},
+	}
+	longPrefix := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				strings.Repeat("p", 254) + "/name": "xxx",
+			},
+		},
+	}
+	// validLongPrefixedLabelKey exceeds 63 characters in total but has a valid
+	// prefix (<=253) and name segment (<=63) per Kubernetes label syntax.
+	validLongPrefixedLabelKey := strings.Repeat("a", 100) + ".example.com/env"
+	if len(validLongPrefixedLabelKey) <= 63 {
+		t.Fatal("test setup: validLongPrefixedLabelKey must exceed 63 characters")
+	}
+	validLongPrefixedMatchLabels := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				validLongPrefixedLabelKey: "value",
+			},
+		},
+	}
+	validLongPrefixedMatchExpression := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchExpressions: []metav1.LabelSelectorRequirement{
+				{
+					Key:      validLongPrefixedLabelKey,
+					Operator: metav1.LabelSelectorOpExists,
+				},
+			},
+		},
+	}
+	invalidOperator := &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchExpressions: []metav1.LabelSelectorRequirement{
+				{
+					Key:      "env",
+					Operator: metav1.LabelSelectorOperator("InvalidOp"),
+					Values:   []string{"prod"},
+				},
+			},
+		},
+	}
+
+	basePrometheusSpec := func() monitoringv1.PrometheusSpec {
+		return monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Replicas:           &replicas,
+				Version:            operator.DefaultPrometheusVersion,
+				ServiceAccountName: "prometheus",
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("400Mi"),
+					},
+				},
+			},
+		}
+	}
+
+	tests := []struct {
+		name   string
+		mutate func(*monitoringv1.PrometheusSpec)
+	}{
+		{
+			name: "invalid-service-monitor-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-match-expressions-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = longMatchExpressionKey
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-match-expressions-operator",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = invalidOperator
+			},
+		},
+		{
+			name: "invalid-service-monitor-namespace-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorNamespaceSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-pod-monitor-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.PodMonitorSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-pod-monitor-selector-match-expressions-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.PodMonitorSelector = longMatchExpressionKey
+			},
+		},
+		{
+			name: "invalid-pod-monitor-selector-match-expressions-operator",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.PodMonitorSelector = invalidOperator
+			},
+		},
+		{
+			name: "invalid-pod-monitor-namespace-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.PodMonitorNamespaceSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-probe-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ProbeSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-probe-selector-match-expressions-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ProbeSelector = longMatchExpressionKey
+			},
+		},
+		{
+			name: "invalid-probe-selector-match-expressions-operator",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ProbeSelector = invalidOperator
+			},
+		},
+		{
+			name: "invalid-probe-namespace-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ProbeNamespaceSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-scrape-config-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ScrapeConfigSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-scrape-config-selector-match-expressions-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ScrapeConfigSelector = longMatchExpressionKey
+			},
+		},
+		{
+			name: "invalid-scrape-config-selector-match-expressions-operator",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ScrapeConfigSelector = invalidOperator
+			},
+		},
+		{
+			name: "invalid-scrape-config-namespace-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ScrapeConfigNamespaceSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-rule-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.RuleSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-rule-selector-match-expressions-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.RuleSelector = longMatchExpressionKey
+			},
+		},
+		{
+			name: "invalid-rule-selector-match-expressions-operator",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.RuleSelector = invalidOperator
+			},
+		},
+		{
+			name: "invalid-rule-namespace-selector-match-labels-key-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.RuleNamespaceSelector = longMatchLabelKey
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-prefixed-name-segment-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = longPrefixedNameSegment
+			},
+		},
+		{
+			name: "invalid-service-monitor-selector-prefix-too-long",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = longPrefix
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			spec := basePrometheusSpec()
+			test.mutate(&spec)
+			assertPrometheusCreateRejected(t, name, ns, spec)
+		})
+	}
+
+	for _, test := range []struct {
+		name   string
+		mutate func(*monitoringv1.PrometheusSpec)
+	}{
+		{
+			name: "valid-service-monitor-selector-prefixed-match-labels-key",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = validLongPrefixedMatchLabels
+			},
+		},
+		{
+			name: "valid-service-monitor-selector-prefixed-match-expressions-key",
+			mutate: func(s *monitoringv1.PrometheusSpec) {
+				s.ServiceMonitorSelector = validLongPrefixedMatchExpression
+			},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			spec := basePrometheusSpec()
+			test.mutate(&spec)
+			assertPrometheusCreateAccepted(t, name, ns, spec)
+		})
+	}
+}
+
 func testRelabelConfigCRDValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
@@ -5533,11 +5840,11 @@ func testPrometheusReconciliationOnSecretChanges(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"kubernetes.io/metadata.name": ns2,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
