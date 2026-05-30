@@ -20,7 +20,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // CommonPrometheusFieldsApplyConfiguration represents a declarative configuration of the CommonPrometheusFields type for use
@@ -51,11 +50,11 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
-	ServiceMonitorSelector *metav1.LabelSelectorApplyConfiguration `json:"serviceMonitorSelector,omitempty"`
+	ServiceMonitorSelector *ValidatedLabelSelectorApplyConfiguration `json:"serviceMonitorSelector,omitempty"`
 	// serviceMonitorNamespaceSelector defines the namespaces to match for ServicedMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
-	ServiceMonitorNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"serviceMonitorNamespaceSelector,omitempty"`
+	ServiceMonitorNamespaceSelector *ValidatedLabelSelectorApplyConfiguration `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// podMonitorSelector defines the podMonitors to be selected for target discovery. An empty label selector
 	// matches all objects. A null label selector matches no objects.
 	//
@@ -67,11 +66,11 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
-	PodMonitorSelector *metav1.LabelSelectorApplyConfiguration `json:"podMonitorSelector,omitempty"`
+	PodMonitorSelector *ValidatedLabelSelectorApplyConfiguration `json:"podMonitorSelector,omitempty"`
 	// podMonitorNamespaceSelector defines the namespaces to match for PodMonitors discovery. An empty label selector
 	// matches all namespaces. A null label selector (default value) matches the current
 	// namespace only.
-	PodMonitorNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"podMonitorNamespaceSelector,omitempty"`
+	PodMonitorNamespaceSelector *ValidatedLabelSelectorApplyConfiguration `json:"podMonitorNamespaceSelector,omitempty"`
 	// probeSelector defines the probes to be selected for target discovery. An empty label selector
 	// matches all objects. A null label selector matches no objects.
 	//
@@ -83,11 +82,11 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// This behavior is *deprecated* and will be removed in the next major version
 	// of the custom resource definition. It is recommended to use
 	// `spec.additionalScrapeConfigs` instead.
-	ProbeSelector *metav1.LabelSelectorApplyConfiguration `json:"probeSelector,omitempty"`
+	ProbeSelector *ValidatedLabelSelectorApplyConfiguration `json:"probeSelector,omitempty"`
 	// probeNamespaceSelector defines the namespaces to match for Probe discovery. An empty label
 	// selector matches all namespaces. A null label selector matches the
 	// current namespace only.
-	ProbeNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"probeNamespaceSelector,omitempty"`
+	ProbeNamespaceSelector *ValidatedLabelSelectorApplyConfiguration `json:"probeNamespaceSelector,omitempty"`
 	// scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label
 	// selector matches all objects. A null label selector matches no objects.
 	//
@@ -102,14 +101,14 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	//
 	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
 	// and will be graduated to Beta in a future release.
-	ScrapeConfigSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigSelector,omitempty"`
+	ScrapeConfigSelector *ValidatedLabelSelectorApplyConfiguration `json:"scrapeConfigSelector,omitempty"`
 	// scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	//
 	// Note that the ScrapeConfig custom resource definition is currently at Alpha level
 	// and will be graduated to Beta in a future release.
-	ScrapeConfigNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"scrapeConfigNamespaceSelector,omitempty"`
+	ScrapeConfigNamespaceSelector *ValidatedLabelSelectorApplyConfiguration `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// version of Prometheus being deployed. The operator uses this information
 	// to generate the Prometheus StatefulSet + configuration files.
 	//
@@ -709,7 +708,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMetadata(value *Embedd
 // WithServiceMonitorSelector sets the ServiceMonitorSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceMonitorSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ServiceMonitorSelector = value
 	return b
 }
@@ -717,7 +716,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorSelector(va
 // WithServiceMonitorNamespaceSelector sets the ServiceMonitorNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServiceMonitorNamespaceSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ServiceMonitorNamespaceSelector = value
 	return b
 }
@@ -725,7 +724,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithServiceMonitorNamespaceSe
 // WithPodMonitorSelector sets the PodMonitorSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PodMonitorSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.PodMonitorSelector = value
 	return b
 }
@@ -733,7 +732,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorSelector(value 
 // WithPodMonitorNamespaceSelector sets the PodMonitorNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the PodMonitorNamespaceSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.PodMonitorNamespaceSelector = value
 	return b
 }
@@ -741,7 +740,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithPodMonitorNamespaceSelect
 // WithProbeSelector sets the ProbeSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProbeSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ProbeSelector = value
 	return b
 }
@@ -749,7 +748,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeSelector(value *meta
 // WithProbeNamespaceSelector sets the ProbeNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ProbeNamespaceSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ProbeNamespaceSelector = value
 	return b
 }
@@ -757,7 +756,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithProbeNamespaceSelector(va
 // WithScrapeConfigSelector sets the ScrapeConfigSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeConfigSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ScrapeConfigSelector = value
 	return b
 }
@@ -765,7 +764,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigSelector(valu
 // WithScrapeConfigNamespaceSelector sets the ScrapeConfigNamespaceSelector field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ScrapeConfigNamespaceSelector field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeConfigNamespaceSelector(value *ValidatedLabelSelectorApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
 	b.ScrapeConfigNamespaceSelector = value
 	return b
 }

@@ -88,7 +88,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 	// case of scale down.
 	prom := framework.MakeBasicPrometheus(ns, prometheusName, prometheusGroupLabel, 1)
 	prom.Spec.Shards = new(int32(1))
-	prom.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+	prom.Spec.ServiceMonitorSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "group",
@@ -96,7 +96,7 @@ func testPrometheusTargetDistributionOnResharding(t *testing.T) {
 				Values:   []string{testFramework.AppGroupLabel, prometheusGroupLabel},
 			},
 		},
-	}
+	})
 
 	prom.Spec.ShardRetentionPolicy = &monitoringv1.ShardRetentionPolicy{
 		WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),

@@ -264,6 +264,7 @@ func testAllNSPrometheus(t *testing.T) {
 	skipPrometheusAllNSTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"PrometheusCRDValidation":                   testPrometheusCRDValidation,
+		"PrometheusLabelSelectorCRDValidation":      testPrometheusLabelSelectorCRDValidation,
 		"PromRemoteWriteWithTLS":                    testPromRemoteWriteWithTLS,
 		"PromCreateDeleteCluster":                   testPromCreateDeleteCluster,
 		"PromScaleUpDownCluster":                    testPromScaleUpDownReplicas,
