@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -94,7 +94,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 							{
 								Role:  "Pod",
-								Label: ptr.To("component=executor"),
+								Label: new("component=executor"),
 							},
 						},
 					},
@@ -111,7 +111,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						},
 						RefreshInterval: &fiveMins,
 						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -124,7 +124,7 @@ func testScrapeConfigCreation(t *testing.T) {
 						Names:           []string{""},
 						RefreshInterval: &fiveMins,
 						Type:            ptr.To(monitoringv1alpha1.DNSRecordType("A")),
-						Port:            ptr.To(int32(9100)),
+						Port:            new(int32(9100)),
 					},
 				},
 			},
@@ -136,8 +136,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -156,8 +156,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -176,8 +176,8 @@ func testScrapeConfigCreation(t *testing.T) {
 				ScalewaySDConfigs: []monitoringv1alpha1.ScalewaySDConfig{
 					{
 						AccessKey: "ak",
-						SecretKey: v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
 							Key: "key.pem",
@@ -461,8 +461,8 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	sc := framework.MakeBasicScrapeConfig(ns, "scrape-config")
 	sc.Spec.Scheme = ptr.To(monitoringv1.SchemeHTTPS)
 	sc.Spec.Authorization = &monitoringv1.SafeAuthorization{
-		Credentials: &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		Credentials: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "prometheus-sa-secret",
 			},
 			Key: "token",
@@ -470,25 +470,25 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	}
 	sc.Spec.TLSConfig = &monitoringv1.SafeTLSConfig{
 		// since we cannot validate server name in cert
-		InsecureSkipVerify: ptr.To(true),
+		InsecureSkipVerify: new(true),
 		CA: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			Secret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: "ca.crt",
 			},
 		},
 		Cert: monitoringv1.SecretOrConfigMap{
-			Secret: &v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{
+			Secret: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
 				Key: "cert.pem",
 			},
 		},
-		KeySecret: &v1.SecretKeySelector{
-			LocalObjectReference: v1.LocalObjectReference{
+		KeySecret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{
 				Name: secretName,
 			},
 			Key: "key.pem",
@@ -545,7 +545,7 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 		{
 			Names: []string{"node.demo.do.prometheus.io"},
 			Type:  ptr.To(monitoringv1alpha1.DNSRecordType("A")),
-			Port:  ptr.To(int32(9100)),
+			Port:  new(int32(9100)),
 		},
 	}
 	_, err = framework.CreateScrapeConfig(context.Background(), ns, sc)
@@ -653,6 +653,37 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("EurekaSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, EurekaSDTestCases)
 	})
+	t.Run("AuthMutualExclusion", func(t *testing.T) {
+		runAuthMutualExclusionValidation(t, AuthMutualExclusionTestCases)
+	})
+}
+
+func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCase) {
+	const authMutualExclusionMsg = "at most one of basicAuth, authorization, or oauth2 can be configured"
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			sc := &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: ns,
+				},
+				Spec: test.scrapeConfigSpec,
+			}
+
+			_, err := framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(context.Background(), sc, metav1.CreateOptions{})
+			if test.expectedError {
+				require.True(t, apierrors.IsInvalid(err))
+				require.Contains(t, err.Error(), authMutualExclusionMsg)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
 }
 
 func runScrapeConfigCRDValidation(t *testing.T, testCases []scrapeCRDTestCase) {
@@ -720,7 +751,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:     "valid-server",
-					PathPrefix: ptr.To("valid-server"),
+					PathPrefix: new("valid-server"),
 				},
 			},
 		},
@@ -732,7 +763,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:     "valid-server",
-					PathPrefix: ptr.To(""),
+					PathPrefix: new(""),
 				},
 			},
 		},
@@ -755,7 +786,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:     "valid-server",
-					Datacenter: ptr.To("valid-server"),
+					Datacenter: new("valid-server"),
 				},
 			},
 		},
@@ -767,7 +798,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:     "valid-server",
-					Datacenter: ptr.To(""),
+					Datacenter: new(""),
 				},
 			},
 		},
@@ -790,7 +821,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:    "valid-server",
-					Namespace: ptr.To("valid-server"),
+					Namespace: new("valid-server"),
 				},
 			},
 		},
@@ -802,7 +833,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:    "valid-server",
-					Namespace: ptr.To(""),
+					Namespace: new(""),
 				},
 			},
 		},
@@ -825,7 +856,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:    "valid-server",
-					Partition: ptr.To("valid-server"),
+					Partition: new("valid-server"),
 				},
 			},
 		},
@@ -837,7 +868,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:    "valid-server",
-					Partition: ptr.To(""),
+					Partition: new(""),
 				},
 			},
 		},
@@ -989,7 +1020,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:       "valid-server",
-					TagSeparator: ptr.To(","),
+					TagSeparator: new(","),
 				},
 			},
 		},
@@ -1001,7 +1032,7 @@ var ConsulSDTestCases = []scrapeCRDTestCase{
 			ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
 				{
 					Server:       "valid-server",
-					TagSeparator: ptr.To(""),
+					TagSeparator: new(""),
 				},
 			},
 		},
@@ -1083,7 +1114,7 @@ var K8STestCases = []scrapeCRDTestCase{
 			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
 				{
 					Role:      "EndpointSlice",
-					APIServer: ptr.To(""),
+					APIServer: new(""),
 				},
 			},
 		},
@@ -1176,7 +1207,7 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Label: ptr.To(""),
+							Label: new(""),
 						},
 					},
 				},
@@ -1193,7 +1224,7 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Label: ptr.To("node.kubernetes.io/instance-type=master"),
+							Label: new("node.kubernetes.io/instance-type=master"),
 						},
 					},
 				},
@@ -1210,7 +1241,7 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Field: ptr.To(""),
+							Field: new(""),
 						},
 					},
 				},
@@ -1227,7 +1258,7 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Field: ptr.To("metadata.name=foobar"),
+							Field: new("metadata.name=foobar"),
 						},
 					},
 				},
@@ -1244,7 +1275,7 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Field: ptr.To("metadata.name=foobar"),
+							Field: new("metadata.name=foobar"),
 						},
 					},
 				},
@@ -1261,13 +1292,13 @@ var K8STestCases = []scrapeCRDTestCase{
 					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
 						{
 							Role:  "Pod",
-							Label: ptr.To("node.kubernetes.io/instance-type=master"),
-							Field: ptr.To("metadata.name=foobar"),
+							Label: new("node.kubernetes.io/instance-type=master"),
+							Field: new("metadata.name=foobar"),
 						},
 						{
 							Role:  "Pod",
-							Label: ptr.To("node.kubernetes.io/instance-type=master"),
-							Field: ptr.To("metadata.name=foobar"),
+							Label: new("node.kubernetes.io/instance-type=master"),
+							Field: new("metadata.name=foobar"),
 						},
 					},
 				},
@@ -1282,7 +1313,7 @@ var K8STestCases = []scrapeCRDTestCase{
 				{
 					Role: "Pod",
 					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-						IncludeOwnNamespace: ptr.To(true),
+						IncludeOwnNamespace: new(true),
 					},
 				},
 			},
@@ -1296,7 +1327,7 @@ var K8STestCases = []scrapeCRDTestCase{
 				{
 					Role: "Pod",
 					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-						IncludeOwnNamespace: ptr.To(false),
+						IncludeOwnNamespace: new(false),
 						Names:               []string{},
 					},
 				},
@@ -1339,7 +1370,7 @@ var K8STestCases = []scrapeCRDTestCase{
 				{
 					Role: "Pod",
 					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-						IncludeOwnNamespace: ptr.To(true),
+						IncludeOwnNamespace: new(true),
 						Names:               []string{"default", "kube-system"},
 					},
 				},
@@ -1354,8 +1385,36 @@ var K8STestCases = []scrapeCRDTestCase{
 				{
 					Role: "Pod",
 					Namespaces: &monitoringv1alpha1.NamespaceDiscovery{
-						IncludeOwnNamespace: ptr.To(true),
+						IncludeOwnNamespace: new(true),
 						Names:               []string{"default", "default"},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AttachMetadata with node",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:           "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{Node: new(true)},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Selector with invalid role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					Selectors: []monitoringv1alpha1.K8SSelectorConfig{
+						{
+							Role: "Invalid",
+						},
 					},
 				},
 			},
@@ -1485,7 +1544,7 @@ var DNSSDTestCases = []scrapeCRDTestCase{
 			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 				{
 					Names: []string{"test1"},
-					Port:  ptr.To(int32(8080)),
+					Port:  new(int32(8080)),
 				},
 			},
 		},
@@ -1497,7 +1556,7 @@ var DNSSDTestCases = []scrapeCRDTestCase{
 			DNSSDConfigs: []monitoringv1alpha1.DNSSDConfig{
 				{
 					Names: []string{"test1"},
-					Port:  ptr.To(int32(80809)),
+					Port:  new(int32(80809)),
 				},
 			},
 		},
@@ -1535,7 +1594,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To("us-west"),
+					Region: new("us-west"),
 				},
 			},
 		},
@@ -1555,7 +1614,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To(""),
+					Region: new(""),
 				},
 			},
 		},
@@ -1566,7 +1625,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					RoleARN: ptr.To("valid-role"),
+					RoleARN: new("valid-role"),
 				},
 			},
 		},
@@ -1586,7 +1645,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					RoleARN: ptr.To(""),
+					RoleARN: new(""),
 				},
 			},
 		},
@@ -1597,7 +1656,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Port: ptr.To(int32(8080)),
+					Port: new(int32(8080)),
 				},
 			},
 		},
@@ -1608,7 +1667,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Port: ptr.To(int32(80809)),
+					Port: new(int32(80809)),
 				},
 			},
 		},
@@ -1619,7 +1678,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To("us-west"),
+					Region: new("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "foo",
@@ -1636,7 +1695,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To("us-west"),
+					Region: new("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "foo",
@@ -1653,7 +1712,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To("us-west"),
+					Region: new("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "foo",
@@ -1670,7 +1729,7 @@ var EC2SDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			EC2SDConfigs: []monitoringv1alpha1.EC2SDConfig{
 				{
-					Region: ptr.To("us-west"),
+					Region: new("us-west"),
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "foo",
@@ -1693,14 +1752,14 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 	{
 		name: "JobName: Empty String",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			JobName: ptr.To(""),
+			JobName: new(""),
 		},
 		expectedError: true,
 	},
 	{
 		name: "JobName: Valid Value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			JobName: ptr.To("validJob"),
+			JobName: new("validJob"),
 		},
 		expectedError: false,
 	},
@@ -1738,14 +1797,14 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 	{
 		name: "ScrapeClassName: Empty String",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScrapeClassName: ptr.To(""),
+			ScrapeClassName: new(""),
 		},
 		expectedError: true,
 	},
 	{
 		name: "ScrapeClassName: Valid Value",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
-			ScrapeClassName: ptr.To("default"),
+			ScrapeClassName: new("default"),
 		},
 		expectedError: false,
 	},
@@ -1841,6 +1900,61 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 			FallbackScrapeProtocol: nil,
 		},
 		expectedError: false,
+	},
+}
+
+var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
+	{
+		name: "single auth method",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+		},
+		expectedError: false,
+	},
+	{
+		name: "basicAuth and authorization",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+		},
+		expectedError: true,
+	},
+	{
+		name: "basicAuth and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth: &monitoringv1.BasicAuth{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "all three set",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			BasicAuth:     &monitoringv1.BasicAuth{},
+			Authorization: &monitoringv1.SafeAuthorization{},
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
 	},
 }
 
@@ -1957,7 +2071,7 @@ var DigitalOceanSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
 				{
-					Port: ptr.To(int32(8080)),
+					Port: new(int32(8080)),
 				},
 			},
 		},
@@ -1968,7 +2082,7 @@ var DigitalOceanSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
 				{
-					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+					Port: new(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -1979,7 +2093,7 @@ var DigitalOceanSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
 				{
-					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+					Port: new(int32(-1)), // minimum Port number = 0;
 				},
 			},
 		},
@@ -2047,7 +2161,7 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
-					Port:         ptr.To(int32(8080)),
+					Port:         new(int32(8080)),
 				},
 			},
 		},
@@ -2059,7 +2173,7 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
-					Port:         ptr.To(int32(65536)), // maximum Port number = 65535
+					Port:         new(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -2071,7 +2185,7 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
-					Port:         ptr.To(int32(-1)), // minimum Port number = 0
+					Port:         new(int32(-1)), // minimum Port number = 0
 				},
 			},
 		},
@@ -2085,7 +2199,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Region: ptr.To("us-east-1"),
+					Region: new("us-east-1"),
 				},
 			},
 		},
@@ -2096,7 +2210,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Region: ptr.To(""),
+					Region: new(""),
 				},
 			},
 		},
@@ -2107,7 +2221,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Endpoint: ptr.To("https://custom-endpoint.example.com"),
+					Endpoint: new("https://custom-endpoint.example.com"),
 				},
 			},
 		},
@@ -2119,7 +2233,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Endpoint: ptr.To(""),
+					Endpoint: new(""),
 				},
 			},
 		},
@@ -2130,7 +2244,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Port: ptr.To(int32(80)),
+					Port: new(int32(80)),
 				},
 			},
 		},
@@ -2141,7 +2255,7 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Port: ptr.To(int32(-1)),
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -2152,7 +2266,29 @@ var LightSailSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
 				{
-					Port: ptr.To(int32(65536)),
+					Port: new(int32(65536)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RoleARN",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: new("arn:aws:iam::123456789012:role/MyRole"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RoleARN with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LightSailSDConfigs: []monitoringv1alpha1.LightSailSDConfig{
+				{
+					RoleARN: new(""),
 				},
 			},
 		},
@@ -2235,7 +2371,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 				{
 					Project: "devops-dev",
 					Zone:    "us-west-1",
-					Port:    ptr.To(int32(65534)),
+					Port:    new(int32(65534)),
 				},
 			},
 		},
@@ -2246,7 +2382,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
 				{
-					Port: ptr.To(int32(-1)),
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -2259,7 +2395,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 				{
 					Project: "devops-dev",
 					Zone:    "us-west-1",
-					Filter:  ptr.To("filter-expression"),
+					Filter:  new("filter-expression"),
 				},
 			},
 		},
@@ -2270,7 +2406,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
 				{
-					Filter: ptr.To(""),
+					Filter: new(""),
 				},
 			},
 		},
@@ -2283,7 +2419,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 				{
 					Project:      "devops-dev",
 					Zone:         "us-west-1",
-					TagSeparator: ptr.To("tag-value"),
+					TagSeparator: new("tag-value"),
 				},
 			},
 		},
@@ -2294,7 +2430,7 @@ var GCESDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			GCESDConfigs: []monitoringv1alpha1.GCESDConfig{
 				{
-					TagSeparator: ptr.To(""),
+					TagSeparator: new(""),
 				},
 			},
 		},
@@ -2319,7 +2455,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
-					Environment:          ptr.To("AzurePublicCloud"),
+					Environment:          new("AzurePublicCloud"),
 					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
 				},
 			},
@@ -2351,7 +2487,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
-					Environment:    ptr.To("AzurePublicCloud"),
+					Environment:    new("AzurePublicCloud"),
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2363,7 +2499,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
-					Environment:    ptr.To(""),
+					Environment:    new(""),
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2375,7 +2511,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
-					ResourceGroup:  ptr.To("my-resource-group"),
+					ResourceGroup:  new("my-resource-group"),
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2387,7 +2523,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
-					ResourceGroup:  ptr.To(""),
+					ResourceGroup:  new(""),
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2424,11 +2560,11 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
-					TenantID:             ptr.To("22222222-2222-2222-2222-222222222222"),
-					ClientID:             ptr.To("33333333-3333-3333-3333-333333333333"),
+					TenantID:             new("22222222-2222-2222-2222-222222222222"),
+					ClientID:             new("33333333-3333-3333-3333-333333333333"),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
-					ClientSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					ClientSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "azure-client-secret",
 						},
 						Key: "clientSecret",
@@ -2444,7 +2580,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
-					TenantID:             ptr.To(""),
+					TenantID:             new(""),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2457,7 +2593,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeOAuth),
-					ClientID:             ptr.To(""),
+					ClientID:             new(""),
 					SubscriptionID:       "11111111-1111-1111-1111-111111111111",
 				},
 			},
@@ -2494,7 +2630,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
-					Port:           ptr.To(int32(65534)),
+					Port:           new(int32(65534)),
 				},
 			},
 		},
@@ -2506,7 +2642,7 @@ var AzureSDTestCases = []scrapeCRDTestCase{
 			AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
 				{
 					SubscriptionID: "11111111-1111-1111-1111-111111111111",
-					Port:           ptr.To(int32(-1)),
+					Port:           new(int32(-1)),
 				},
 			},
 		},
@@ -2521,10 +2657,10 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
-					Endpoint:          ptr.To("https://api.ovh.com/endpoint"),
+					Endpoint:          new("https://api.ovh.com/endpoint"),
 					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
 				},
 			},
@@ -2537,8 +2673,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 				},
 			},
@@ -2551,8 +2687,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2565,8 +2701,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2578,8 +2714,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2592,8 +2728,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2606,8 +2742,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceDedicatedServer,
 				},
 			},
@@ -2620,8 +2756,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           "InvalidService",
 				},
 			},
@@ -2634,8 +2770,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 				},
 			},
 		},
@@ -2647,8 +2783,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 				},
 			},
@@ -2661,10 +2797,10 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
-					Endpoint:          ptr.To(""),
+					Endpoint:          new(""),
 				},
 			},
 		},
@@ -2676,8 +2812,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 					RefreshInterval:   ptr.To(monitoringv1.Duration("")),
 				},
@@ -2691,8 +2827,8 @@ var OVHCloudSDTestCases = []scrapeCRDTestCase{
 			OVHCloudSDConfigs: []monitoringv1alpha1.OVHCloudSDConfig{
 				{
 					ApplicationKey:    "valid-app-key",
-					ApplicationSecret: v1.SecretKeySelector{Key: "valid-secret-key"},
-					ConsumerKey:       v1.SecretKeySelector{Key: "valid-consumer-key"},
+					ApplicationSecret: corev1.SecretKeySelector{Key: "valid-secret-key"},
+					ConsumerKey:       corev1.SecretKeySelector{Key: "valid-consumer-key"},
 					Service:           monitoringv1alpha1.OVHServiceVPS,
 					RefreshInterval:   ptr.To(monitoringv1.Duration("30s")),
 				},
@@ -2813,7 +2949,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("http://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("http://example.com")),
 				},
 			},
 		},
@@ -2826,7 +2962,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("https://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("https://example.com")),
 				},
 			},
 		},
@@ -2839,7 +2975,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To("ftp://example.com"),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},
@@ -2852,7 +2988,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:             monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:           "default",
-					IdentityEndpoint: ptr.To(""),
+					IdentityEndpoint: ptr.To(monitoringv1alpha1.URL("")),
 				},
 			},
 		},
@@ -2865,7 +3001,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
-					Username: ptr.To("admin"),
+					Username: new("admin"),
 				},
 			},
 		},
@@ -2878,7 +3014,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
-					Username: ptr.To(""),
+					Username: new(""),
 				},
 			},
 		},
@@ -2891,7 +3027,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
-					UserID: ptr.To("ac3377633149401296f6c0d92d79dc16"),
+					UserID: new("ac3377633149401296f6c0d92d79dc16"),
 				},
 			},
 		},
@@ -2904,7 +3040,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
-					UserID: ptr.To(""),
+					UserID: new(""),
 				},
 			},
 		},
@@ -2917,7 +3053,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
-					DomainID: ptr.To("e0353a670a9e496da891347c589539e9"),
+					DomainID: new("e0353a670a9e496da891347c589539e9"),
 				},
 			},
 		},
@@ -2930,7 +3066,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:     monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:   "default",
-					DomainID: ptr.To(""),
+					DomainID: new(""),
 				},
 			},
 		},
@@ -2943,7 +3079,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
-					DomainName: ptr.To("default"),
+					DomainName: new("default"),
 				},
 			},
 		},
@@ -2956,7 +3092,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
-					DomainName: ptr.To(""),
+					DomainName: new(""),
 				},
 			},
 		},
@@ -2969,7 +3105,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:        monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:      "default",
-					ProjectName: ptr.To("default"),
+					ProjectName: new("default"),
 				},
 			},
 		},
@@ -2982,7 +3118,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:        monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:      "default",
-					ProjectName: ptr.To(""),
+					ProjectName: new(""),
 				},
 			},
 		},
@@ -2995,7 +3131,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:    "default",
-					ProjectID: ptr.To("343d245e850143a096806dfaefa9afdc"),
+					ProjectID: new("343d245e850143a096806dfaefa9afdc"),
 				},
 			},
 		},
@@ -3008,7 +3144,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:    "default",
-					ProjectID: ptr.To(""),
+					ProjectID: new(""),
 				},
 			},
 		},
@@ -3021,7 +3157,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:                      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                    "default",
-					ApplicationCredentialName: ptr.To("monitoring"),
+					ApplicationCredentialName: new("monitoring"),
 				},
 			},
 		},
@@ -3034,7 +3170,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:                      monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                    "default",
-					ApplicationCredentialName: ptr.To(""),
+					ApplicationCredentialName: new(""),
 				},
 			},
 		},
@@ -3047,7 +3183,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:                    monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                  "default",
-					ApplicationCredentialID: ptr.To("aa809205ed614a0e854bac92c0768bb9"),
+					ApplicationCredentialID: new("aa809205ed614a0e854bac92c0768bb9"),
 				},
 			},
 		},
@@ -3060,11 +3196,11 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:                    monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:                  "default",
-					ApplicationCredentialID: ptr.To(""),
+					ApplicationCredentialID: new(""),
 				},
 			},
 		},
-		expectedError: false,
+		expectedError: true,
 	},
 	{
 		name: "All Tenants True",
@@ -3073,7 +3209,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
-					AllTenants: ptr.To(true),
+					AllTenants: new(true),
 				},
 			},
 		},
@@ -3086,7 +3222,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:       monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:     "default",
-					AllTenants: ptr.To(false),
+					AllTenants: new(false),
 				},
 			},
 		},
@@ -3125,7 +3261,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
-					Port:   ptr.To(int32(8080)),
+					Port:   new(int32(8080)),
 				},
 			},
 		},
@@ -3138,7 +3274,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
-					Port:   ptr.To(int32(-1)),
+					Port:   new(int32(-1)),
 				},
 			},
 		},
@@ -3151,7 +3287,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:   monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region: "default",
-					Port:   ptr.To(int32(65537)),
+					Port:   new(int32(65537)),
 				},
 			},
 		},
@@ -3164,7 +3300,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: ptr.To("public"),
+					Availability: new("public"),
 				},
 			},
 		},
@@ -3177,7 +3313,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: ptr.To("admin"),
+					Availability: new("admin"),
 				},
 			},
 		},
@@ -3190,7 +3326,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: ptr.To("internal"),
+					Availability: new("internal"),
 				},
 			},
 		},
@@ -3203,7 +3339,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: ptr.To("private"),
+					Availability: new("private"),
 				},
 			},
 		},
@@ -3216,7 +3352,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: ptr.To(""),
+					Availability: new(""),
 				},
 			},
 		},
@@ -3273,7 +3409,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:   "http://example.com",
-					ClientID: ptr.To("valid-client-id"),
+					ClientID: new("valid-client-id"),
 				},
 			},
 		},
@@ -3285,7 +3421,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:   "http://example.com",
-					ClientID: ptr.To(""),
+					ClientID: new(""),
 				},
 			},
 		},
@@ -3345,7 +3481,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:          "http://example.com",
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -3357,7 +3493,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:          "http://example.com",
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -3369,7 +3505,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:      "http://example.com",
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -3381,7 +3517,7 @@ var KumaSDTestCases = []scrapeCRDTestCase{
 			KumaSDConfigs: []monitoringv1alpha1.KumaSDConfig{
 				{
 					Server:      "http://example.com",
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -3397,8 +3533,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3416,8 +3552,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3434,8 +3570,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3453,8 +3589,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3472,8 +3608,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3490,8 +3626,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3509,8 +3645,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3528,8 +3664,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3547,8 +3683,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      "Invalid Role",
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3565,8 +3701,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 				{
 					ProjectID: "1",
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3584,13 +3720,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("https://api.scaleway.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("https://api.scaleway.com")),
 				},
 			},
 		},
@@ -3604,13 +3740,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					ApiURL: ptr.To("ftp://example.com"),
+					ApiURL: ptr.To(monitoringv1alpha1.URL("ftp://example.com")),
 				},
 			},
 		},
@@ -3624,13 +3760,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					NameFilter: ptr.To("my-server"),
+					NameFilter: new("my-server"),
 				},
 			},
 		},
@@ -3644,13 +3780,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					NameFilter: ptr.To(""),
+					NameFilter: new(""),
 				},
 			},
 		},
@@ -3664,8 +3800,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3684,8 +3820,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3704,8 +3840,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3724,13 +3860,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					Zone: ptr.To("fr-par-1"),
+					Zone: new("fr-par-1"),
 				},
 			},
 		},
@@ -3744,13 +3880,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					Zone: ptr.To(""),
+					Zone: new(""),
 				},
 			},
 		},
@@ -3764,13 +3900,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					Port: ptr.To(int32(8080)),
+					Port: new(int32(8080)),
 				},
 			},
 		},
@@ -3784,13 +3920,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					Port: ptr.To(int32(65536)), // maximum Port number = 65535
+					Port: new(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -3804,13 +3940,13 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
 					},
-					Port: ptr.To(int32(-1)), // minimum Port number = 0;
+					Port: new(int32(-1)), // minimum Port number = 0;
 				},
 			},
 		},
@@ -3824,8 +3960,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleInstance,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3844,8 +3980,8 @@ var ScalewaySDTestCases = []scrapeCRDTestCase{
 					ProjectID: "1",
 					Role:      monitoringv1alpha1.ScalewayRoleBaremetal,
 					AccessKey: "AccessKey",
-					SecretKey: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "secret",
 						},
 						Key: "key.pem",
@@ -3864,7 +4000,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 				},
 			},
 		},
@@ -3882,12 +4018,23 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "Valid Port",
+		name: "Invalid Host without scheme",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
 					Host: "127.0.0.1",
-					Port: ptr.To(int32(80)),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
+				{
+					Host: "unix:///var/run/docker.sock",
+					Port: new(int32(80)),
 				},
 			},
 		},
@@ -3898,8 +4045,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
-					Port: ptr.To(int32(-1)),
+					Host: "unix:///var/run/docker.sock",
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -3910,8 +4057,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
-					HostNetworkingHost: ptr.To("localhost"),
+					Host:               "unix:///var/run/docker.sock",
+					HostNetworkingHost: new("localhost"),
 				},
 			},
 		},
@@ -3922,8 +4069,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:               "127.0.0.1",
-					HostNetworkingHost: ptr.To(""),
+					Host:               "unix:///var/run/docker.sock",
+					HostNetworkingHost: new(""),
 				},
 			},
 		},
@@ -3934,8 +4081,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
-					MatchFirstNetwork: ptr.To(true),
+					Host:              "unix:///var/run/docker.sock",
+					MatchFirstNetwork: new(true),
 				},
 			},
 		},
@@ -3946,8 +4093,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:              "127.0.0.1",
-					MatchFirstNetwork: ptr.To(false),
+					Host:              "unix:///var/run/docker.sock",
+					MatchFirstNetwork: new(false),
 				},
 			},
 		},
@@ -3958,7 +4105,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3975,7 +4122,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -3992,7 +4139,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4009,7 +4156,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host: "127.0.0.1",
+					Host: "unix:///var/run/docker.sock",
 					Filters: []monitoringv1alpha1.Filter{
 						{
 							Name:   "health",
@@ -4026,7 +4173,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4038,7 +4185,7 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
+					Host:            "unix:///var/run/docker.sock",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4050,8 +4197,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
-					FollowRedirects: ptr.To(true),
+					Host:            "unix:///var/run/docker.sock",
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4062,8 +4209,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:            "127.0.0.1",
-					FollowRedirects: ptr.To(false),
+					Host:            "unix:///var/run/docker.sock",
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4074,8 +4221,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
-					EnableHTTP2: ptr.To(true),
+					Host:        "unix:///var/run/docker.sock",
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4086,8 +4233,8 @@ var DockerSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			DockerSDConfigs: []monitoringv1alpha1.DockerSDConfig{
 				{
-					Host:        "127.0.0.1",
-					EnableHTTP2: ptr.To(false),
+					Host:        "unix:///var/run/docker.sock",
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4115,7 +4262,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host: "tcp://localhost",
 					Role: "Services",
-					Port: ptr.To(int32(80)),
+					Port: new(int32(80)),
 				},
 			},
 		},
@@ -4128,7 +4275,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host: "tcp://localhost",
 					Role: "Services",
-					Port: ptr.To(int32(-1)),
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -4238,7 +4385,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host:            "tcp://localhost",
 					Role:            "Services",
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4251,7 +4398,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host:            "tcp://localhost",
 					Role:            "Services",
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4264,7 +4411,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host:        "tcp://localhost",
 					Role:        "Services",
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4277,7 +4424,7 @@ var DockerSwarmSDTestCases = []scrapeCRDTestCase{
 				{
 					Host:        "tcp://localhost",
 					Role:        "Services",
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4314,7 +4461,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:            "Hcloud",
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4326,7 +4473,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:            "Hcloud",
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4338,7 +4485,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:        "Hcloud",
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4350,7 +4497,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:        "Hcloud",
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4362,7 +4509,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role: "Hcloud",
-					Port: ptr.To(int32(80)),
+					Port: new(int32(80)),
 				},
 			},
 		},
@@ -4374,7 +4521,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role: "Hcloud",
-					Port: ptr.To(int32(-1)),
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -4410,7 +4557,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:          "Hcloud",
-					LabelSelector: ptr.To("foo"),
+					LabelSelector: new("foo"),
 				},
 			},
 		},
@@ -4422,7 +4569,7 @@ var HetznerSDTestCases = []scrapeCRDTestCase{
 			HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 				{
 					Role:          "Hcloud",
-					LabelSelector: ptr.To(""),
+					LabelSelector: new(""),
 				},
 			},
 		},
@@ -4436,7 +4583,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					Region: ptr.To("us-east"),
+					Region: new("us-east"),
 				},
 			},
 		},
@@ -4447,7 +4594,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					Region: ptr.To(""),
+					Region: new(""),
 				},
 			},
 		},
@@ -4458,7 +4605,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					Port: ptr.To(int32(80)),
+					Port: new(int32(80)),
 				},
 			},
 		},
@@ -4469,7 +4616,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					Port: ptr.To(int32(-1)),
+					Port: new(int32(-1)),
 				},
 			},
 		},
@@ -4480,7 +4627,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					TagSeparator: ptr.To(","),
+					TagSeparator: new(","),
 				},
 			},
 		},
@@ -4513,7 +4660,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4524,7 +4671,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4535,7 +4682,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4546,7 +4693,7 @@ var LinodeSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
 				{
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4560,7 +4707,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
+					Server: "http://localhost:4646",
 				},
 			},
 		},
@@ -4578,12 +4725,23 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
+		name: "Invalid Server without scheme",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "localhost",
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "AllowStale True",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
-					AllowStale: ptr.To(true),
+					Server:     "http://localhost:4646",
+					AllowStale: new(true),
 				},
 			},
 		},
@@ -4594,8 +4752,8 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:     "localhost",
-					AllowStale: ptr.To(false),
+					Server:     "http://localhost:4646",
+					AllowStale: new(false),
 				},
 			},
 		},
@@ -4606,19 +4764,31 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:    "localhost",
-					Namespace: ptr.To("default"),
+					Server:    "http://localhost:4646",
+					Namespace: new("default"),
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
+		name: "Invalid Namespace with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:    "http://localhost:4646",
+					Namespace: new(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Valid RefreshInterval",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -4630,7 +4800,7 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
+					Server:          "http://localhost:4646",
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
@@ -4642,32 +4812,56 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server: "localhost",
-					Region: ptr.To("us-east"),
+					Server: "http://localhost:4646",
+					Region: new("us-east"),
 				},
 			},
 		},
 		expectedError: false,
+	},
+	{
+		name: "Invalid Region with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server: "http://localhost:4646",
+					Region: new(""),
+				},
+			},
+		},
+		expectedError: true,
 	},
 	{
 		name: "Valid TagSeparator",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:       "localhost",
-					TagSeparator: ptr.To(","),
+					Server:       "http://localhost:4646",
+					TagSeparator: new(","),
 				},
 			},
 		},
 		expectedError: false,
 	},
 	{
+		name: "Invalid TagSeparator with empty value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
+				{
+					Server:       "http://localhost:4646",
+					TagSeparator: new(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "FollowRedirects True",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
-					FollowRedirects: ptr.To(true),
+					Server:          "http://localhost:4646",
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4678,8 +4872,8 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:          "localhost",
-					FollowRedirects: ptr.To(false),
+					Server:          "http://localhost:4646",
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4690,8 +4884,8 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
-					EnableHTTP2: ptr.To(true),
+					Server:      "http://localhost:4646",
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4702,8 +4896,8 @@ var NomadSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			NomadSDConfigs: []monitoringv1alpha1.NomadSDConfig{
 				{
-					Server:      "localhost",
-					EnableHTTP2: ptr.To(false),
+					Server:      "http://localhost:4646",
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4777,7 +4971,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:               "https://puppetdb.example.com",
 					Query:             "nodes { certname = \"macbook-pro.local\" }",
-					IncludeParameters: ptr.To(true),
+					IncludeParameters: new(true),
 				},
 			},
 		},
@@ -4790,7 +4984,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:               "https://puppetdb.example.com",
 					Query:             "nodes { certname = \"macbook-pro.local\" }",
-					IncludeParameters: ptr.To(false),
+					IncludeParameters: new(false),
 				},
 			},
 		},
@@ -4829,7 +5023,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:   "https://puppetdb.example.com",
 					Query: "nodes { certname = \"macbook-pro.local\" }",
-					Port:  ptr.To(int32(80)),
+					Port:  new(int32(80)),
 				},
 			},
 		},
@@ -4842,7 +5036,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:   "https://puppetdb.example.com",
 					Query: "nodes { certname = \"macbook-pro.local\" }",
-					Port:  ptr.To(int32(-1)),
+					Port:  new(int32(-1)),
 				},
 			},
 		},
@@ -4855,7 +5049,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:             "https://puppetdb.example.com",
 					Query:           "nodes { certname = \"macbook-pro.local\" }",
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4868,7 +5062,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:             "https://puppetdb.example.com",
 					Query:           "nodes { certname = \"macbook-pro.local\" }",
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4881,7 +5075,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:         "https://puppetdb.example.com",
 					Query:       "nodes { certname = \"macbook-pro.local\" }",
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4894,7 +5088,7 @@ var PuppetDBSDTestCases = []scrapeCRDTestCase{
 				{
 					URL:         "https://puppetdb.example.com",
 					Query:       "nodes { certname = \"macbook-pro.local\" }",
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},
@@ -4942,7 +5136,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
 					Server:          "http://localhost:8761/eureka",
-					FollowRedirects: ptr.To(true),
+					FollowRedirects: new(true),
 				},
 			},
 		},
@@ -4954,7 +5148,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
 					Server:          "http://localhost:8761/eureka",
-					FollowRedirects: ptr.To(false),
+					FollowRedirects: new(false),
 				},
 			},
 		},
@@ -4966,7 +5160,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
 					Server:      "http://localhost:8761/eureka",
-					EnableHTTP2: ptr.To(true),
+					EnableHTTP2: new(true),
 				},
 			},
 		},
@@ -4978,7 +5172,7 @@ var EurekaSDTestCases = []scrapeCRDTestCase{
 			EurekaSDConfigs: []monitoringv1alpha1.EurekaSDConfig{
 				{
 					Server:      "http://localhost:8761/eureka",
-					EnableHTTP2: ptr.To(false),
+					EnableHTTP2: new(false),
 				},
 			},
 		},

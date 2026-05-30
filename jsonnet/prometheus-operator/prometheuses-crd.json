@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.19.0",
-      "operator.prometheus.io/version": "0.88.0"
+      "controller-gen.kubebuilder.io/version": "v0.20.1",
+      "operator.prometheus.io/version": "0.91.0"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -1286,6 +1286,11 @@
                                   "type": "object",
                                   "x-kubernetes-map-type": "atomic"
                                 },
+                                "externalId": {
+                                  "description": "externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.",
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
                                 "profile": {
                                   "description": "profile defines the named AWS profile used to authenticate.",
                                   "type": "string"
@@ -1326,7 +1331,13 @@
                                   "type": "boolean"
                                 }
                               },
-                              "type": "object"
+                              "type": "object",
+                              "x-kubernetes-validations": [
+                                {
+                                  "message": "externalId can only be used when roleArn is specified",
+                                  "rule": "!has(self.externalId) || has(self.roleArn)"
+                                }
+                              ]
                             },
                             "timeout": {
                               "description": "timeout defines a per-target Alertmanager timeout when pushing alerts.",
@@ -1883,7 +1894,7 @@
                     "type": "array"
                   },
                   "containers": {
-                    "description": "containers allows injecting additional containers or modifying operator\ngenerated containers. This can be used to allow adding an authentication\nproxy to the Pods or to change the behavior of an operator generated\ncontainer. Containers described here modify an operator generated\ncontainer if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of containers managed by the operator are:\n* `prometheus`\n* `config-reloader`\n* `thanos-sidecar`\n\nOverriding containers is entirely outside the scope of what the\nmaintainers will support and by doing so, you accept that this behaviour\nmay break at any time without notice.",
+                    "description": "containers allows injecting additional containers or modifying operator\ngenerated containers. This can be used to allow adding an authentication\nproxy to the Pods or to change the behavior of an operator generated\ncontainer. Containers described here modify an operator generated\ncontainer if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of containers managed by the operator are:\n* `prometheus`\n* `config-reloader`\n* `thanos-sidecar`\n\nOverriding containers which are managed by the operator require careful\ntesting, especially when upgrading to a new version of the operator.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -2699,7 +2710,7 @@
                           "type": "object"
                         },
                         "resizePolicy": {
-                          "description": "Resources resize policy for the container.",
+                          "description": "Resources resize policy for the container.\nThis field cannot be set on ephemeral containers.",
                           "items": {
                             "description": "ContainerResizePolicy represents resource resize policy for the container.",
                             "properties": {
@@ -2881,7 +2892,7 @@
                               "type": "boolean"
                             },
                             "procMount": {
-                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "string"
                             },
                             "readOnlyRootFilesystem": {
@@ -3494,7 +3505,7 @@
                     "type": "array"
                   },
                   "initContainers": {
-                    "description": "initContainers allows injecting initContainers to the Pod definition. Those\ncan be used to e.g.  fetch secrets for injection into the Prometheus\nconfiguration from external sources. Any errors during the execution of\nan initContainer will lead to a restart of the Pod. More info:\nhttps://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator generated init\ncontainers if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of init container name managed by the operator are:\n* `init-config-reloader`.\n\nOverriding init containers is entirely outside the scope of what the\nmaintainers will support and by doing so, you accept that this behaviour\nmay break at any time without notice.",
+                    "description": "initContainers allows injecting initContainers to the Pod definition. Those\ncan be used to e.g. fetch secrets for injection into the Prometheus\nconfiguration from external sources. Any errors during the execution of\nan initContainer will lead to a restart of the Pod. More info:\nhttps://kubernetes.io/docs/concepts/workloads/pods/init-containers/\nInitContainers described here modify an operator generated init\ncontainers if they share the same name and modifications are done via a\nstrategic merge patch.\n\nThe names of init container name managed by the operator are:\n* `init-config-reloader`.\n\nOverriding init containers which are managed by the operator require\ncareful testing, especially when upgrading to a new version of the\noperator.",
                     "items": {
                       "description": "A single application container that you want to run within a pod.",
                       "properties": {
@@ -4310,7 +4321,7 @@
                           "type": "object"
                         },
                         "resizePolicy": {
-                          "description": "Resources resize policy for the container.",
+                          "description": "Resources resize policy for the container.\nThis field cannot be set on ephemeral containers.",
                           "items": {
                             "description": "ContainerResizePolicy represents resource resize policy for the container.",
                             "properties": {
@@ -4492,7 +4503,7 @@
                               "type": "boolean"
                             },
                             "procMount": {
-                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                               "type": "string"
                             },
                             "readOnlyRootFilesystem": {
@@ -4931,6 +4942,14 @@
                       },
                       "keepIdentifyingResourceAttributes": {
                         "description": "keepIdentifyingResourceAttributes enables adding `service.name`, `service.namespace` and `service.instance.id`\nresource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.\n\nIt requires Prometheus >= v3.1.0.",
+                        "type": "boolean"
+                      },
+                      "labelNamePreserveMultipleUnderscores": {
+                        "description": "labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses\nunderscore escaping.\nWhen true (default), multiple consecutive underscores are preserved during label name sanitization.\n\nNotice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.\n\nIt requires Prometheus >= v3.8.0.",
+                        "type": "boolean"
+                      },
+                      "labelNameUnderscoreSanitization": {
+                        "description": "labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.\nReserved labels starting with '__' are not modified.\nThis is only relevant when translation_strategy uses underscore escaping (e.g., \"UnderscoreEscapingWithSuffixes\" or \"UnderscoreEscapingWithoutSuffixes\").\n\nNotice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.\n\nIt requires Prometheus >= v3.8.0.",
                         "type": "boolean"
                       },
                       "promoteAllResourceAttributes": {
@@ -5706,7 +5725,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -5947,7 +5966,8 @@
                           "type": "object"
                         },
                         "url": {
-                          "description": "url defines the URL of the endpoint to query from.",
+                          "description": "url defines the URL of the endpoint to query from.\n\nIt must use the HTTP or HTTPS scheme.",
+                          "pattern": "^(http|https)://.+$",
                           "type": "string"
                         }
                       },
@@ -6518,7 +6538,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -6662,6 +6682,11 @@
                               "type": "object",
                               "x-kubernetes-map-type": "atomic"
                             },
+                            "externalId": {
+                              "description": "externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.",
+                              "minLength": 1,
+                              "type": "string"
+                            },
                             "profile": {
                               "description": "profile defines the named AWS profile used to authenticate.",
                               "type": "string"
@@ -6702,7 +6727,13 @@
                               "type": "boolean"
                             }
                           },
-                          "type": "object"
+                          "type": "object",
+                          "x-kubernetes-validations": [
+                            {
+                              "message": "externalId can only be used when roleArn is specified",
+                              "rule": "!has(self.externalId) || has(self.roleArn)"
+                            }
+                          ]
                         },
                         "tlsConfig": {
                           "description": "tlsConfig to use for the URL.",
@@ -6878,8 +6909,8 @@
                           "type": "object"
                         },
                         "url": {
-                          "description": "url defines the URL of the endpoint to send samples to.",
-                          "minLength": 1,
+                          "description": "url defines the URL of the endpoint to send samples to.\n\nIt must use the HTTP or HTTPS scheme.",
+                          "pattern": "^(http|https)://.+$",
                           "type": "string"
                         },
                         "writeRelabelConfigs": {
@@ -7193,6 +7224,11 @@
                     "format": "int64",
                     "type": "integer"
                   },
+                  "schedulerName": {
+                    "description": "schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "scrapeClasses": {
                     "description": "scrapeClasses defines the list of scrape classes to expose to scraping objects such as\nPodMonitors, ServiceMonitors, Probes and ScrapeConfigs.\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.",
                     "items": {
@@ -7201,7 +7237,7 @@
                           "description": "attachMetadata defines additional metadata to the discovered targets.\nWhen the scrape object defines its own configuration, it takes\nprecedence over the scrape class configuration.",
                           "properties": {
                             "node": {
-                              "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.",
+                              "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nNode metadata labels are not automatically added to scraped metrics. They are\nexposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries\nwith relabeling configuration.",
                               "type": "boolean"
                             }
                           },
@@ -7590,7 +7626,7 @@
                     "type": "boolean"
                   },
                   "scrapeConfigNamespaceSelector": {
-                    "description": "scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level.",
+                    "description": "scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level\nand will be graduated to Beta in a future release.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -7635,7 +7671,7 @@
                     "x-kubernetes-map-type": "atomic"
                   },
                   "scrapeConfigSelector": {
-                    "description": "scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label\nselector matches all objects. A null label selector matches no objects.\n\nIf `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`\nand `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.\nThe Prometheus operator will ensure that the Prometheus configuration's\nSecret exists, but it is the responsibility of the user to provide the raw\ngzipped Prometheus configuration under the `prometheus.yaml.gz` key.\nThis behavior is *deprecated* and will be removed in the next major version\nof the custom resource definition. It is recommended to use\n`spec.additionalScrapeConfigs` instead.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level.",
+                    "description": "scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label\nselector matches all objects. A null label selector matches no objects.\n\nIf `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`\nand `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.\nThe Prometheus operator will ensure that the Prometheus configuration's\nSecret exists, but it is the responsibility of the user to provide the raw\ngzipped Prometheus configuration under the `prometheus.yaml.gz` key.\nThis behavior is *deprecated* and will be removed in the next major version\nof the custom resource definition. It is recommended to use\n`spec.additionalScrapeConfigs` instead.\n\nNote that the ScrapeConfig custom resource definition is currently at Alpha level\nand will be graduated to Beta in a future release.",
                     "properties": {
                       "matchExpressions": {
                         "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
@@ -7985,10 +8021,10 @@
                     "description": "shardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.\n\nThe final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,\nhowever, the feature is not yet fully implemented in this PR. The limitation being:\n* Retention duration is not settable, for now, shards are retained forever.",
                     "properties": {
                       "retain": {
-                        "description": "retain defines the config for retention when the retention policy is set to `Retain`.\nThis field is ineffective as of now.",
+                        "description": "retain defines the config for retention when the retention policy is set\nto `Retain`.\n\nIf not defined, the operator will use the retention duration configured\nfor the Prometheus data. If the resource uses size-based retention, the\nshard(s) are kept forever (unless manually deleted).",
                         "properties": {
                           "retentionPeriod": {
-                            "description": "retentionPeriod defines the retentionPeriod for shard retention policy.",
+                            "description": "retentionPeriod defines how long the scaled-down shard(s) need to be\nkept before being deleted.",
                             "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                             "type": "string"
                           }
@@ -8008,6 +8044,44 @@
                       }
                     },
                     "type": "object"
+                  },
+                  "shardingStrategy": {
+                    "description": "shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.\n\nWhen not defined, the operator defaults to the 'Address' mode which distributes\ntargets based on a hash of the target address.",
+                    "properties": {
+                      "mode": {
+                        "description": "mode defines the sharding mode. Can be 'Address' or 'Topology'.\n\n'Address' is the default mode and distributes targets across shards\nbased on a hash of the target address.\n\n'Topology' enables zone-aware sharding where each shard is assigned to a\nspecific topology zone and only scrapes targets in that zone.\n(Alpha) Using the 'Topology' mode requires the `PrometheusTopologySharding`\nfeature gate to be enabled.",
+                        "enum": [
+                          "Address",
+                          "Topology"
+                        ],
+                        "type": "string"
+                      },
+                      "topology": {
+                        "description": "topology defines the configuration for topology-aware sharding.\nThis field is only valid when mode is set to 'Topology'.",
+                        "properties": {
+                          "externalLabelName": {
+                            "description": "externalLabelName defines the name of the Prometheus external label used\nto communicate the topology zone assigned to the Prometheus instance.\nIf not defined, it defaults to \"zone\".\nIf set to the empty string, no external label is added to the Prometheus configuration.",
+                            "type": "string"
+                          },
+                          "values": {
+                            "description": "values defines the list of topology values (e.g. zone names) to be used\nfor sharding. The configured number of shards must be greater than or\nequal to the number of values.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array",
+                            "x-kubernetes-list-type": "atomic"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "topology can only be defined when mode is set to 'Topology'",
+                        "rule": "!has(self.topology) || (has(self.mode) && self.mode == 'Topology')"
+                      }
+                    ]
                   },
                   "shards": {
                     "description": "shards defines the number of shards to distribute the scraped targets onto.\n\n`spec.replicas` multiplied by `spec.shards` is the total number of Pods\nbeing created.\n\nWhen not defined, the operator assumes only one shard.\n\nNote that scaling down shards will not reshard data onto the remaining\ninstances, it must be manually moved. Increasing shards will not reshard\ndata either but it will continue to be available from the same\ninstances. To query globally, use either\n* Thanos sidecar + querier for query federation and Thanos Ruler for rules.\n* Remote-write to send metrics to a central location.\n\nBy default, the sharding of targets is performed on:\n* The `__address__` target's metadata label for PodMonitor,\nServiceMonitor and ScrapeConfig resources.\n* The `__param_target__` label for Probe resources.\n\nUsers can define their own sharding implementation by setting the\n`__tmp_hash` label during the target discovery with relabeling\nconfiguration (either in the monitoring resources or via scrape class).\n\nYou can also disable sharding on a specific target by setting the\n`__tmp_disable_sharding` label with relabeling configuration. When\nthe label value isn't empty, all Prometheus shards will scrape the target.",
@@ -8115,7 +8189,7 @@
                                     "type": "object"
                                   },
                                   "resources": {
-                                    "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                                    "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                                     "properties": {
                                       "limits": {
                                         "additionalProperties": {
@@ -8321,7 +8395,7 @@
                                 "type": "object"
                               },
                               "resources": {
-                                "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                                "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                                 "properties": {
                                   "limits": {
                                     "additionalProperties": {
@@ -8438,7 +8512,7 @@
                                   "description": "When a controller receives persistentvolume claim update with ClaimResourceStatus for a resource\nthat it does not recognizes, then it should ignore that update and let other controllers\nhandle it.",
                                   "type": "string"
                                 },
-                                "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
+                                "description": "allocatedResourceStatuses stores status of resource being resized for the given PVC.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nClaimResourceStatus can be in any of following states:\n\t- ControllerResizeInProgress:\n\t\tState set when resize controller starts resizing the volume in control-plane.\n\t- ControllerResizeFailed:\n\t\tState set when resize has failed in resize controller with a terminal error.\n\t- NodeResizePending:\n\t\tState set when resize controller has finished resizing the volume but further resizing of\n\t\tvolume is needed on the node.\n\t- NodeResizeInProgress:\n\t\tState set when kubelet starts resizing the volume.\n\t- NodeResizeFailed:\n\t\tState set when resizing has failed in kubelet with a terminal error. Transient errors don't set\n\t\tNodeResizeFailed.\nFor example: if expanding a PVC for more capacity - this field can be one of the following states:\n\t- pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"ControllerResizeFailed\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizePending\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeInProgress\"\n     - pvc.status.allocatedResourceStatus['storage'] = \"NodeResizeFailed\"\nWhen this field is not set, it means that no resize operation is in progress for the given PVC.\n\nA controller that receives PVC update with previously unknown resourceName or ClaimResourceStatus\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
                                 "type": "object",
                                 "x-kubernetes-map-type": "granular"
                               },
@@ -8455,7 +8529,7 @@
                                   "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                                   "x-kubernetes-int-or-string": true
                                 },
-                                "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.\n\nThis is an alpha field and requires enabling RecoverVolumeExpansionFailure feature.",
+                                "description": "allocatedResources tracks the resources allocated to a PVC including its capacity.\nKey names follow standard Kubernetes label syntax. Valid values are either:\n\t* Un-prefixed keys:\n\t\t- storage - the capacity of the volume.\n\t* Custom resources must use implementation-defined prefixed names such as \"example.com/my-custom-resource\"\nApart from above values - keys that are unprefixed or have kubernetes.io prefix are considered\nreserved and hence may not be used.\n\nCapacity reported here may be larger than the actual capacity when a volume expansion operation\nis requested.\nFor storage quota, the larger value from allocatedResources and PVC.spec.resources is used.\nIf allocatedResources is not set, PVC.spec.resources alone is used for quota calculation.\nIf a volume expansion capacity request is lowered, allocatedResources is only\nlowered if there are no expansion operations in progress and if the actual volume capacity\nis equal or lower than the requested capacity.\n\nA controller that receives PVC update with previously unknown resourceName\nshould ignore the update for the purpose it was designed. For example - a controller that\nonly is responsible for resizing capacity of the volume, should ignore PVC updates that change other valid\nresources associated with PVC.",
                                 "type": "object"
                               },
                               "capacity": {
@@ -8617,7 +8691,7 @@
                         "type": "boolean"
                       },
                       "grpcServerTlsConfig": {
-                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `caFile`, `certFile`, and `keyFile` fields are supported.",
+                        "description": "grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.\n\nNote: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.",
                         "properties": {
                           "ca": {
                             "description": "ca defines the Certificate authority used when verifying server certificates.",
@@ -8730,6 +8804,24 @@
                           "certFile": {
                             "description": "certFile defines the path to the client cert file in the Prometheus container for the targets.",
                             "type": "string"
+                          },
+                          "cipherSuites": {
+                            "description": "cipherSuites defines the list of supported cipher suites for TLS\nversions up to TLS 1.2.\n\nIf not defined, the Go default cipher suites are used.\nAvailable cipher suites are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#pkg-constants\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "x-kubernetes-list-type": "set"
+                          },
+                          "curves": {
+                            "description": "curves defines the list of preferred elliptic curves for\nTLS handshakes.\n\nIf not defined, the Go default curves are used.\nAvailable curves are documented in the Go documentation:\nhttps://golang.org/pkg/crypto/tls/#CurveID\n\nIt requires Thanos >= v0.42.0. Note that the operator doesn't verify if\nthe Thanos version supports the provided values.",
+                            "items": {
+                              "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "x-kubernetes-list-type": "set"
                           },
                           "insecureSkipVerify": {
                             "description": "insecureSkipVerify defines how to disable target certificate validation.",
@@ -9018,7 +9110,7 @@
                           "type": "string"
                         },
                         "operator": {
-                          "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                          "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                           "type": "string"
                         },
                         "tolerationSeconds": {
@@ -9377,6 +9469,19 @@
                         "description": "outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with\nrespect to the TSDB max time.\n\nAn out-of-order/out-of-bounds sample is ingested into the TSDB as long as\nthe timestamp of the sample is >= (TSDB.MaxTime - outOfOrderTimeWindow).\n\nThis is an *experimental feature*, it may change in any upcoming release\nin a breaking way.\n\nIt requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.",
                         "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                         "type": "string"
+                      },
+                      "staleSeriesCompactionThreshold": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ],
+                        "description": "staleSeriesCompactionThreshold configures the trigger point for compacting\nstale series from memory into persistent blocks and removing those stale\nseries from memory.\n\nThe threshold is a number between 0.0 and 1.0. It represents the ratio of\nstale series in memory to the total series in memory. The stale series\ncompaction is triggered when this ratio crosses the configured threshold.\nIt may not trigger the stale series compaction if the usual head compaction\nis about to happen soon.\n\nIf set to 0, stale series compaction is disabled.\n\nIt requires Prometheus >= v3.10.0.",
+                        "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                        "x-kubernetes-int-or-string": true
                       }
                     },
                     "type": "object"
@@ -9901,7 +10006,7 @@
                                       "type": "object"
                                     },
                                     "resources": {
-                                      "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                                      "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                                       "properties": {
                                         "limits": {
                                           "additionalProperties": {
@@ -10187,7 +10292,7 @@
                           "type": "object"
                         },
                         "image": {
-                          "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro) and non-executable files (noexec).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
+                          "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
                           "properties": {
                             "pullPolicy": {
                               "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
@@ -10330,7 +10435,7 @@
                           "type": "object"
                         },
                         "portworxVolume": {
-                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate\nis on.",
+                          "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver.",
                           "properties": {
                             "fsType": {
                               "description": "fSType represents the filesystem type to mount\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -10582,6 +10687,13 @@
                                       "signerName": {
                                         "description": "Kubelet's generated CSRs will be addressed to this signer.",
                                         "type": "string"
+                                      },
+                                      "userAnnotations": {
+                                        "additionalProperties": {
+                                          "type": "string"
+                                        },
+                                        "description": "userAnnotations allow pod authors to pass additional information to\nthe signer implementation.  Kubernetes does not restrict or validate this\nmetadata in any way.\n\nThese values are copied verbatim into the `spec.unverifiedUserAnnotations` field of\nthe PodCertificateRequest objects that Kubelet creates.\n\nEntries are subject to the same validation as object metadata annotations,\nwith the addition that all keys must be domain-prefixed. No restrictions\nare placed on values, except an overall size limitation on the entire field.\n\nSigners should document the keys and values they support. Signers should\ndeny requests that contain keys they do not recognize.",
+                                        "type": "object"
                                       }
                                     },
                                     "required": [
@@ -11172,7 +11284,13 @@
                     "type": "object"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "shards must be greater than or equal to the number of topology values when sharding strategy mode is Topology",
+                    "rule": "!has(self.shardingStrategy) || !has(self.shardingStrategy.mode) || self.shardingStrategy.mode != 'Topology' || !has(self.shardingStrategy.topology) || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size() == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()"
+                  }
+                ]
               },
               "status": {
                 "description": "status defines the most recent observed status of the Prometheus cluster. Read-only.\nMore info:\nhttps://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",

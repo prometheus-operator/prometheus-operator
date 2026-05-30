@@ -1,0 +1,9 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - details:
+      foo: bar
+      key:
+        subkey1: subvalue1
+        subkey2: subvalue2
+templates: []

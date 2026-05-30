@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -203,6 +203,10 @@ type AlertmanagerSpec struct {
 	// +optional
 	//nolint:kubeapilinter // standard Kubernetes node selector format
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	SchedulerName string `json:"schedulerName,omitempty"`
 	// resources defines the resource requests and limits of the Pods.
 	// +optional
 	Resources v1.ResourceRequirements `json:"resources,omitempty"`
@@ -270,27 +274,43 @@ type AlertmanagerSpec struct {
 	// +optional
 	UpdateStrategy *StatefulSetUpdateStrategy `json:"updateStrategy,omitempty"`
 
-	// containers allows injecting additional containers. This is meant to
-	// allow adding an authentication proxy to an Alertmanager pod.
-	// Containers described here modify an operator generated container if they
-	// share the same name and modifications are done via a strategic merge
-	// patch. The current container names are: `alertmanager` and
-	// `config-reloader`. Overriding containers is entirely outside the scope
-	// of what the maintainers will support and by doing so, you accept that
-	// this behaviour may break at any time without notice.
+	// containers allows injecting additional containers or modifying operator
+	// generated containers. This can be used to allow adding an authentication
+	// proxy to the Pods or to change the behavior of an operator generated
+	// container. Containers described here modify an operator generated
+	// container if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of containers managed by the operator are:
+	// * `alertmanager`
+	// * `config-reloader`
+	// * `thanos-sidecar`
+	//
+	// Overriding containers which are managed by the operator require careful
+	// testing, especially when upgrading to a new version of the operator.
+	//
 	// +optional
 	Containers []v1.Container `json:"containers,omitempty"`
-	// initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-	// fetch secrets for injection into the Alertmanager configuration from external sources. Any
-	// errors during the execution of an initContainer will lead to a restart of the Pod. More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// InitContainers described here modify an operator
-	// generated init containers if they share the same name and modifications are
-	// done via a strategic merge patch. The current init container name is:
-	// `init-config-reloader`. Overriding init containers is entirely outside the
-	// scope of what the maintainers will support and by doing so, you accept that
-	// this behaviour may break at any time without notice.
+
+	// initContainers allows injecting initContainers to the Pod definition. Those
+	// can be used to e.g.  fetch secrets for injection into the Prometheus
+	// configuration from external sources. Any errors during the execution of
+	// an initContainer will lead to a restart of the Pod. More info:
+	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	// InitContainers described here modify an operator generated init
+	// containers if they share the same name and modifications are done via a
+	// strategic merge patch.
+	//
+	// The names of init container name managed by the operator are:
+	// * `init-config-reloader`.
+	//
+	// Overriding init containers which are managed by the operator require
+	// careful testing, especially when upgrading to a new version of the
+	// operator.
+	//
 	// +optional
 	InitContainers []v1.Container `json:"initContainers,omitempty"`
+
 	// priorityClassName assigned to the Pods
 	// +optional
 	PriorityClassName string `json:"priorityClassName,omitempty"`
@@ -537,6 +557,10 @@ type AlertmanagerGlobalConfig struct {
 	// wechat defines the default WeChat Config
 	// +optional
 	WeChatConfig *GlobalWeChatConfig `json:"wechat,omitempty"`
+
+	// mattermost defines the default Mattermost Config
+	// +optional
+	MattermostConfig *GlobalMattermostConfig `json:"mattermost,omitempty"`
 }
 
 // AlertmanagerStatus is the most recent observed status of the Alertmanager cluster. Read-only.
@@ -579,6 +603,10 @@ func (a *Alertmanager) ExpectedReplicas() int {
 	}
 	return int(*a.Spec.Replicas)
 }
+
+func (a *Alertmanager) GetAvailableReplicas() int  { return int(a.Status.AvailableReplicas) }
+func (a *Alertmanager) GetUpdatedReplicas() int    { return int(a.Status.UpdatedReplicas) }
+func (a *Alertmanager) GetConditions() []Condition { return a.Status.Conditions }
 
 func (a *Alertmanager) SetReplicas(i int)            { a.Status.Replicas = int32(i) }
 func (a *Alertmanager) SetUpdatedReplicas(i int)     { a.Status.UpdatedReplicas = int32(i) }
@@ -656,6 +684,14 @@ type GlobalSMTPConfig struct {
 	// tlsConfig defines the default TLS configuration for SMTP receivers
 	// +optional
 	TLSConfig *SafeTLSConfig `json:"tlsConfig,omitempty"`
+
+	// forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+	// true: force use of implicit TLS (direct TLS connection on any port)
+	// false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
 }
 
 // GlobalTelegramConfig configures global Telegram parameters.
@@ -740,6 +776,16 @@ type GlobalVictorOpsConfig struct {
 	APIKey *v1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 
+// GlobalMattermostConfig configures global Mattermost parameters.
+type GlobalMattermostConfig struct {
+	// webhookURL defines the default Mattermost Webhook URL.
+	//
+	// It requires Alertmanager >= v0.32.0.
+	//
+	// +optional
+	WebhookURL *v1.SecretKeySelector `json:"webhookURL,omitempty"`
+}
+
 // HostPort represents a "host:port" network address.
 type HostPort struct {
 	// host defines the host's address, it can be a DNS name or a literal IP address.
@@ -778,7 +824,3 @@ type ClusterTLSConfig struct {
 	// +required
 	ClientTLS SafeTLSConfig `json:"client"`
 }
-
-// URL represents a valid URL
-// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
-type URL string

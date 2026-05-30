@@ -16,19 +16,34 @@
 
 package v1beta1
 
-import (
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-)
-
 // SlackActionApplyConfiguration represents a declarative configuration of the SlackAction type for use
 // with apply.
+//
+// SlackAction configures a single Slack action that is sent with each
+// notification.
+// See https://api.slack.com/docs/message-attachments#action_fields and
+// https://api.slack.com/docs/message-buttons for more information.
 type SlackActionApplyConfiguration struct {
-	Type         *string                                   `json:"type,omitempty"`
-	Text         *string                                   `json:"text,omitempty"`
-	URL          *monitoringv1beta1.URL                    `json:"url,omitempty"`
-	Style        *string                                   `json:"style,omitempty"`
-	Name         *string                                   `json:"name,omitempty"`
-	Value        *string                                   `json:"value,omitempty"`
+	// type defines the type of interactive component.
+	// Common values include "button" for clickable buttons and "select" for dropdown menus.
+	Type *string `json:"type,omitempty"`
+	// text defines the user-visible label displayed on the action element.
+	// For buttons, this is the button text. For select menus, this is the placeholder text.
+	Text *string `json:"text,omitempty"`
+	// url defines the URL to open when the action is triggered.
+	// Only applicable for button-type actions. When set, clicking the button opens this URL.
+	URL *string `json:"url,omitempty"`
+	// style defines the visual appearance of the action element.
+	// Valid values include "default", "primary" (green), and "danger" (red).
+	Style *string `json:"style,omitempty"`
+	// name defines a unique identifier for the action within the message.
+	// This value is sent back to your application when the action is triggered.
+	Name *string `json:"name,omitempty"`
+	// value defines the payload sent when the action is triggered.
+	// This data is included in the callback sent to your application.
+	Value *string `json:"value,omitempty"`
+	// confirm defines an optional confirmation dialog that appears before the action is executed.
+	// When set, users must confirm their intent before the action proceeds.
 	ConfirmField *SlackConfirmationFieldApplyConfiguration `json:"confirm,omitempty"`
 }
 
@@ -57,7 +72,7 @@ func (b *SlackActionApplyConfiguration) WithText(value string) *SlackActionApply
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *SlackActionApplyConfiguration) WithURL(value monitoringv1beta1.URL) *SlackActionApplyConfiguration {
+func (b *SlackActionApplyConfiguration) WithURL(value string) *SlackActionApplyConfiguration {
 	b.URL = &value
 	return b
 }

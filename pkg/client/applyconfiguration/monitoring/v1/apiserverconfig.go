@@ -22,13 +22,37 @@ import (
 
 // APIServerConfigApplyConfiguration represents a declarative configuration of the APIServerConfig type for use
 // with apply.
+//
+// APIServerConfig defines how the Prometheus server connects to the Kubernetes API server.
+//
+// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 type APIServerConfigApplyConfiguration struct {
-	Host                          *string                          `json:"host,omitempty"`
-	BasicAuth                     *BasicAuthApplyConfiguration     `json:"basicAuth,omitempty"`
-	BearerTokenFile               *string                          `json:"bearerTokenFile,omitempty"`
-	TLSConfig                     *TLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
-	Authorization                 *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	BearerToken                   *string                          `json:"bearerToken,omitempty"`
+	// host defines the Kubernetes API address consisting of a hostname or IP address followed
+	// by an optional port number.
+	Host *string `json:"host,omitempty"`
+	// basicAuth configuration for the API server.
+	//
+	// Cannot be set at the same time as `authorization`, `bearerToken`, or
+	// `bearerTokenFile`.
+	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// bearerTokenFile defines the file to read bearer token for accessing apiserver.
+	//
+	// Cannot be set at the same time as `basicAuth`, `authorization`, or `bearerToken`.
+	//
+	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
+	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
+	// tlsConfig to use for the API server.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// authorization section for the API server.
+	//
+	// Cannot be set at the same time as `basicAuth`, `bearerToken`, or
+	// `bearerTokenFile`.
+	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// bearerToken is deprecated: this will be removed in a future release.
+	// *Warning: this field shouldn't be used because the token value appears
+	// in clear-text. Prefer using `authorization`.*
+	BearerToken *string `json:"bearerToken,omitempty"`
+	// Optional ProxyConfig.
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 

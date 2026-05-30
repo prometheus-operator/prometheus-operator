@@ -1,4 +1,4 @@
-// Copyright 2018 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,10 @@ const (
 	Version = "v1"
 )
 
+// URL represents a valid URL
+// +kubebuilder:validation:Pattern:="^(http|https)://.+$"
+type URL string
+
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 // Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
@@ -48,12 +52,6 @@ func (bs *ByteSize) IsEmpty() bool {
 // Examples: `30s`, `1m`, `1h20m15s`, `15d`
 // +kubebuilder:validation:Pattern:="^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
 type Duration string
-
-// DurationPointer is a helper function to parse a Duration string into a *Duration.
-func DurationPointer(s string) *Duration {
-	d := Duration(s)
-	return &d
-}
 
 // NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
 // Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
@@ -655,6 +653,10 @@ type AttachMetadata struct {
 	// The Prometheus service account must have the `list` and `watch`
 	// permissions on the `Nodes` objects.
 	//
+	// Node metadata labels are not automatically added to scraped metrics. They are
+	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+	// with relabeling configuration.
+	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
@@ -675,9 +677,8 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	TokenURL string `json:"tokenUrl"`
+	TokenURL URL `json:"tokenUrl"`
 
 	// scopes defines the OAuth2 scopes used for the token request.
 	//
@@ -709,8 +710,8 @@ func (o *OAuth2) Validate() error {
 		return nil
 	}
 
-	if o.TokenURL == "" {
-		return errors.New("OAuth2 'tokenURL' must be specified")
+	if string(o.TokenURL) == "" {
+		return errors.New("OAuth2 tokenURL must be specified")
 	}
 
 	if o.ClientID == (SecretOrConfigMap{}) {
@@ -1080,10 +1081,8 @@ func (tc *TracingConfig) Validate() error {
 	}
 
 	if tc.SamplingFraction != nil {
-		min, _ := resource.ParseQuantity("0")
-		max, _ := resource.ParseQuantity("1")
-
-		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+		v := tc.SamplingFraction.AsApproximateFloat64()
+		if v < 0 || v > 1 {
 			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}

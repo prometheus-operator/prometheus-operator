@@ -19,6 +19,10 @@ package v1alpha1
 // AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
+	// node attaches node metadata to discovered targets.
+	// When set to true, Prometheus must have the `get` permission on the
+	// `Nodes` objects.
+	// Only valid for Pod, Endpoint and Endpointslice roles.
 	Node *bool `json:"node,omitempty"`
 }
 

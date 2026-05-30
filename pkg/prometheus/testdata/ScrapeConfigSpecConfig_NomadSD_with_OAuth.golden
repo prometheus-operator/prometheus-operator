@@ -17,7 +17,7 @@ scrape_configs:
       endpoint_params:
         param1: value1
         param2: value2
-    server: ""
+    server: http://localhost:4646
   relabel_configs:
   - source_labels:
     - job

@@ -18,10 +18,18 @@ package v1beta1
 
 // RocketChatFieldConfigApplyConfiguration represents a declarative configuration of the RocketChatFieldConfig type for use
 // with apply.
+//
+// RocketChatFieldConfig defines a field for RocketChat messages.
 type RocketChatFieldConfigApplyConfiguration struct {
+	// title defines the title of this field.
+	// This appears as bold text labeling the field content.
 	Title *string `json:"title,omitempty"`
+	// value defines the value of this field, displayed underneath the title.
+	// This contains the actual data or content for the field.
 	Value *string `json:"value,omitempty"`
-	Short *bool   `json:"short,omitempty"`
+	// short defines whether this field should be a short field.
+	// When true, the field may be displayed inline with other short fields to save space.
+	Short *bool `json:"short,omitempty"`
 }
 
 // RocketChatFieldConfigApplyConfiguration constructs a declarative configuration of the RocketChatFieldConfig type for use with

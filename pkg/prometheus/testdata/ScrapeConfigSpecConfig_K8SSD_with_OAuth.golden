@@ -7,7 +7,8 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   kubernetes_sd_configs:
-  - role: node
+  - api_server: https://kubernetes.default.svc
+    role: node
     oauth2:
       client_id: client-id
       client_secret: client-secret

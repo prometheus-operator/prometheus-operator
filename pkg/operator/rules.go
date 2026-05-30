@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,17 +27,18 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	v1 "k8s.io/api/core/v1"
+	"github.com/prometheus/prometheus/promql/parser"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	clientv1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 
 	sortutil "github.com/prometheus-operator/prometheus-operator/internal/sortutil"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	namespacelabeler "github.com/prometheus-operator/prometheus-operator/pkg/namespacelabeler"
 )
 
@@ -58,16 +59,17 @@ const (
 // maximum `Data` size of a ConfigMap seems to differ between environments.
 // This is probably due to different meta data sizes which count into the
 // overall maximum size of a ConfigMap. Thereby lets leave a large buffer.
-var MaxConfigMapDataSize = int(float64(v1.MaxSecretSize) * 0.5)
+var MaxConfigMapDataSize = int(float64(corev1.MaxSecretSize) * 0.5)
 
 // PrometheusRuleSelector selects PrometheusRule resources and translates them
 // to Prometheus/Thanos configuration format.
 type PrometheusRuleSelector struct {
-	ruleFormat   RuleConfigurationFormat
-	version      semver.Version
-	ruleSelector labels.Selector
-	nsLabeler    *namespacelabeler.Labeler
-	ruleInformer *informers.ForResource
+	ruleFormat    RuleConfigurationFormat
+	version       semver.Version
+	ruleSelector  labels.Selector
+	nsLabeler     *namespacelabeler.Labeler
+	ruleInformer  *informers.ForResource
+	parserOptions parser.Options
 
 	eventRecorder *EventRecorder
 
@@ -96,7 +98,7 @@ func (prs *PrometheusRuleSelection) RejectedLen() int {
 }
 
 // NewPrometheusRuleSelector returns a PrometheusRuleSelector pointer.
-func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger) (*PrometheusRuleSelector, error) {
+func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version string, labelSelector *metav1.LabelSelector, nsLabeler *namespacelabeler.Labeler, ruleInformer *informers.ForResource, eventRecorder *EventRecorder, logger *slog.Logger, parserOptions parser.Options) (*PrometheusRuleSelector, error) {
 	componentVersion, err := semver.ParseTolerant(version)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse version: %w", err)
@@ -113,6 +115,7 @@ func NewPrometheusRuleSelector(ruleFormat RuleConfigurationFormat, version strin
 		ruleSelector:  ruleSelector,
 		nsLabeler:     nsLabeler,
 		ruleInformer:  ruleInformer,
+		parserOptions: parserOptions,
 		eventRecorder: eventRecorder,
 		logger:        logger,
 	}, nil
@@ -136,7 +139,7 @@ func (prs *PrometheusRuleSelector) generateRulesConfiguration(promRule *monitori
 		validationScheme = ValidationSchemeForPrometheus(prs.version)
 	}
 
-	errs := ValidateRule(promRuleSpec, validationScheme)
+	errs := ValidateRule(promRuleSpec, validationScheme, prs.parserOptions)
 	if len(errs) != 0 {
 		const m = "invalid rule"
 		logger.Debug(m, "content", content)
@@ -198,7 +201,7 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 }
 
 // ValidateRule takes PrometheusRuleSpec and validates it using the upstream prometheus rule validator.
-func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme) []error {
+func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme model.ValidationScheme, parserOptions parser.Options) []error {
 	for i := range promRuleSpec.Groups {
 		// The upstream Prometheus rule validator doesn't support the
 		// partial_response_strategy field.
@@ -228,7 +231,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content, false, validationScheme)
+	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parserOptions))
 	return errs
 }
 
@@ -239,7 +242,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 	for _, ns := range namespaces {
 		err := prs.ruleInformer.ListAllByNamespace(ns, prs.ruleSelector, func(obj any) {
 			promRule := obj.(*monitoringv1.PrometheusRule).DeepCopy()
-			if err := k8sutil.AddTypeInformationToObject(promRule); err != nil {
+			if err := k8s.AddTypeInformationToObject(promRule); err != nil {
 				prs.logger.Error("failed to set rule type information", "namespace", ns, "err", err)
 				return
 			}
@@ -282,7 +285,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 				"prometheusrule", promRule.Name,
 				"namespace", promRule.Namespace,
 			)
-			prs.eventRecorder.Eventf(promRule, v1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
+			prs.eventRecorder.Eventf(promRule, corev1.EventTypeWarning, InvalidConfigurationEvent, selectingPrometheusRuleResourcesAction, "PrometheusRule %s was rejected due to invalid configuration: %v", promRule.Name, err)
 			reason = InvalidConfigurationEvent
 		} else {
 			marshalRules[ruleName] = content
@@ -315,7 +318,7 @@ func (prs *PrometheusRuleSelector) Select(namespaces []string) (PrometheusRuleSe
 type PrometheusRuleSyncer struct {
 	namePrefix string
 	opts       []ObjectOption
-	cmClient   clientv1.ConfigMapInterface
+	cmClient   typedcorev1.ConfigMapInterface
 	cmSelector labels.Set
 
 	logger *slog.Logger
@@ -324,7 +327,7 @@ type PrometheusRuleSyncer struct {
 func NewPrometheusRuleSyncer(
 	logger *slog.Logger,
 	namePrefix string,
-	cmClient clientv1.ConfigMapInterface,
+	cmClient typedcorev1.ConfigMapInterface,
 	cmSelector labels.Set,
 	options []ObjectOption,
 ) *PrometheusRuleSyncer {
@@ -388,33 +391,39 @@ func (prs *PrometheusRuleSyncer) Sync(ctx context.Context, rules map[string]stri
 		return nil, fmt.Errorf("failed to generate ConfigMaps for PrometheusRule: %w", err)
 	}
 
-	// Delete and recreate the configmap(s). It's not very efficient but proved
-	// to be robust enough so far.
-	if len(current) > 0 {
-		prs.logger.Debug("deleting ConfigMaps for PrometheusRule")
-		// In theory we could use DeleteCollection but the method isn't
-		// supported by the fake client.
-		// See https://github.com/kubernetes/kubernetes/issues/105357
-		for _, cm := range current {
-			err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{})
-			if err != nil {
-				return nil, fmt.Errorf("failed to delete ConfigMap %q: %w", cm.Name, err)
-			}
+	// Build a set of desired ConfigMap names for quick lookup.
+	desiredNames := make(map[string]struct{}, len(configMaps))
+	for _, cm := range configMaps {
+		desiredNames[cm.Name] = struct{}{}
+	}
+
+	// Create or update the desired ConfigMaps first to ensure rules are never
+	// missing. This avoids the race condition where deleting ConfigMaps before
+	// creating new ones could cause the config-reloader to reload Prometheus
+	// with missing rules.
+	prs.logger.Debug("creating/updating ConfigMaps for PrometheusRule")
+	for i := range configMaps {
+		if err := k8s.CreateOrUpdateConfigMap(ctx, prs.cmClient, &configMaps[i]); err != nil {
+			return nil, fmt.Errorf("failed to create or update ConfigMap %q: %w", configMaps[i].Name, err)
 		}
 	}
 
-	prs.logger.Debug("creating ConfigMaps for PrometheusRule")
-	for _, cm := range configMaps {
-		_, err = prs.cmClient.Create(ctx, &cm, metav1.CreateOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create ConfigMap %q: %w", cm.Name, err)
+	// Delete ConfigMaps that are no longer needed (excess shards from previous
+	// reconciliations). This happens after creates/updates to ensure rules
+	// remain available throughout the sync process.
+	for _, cm := range current {
+		if _, exists := desiredNames[cm.Name]; !exists {
+			prs.logger.Debug("deleting excess ConfigMap for PrometheusRule", "configmap", cm.Name)
+			if err := prs.cmClient.Delete(ctx, cm.Name, metav1.DeleteOptions{}); err != nil {
+				return nil, fmt.Errorf("failed to delete excess ConfigMap %q: %w", cm.Name, err)
+			}
 		}
 	}
 
 	return configMapNames(configMaps), nil
 }
 
-func configMapNames(cms []v1.ConfigMap) []string {
+func configMapNames(cms []corev1.ConfigMap) []string {
 	return slices.Sorted(slices.Values(slices.Collect(func(yield func(string) bool) {
 		for _, cm := range cms {
 			if !yield(cm.Name) {
@@ -438,7 +447,7 @@ type bucket struct {
 // simplicity should be sufficient.
 //
 // [1] https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]v1.ConfigMap, error) {
+func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string) ([]corev1.ConfigMap, error) {
 	var (
 		i       int
 		buckets = []bucket{{rules: map[string]string{}}}
@@ -456,9 +465,9 @@ func (prs *PrometheusRuleSyncer) makeConfigMapsFromRules(rules map[string]string
 		buckets[i].size += len(rules[filename])
 	}
 
-	configMaps := make([]v1.ConfigMap, 0, len(buckets))
+	configMaps := make([]corev1.ConfigMap, 0, len(buckets))
 	for i, bucket := range buckets {
-		cm := v1.ConfigMap{
+		cm := corev1.ConfigMap{
 			Data: bucket.rules,
 		}
 

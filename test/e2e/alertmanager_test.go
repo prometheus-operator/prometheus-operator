@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/http2"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -81,16 +81,16 @@ func testAlertmanagerWithStatefulsetCreationFailure(t *testing.T) {
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
 				Cert: monitoringv1.SecretOrConfigMap{
-					ConfigMap: &v1.ConfigMapKeySelector{},
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					ConfigMap: &corev1.ConfigMapKeySelector{},
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "tls-cert",
 						},
 						Key: "tls.crt",
 					},
 				},
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "tls-cert",
 					},
 					Key: "tls.key",
@@ -216,11 +216,11 @@ func testAMStorageUpdate(t *testing.T) {
 							"test": "testAMStorageUpdate",
 						},
 					},
-					Spec: v1.PersistentVolumeClaimSpec{
-						AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
-						Resources: v1.VolumeResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("200Mi"),
+					Spec: corev1.PersistentVolumeClaimSpec{
+						AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("200Mi"),
 							},
 						},
 					},
@@ -246,11 +246,11 @@ func testAMStorageUpdate(t *testing.T) {
 							"test": "testAMStorageUpdate",
 						},
 					},
-					Spec: v1.PersistentVolumeClaimSpec{
-						StorageClassName: ptr.To("unknown-storage-class"),
-						Resources: v1.VolumeResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("200Mi"),
+					Spec: corev1.PersistentVolumeClaimSpec{
+						StorageClassName: new("unknown-storage-class"),
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("200Mi"),
 							},
 						},
 					},
@@ -288,7 +288,7 @@ func testAMExposingWithKubernetesAPI(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test-alertmanager", 1)
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", corev1.ServiceTypeClusterIP)
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
@@ -312,7 +312,7 @@ func testAMClusterInitialization(t *testing.T) {
 
 	amClusterSize := 3
 	alertmanager := framework.MakeBasicAlertmanager(ns, "test", int32(amClusterSize))
-	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", v1.ServiceTypeClusterIP)
+	alertmanagerService := framework.MakeAlertmanagerService(alertmanager.Name, "alertmanager-service", corev1.ServiceTypeClusterIP)
 
 	_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
@@ -379,54 +379,54 @@ func testAMClusterGossipSilences(t *testing.T) {
 			clusterTLSConfig: &monitoringv1.ClusterTLSConfig{
 				ServerTLS: monitoringv1.WebTLSConfig{
 					ClientCA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "ca.crt",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "cert.pem",
 						},
 					},
-					KeySecret: v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: secretName,
 						},
 						Key: "key.pem",
 					},
-					ClientAuthType: ptr.To("VerifyClientCertIfGiven"),
+					ClientAuthType: new("VerifyClientCertIfGiven"),
 				},
 				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "ca.crt",
 						},
 					},
 					Cert: monitoringv1.SecretOrConfigMap{
-						Secret: &v1.SecretKeySelector{
-							LocalObjectReference: v1.LocalObjectReference{
+						Secret: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
 								Name: secretName,
 							},
 							Key: "cert.pem",
 						},
 					},
-					KeySecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					KeySecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: secretName,
 						},
 						Key: "key.pem",
 					},
 					// Since we cannot verify hostname in the cert.
-					InsecureSkipVerify: ptr.To(true),
+					InsecureSkipVerify: new(true),
 				},
 			},
 		},
@@ -552,7 +552,7 @@ An Alert test
 </body>
 `
 
-	cfg := &v1.Secret{
+	cfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -563,7 +563,7 @@ An Alert test
 
 	templateFileKey := "test-emails.tmpl"
 	templateSecretFileKey := "test-emails-secret.tmpl"
-	templateCfg := &v1.ConfigMap{
+	templateCfg := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: templateResourceName,
 		},
@@ -571,7 +571,7 @@ An Alert test
 			templateFileKey: template,
 		},
 	}
-	templateSecret := &v1.Secret{
+	templateSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: templateResourceName,
 		},
@@ -676,7 +676,7 @@ An Alert test
 </body>
 `
 
-	cfg := &v1.Secret{
+	cfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -721,18 +721,18 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 					"app.kubernetes.io/name": "alertmanager-webhook",
 				},
 			},
-			Template: v1.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"app.kubernetes.io/name": "alertmanager-webhook",
 					},
 				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:  "webhook-server",
 							Image: "quay.io/prometheus-operator/prometheus-alertmanager-test-webhook:latest",
-							Ports: []v1.ContainerPort{
+							Ports: []corev1.ContainerPort{
 								{
 									Name:          "web",
 									ContainerPort: 5001,
@@ -744,13 +744,13 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 			},
 		},
 	}
-	whsvc := &v1.Service{
+	whsvc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "alertmanager-webhook",
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeClusterIP,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       5001,
@@ -776,8 +776,8 @@ func testAMZeroDowntimeRollingDeployment(t *testing.T) {
 	require.NoError(t, err)
 
 	alertmanager := framework.MakeBasicAlertmanager(ns, "rolling-deploy", 3)
-	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", v1.ServiceTypeClusterIP)
-	amcfg := &v1.Secret{
+	amsvc := framework.MakeAlertmanagerService(alertmanager.Name, "test", corev1.ServiceTypeClusterIP)
+	amcfg := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", alertmanager.Name),
 		},
@@ -1017,7 +1017,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// reuse the secret for pagerduty, wechat and sns
 	testingSecret := "testing-secret"
 	testingSecretKey := "testing-secret-key"
-	testingKeySecret := &v1.Secret{
+	testingKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testingSecret,
 		},
@@ -1031,7 +1031,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	// telegram secret
 	telegramTestingSecret := "telegram-testing-secret"
 	telegramTestingbotTokenKey := "telegram-testing-bottoken-key"
-	telegramTestingKeySecret := &v1.Secret{
+	telegramTestingKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: telegramTestingSecret,
 		},
@@ -1042,7 +1042,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), telegramTestingKeySecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	apiKeySecret := &v1.Secret{
+	apiKeySecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "og-receiver-api-key",
 		},
@@ -1053,7 +1053,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), apiKeySecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
-	slackAPIURLSecret := &v1.Secret{
+	slackAPIURLSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "s-receiver-api-url",
 		},
@@ -1065,7 +1065,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	require.NoError(t, err)
 
 	webexAPIToken := "super-secret-token"
-	webexAPITokenSecret := &v1.Secret{
+	webexAPITokenSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "webex-api-token",
 		},
@@ -1074,6 +1074,18 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 		},
 	}
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), webexAPITokenSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	msteamsWebhookURL := "https://msteams.webhook.url"
+	msteamsSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "msteams",
+		},
+		Data: map[string][]byte{
+			"webhook-url": []byte(msteamsWebhookURL),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// A valid AlertmanagerConfig resource with many receivers.
@@ -1090,16 +1102,16 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-					APIKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "og-receiver-api-key",
 						},
 						Key: "api-key",
 					},
 				}},
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1107,8 +1119,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					URL: ptr.To(monitoringv1alpha1.URL("https://pagerduty.example.com")),
 				}},
 				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
-					APIURL: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIURL: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "s-receiver-api-url",
 						},
 						Key: "api-url",
@@ -1117,7 +1129,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						{
 							Type: "type",
 							Text: "text",
-							Name: ptr.To("my-action"),
+							Name: new("my-action"),
 							ConfirmField: &monitoringv1alpha1.SlackConfirmationField{
 								Text: "text",
 							},
@@ -1131,32 +1143,32 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 				}},
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: new("http://test.url"),
 				}},
 				WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{
-					APISecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APISecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
-					CorpID: ptr.To("testingCorpID"),
+					CorpID: new("testingCorpID"),
 				}},
 				EmailConfigs: []monitoringv1alpha1.EmailConfig{{
 					SendResolved: func(b bool) *bool {
 						return &b
 					}(true),
-					Smarthost: ptr.To("example.com:25"),
-					From:      ptr.To("admin@example.com"),
-					To:        ptr.To("test@example.com"),
-					AuthPassword: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Smarthost: new("example.com:25"),
+					From:      new("admin@example.com"),
+					To:        new("test@example.com"),
+					AuthPassword: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
-					AuthSecret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					AuthSecret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1167,11 +1179,11 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					},
 					// HTML field with an empty string must appear as-is in the generated configuration.
 					// See https://github.com/prometheus-operator/prometheus-operator/issues/5421
-					HTML: ptr.To(""),
+					HTML: new(""),
 				}},
 				VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{
-					APIKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					APIKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1179,14 +1191,14 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 					RoutingKey: "abc",
 				}},
 				PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
-					UserKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					UserKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
 					},
-					Token: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Token: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1194,8 +1206,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
 					APIURL: ptr.To(monitoringv1alpha1.URL("https://telegram.api.url")),
-					BotToken: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					BotToken: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: telegramTestingSecret,
 						},
 						Key: telegramTestingbotTokenKey,
@@ -1204,46 +1216,49 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 				}},
 				SNSConfigs: []monitoringv1alpha1.SNSConfig{
 					{
-						ApiURL: ptr.To(monitoringv1alpha1.URL("https://sns.us-east-2.amazonaws.com")),
+						ApiURL: new("https://sns.us-east-2.amazonaws.com"),
 						Sigv4: &monitoringv1.Sigv4{
 							Region: "us-east-2",
-							AccessKey: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							AccessKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: testingSecret,
 								},
 								Key: testingSecretKey,
 							},
-							SecretKey: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							SecretKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: testingSecret,
 								},
 								Key: testingSecretKey,
 							},
 						},
-						TopicARN: ptr.To("test-topicARN"),
+						TopicARN: new("test-topicARN"),
 					},
 				},
 				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
-					APIURL: func() *monitoringv1alpha1.URL {
-						res := monitoringv1alpha1.URL("https://webex.api.url")
-						return &res
-					}(),
-					RoomID: "testingRoomID",
-					Message: func() *string {
-						res := "testingMessage"
-						return &res
-					}(),
+					APIURL:  ptr.To(monitoringv1alpha1.URL("https://webex.api.url")),
+					RoomID:  "testingRoomID",
+					Message: new("testingMessage"),
 					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
 						Authorization: &monitoringv1.SafeAuthorization{
 							Type: "Bearer",
-							Credentials: &v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webex-api-token",
 								},
 								Key: "api-token",
 							},
 						},
 					},
+				}},
+				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
+					WebhookURL: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "msteams",
+						},
+						Key: "webhook-url",
+					},
+					Title: new("Alert"),
 				}},
 			}},
 		},
@@ -1303,7 +1318,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: new("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1358,7 +1373,7 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-					URL: ptr.To(monitoringv1alpha1.URL("http://test.url")),
+					URL: new("http://test.url"),
 				}},
 			}},
 			MuteTimeIntervals: []monitoringv1alpha1.MuteTimeInterval{
@@ -1394,8 +1409,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: "non-existing-key",
@@ -1423,8 +1438,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: testingSecretKey,
@@ -1454,8 +1469,8 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 			Receivers: []monitoringv1alpha1.Receiver{{
 				Name: "e2e",
 				PagerDutyConfigs: []monitoringv1alpha1.PagerDutyConfig{{
-					RoutingKey: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					RoutingKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: testingSecret,
 						},
 						Key: "non-existing-key",
@@ -1590,6 +1605,9 @@ receivers:
     api_url: https://webex.api.url
     message: testingMessage
     room_id: testingRoomID
+  msteams_configs:
+  - webhook_url: https://msteams.webhook.url
+    title: Alert
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -1668,6 +1686,167 @@ templates: []
 	require.NoError(t, err)
 }
 
+func testAlertmanagerConfigCRDValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+
+	tests := []struct {
+		name          string
+		route         *monitoringv1alpha1.Route
+		expectedError bool
+	}{
+		//
+		// GroupInterval validation:
+		//
+		{
+			name: "valid-group-interval-seconds",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("30s")),
+			},
+		},
+		{
+			name: "valid-group-interval-minutes",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("8m")),
+			},
+		},
+		{
+			name: "valid-group-interval-complex",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("1h10m15s")),
+			},
+		},
+		{
+			name: "valid-group-interval-all-units",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("1y2w3d4h5m6s7ms")),
+			},
+		},
+		{
+			name: "invalid-group-interval-missing-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("500")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-group-interval-wrong-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("30sec")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-group-interval-invalid-format",
+			route: &monitoringv1alpha1.Route{
+				Receiver:      "e2e",
+				GroupInterval: ptr.To(monitoringv1.NonEmptyDuration("invalid")),
+			},
+			expectedError: true,
+		},
+		//
+		// RepeatInterval validation:
+		//
+		{
+			name: "valid-repeat-interval-hours",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("4h")),
+			},
+		},
+		{
+			name: "valid-repeat-interval-complex",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("2d12h30m")),
+			},
+		},
+		{
+			name: "invalid-repeat-interval-missing-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("3600")),
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-repeat-interval-wrong-unit",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("4hrs")),
+			},
+			expectedError: true,
+		},
+		//
+		// Both intervals together:
+		//
+		{
+			name: "valid-both-intervals",
+			route: &monitoringv1alpha1.Route{
+				Receiver:       "e2e",
+				GroupInterval:  ptr.To(monitoringv1.NonEmptyDuration("5m")),
+				RepeatInterval: ptr.To(monitoringv1.NonEmptyDuration("4h")),
+			},
+		},
+		//
+		// Empty values (these should be valid optional fields):
+		//
+		{
+			name: "empty-intervals",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "e2e",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: test.route,
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: new("http://example.com"),
+						}},
+					}},
+				},
+			}
+
+			_, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
 func testUserDefinedAlertmanagerConfigFromSecret(t *testing.T) {
 	// Don't run Alertmanager tests in parallel. See
 	// https://github.com/prometheus/alertmanager/issues/1835 for details.
@@ -1688,7 +1867,7 @@ inhibit_rules:
   - test!=dropped
   - expect=~this-value
 `
-	amConfig := &v1.Secret{
+	amConfig := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "amconfig",
 		},
@@ -1756,27 +1935,27 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		Name: alertmanagerConfig.Name,
 		Global: &monitoringv1.AlertmanagerGlobalConfig{
 			SMTPConfig: &monitoringv1.GlobalSMTPConfig{
-				From: ptr.To("from"),
+				From: new("from"),
 				SmartHost: &monitoringv1.HostPort{
 					Host: "smtp.example.org",
 					Port: "587",
 				},
-				Hello:        ptr.To("smtp.example.org"),
-				AuthUsername: ptr.To("dev@smtp.example.org"),
-				AuthPassword: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Hello:        new("smtp.example.org"),
+				AuthUsername: new("dev@smtp.example.org"),
+				AuthPassword: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "password",
 				},
-				AuthIdentity: ptr.To("dev@smtp.example.org"),
-				AuthSecret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				AuthIdentity: new("dev@smtp.example.org"),
+				AuthSecret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "smtp-auth",
 					},
 					Key: "secret",
 				},
-				RequireTLS: ptr.To(true),
+				RequireTLS: new(true),
 			},
 			ResolveTimeout: "30s",
 			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
@@ -1784,15 +1963,15 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 					HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
-								ConfigMap: &v1.ConfigMapKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "webhook-client-id",
 									},
 									Key: "test",
 								},
 							},
-							ClientSecret: v1.SecretKeySelector{
-								LocalObjectReference: v1.LocalObjectReference{
+							ClientSecret: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "webhook-client-secret",
 								},
 								Key: "test",
@@ -1803,23 +1982,66 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 								"some": "value",
 							},
 						},
-						FollowRedirects: ptr.To(true),
+						FollowRedirects: new(true),
 					},
 				},
+			},
+			TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://telegram.api.url")),
+			},
+			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
+				APISecret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "wechat",
+					},
+					Key: "apisecret",
+				},
+				APICorpID: new("abc123"),
+			},
+			VictorOpsConfig: &monitoringv1.GlobalVictorOpsConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://victorops.api.url")),
+				APIKey: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "victorops",
+					},
+					Key: "apikey",
+				},
+			},
+			JiraConfig: &monitoringv1.GlobalJiraConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://jira.api.url")),
+			},
+			RocketChatConfig: &monitoringv1.GlobalRocketChatConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://rocketchat.api.url")),
+				Token: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "rocketchat",
+					},
+					Key: "token",
+				},
+				TokenID: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "rocketchat",
+					},
+					Key: "tokenid",
+				},
+			},
+			WebexConfig: &monitoringv1.GlobalWebexConfig{
+				APIURL: ptr.To(monitoringv1.URL("https://webex.api.url")),
 			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
-				Secret: &v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				Secret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "template1",
 					},
 					Key: "template1.tmpl",
 				},
 			},
 			{
-				ConfigMap: &v1.ConfigMapKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				ConfigMap: &corev1.ConfigMapKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "template2",
 					},
 					Key: "template2.tmpl",
@@ -1828,7 +2050,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 		},
 	}
 
-	cm := v1.ConfigMap{
+	cm := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "webhook-client-id",
 			Namespace: ns,
@@ -1837,7 +2059,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": "clientID",
 		},
 	}
-	smtp := v1.Secret{
+	smtp := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "smtp-auth",
 			Namespace: ns,
@@ -1847,7 +2069,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"secret":   []byte("secret"),
 		},
 	}
-	sec := v1.Secret{
+	sec := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "webhook-client-secret",
 			Namespace: ns,
@@ -1856,7 +2078,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"test": []byte("clientSecret"),
 		},
 	}
-	tpl1 := v1.Secret{
+	tpl1 := corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "template1",
 		},
@@ -1864,12 +2086,37 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"template1.tmpl": []byte(`template1`),
 		},
 	}
-	tpl2 := v1.ConfigMap{
+	tpl2 := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "template2",
 		},
 		Data: map[string]string{
 			"template2.tmpl": "template2",
+		},
+	}
+	victorops := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "victorops",
+		},
+		Data: map[string][]byte{
+			"apikey": []byte(`abcdef1234567890`),
+		},
+	}
+	wechat := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "wechat",
+		},
+		Data: map[string][]byte{
+			"apisecret": []byte(`abcdef1234567890`),
+		},
+	}
+	rocketchat := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":   []byte(`abcdef1234567890`),
+			"tokenid": []byte(`abc123`),
 		},
 	}
 
@@ -1883,6 +2130,12 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &tpl1, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &tpl2, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &victorops, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &wechat, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &rocketchat, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -1908,6 +2161,17 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
+  wechat_api_url: https://wechat.api.url
+  wechat_api_secret: abcdef1234567890
+  wechat_api_corp_id: abc123
+  victorops_api_url: https://victorops.api.url
+  victorops_api_key: abcdef1234567890
+  telegram_api_url: https://telegram.api.url
+  webex_api_url: https://webex.api.url
+  jira_api_url: https://jira.api.url
+  rocketchat_api_url: https://rocketchat.api.url
+  rocketchat_token: abcdef1234567890
+  rocketchat_token_id: abc123
 route:
   receiver: %[1]s
   routes:
@@ -2068,7 +2332,7 @@ func testAMRollbackManualChanges(t *testing.T) {
 	sset, err := ssetClient.Get(context.Background(), "alertmanager-"+name, metav1.GetOptions{})
 	require.NoError(t, err)
 
-	sset.Spec.Replicas = ptr.To(int32(0))
+	sset.Spec.Replicas = new(int32(0))
 	sset, err = ssetClient.Update(context.Background(), sset, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
@@ -2118,15 +2382,15 @@ func testAMWeb(t *testing.T) {
 	am.Spec.Web = &monitoringv1.AlertmanagerWebSpec{
 		WebConfigFileFields: monitoringv1.WebConfigFileFields{
 			TLSConfig: &monitoringv1.WebTLSConfig{
-				KeySecret: v1.SecretKeySelector{
-					LocalObjectReference: v1.LocalObjectReference{
+				KeySecret: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
 						Name: "web-tls",
 					},
 					Key: "tls.key",
 				},
 				Cert: monitoringv1.SecretOrConfigMap{
-					Secret: &v1.SecretKeySelector{
-						LocalObjectReference: v1.LocalObjectReference{
+					Secret: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "web-tls",
 						},
 						Key: "tls.crt",
@@ -2347,7 +2611,7 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
-	am.Spec.MinReadySeconds = ptr.To(int32(5))
+	am.Spec.MinReadySeconds = new(int32(5))
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
 
@@ -2356,7 +2620,7 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 
 	require.Equal(t, int32(5), amSS.Spec.MinReadySeconds)
 
-	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: ptr.To(int32(10))})
+	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: new(int32(10))})
 	require.NoError(t, err)
 
 	amSS, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(context.Background(), "alertmanager-basic-am", metav1.GetOptions{})
@@ -2453,7 +2717,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "ndots",
-							Value: ptr.To("5"),
+							Value: new("5"),
 						},
 					},
 				},
@@ -2479,11 +2743,11 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "ndots",
-							Value: ptr.To("5"),
+							Value: new("5"),
 						},
 						{
 							Name:  "timeout",
-							Value: ptr.To("2"),
+							Value: new("2"),
 						},
 					},
 				},
@@ -2510,7 +2774,7 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 					Options: []monitoringv1.PodDNSConfigOption{
 						{
 							Name:  "", // Empty string violates MinLength constraint
-							Value: ptr.To("some-value"),
+							Value: new("some-value"),
 						},
 					},
 				},
@@ -2690,14 +2954,14 @@ func testAlertManagerServiceName(t *testing.T) {
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	name := "test-servicename"
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-service", name),
 			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
 					Port: 9090,
@@ -2728,4 +2992,35 @@ func testAlertManagerServiceName(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
+}
+
+func testAMScaleUpWithoutLabels(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create an Alertmanager resource with 1 replica
+	am, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, framework.MakeBasicAlertmanager(ns, name, 1))
+	require.NoError(t, err)
+
+	// Remove all labels on the StatefulSet using Patch
+	stsName := fmt.Sprintf("alertmanager-%s", name)
+	err = framework.RemoveAllLabelsFromStatefulSet(ctx, stsName, ns)
+	require.NoError(t, err)
+
+	// Scale up the Alertmanager resource to 2 replicas
+	_, err = framework.UpdateAlertmanagerReplicasAndWaitUntilReady(ctx, am.Name, ns, 2)
+	require.NoError(t, err)
+
+	// Verify the StatefulSet now has labels again (restored by the operator)
+	stsClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
 }

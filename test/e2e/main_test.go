@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -228,6 +228,7 @@ func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
+		"AlertmanagerConfigCRDValidation":         testAlertmanagerConfigCRDValidation,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,
@@ -251,6 +252,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMTemplateReloadConfig":                  testAMTmplateReloadConfig,
 		"AMStatusScale":                           testAlertmanagerStatusScale,
 		"AMServiceName":                           testAlertManagerServiceName,
+		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
 	}
 
 	for name, f := range testFuncs {
@@ -273,6 +275,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromAdditionalScrapeConfig":                testPromAdditionalScrapeConfig,
 		"PromAdditionalAlertManagerConfig":          testPromAdditionalAlertManagerConfig,
 		"PromReloadRules":                           testPromReloadRules,
+		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
 		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,
@@ -302,6 +305,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromQueryLogFile":                          testPromQueryLogFile,
 		"PromDegradedCondition":                     testPromDegradedConditionStatus,
 		"PromUnavailableCondition":                  testPromUnavailableConditionStatus,
+		"PromStatusConditionLastTransitionTime":     testPromStatusConditionLastTransitionTime,
 		"PromStrategicMergePatch":                   testPromStrategicMergePatch,
 		"RelabelConfigCRDValidation":                testRelabelConfigCRDValidation,
 		"PromReconcileStatusWhenInvalidRuleCreated": testPromReconcileStatusWhenInvalidRuleCreated,
@@ -320,7 +324,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusReconciliationOnSecretChanges":   testPrometheusReconciliationOnSecretChanges,
 		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
-		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
+		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
 	}
 
 	for name, f := range testFuncs {
@@ -341,6 +345,8 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerCheckStorageClass":                  testTRCheckStorageClass,
 		"ThanosRulerServiceName":                        testThanosRulerServiceName,
 		"ThanosRulerStateless":                          testThanosRulerStateless,
+		"ThanosRulerScaleUpWithoutLabels":               testThanosRulerScaleUpWithoutLabels,
+		"ThanosRulerStatusUpdatedReplicasRollback":      testThanosRulerStatusUpdatedReplicasRollback,
 	}
 	for name, f := range testFuncs {
 		t.Run(name, f)
@@ -392,6 +398,18 @@ func TestPromInstanceNs(t *testing.T) {
 	}
 }
 
+// TestRepairPolicy verifies that the operator can repair broken statefulsets when needed.
+func TestRepairPolicy(t *testing.T) {
+	skipPrometheusTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"RepairPolicy": testRepairPolicy,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given.
 func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
@@ -433,7 +451,9 @@ func TestGatedFeatures(t *testing.T) {
 		"PromAgentReconcileDaemonSetResourceDelete":            testPromAgentReconcileDaemonSetResourceDelete,
 		"PrometheusAgentDaemonSetSelectPodMonitor":             testPrometheusAgentDaemonSetSelectPodMonitor,
 		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
+		"PrometheusTargetDistributionOnResharding":             testPrometheusTargetDistributionOnResharding,
 		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
+		"ShardingStrategyCELValidations":                       testPrometheusShardingStrategyCELValidations,
 		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
 		"ServiceMonitorStatusSubresource":                      testServiceMonitorStatusSubresource,
 		"ServiceMonitorStatusWithMultipleWorkloads":            testServiceMonitorStatusWithMultipleWorkloads,
@@ -456,6 +476,7 @@ func TestGatedFeatures(t *testing.T) {
 		"PrometheusRuleStatusSubresourceForThanosRuler":        testPrometheusRuleStatusSubresourceForThanosRuler,
 		"GarbageCollectionOfPromRuleBindingForThanosRuler":     testGarbageCollectionOfPromRuleBindingForThanosRuler,
 		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler": testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"PrometheusTopologySharding":                           testPrometheusTopologySharding,
 	}
 
 	for name, f := range testFuncs {

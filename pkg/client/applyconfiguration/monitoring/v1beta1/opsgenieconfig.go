@@ -22,21 +22,51 @@ import (
 
 // OpsGenieConfigApplyConfiguration represents a declarative configuration of the OpsGenieConfig type for use
 // with apply.
+//
+// OpsGenieConfig configures notifications via OpsGenie.
+// See https://prometheus.io/docs/alerting/latest/configuration/#opsgenie_config
 type OpsGenieConfigApplyConfiguration struct {
-	SendResolved *bool                                       `json:"sendResolved,omitempty"`
-	APIKey       *SecretKeySelectorApplyConfiguration        `json:"apiKey,omitempty"`
-	APIURL       *monitoringv1beta1.URL                      `json:"apiURL,omitempty"`
-	Message      *string                                     `json:"message,omitempty"`
-	Description  *string                                     `json:"description,omitempty"`
-	Source       *string                                     `json:"source,omitempty"`
-	Tags         *string                                     `json:"tags,omitempty"`
-	Note         *string                                     `json:"note,omitempty"`
-	Priority     *string                                     `json:"priority,omitempty"`
-	Details      []KeyValueApplyConfiguration                `json:"details,omitempty"`
-	Responders   []OpsGenieConfigResponderApplyConfiguration `json:"responders,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration               `json:"httpConfig,omitempty"`
-	Entity       *string                                     `json:"entity,omitempty"`
-	Actions      *string                                     `json:"actions,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiKey defines the secret's key that contains the OpsGenie API key.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	APIKey *SecretKeySelectorApplyConfiguration `json:"apiKey,omitempty"`
+	// apiURL defines the URL to send OpsGenie API requests to.
+	// When not specified, defaults to the standard OpsGenie API endpoint.
+	APIURL *monitoringv1beta1.URL `json:"apiURL,omitempty"`
+	// message defines the alert text limited to 130 characters.
+	// This appears as the main alert title in OpsGenie.
+	Message *string `json:"message,omitempty"`
+	// description defines the detailed description of the incident.
+	// This provides additional context beyond the message field.
+	Description *string `json:"description,omitempty"`
+	// source defines the backlink to the sender of the notification.
+	// This helps identify where the alert originated from.
+	Source *string `json:"source,omitempty"`
+	// tags defines a comma separated list of tags attached to the notifications.
+	// These help categorize and filter alerts within OpsGenie.
+	Tags *string `json:"tags,omitempty"`
+	// note defines an additional alert note.
+	// This provides supplementary information about the alert.
+	Note *string `json:"note,omitempty"`
+	// priority defines the priority level of alert.
+	// Possible values are P1, P2, P3, P4, and P5, where P1 is highest priority.
+	Priority *string `json:"priority,omitempty"`
+	// details defines a set of arbitrary key/value pairs that provide further detail about the incident.
+	// These appear as additional fields in the OpsGenie alert.
+	Details []KeyValueApplyConfiguration `json:"details,omitempty"`
+	// responders defines the list of responders responsible for notifications.
+	// These determine who gets notified when the alert is created.
+	Responders []OpsGenieConfigResponderApplyConfiguration `json:"responders,omitempty"`
+	// httpConfig defines the HTTP client configuration for OpsGenie API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// entity defines an optional field that can be used to specify which domain alert is related to.
+	// This helps group related alerts together in OpsGenie.
+	Entity *string `json:"entity,omitempty"`
+	// actions defines a comma separated list of actions that will be available for the alert.
+	// These appear as action buttons in the OpsGenie interface.
+	Actions *string `json:"actions,omitempty"`
 }
 
 // OpsGenieConfigApplyConfiguration constructs a declarative configuration of the OpsGenieConfig type for use with

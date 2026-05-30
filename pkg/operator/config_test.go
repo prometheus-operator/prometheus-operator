@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestMap(t *testing.T) {
@@ -34,6 +34,30 @@ func TestMap(t *testing.T) {
 	require.Equal(t, "foo=bar,foo2=bar2", m.String())
 
 	require.Equal(t, map[string]string{"foo": "bar", "foo2": "bar2", "foo3": "bar3"}, m.Merge(map[string]string{"foo": "xxx", "foo3": "bar3"}))
+
+	require.NoError(t, m.Set("k=v=with=equals"))
+	require.Equal(t, "v=with=equals", m["k"])
+}
+
+func TestMapSetInvalid(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value string
+	}{
+		{
+			name:  "missing value",
+			value: "key",
+		},
+		{
+			name:  "one valid one invalid",
+			value: "good=value,bad",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var m Map
+			require.Error(t, m.Set(tc.value))
+		})
+	}
 }
 
 func TestFieldSelector(t *testing.T) {
@@ -243,13 +267,13 @@ func TestMergeAllowLists(t *testing.T) {
 	}{
 		{
 			a: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 			b: StringSet{
 				"foo": struct{}{},
 			},
 			exp: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 		},
 		{
@@ -257,10 +281,10 @@ func TestMergeAllowLists(t *testing.T) {
 				"foo": struct{}{},
 			},
 			b: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 			exp: StringSet{
-				v1.NamespaceAll: struct{}{},
+				corev1.NamespaceAll: struct{}{},
 			},
 		},
 		{

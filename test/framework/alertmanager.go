@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import (
 
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
 	"github.com/prometheus/alertmanager/api/v2/models"
-	v1 "k8s.io/api/core/v1"
-	extv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -36,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -120,7 +119,7 @@ func (f *Framework) CreateAlertmanagerConfig(ctx context.Context, ns, name strin
 			},
 			Route: &monitoringv1alpha1.Route{
 				Receiver: "null",
-				Routes: []extv1.JSON{
+				Routes: []apiextensionsv1.JSON{
 					{
 						Raw: subRouteJSON,
 					},
@@ -132,17 +131,17 @@ func (f *Framework) CreateAlertmanagerConfig(ctx context.Context, ns, name strin
 	return f.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, amConfig, metav1.CreateOptions{})
 }
 
-func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.ServiceType) *v1.Service {
-	service := &v1.Service{
+func (f *Framework) MakeAlertmanagerService(name, group string, serviceType corev1.ServiceType) *corev1.Service {
+	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("alertmanager-%s", name),
 			Labels: map[string]string{
 				"group": group,
 			},
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Type: serviceType,
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "web",
 					Port:       9093,
@@ -158,13 +157,13 @@ func (f *Framework) MakeAlertmanagerService(name, group string, serviceType v1.S
 	return service
 }
 
-func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
+func (f *Framework) SecretFromYaml(filepath string) (*corev1.Secret, error) {
 	manifest, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}
 
-	s := v1.Secret{}
+	s := corev1.Secret{}
 	err = yaml.NewYAMLOrJSONDecoder(manifest, 100).Decode(&s)
 	if err != nil {
 		return nil, err
@@ -173,7 +172,7 @@ func (f *Framework) SecretFromYaml(filepath string) (*v1.Secret, error) {
 	return &s, nil
 }
 
-func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*v1.Secret, error) {
+func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*corev1.Secret, error) {
 	s, err := f.SecretFromYaml("../../test/framework/resources/alertmanager-main-secret.yaml")
 	if err != nil {
 		return nil, err
@@ -285,7 +284,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -303,7 +302,7 @@ func (f *Framework) UpdateAlertmanagerReplicasAndWaitUntilReady(ctx context.Cont
 		name,
 		ns,
 		monitoringv1.AlertmanagerSpec{
-			Replicas: ptr.To(replicas),
+			Replicas: new(replicas),
 		},
 	)
 }
@@ -508,7 +507,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 		}
 
 		for _, alert := range alerts {
-			if alert.Labels["alertname"] == alertName && alert.Status.State != ptr.To("firing") {
+			if alert.Labels["alertname"] == alertName && alert.Status.State != new("firing") {
 				return true, nil
 			}
 		}

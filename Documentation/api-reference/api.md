@@ -445,6 +445,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resources</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core">
@@ -645,14 +657,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -666,15 +682,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -2195,7 +2215,8 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -2212,7 +2233,8 @@ Kubernetes meta/v1.LabelSelector
 <p>scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -2337,6 +2359,22 @@ configuration (either in the monitoring resources or via scrape class).</p>
 <p>You can also disable sharding on a specific target by setting the
 <code>__tmp_disable_sharding</code> label with relabeling configuration. When
 the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategy">
+ShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.</p>
+<p>When not defined, the operator defaults to the &lsquo;Address&rsquo; mode which distributes
+targets based on a hash of the target address.</p>
 </td>
 </tr>
 <tr>
@@ -2658,6 +2696,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -2911,9 +2961,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -2928,7 +2977,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -2937,9 +2986,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -4811,6 +4860,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resources</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core">
@@ -5383,13 +5444,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -5403,13 +5468,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -5506,17 +5569,16 @@ string
 <td>
 <code>grpcServerTlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.TLSConfig">
-TLSConfig
+<a href="#monitoring.coreos.com/v1.GRPCServerTLSConfig">
+GRPCServerTLSConfig
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
-recorded rule data.
-Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
+recorded rule data.</p>
+<p>Note: Currently only the <code>minVersion</code>, <code>caFile</code>, <code>certFile</code>, <code>keyFile</code>, <code>cipherSuites</code> and <code>curves</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -6562,6 +6624,20 @@ GlobalWeChatConfig
 <p>wechat defines the default WeChat Config</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>mattermost</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GlobalMattermostConfig">
+GlobalMattermostConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>mattermost defines the default Mattermost Config</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec
@@ -6974,6 +7050,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>resources</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#resourcerequirements-v1-core">
@@ -7174,14 +7262,18 @@ Template.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers. This is meant to
-allow adding an authentication proxy to an Alertmanager pod.
-Containers described here modify an operator generated container if they
-share the same name and modifications are done via a strategic merge
-patch. The current container names are: <code>alertmanager</code> and
-<code>config-reloader</code>. Overriding containers is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>alertmanager</code>
+* <code>config-reloader</code>
+* <code>thanos-sidecar</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -7195,15 +7287,19 @@ this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the Alertmanager configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod. More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-InitContainers described here modify an operator
-generated init containers if they share the same name and modifications are
-done via a strategic merge patch. The current init container name is:
-<code>init-config-reloader</code>. Overriding init containers is entirely outside the
-scope of what the maintainers will support and by doing so, you accept that
-this behaviour may break at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition. Those
+can be used to e.g.  fetch secrets for injection into the Prometheus
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
+InitContainers described here modify an operator generated init
+containers if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of init container name managed by the operator are:
+* <code>init-config-reloader</code>.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -7851,6 +7947,9 @@ bool
 targets.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
 permissions on the <code>Nodes</code> objects.</p>
+<p>Node metadata labels are not automatically added to scraped metrics. They are
+exposed as <code>__meta_kubernetes_node_*</code> labels and can be copied to timeseries
+with relabeling configuration.</p>
 </td>
 </tr>
 </tbody>
@@ -8193,7 +8292,7 @@ authentication.</p>
 <h3 id="monitoring.coreos.com/v1.ByteSize">ByteSize
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerLimitsSpec">AlertmanagerLimitsSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.PodMonitorSpec">PodMonitorSpec</a>, <a href="#monitoring.coreos.com/v1.PrometheusSpec">PrometheusSpec</a>, <a href="#monitoring.coreos.com/v1.ServiceMonitorSpec">ServiceMonitorSpec</a>, <a href="#monitoring.coreos.com/v1alpha1.ScrapeConfigSpec">ScrapeConfigSpec</a>)
 </p>
 <div>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
@@ -8420,7 +8519,8 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -8437,7 +8537,8 @@ Kubernetes meta/v1.LabelSelector
 <p>scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -8562,6 +8663,22 @@ configuration (either in the monitoring resources or via scrape class).</p>
 <p>You can also disable sharding on a specific target by setting the
 <code>__tmp_disable_sharding</code> label with relabeling configuration. When
 the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategy">
+ShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.</p>
+<p>When not defined, the operator defaults to the &lsquo;Address&rsquo; mode which distributes
+targets based on a hash of the target address.</p>
 </td>
 </tr>
 <tr>
@@ -8883,6 +9000,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -9136,9 +9265,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -9153,7 +9281,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -9162,9 +9290,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -10632,7 +10760,7 @@ Kubernetes core/v1.VolumeResourceRequirements
 <td>
 <em>(Optional)</em>
 <p>resources represents the minimum resources the volume should have.
-If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+Users are allowed to specify resource requirements
 that are lower than previous value but must still be higher than capacity recorded in the
 status field of the claim.
 More info: <a href="https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources">https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources</a></p>
@@ -11197,6 +11325,192 @@ than zero disables the storage.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.GRPCServerTLSConfig">GRPCServerTLSConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+</p>
+<div>
+<p>GRPCServerTLSConfig defines TLS configuration for a gRPC server.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ca</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
+SecretOrConfigMap
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ca defines the Certificate authority used when verifying server certificates.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cert</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
+SecretOrConfigMap
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>cert defines the Client certificate to present when doing client-authentication.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keySecret</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>keySecret defines the Secret containing the client key file for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serverName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serverName is used to verify the hostname for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>insecureSkipVerify</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>insecureSkipVerify defines how to disable target certificate validation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>minVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>minVersion defines the minimum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.35.0 or Thanos &gt;= v0.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxVersion</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TLSVersion">
+TLSVersion
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>maxVersion defines the maximum acceptable TLS version.</p>
+<p>It requires Prometheus &gt;= v2.41.0 or Thanos &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>caFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>caFile defines the path to the CA cert in the Prometheus container to use for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>certFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>certFile defines the path to the client cert file in the Prometheus container for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keyFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>keyFile defines the path to the client key file in the Prometheus container for the targets.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cipherSuites</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>cipherSuites defines the list of supported cipher suites for TLS
+versions up to TLS 1.2.</p>
+<p>If not defined, the Go default cipher suites are used.
+Available cipher suites are documented in the Go documentation:
+<a href="https://golang.org/pkg/crypto/tls/#pkg-constants">https://golang.org/pkg/crypto/tls/#pkg-constants</a></p>
+<p>It requires Thanos &gt;= v0.42.0. Note that the operator doesn&rsquo;t verify if
+the Thanos version supports the provided values.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>curves</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>curves defines the list of preferred elliptic curves for
+TLS handshakes.</p>
+<p>If not defined, the Go default curves are used.
+Available curves are documented in the Go documentation:
+<a href="https://golang.org/pkg/crypto/tls/#CurveID">https://golang.org/pkg/crypto/tls/#CurveID</a></p>
+<p>It requires Thanos &gt;= v0.42.0. Note that the operator doesn&rsquo;t verify if
+the Thanos version supports the provided values.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig
 </h3>
 <p>
@@ -11226,6 +11540,39 @@ URL
 <em>(Optional)</em>
 <p>apiURL defines the default Jira API URL.</p>
 <p>It requires Alertmanager &gt;= v0.28.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.GlobalMattermostConfig">GlobalMattermostConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>)
+</p>
+<div>
+<p>GlobalMattermostConfig configures global Mattermost parameters.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>webhookURL</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>webhookURL defines the default Mattermost Webhook URL.</p>
+<p>It requires Alertmanager &gt;= v0.32.0.</p>
 </td>
 </tr>
 </tbody>
@@ -11425,6 +11772,22 @@ SafeTLSConfig
 <td>
 <em>(Optional)</em>
 <p>tlsConfig defines the default TLS configuration for SMTP receivers</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12713,7 +13076,7 @@ It requires Prometheus &gt;= v3.0.0.</p>
 <h3 id="monitoring.coreos.com/v1.NonEmptyDuration">NonEmptyDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Rule">Rule</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
 </p>
 <div>
 <p>NonEmptyDuration is a valid time duration that can be parsed by Prometheus model.ParseDuration() function.
@@ -12769,7 +13132,9 @@ client&rsquo;s secret.</p>
 <td>
 <code>tokenUrl</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -12984,6 +13349,38 @@ bool
 <p>promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
 As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
 It requires Prometheus &gt;= v3.6.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNameUnderscoreSanitization</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labelNameUnderscoreSanitization controls whether to enable prepending of &lsquo;key<em>&rsquo; to labels starting with &lsquo;</em>&rsquo;.
+Reserved labels starting with &lsquo;__&rsquo; are not modified.
+This is only relevant when translation_strategy uses underscore escaping (e.g., &ldquo;UnderscoreEscapingWithSuffixes&rdquo; or &ldquo;UnderscoreEscapingWithoutSuffixes&rdquo;).</p>
+<p>Notice: This one has no impact if <code>nameEscapingScheme</code> is <code>AllowUTF8</code>.</p>
+<p>It requires Prometheus &gt;= v3.8.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelNamePreserveMultipleUnderscores</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+underscore escaping.
+When true (default), multiple consecutive underscores are preserved during label name sanitization.</p>
+<p>Notice: This one has no impact if <code>nameEscapingScheme</code> is <code>AllowUTF8</code>.</p>
+<p>It requires Prometheus &gt;= v3.8.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14944,7 +15341,8 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -14961,7 +15359,8 @@ Kubernetes meta/v1.LabelSelector
 <p>scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -15086,6 +15485,22 @@ configuration (either in the monitoring resources or via scrape class).</p>
 <p>You can also disable sharding on a specific target by setting the
 <code>__tmp_disable_sharding</code> label with relabeling configuration. When
 the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategy">
+ShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.</p>
+<p>When not defined, the operator defaults to the &lsquo;Address&rsquo; mode which distributes
+targets based on a hash of the target address.</p>
 </td>
 </tr>
 <tr>
@@ -15407,6 +15822,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -15660,9 +16087,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -15677,7 +16103,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -15686,9 +16112,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -17780,11 +18206,14 @@ to a remote endpoint.</p>
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
 <p>url defines the URL of the endpoint to send samples to.</p>
+<p>It must use the HTTP or HTTPS scheme.</p>
 </td>
 </tr>
 <tr>
@@ -18173,7 +18602,8 @@ Duration
 </em>
 </td>
 <td>
-<p>retentionPeriod defines the retentionPeriod for shard retention policy.</p>
+<p>retentionPeriod defines how long the scaled-down shard(s) need to be
+kept before being deleted.</p>
 </td>
 </tr>
 </tbody>
@@ -19420,8 +19850,11 @@ RetainConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>retain defines the config for retention when the retention policy is set to <code>Retain</code>.
-This field is ineffective as of now.</p>
+<p>retain defines the config for retention when the retention policy is set
+to <code>Retain</code>.</p>
+<p>If not defined, the operator will use the retention duration configured
+for the Prometheus data. If the resource uses size-based retention, the
+shard(s) are kept forever (unless manually deleted).</p>
 </td>
 </tr>
 </tbody>
@@ -19499,6 +19932,85 @@ int32
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategy">ShardingStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+</p>
+<div>
+<p>ShardingStrategy defines the sharding strategy for Prometheus.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>mode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategyMode">
+ShardingStrategyMode
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>mode defines the sharding mode. Can be &lsquo;Address&rsquo; or &lsquo;Topology&rsquo;.</p>
+<p>&lsquo;Address&rsquo; is the default mode and distributes targets across shards
+based on a hash of the target address.</p>
+<p>&lsquo;Topology&rsquo; enables zone-aware sharding where each shard is assigned to a
+specific topology zone and only scrapes targets in that zone.
+(Alpha) Using the &lsquo;Topology&rsquo; mode requires the <code>PrometheusTopologySharding</code>
+feature gate to be enabled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topology</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TopologyShardingStrategy">
+TopologyShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>topology defines the configuration for topology-aware sharding.
+This field is only valid when mode is set to &lsquo;Topology&rsquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ShardingStrategyMode">ShardingStrategyMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategy">ShardingStrategy</a>)
+</p>
+<div>
+<p>ShardingStrategyMode defines the sharding mode for Prometheus.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Address&#34;</p></td>
+<td><p>AddressShardingStrategyMode is the default sharding mode.
+Targets are distributed across shards based on a hash of the target address.</p>
+</td>
+</tr><tr><td><p>&#34;Topology&#34;</p></td>
+<td><p>TopologyShardingStrategyMode enables zone-aware sharding.
+Each shard is assigned to a specific topology zone and only scrapes targets in that zone.
+(Alpha) Using this mode requires the <code>PrometheusTopologySharding</code> feature gate to be enabled.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Sigv4">Sigv4
 </h3>
@@ -19581,6 +20093,19 @@ string
 <td>
 <em>(Optional)</em>
 <p>roleArn defines the named AWS profile used to authenticate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.33.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 <tr>
@@ -19766,7 +20291,7 @@ is to use a label selector alongside manually created PersistentVolumes.</p>
 <h3 id="monitoring.coreos.com/v1.TLSConfig">TLSConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.HTTPConfigWithTLSFiles">HTTPConfigWithTLSFiles</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>, <a href="#monitoring.coreos.com/v1.TracingConfig">TracingConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.APIServerConfig">APIServerConfig</a>, <a href="#monitoring.coreos.com/v1.AlertmanagerEndpoints">AlertmanagerEndpoints</a>, <a href="#monitoring.coreos.com/v1.GRPCServerTLSConfig">GRPCServerTLSConfig</a>, <a href="#monitoring.coreos.com/v1.HTTPConfigWithTLSFiles">HTTPConfigWithTLSFiles</a>, <a href="#monitoring.coreos.com/v1.RemoteReadSpec">RemoteReadSpec</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>, <a href="#monitoring.coreos.com/v1.ScrapeClass">ScrapeClass</a>, <a href="#monitoring.coreos.com/v1.TracingConfig">TracingConfig</a>)
 </p>
 <div>
 <p>TLSConfig defines full TLS configuration.</p>
@@ -20026,6 +20551,29 @@ in a breaking way.</p>
 <p>It requires Prometheus &gt;= v2.39.0 or PrometheusAgent &gt;= v2.54.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>staleSeriesCompactionThreshold</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>staleSeriesCompactionThreshold configures the trigger point for compacting
+stale series from memory into persistent blocks and removing those stale
+series from memory.</p>
+<p>The threshold is a number between 0.0 and 1.0. It represents the ratio of
+stale series in memory to the total series in memory. The stale series
+compaction is triggered when this ratio crosses the configured threshold.
+It may not trigger the stale series compaction if the usual head compaction
+is about to happen soon.</p>
+<p>If set to 0, stale series compaction is disabled.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec
@@ -20155,6 +20703,18 @@ map[string]string
 <td>
 <em>(Optional)</em>
 <p>nodeSelector defines which Nodes the Pods are scheduled on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
 </td>
 </tr>
 <tr>
@@ -20731,13 +21291,17 @@ operates in stateless mode.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>containers allows injecting additional containers or modifying operator generated
-containers. This can be used to allow adding an authentication proxy to a ThanosRuler pod or
-to change the behavior of an operator generated container. Containers described here modify
-an operator generated container if they share the same name and modifications are done via a
-strategic merge patch. The current container names are: <code>thanos-ruler</code> and <code>config-reloader</code>.
-Overriding containers is entirely outside the scope of what the maintainers will support and by doing
-so, you accept that this behaviour may break at any time without notice.</p>
+<p>containers allows injecting additional containers or modifying operator
+generated containers. This can be used to allow adding an authentication
+proxy to the Pods or to change the behavior of an operator generated
+container. Containers described here modify an operator generated
+container if they share the same name and modifications are done via a
+strategic merge patch.</p>
+<p>The names of containers managed by the operator are:
+* <code>thanos-ruler</code>
+* <code>config-reloader</code></p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -20751,13 +21315,11 @@ so, you accept that this behaviour may break at any time without notice.</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>initContainers allows adding initContainers to the pod definition. Those can be used to e.g.
-fetch secrets for injection into the ThanosRuler configuration from external sources. Any
-errors during the execution of an initContainer will lead to a restart of the Pod.
-More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
-Using initContainers for any use case other then secret fetching is entirely outside the scope
-of what the maintainers will support and by doing so, you accept that this behaviour may break
-at any time without notice.</p>
+<p>initContainers allows injecting initContainers to the Pod definition.
+Those can be used to e.g. fetch secrets for injection into the
+configuration from external sources. Any errors during the execution of
+an initContainer will lead to a restart of the Pod. More info:
+<a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a></p>
 </td>
 </tr>
 <tr>
@@ -20854,17 +21416,16 @@ string
 <td>
 <code>grpcServerTlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.TLSConfig">
-TLSConfig
+<a href="#monitoring.coreos.com/v1.GRPCServerTLSConfig">
+GRPCServerTLSConfig
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>grpcServerTlsConfig defines the gRPC server from which Thanos Querier reads
-recorded rule data.
-Note: Currently only the CAFile, CertFile, and KeyFile fields are supported.
-Maps to the &lsquo;&ndash;grpc-server-tls-*&rsquo; CLI args.</p>
+recorded rule data.</p>
+<p>Note: Currently only the <code>minVersion</code>, <code>caFile</code>, <code>certFile</code>, <code>keyFile</code>, <code>cipherSuites</code> and <code>curves</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -21400,15 +21961,15 @@ in a breaking way.</p>
 <td>
 <code>grpcServerTlsConfig</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.TLSConfig">
-TLSConfig
+<a href="#monitoring.coreos.com/v1.GRPCServerTLSConfig">
+GRPCServerTLSConfig
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.</p>
-<p>Note: Currently only the <code>caFile</code>, <code>certFile</code>, and <code>keyFile</code> fields are supported.</p>
+<p>Note: Currently only the <code>minVersion</code>, <code>caFile</code>, <code>certFile</code>, <code>keyFile</code>, <code>cipherSuites</code> and <code>curves</code> fields are supported.</p>
 </td>
 </tr>
 <tr>
@@ -21546,6 +22107,53 @@ if they are invalid or not supported the given Thanos version.
 In case of an argument conflict (e.g. an argument which is already set by the
 operator itself) or when providing an invalid argument, the reconciliation will
 fail and an error will be logged.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.TopologyShardingStrategy">TopologyShardingStrategy
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ShardingStrategy">ShardingStrategy</a>)
+</p>
+<div>
+<p>TopologyShardingStrategy defines the configuration for topology-aware sharding.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>externalLabelName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>externalLabelName defines the name of the Prometheus external label used
+to communicate the topology zone assigned to the Prometheus instance.
+If not defined, it defaults to &ldquo;zone&rdquo;.
+If set to the empty string, no external label is added to the Prometheus configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>values defines the list of topology values (e.g. zone names) to be used
+for sharding. The configured number of shards must be greater than or
+equal to the number of values.</p>
 </td>
 </tr>
 </tbody>
@@ -21913,7 +22521,7 @@ Supported values are:
 <h3 id="monitoring.coreos.com/v1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerGlobalConfig">AlertmanagerGlobalConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalJiraConfig">GlobalJiraConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalRocketChatConfig">GlobalRocketChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalTelegramConfig">GlobalTelegramConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalVictorOpsConfig">GlobalVictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWeChatConfig">GlobalWeChatConfig</a>, <a href="#monitoring.coreos.com/v1.GlobalWebexConfig">GlobalWebexConfig</a>, <a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>, <a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -22765,7 +23373,8 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -22782,7 +23391,8 @@ Kubernetes meta/v1.LabelSelector
 <p>scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -22907,6 +23517,22 @@ configuration (either in the monitoring resources or via scrape class).</p>
 <p>You can also disable sharding on a specific target by setting the
 <code>__tmp_disable_sharding</code> label with relabeling configuration. When
 the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategy">
+ShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.</p>
+<p>When not defined, the operator defaults to the &lsquo;Address&rsquo; mode which distributes
+targets based on a hash of the target address.</p>
 </td>
 </tr>
 <tr>
@@ -23228,6 +23854,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -23481,9 +24119,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -23498,7 +24135,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -23507,9 +24144,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -25008,6 +25645,23 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+response body that will be accepted by Prometheus. Targets responding with
+a body larger than this many bytes will cause the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeNativeHistograms</code><br/>
 <em>
 bool
@@ -25359,6 +26013,8 @@ Only valid for Pod, Endpoint and Endpointslice roles.</p>
 <td></td>
 </tr><tr><td><p>&#34;SDK&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;WorkloadIdentity&#34;</p></td>
+<td></td>
 </tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.AzureSDConfig">AzureSDConfig
@@ -25633,7 +26289,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defies the TLS configuration applying to the target HTTP endpoint.</p>
+<p>tlsConfig defines the TLS configuration applying to the target HTTP endpoint.</p>
 </td>
 </tr>
 </tbody>
@@ -25805,8 +26461,22 @@ string
 <td>
 <em>(Optional)</em>
 <p>filter defines the filter expression used to filter the catalog results.
-See <a href="https://www.consul.io/api-docs/catalog#list-services">https://www.consul.io/api-docs/catalog#list-services</a>
+See <a href="https://developer.hashicorp.com/consul/api-docs/catalog#filtering">https://developer.hashicorp.com/consul/api-docs/catalog#filtering</a>
 It requires Prometheus &gt;= 3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>healthFilter</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>healthFilter defines the filter expression used to filter the health results.
+See <a href="https://developer.hashicorp.com/consul/api-docs/health#filtering">https://developer.hashicorp.com/consul/api-docs/health#filtering</a>
+It requires Prometheus &gt;= 3.11.2.</p>
 </td>
 </tr>
 <tr>
@@ -26152,7 +26822,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the DigitalOcean API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26261,7 +26931,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the DigitalOcean API.</p>
 </td>
 </tr>
 <tr>
@@ -26442,7 +27112,7 @@ string
 </em>
 </td>
 <td>
-<p>host defines the address of the docker daemon</p>
+<p>host defines the address of the docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26511,7 +27181,8 @@ SafeTLSConfig
 </em>
 </td>
 <td>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<em>(Optional)</em>
+<p>tlsConfig defines the TLS configuration to connect to the Docker daemon.</p>
 </td>
 </tr>
 <tr>
@@ -26606,7 +27277,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker daemon.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26761,7 +27432,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Docker Swarm API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -26847,7 +27518,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Docker Swarm daemon.</p>
 </td>
 </tr>
 <tr>
@@ -27062,7 +27733,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.
+<p>tlsConfig defines the TLS configuration to connect to the EC2 API.
 It requires Prometheus &gt;= v2.41.0</p>
 </td>
 </tr>
@@ -27302,6 +27973,68 @@ SafeTLSConfig
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1alpha1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.ThreadByDateType">
+ThreadByDateType
+</a>
+</em>
+</td>
+<td>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+(None means group by alert group key, no date).</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig
@@ -27326,7 +28059,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -27358,7 +28093,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Eureka server.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -27387,7 +28122,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Eureka server.</p>
 </td>
 </tr>
 <tr>
@@ -27896,7 +28631,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -28114,7 +28851,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Hetzner API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28223,7 +28960,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Hetzner API.</p>
 </td>
 </tr>
 <tr>
@@ -28398,7 +29135,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
-<p>authorization defines the  header configuration to authenticate against the IONOS.
+<p>authorization defines the header configuration to authenticate against the IONOS API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -28469,7 +29206,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the IONOS API.</p>
 </td>
 </tr>
 <tr>
@@ -29012,7 +29749,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Kuma control plane.</p>
 </td>
 </tr>
 <tr>
@@ -29040,7 +29777,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Kuma control plane.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29091,8 +29828,7 @@ bool
 </p>
 <div>
 <p>LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
-See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config</a>
-TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config</a></p>
 </div>
 <table>
 <thead>
@@ -29219,7 +29955,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Lightsail API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29305,7 +30041,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Lightsail API.</p>
 </td>
 </tr>
 <tr>
@@ -29413,7 +30149,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Linode API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -29511,7 +30247,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Linode API.</p>
 </td>
 </tr>
 <tr>
@@ -30020,7 +30756,9 @@ When specified, only resources within this region will be discovered.</p>
 <td>
 <code>server</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30066,7 +30804,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the Nomad API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -30095,7 +30833,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Nomad API.</p>
 </td>
 </tr>
 <tr>
@@ -30370,7 +31108,9 @@ string
 <td>
 <code>identityEndpoint</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -30972,9 +31712,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31159,9 +31897,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31203,9 +31939,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -31481,7 +32215,8 @@ gzipped Prometheus configuration under the <code>prometheus.yaml.gz</code> key.
 This behavior is <em>deprecated</em> and will be removed in the next major version
 of the custom resource definition. It is recommended to use
 <code>spec.additionalScrapeConfigs</code> instead.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -31498,7 +32233,8 @@ Kubernetes meta/v1.LabelSelector
 <p>scrapeConfigNamespaceSelector defines the namespaces to match for ScrapeConfig discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
-<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level.</p>
+<p>Note that the ScrapeConfig custom resource definition is currently at Alpha level
+and will be graduated to Beta in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -31623,6 +32359,22 @@ configuration (either in the monitoring resources or via scrape class).</p>
 <p>You can also disable sharding on a specific target by setting the
 <code>__tmp_disable_sharding</code> label with relabeling configuration. When
 the label value isn&rsquo;t empty, all Prometheus shards will scrape the target.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shardingStrategy</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ShardingStrategy">
+ShardingStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>shardingStrategy defines the sharding strategy for distributing scraped targets across Prometheus shards.</p>
+<p>When not defined, the operator defaults to the &lsquo;Address&rsquo; mode which distributes
+targets based on a hash of the target address.</p>
 </td>
 </tr>
 <tr>
@@ -31944,6 +32696,18 @@ map[string]string
 </tr>
 <tr>
 <td>
+<code>schedulerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>serviceAccountName</code><br/>
 <em>
 string
@@ -32197,9 +32961,8 @@ strategic merge patch.</p>
 * <code>prometheus</code>
 * <code>config-reloader</code>
 * <code>thanos-sidecar</code></p>
-<p>Overriding containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding containers which are managed by the operator require careful
+testing, especially when upgrading to a new version of the operator.</p>
 </td>
 </tr>
 <tr>
@@ -32214,7 +32977,7 @@ may break at any time without notice.</p>
 <td>
 <em>(Optional)</em>
 <p>initContainers allows injecting initContainers to the Pod definition. Those
-can be used to e.g.  fetch secrets for injection into the Prometheus
+can be used to e.g. fetch secrets for injection into the Prometheus
 configuration from external sources. Any errors during the execution of
 an initContainer will lead to a restart of the Pod. More info:
 <a href="https://kubernetes.io/docs/concepts/workloads/pods/init-containers/">https://kubernetes.io/docs/concepts/workloads/pods/init-containers/</a>
@@ -32223,9 +32986,9 @@ containers if they share the same name and modifications are done via a
 strategic merge patch.</p>
 <p>The names of init container name managed by the operator are:
 * <code>init-config-reloader</code>.</p>
-<p>Overriding init containers is entirely outside the scope of what the
-maintainers will support and by doing so, you accept that this behaviour
-may break at any time without notice.</p>
+<p>Overriding init containers which are managed by the operator require
+careful testing, especially when upgrading to a new version of the
+operator.</p>
 </td>
 </tr>
 <tr>
@@ -33024,7 +33787,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>url</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -33110,7 +33875,7 @@ SafeAuthorization
 </td>
 <td>
 <em>(Optional)</em>
-<p>authorization defines the  header configuration to authenticate against the DigitalOcean API.
+<p>authorization defines the header configuration to authenticate against the PuppetDB API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
 </tr>
@@ -33196,7 +33961,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the PuppetDB server.</p>
 </td>
 </tr>
 <tr>
@@ -33348,9 +34113,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33770,9 +34533,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33864,7 +34625,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -33878,7 +34641,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -33911,9 +34676,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -33993,9 +34756,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34008,9 +34769,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34167,13 +34926,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -34181,13 +34941,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -34195,13 +34957,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -34317,9 +35081,7 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -34465,8 +35227,9 @@ HTTPConfig
 </p>
 <div>
 <p>ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
-See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config</a>
-TODO: Need to document that we will not be supporting the <code>_file</code> fields.</p>
+See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config</a></p>
+<p>Note: The <code>_file</code> variants of credential fields (e.g. <code>secret_key_file</code>)
+from the Prometheus configuration are not supported. Use Kubernetes secrets via <code>secretKey</code> instead.</p>
 </div>
 <table>
 <thead>
@@ -34540,7 +35303,9 @@ int32
 <td>
 <code>apiURL</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.URL">
+URL
+</a>
 </em>
 </td>
 <td>
@@ -34690,7 +35455,7 @@ SafeTLSConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>tlsConfig defines the TLS configuration to connect to the Consul API.</p>
+<p>tlsConfig defines the TLS configuration to connect to the Scaleway API.</p>
 </td>
 </tr>
 </tbody>
@@ -35352,6 +36117,23 @@ Only valid in Prometheus versions 2.27.0 and newer.</p>
 </tr>
 <tr>
 <td>
+<code>bodySizeLimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ByteSize">
+ByteSize
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>bodySizeLimit defines a per-scrape limit on the size of the uncompressed
+response body that will be accepted by Prometheus. Targets responding with
+a body larger than this many bytes will cause the scrape to fail.</p>
+<p>It requires Prometheus &gt;= v2.28.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>scrapeNativeHistograms</code><br/>
 <em>
 bool
@@ -35595,9 +36377,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35760,9 +36540,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35873,9 +36651,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35887,9 +36663,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35901,9 +36675,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -35980,6 +36752,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -36166,8 +36952,7 @@ map[string]string
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.StaticConfig">StaticConfig</a>)
 </p>
 <div>
-<p>Target represents a target for Prometheus to scrape
-kubebuilder:validation:MinLength:=1</p>
+<p>Target represents a target for Prometheus to scrape</p>
 </div>
 <h3 id="monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig
 </h3>
@@ -36327,6 +37112,26 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.ThreadByDateType">ThreadByDateType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailThreadingConfig">EmailThreadingConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Daily&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;None&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.Time">Time
 (<code>string</code> alias)</h3>
 <p>
@@ -36472,7 +37277,7 @@ Time
 <h3 id="monitoring.coreos.com/v1alpha1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1alpha1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.EurekaSDConfig">EurekaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.KumaSDConfig">KumaSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.NomadSDConfig">NomadSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PuppetDBSDConfig">PuppetDBSDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.ScalewaySDConfig">ScalewaySDConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -36914,9 +37719,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -37110,9 +37913,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -37210,9 +38013,9 @@ Route
 </td>
 <td>
 <em>(Optional)</em>
-<p>route defines the Alertmanager route definition for alerts matching the resource&rsquo;s
-namespace. If present, it will be added to the generated Alertmanager
-configuration as a first-level route.</p>
+<p>route defines the Alertmanager route definition for incoming alerts. It will be added to the
+generated Alertmanager configuration as a first-level route. The matching behavior of the
+route depends on the Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -37630,6 +38433,68 @@ SafeTLSConfig
 <em>(Optional)</em>
 <p>tlsConfig defines the TLS configuration for SMTP connections.
 This includes settings for certificates, CA validation, and TLS protocol options.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>forceImplicitTLS</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+true: force use of implicit TLS (direct TLS connection on any port)
+false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>threading</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.EmailThreadingConfig">
+EmailThreadingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>threading defines the threading configuration for email receiver.
+It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1beta1.EmailThreadingConfig">EmailThreadingConfig
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>threadByDate</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.ThreadByDateType">
+ThreadByDateType
+</a>
+</em>
+</td>
+<td>
+<p>threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+(None means group by alert group key, no date).</p>
 </td>
 </tr>
 </tbody>
@@ -38623,9 +39488,7 @@ string
 <td>
 <code>clientURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38810,9 +39673,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -38854,9 +39715,7 @@ string
 <td>
 <code>href</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39040,9 +39899,7 @@ This is the main body text of the Pushover notification.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39253,7 +40110,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>discordConfigs defines the list of Slack configurations.</p>
+<p>discordConfigs defines the list of Discord configurations.</p>
 </td>
 </tr>
 <tr>
@@ -39462,9 +40319,7 @@ This is the label that appears on the interactive button.</p>
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39556,7 +40411,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>token defines the sender token for RocketChat authentication.
-This is the personal access token or bot token used to authenticate API requests.</p>
+This is the personal access token or bot token used to authenticate API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -39570,7 +40427,9 @@ Kubernetes core/v1.SecretKeySelector
 </td>
 <td>
 <p>tokenID defines the sender token ID for RocketChat authentication.
-This is the user ID associated with the token used for API requests.</p>
+This is the user ID associated with the token used for API requests.
+The secret needs to be in the same namespace as the AlertmanagerConfig
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -39603,9 +40462,7 @@ If provided, this emoji will be used instead of the default avatar or iconURL.</
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39685,9 +40542,7 @@ When true, fields may be displayed side by side to save space.</p>
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39700,9 +40555,7 @@ This embeds an image directly in the message attachment.</p>
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -39859,13 +40712,14 @@ Special label &ldquo;&hellip;&rdquo; (aggregate by all possible labels), if prov
 <td>
 <code>groupWait</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupWait defines how long to wait before sending the initial notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
 Example: &ldquo;30s&rdquo;</p>
 </td>
 </tr>
@@ -39873,13 +40727,15 @@ Example: &ldquo;30s&rdquo;</p>
 <td>
 <code>groupInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>groupInterval defines how long to wait before sending an updated notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;5m&rdquo;</p>
 </td>
 </tr>
@@ -39887,13 +40743,15 @@ Example: &ldquo;5m&rdquo;</p>
 <td>
 <code>repeatInterval</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.NonEmptyDuration">
+NonEmptyDuration
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>repeatInterval defines how long to wait before repeating the last notification.
-Must match the regular expression<code>^(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?$</code>
+Must be greater than 0.
 Example: &ldquo;4h&rdquo;</p>
 </td>
 </tr>
@@ -39910,8 +40768,8 @@ Example: &ldquo;4h&rdquo;</p>
 <em>(Optional)</em>
 <p>matchers defines the list of matchers that the alert&rsquo;s labels should match. For the first
 level route, the operator removes any existing equality and regexp
-matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object
-namespace&gt;</code> matcher.</p>
+matcher on the <code>namespace</code> label and adds a <code>namespace: &lt;object namespace&gt;</code> matcher,
+unless configured otherwise in Alertmanager&rsquo;s AlertmanagerConfigMatcherStrategyType.</p>
 </td>
 </tr>
 <tr>
@@ -40001,9 +40859,7 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40208,9 +41064,7 @@ For buttons, this is the button text. For select menus, this is the placeholder 
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40373,9 +41227,7 @@ string
 <td>
 <code>titleLink</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40486,9 +41338,7 @@ string
 <td>
 <code>iconURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40500,9 +41350,7 @@ URL
 <td>
 <code>imageURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40514,9 +41362,7 @@ URL
 <td>
 <code>thumbURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>
@@ -40593,6 +41439,20 @@ Duration
 <p>timeout defines the maximum time to wait for a webhook request to complete,
 before failing the request and allowing it to be retried.
 It requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText defines text content of the Slack message.
+If set, this is sent as the top-level &lsquo;text&rsquo; field in the Slack payload.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -40887,6 +41747,26 @@ HTTPConfig
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1beta1.ThreadByDateType">ThreadByDateType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailThreadingConfig">EmailThreadingConfig</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Daily&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;None&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1beta1.Time">Time
 (<code>string</code> alias)</h3>
 <p>
@@ -41075,7 +41955,7 @@ Time
 <h3 id="monitoring.coreos.com/v1beta1.URL">URL
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyImageConfig">PagerDutyImageConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyLinkConfig">PagerDutyLinkConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatActionConfig">RocketChatActionConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SNSConfig">SNSConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackAction">SlackAction</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.RocketChatConfig">RocketChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebexConfig">WebexConfig</a>)
 </p>
 <div>
 <p>URL represents a valid URL</p>
@@ -41518,9 +42398,7 @@ bool
 <td>
 <code>url</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.URL">
-URL
-</a>
+string
 </em>
 </td>
 <td>

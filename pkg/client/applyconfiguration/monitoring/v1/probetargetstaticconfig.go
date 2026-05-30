@@ -18,9 +18,16 @@ package v1
 
 // ProbeTargetStaticConfigApplyConfiguration represents a declarative configuration of the ProbeTargetStaticConfig type for use
 // with apply.
+//
+// ProbeTargetStaticConfig defines the set of static targets considered for probing.
 type ProbeTargetStaticConfigApplyConfiguration struct {
-	Targets        []string                          `json:"static,omitempty"`
-	Labels         map[string]string                 `json:"labels,omitempty"`
+	// static defines the list of hosts to probe.
+	Targets []string `json:"static,omitempty"`
+	// labels defines all labels assigned to all metrics scraped from the targets.
+	Labels map[string]string `json:"labels,omitempty"`
+	// relabelingConfigs defines relabelings to be apply to the label set of the targets before it gets
+	// scraped.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
 	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelingConfigs,omitempty"`
 }
 

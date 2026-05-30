@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/prometheus/prometheus/promql/parser"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -50,9 +51,23 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 	}
 
 	var (
-		nsLabeler   = namespacelabeler.New(p.Spec.EnforcedNamespaceLabel, excludedFromEnforcement, true)
-		promVersion = operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+		nsLabeler     = namespacelabeler.New(p.Spec.EnforcedNamespaceLabel, excludedFromEnforcement, true)
+		promVersion   = operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+		parserOptions parser.Options
 	)
+
+	for _, f := range p.GetCommonPrometheusFields().EnableFeatures {
+		switch f {
+		case "promql-experimental-functions":
+			parserOptions.EnableExperimentalFunctions = true
+		case "promql-duration-expr":
+			parserOptions.ExperimentalDurationExpr = true
+		case "promql-extended-range-selectors":
+			parserOptions.EnableExtendedRangeSelectors = true
+		case "promql-binop-fill-modifiers":
+			parserOptions.EnableBinopFillModifiers = true
+		}
+	}
 
 	// Select and filter PrometheusRule resources.
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(
@@ -63,6 +78,7 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 		c.ruleInfs,
 		c.newEventRecorder(p),
 		logger,
+		parserOptions,
 	)
 	if err != nil {
 		return rules, fmt.Errorf("initializing PrometheusRules failed: %w", err)

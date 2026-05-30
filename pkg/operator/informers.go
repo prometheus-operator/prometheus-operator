@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
-	"github.com/prometheus-operator/prometheus-operator/pkg/k8sutil"
+	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 )
 
 type InformerGetter interface {
@@ -81,22 +81,28 @@ func HasReferenceFunc(
 	}
 }
 
-// GetObjectFromKey retrieves an object from the informer cache using the provided key. It returns a nil value and no error if the object is not found.
-// The function will panic if the caller provides an informer which doesn't reference objects of type T.
+// GetObjectFromKey retrieves an object from the informer cache using the
+// provided key. It returns a nil value and no error if the object is not
+// found.
+//
+// The function will panic if the caller provides an informer which doesn't
+// reference objects of type T.
 func GetObjectFromKey[T runtime.Object](infs *informers.ForResource, key string) (T, error) {
-	obj, err := infs.Get(key)
 	var zero T
 
+	obj, err := infs.Get(key)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return zero, nil
 		}
+
 		return zero, fmt.Errorf("failed to retrieve object from informer: %w", err)
 	}
 
 	obj = obj.DeepCopyObject()
-	if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+	if err = k8s.AddTypeInformationToObject(obj); err != nil {
 		return zero, err
 	}
+
 	return obj.(T), nil
 }

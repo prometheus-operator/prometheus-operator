@@ -22,16 +22,35 @@ import (
 
 // GlobalSMTPConfigApplyConfiguration represents a declarative configuration of the GlobalSMTPConfig type for use
 // with apply.
+//
+// GlobalSMTPConfig configures global SMTP parameters.
+// See https://prometheus.io/docs/alerting/latest/configuration/#configuration-file
 type GlobalSMTPConfigApplyConfiguration struct {
-	From         *string                          `json:"from,omitempty"`
-	SmartHost    *HostPortApplyConfiguration      `json:"smartHost,omitempty"`
-	Hello        *string                          `json:"hello,omitempty"`
-	AuthUsername *string                          `json:"authUsername,omitempty"`
-	AuthPassword *corev1.SecretKeySelector        `json:"authPassword,omitempty"`
-	AuthIdentity *string                          `json:"authIdentity,omitempty"`
-	AuthSecret   *corev1.SecretKeySelector        `json:"authSecret,omitempty"`
-	RequireTLS   *bool                            `json:"requireTLS,omitempty"`
-	TLSConfig    *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// from defines the default SMTP From header field.
+	From *string `json:"from,omitempty"`
+	// smartHost defines the default SMTP smarthost used for sending emails.
+	SmartHost *HostPortApplyConfiguration `json:"smartHost,omitempty"`
+	// hello defines the default hostname to identify to the SMTP server.
+	Hello *string `json:"hello,omitempty"`
+	// authUsername represents SMTP Auth using CRAM-MD5, LOGIN and PLAIN. If empty, Alertmanager doesn't authenticate to the SMTP server.
+	AuthUsername *string `json:"authUsername,omitempty"`
+	// authPassword represents SMTP Auth using LOGIN and PLAIN.
+	AuthPassword *corev1.SecretKeySelector `json:"authPassword,omitempty"`
+	// authIdentity represents SMTP Auth using PLAIN
+	AuthIdentity *string `json:"authIdentity,omitempty"`
+	// authSecret represents SMTP Auth using CRAM-MD5.
+	AuthSecret *corev1.SecretKeySelector `json:"authSecret,omitempty"`
+	// requireTLS defines the default SMTP TLS requirement.
+	// Note that Go does not support unencrypted connections to remote SMTP endpoints.
+	RequireTLS *bool `json:"requireTLS,omitempty"`
+	// tlsConfig defines the default TLS configuration for SMTP receivers
+	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// forceImplicitTLS defines whether to force use of implicit TLS (direct TLS connection) for better security.
+	// true: force use of implicit TLS (direct TLS connection on any port)
+	// false: force disable implicit TLS (use explicit TLS/STARTTLS if required)
+	// nil (default): auto-detect based on port (465=implicit, other=explicit) for backward compatibility
+	// It requires Alertmanager >= v0.31.0.
+	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"`
 }
 
 // GlobalSMTPConfigApplyConfiguration constructs a declarative configuration of the GlobalSMTPConfig type for use with
@@ -109,5 +128,13 @@ func (b *GlobalSMTPConfigApplyConfiguration) WithRequireTLS(value bool) *GlobalS
 // If called multiple times, the TLSConfig field is set to the value of the last call.
 func (b *GlobalSMTPConfigApplyConfiguration) WithTLSConfig(value *SafeTLSConfigApplyConfiguration) *GlobalSMTPConfigApplyConfiguration {
 	b.TLSConfig = value
+	return b
+}
+
+// WithForceImplicitTLS sets the ForceImplicitTLS field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ForceImplicitTLS field is set to the value of the last call.
+func (b *GlobalSMTPConfigApplyConfiguration) WithForceImplicitTLS(value bool) *GlobalSMTPConfigApplyConfiguration {
+	b.ForceImplicitTLS = &value
 	return b
 }

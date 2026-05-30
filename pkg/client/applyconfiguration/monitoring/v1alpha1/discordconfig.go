@@ -23,15 +23,28 @@ import (
 
 // DiscordConfigApplyConfiguration represents a declarative configuration of the DiscordConfig type for use
 // with apply.
+//
+// DiscordConfig configures notifications via Discord.
+// See https://prometheus.io/docs/alerting/latest/configuration/#discord_config
 type DiscordConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	APIURL       *v1.SecretKeySelector         `json:"apiURL,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	Content      *string                       `json:"content,omitempty"`
-	Username     *string                       `json:"username,omitempty"`
-	AvatarURL    *monitoringv1alpha1.URL       `json:"avatarURL,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the secret's key that contains the Discord webhook URL.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// title defines the template of the message's title.
+	Title *string `json:"title,omitempty"`
+	// message defines the template of the message's body.
+	Message *string `json:"message,omitempty"`
+	// content defines the template of the content's body.
+	Content *string `json:"content,omitempty"`
+	// username defines the username of the message sender.
+	Username *string `json:"username,omitempty"`
+	// avatarURL defines the avatar url of the message sender.
+	AvatarURL *monitoringv1alpha1.URL `json:"avatarURL,omitempty"`
+	// httpConfig defines the HTTP client configuration.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // DiscordConfigApplyConfiguration constructs a declarative configuration of the DiscordConfig type for use with

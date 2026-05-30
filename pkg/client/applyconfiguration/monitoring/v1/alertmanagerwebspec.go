@@ -18,10 +18,16 @@ package v1
 
 // AlertmanagerWebSpecApplyConfiguration represents a declarative configuration of the AlertmanagerWebSpec type for use
 // with apply.
+//
+// AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 type AlertmanagerWebSpecApplyConfiguration struct {
 	WebConfigFileFieldsApplyConfiguration `json:",inline"`
-	GetConcurrency                        *uint32 `json:"getConcurrency,omitempty"`
-	Timeout                               *uint32 `json:"timeout,omitempty"`
+	// getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the
+	// Alertmanager's `--web.get-concurrency` flag.
+	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`
+	// timeout for HTTP requests. This corresponds to the Alertmanager's
+	// `--web.timeout` flag.
+	Timeout *uint32 `json:"timeout,omitempty"`
 }
 
 // AlertmanagerWebSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerWebSpec type for use with

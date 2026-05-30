@@ -64,6 +64,7 @@ scrape_configs:
     replacement: web
   - source_labels:
     - __meta_kubernetes_pod_ready
+    target_label: pod_ready
     regex: (.*)
     replacement: $1
     action: replace

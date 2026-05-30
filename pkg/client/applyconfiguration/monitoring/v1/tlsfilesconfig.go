@@ -18,10 +18,15 @@ package v1
 
 // TLSFilesConfigApplyConfiguration represents a declarative configuration of the TLSFilesConfig type for use
 // with apply.
+//
+// TLSFilesConfig extends the TLS configuration with file parameters.
 type TLSFilesConfigApplyConfiguration struct {
-	CAFile   *string `json:"caFile,omitempty"`
+	// caFile defines the path to the CA cert in the Prometheus container to use for the targets.
+	CAFile *string `json:"caFile,omitempty"`
+	// certFile defines the path to the client cert file in the Prometheus container for the targets.
 	CertFile *string `json:"certFile,omitempty"`
-	KeyFile  *string `json:"keyFile,omitempty"`
+	// keyFile defines the path to the client key file in the Prometheus container for the targets.
+	KeyFile *string `json:"keyFile,omitempty"`
 }
 
 // TLSFilesConfigApplyConfiguration constructs a declarative configuration of the TLSFilesConfig type for use with

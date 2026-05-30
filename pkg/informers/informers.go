@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"slices"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -46,6 +46,7 @@ type FactoriesForNamespaces interface {
 // ForResource contains a slice of InformLister for a concrete resource type,
 // one per namespace.
 type ForResource struct {
+	gr        schema.GroupResource
 	informers []InformLister
 }
 
@@ -79,12 +80,13 @@ func NewInformersForResourceWithTransform(ifs FactoriesForNamespaces, resource s
 	}
 
 	return &ForResource{
+		gr:        resource.GroupResource(),
 		informers: informers,
 	}, nil
 }
 
-func partialObjectMetadataStrip(obj any) (*v1.PartialObjectMetadata, error) {
-	partialMeta, ok := obj.(*v1.PartialObjectMetadata)
+func partialObjectMetadataStrip(obj any) (*metav1.PartialObjectMetadata, error) {
+	partialMeta, ok := obj.(*metav1.PartialObjectMetadata)
 	if !ok {
 		// Don't do anything if the cast isn't successful.
 		// The object might be of type "cache.DeletedFinalStateUnknown".
@@ -122,7 +124,7 @@ func PartialObjectMetadataStrip(gvk schema.GroupVersionKind) cache.TransformFunc
 			return obj, nil
 		}
 
-		partialMeta.TypeMeta = v1.TypeMeta{
+		partialMeta.TypeMeta = metav1.TypeMeta{
 			Kind:       gvk.Kind,
 			APIVersion: gvk.GroupVersion().String(),
 		}
@@ -189,13 +191,10 @@ func (w *ForResource) ListAllByNamespace(namespace string, selector labels.Selec
 }
 
 // Get invokes all wrapped informers and returns the first found runtime object.
-// It returns the first occurred error.
+// It returns a NotFound error if the object isn't found in any informer.
 func (w *ForResource) Get(name string) (runtime.Object, error) {
-	var err error
-
 	for _, inf := range w.informers {
-		var ret runtime.Object
-		ret, err = inf.Lister().Get(name)
+		ret, err := inf.Lister().Get(name)
 		if apierrors.IsNotFound(err) {
 			continue
 		}
@@ -206,7 +205,7 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 		return ret, nil
 	}
 
-	return nil, err
+	return nil, apierrors.NewNotFound(w.gr, name)
 }
 
 // newInformerOptions returns a list option tweak function and a list of namespaces
@@ -216,18 +215,18 @@ func (w *ForResource) Get(name string) (runtime.Object, error) {
 // then it returns it and a tweak function filtering denied namespaces using a field selector.
 //
 // Else, denied namespaces are ignored and just the set of allowed namespaces is returned.
-func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{}, tweaks func(*v1.ListOptions)) (func(*v1.ListOptions), []string) {
+func newInformerOptions(allowedNamespaces, deniedNamespaces map[string]struct{}, tweaks func(*metav1.ListOptions)) (func(*metav1.ListOptions), []string) {
 	if tweaks == nil {
-		tweaks = func(*v1.ListOptions) {} // nop
+		tweaks = func(*metav1.ListOptions) {} // nop
 	}
 
 	var namespaces []string
 
 	if listwatch.IsAllNamespaces(allowedNamespaces) {
-		return func(options *v1.ListOptions) {
+		return func(options *metav1.ListOptions) {
 			tweaks(options)
 			listwatch.DenyTweak(options, "metadata.namespace", deniedNamespaces)
-		}, []string{v1.NamespaceAll}
+		}, []string{metav1.NamespaceAll}
 	}
 
 	for ns := range allowedNamespaces {

@@ -1,0 +1,7 @@
+receivers:
+- name: ""
+  email_configs:
+  - threading:
+      enabled: true
+      thread_by_date: daily
+templates: []

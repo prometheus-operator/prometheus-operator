@@ -230,3 +230,46 @@ spec:
           type: RuntimeDefault
 
 ```
+
+## How to override probe handlers when TLS and web.config are enabled
+
+When Prometheus is configured with `spec.web.tlsConfig`, the operator
+automatically generates and enforces HTTPS `httpGet` probes. If `web.config`
+also requires authentication (e.g. Basic Auth), these default probes will fail
+because Kubernetes native `httpGet` probes do not support custom authentication
+headers.
+
+The workaround is to override the probe handler to `tcpSocket`, `exec`,
+or `grpc` via a strategic merge patch in the Prometheus CR. Previously, the
+`StrategicMergePatch` logic would incorrectly preserve both the operator's
+default `httpGet` handler and the user-supplied handler simultaneously,
+resulting in a Kubernetes validation error:
+
+```
+creating statefulset failed: StatefulSet.apps "prometheus-prometheus" is invalid:
+[spec.template.spec.containers[0].livenessProbe.tcpSocket: Forbidden: may not specify more than 1 handler type, ...]
+```
+
+The following example replaces the readiness and liveness probes of the `prometheus`
+container with TCP socket probes:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-tls-tcp-probes
+spec:
+  containers:
+  - name: prometheus
+    readinessProbe:
+      tcpSocket:
+        port: 9090
+    livenessProbe:
+      tcpSocket:
+        port: 9090
+```
+
+> **Note:** Using a `tcpSocket` or `exec` probe means the probe no longer calls
+> the Prometheus `/-/ready` endpoint. The Pod may be marked Ready before
+> Prometheus finishes WAL replay or TSDB initialization. This is a known
+> trade-off when prioritizing credential security over granular readiness checks.

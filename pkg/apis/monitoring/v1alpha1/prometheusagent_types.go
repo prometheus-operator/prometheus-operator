@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
 package v1alpha1
 
 import (
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const (
@@ -37,6 +38,14 @@ func (l *PrometheusAgent) SetCommonPrometheusFields(f monitoringv1.CommonPrometh
 func (l *PrometheusAgent) GetStatus() monitoringv1.PrometheusStatus {
 	return l.Status
 }
+
+func (p *PrometheusAgent) ExpectedReplicas() int {
+	return p.Spec.CommonPrometheusFields.ExpectedReplicas()
+}
+
+func (p *PrometheusAgent) GetAvailableReplicas() int               { return int(p.Status.AvailableReplicas) }
+func (p *PrometheusAgent) GetUpdatedReplicas() int                 { return int(p.Status.UpdatedReplicas) }
+func (p *PrometheusAgent) GetConditions() []monitoringv1.Condition { return p.Status.Conditions }
 
 // +genclient
 // +k8s:openapi-gen=true
@@ -108,6 +117,7 @@ func (l *PrometheusAgentList) DeepCopyObject() runtime.Object {
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorSelector))",message="serviceMonitorSelector cannot be set when mode is DaemonSet"
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorNamespaceSelector))",message="serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet"
 // +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.additionalScrapeConfigs))",message="additionalScrapeConfigs cannot be set when mode is DaemonSet"
+// +kubebuilder:validation:XValidation:rule="!(has(self.mode) && self.mode == 'DaemonSet' && has(self.shardingStrategy))",message="shardingStrategy cannot be set when mode is DaemonSet"
 type PrometheusAgentSpec struct {
 	// mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
 	//

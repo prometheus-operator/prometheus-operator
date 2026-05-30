@@ -23,14 +23,48 @@ import (
 // ScrapeClassApplyConfiguration represents a declarative configuration of the ScrapeClass type for use
 // with apply.
 type ScrapeClassApplyConfiguration struct {
-	Name                   *string                           `json:"name,omitempty"`
-	Default                *bool                             `json:"default,omitempty"`
-	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol      `json:"fallbackScrapeProtocol,omitempty"`
-	TLSConfig              *TLSConfigApplyConfiguration      `json:"tlsConfig,omitempty"`
-	Authorization          *AuthorizationApplyConfiguration  `json:"authorization,omitempty"`
-	Relabelings            []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
-	MetricRelabelings      []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
-	AttachMetadata         *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	// name of the scrape class.
+	Name *string `json:"name,omitempty"`
+	// default defines that the scrape applies to all scrape objects that
+	// don't configure an explicit scrape class name.
+	//
+	// Only one scrape class can be set as the default.
+	Default *bool `json:"default,omitempty"`
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
+	//
+	// It requires Prometheus >= v3.0.0.
+	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// tlsConfig defines the TLS settings to use for the scrape. When the
+	// scrape objects define their own CA, certificate and/or key, they take
+	// precedence over the corresponding scrape class fields.
+	//
+	// For now only the `caFile`, `certFile` and `keyFile` fields are supported.
+	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// authorization section for the ScrapeClass.
+	// It will only apply if the scrape resource doesn't specify any Authorization.
+	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// relabelings defines the relabeling rules to apply to all scrape targets.
+	//
+	// The Operator automatically adds relabelings for a few standard Kubernetes fields
+	// like `__meta_kubernetes_namespace` and `__meta_kubernetes_service_name`.
+	// Then the Operator adds the scrape class relabelings defined here.
+	// Then the Operator adds the target-specific relabelings defined in the scrape object.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+	Relabelings []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
+	// metricRelabelings defines the relabeling rules to apply to all samples before ingestion.
+	//
+	// The Operator adds the scrape class metric relabelings defined here.
+	// Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
+	// attachMetadata defines additional metadata to the discovered targets.
+	// When the scrape object defines its own configuration, it takes
+	// precedence over the scrape class configuration.
+	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 }
 
 // ScrapeClassApplyConfiguration constructs a declarative configuration of the ScrapeClass type for use with

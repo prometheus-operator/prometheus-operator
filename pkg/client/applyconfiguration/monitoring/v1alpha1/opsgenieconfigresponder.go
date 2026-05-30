@@ -18,11 +18,23 @@ package v1alpha1
 
 // OpsGenieConfigResponderApplyConfiguration represents a declarative configuration of the OpsGenieConfigResponder type for use
 // with apply.
+//
+// OpsGenieConfigResponder defines a responder to an incident.
+// One of `id`, `name` or `username` has to be defined.
 type OpsGenieConfigResponderApplyConfiguration struct {
-	ID       *string `json:"id,omitempty"`
-	Name     *string `json:"name,omitempty"`
+	// id defines the unique identifier of the responder.
+	// This corresponds to the responder's ID within OpsGenie.
+	ID *string `json:"id,omitempty"`
+	// name defines the display name of the responder.
+	// This is used when the responder is identified by name rather than ID.
+	Name *string `json:"name,omitempty"`
+	// username defines the username of the responder.
+	// This is typically used for user-type responders when identifying by username.
 	Username *string `json:"username,omitempty"`
-	Type     *string `json:"type,omitempty"`
+	// type defines the type of responder.
+	// Valid values include "user", "team", "schedule", and "escalation".
+	// This determines how OpsGenie interprets the other identifier fields.
+	Type *string `json:"type,omitempty"`
 }
 
 // OpsGenieConfigResponderApplyConfiguration constructs a declarative configuration of the OpsGenieConfigResponder type for use with

@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,6 +106,140 @@ func TestInformers(t *testing.T) {
 		if !apierrors.IsNotFound(err) {
 			t.Errorf("expected IsNotFound error, got %v", err)
 			return
+		}
+	})
+
+	t.Run("TestGetWithEmptyInformers", func(t *testing.T) {
+		// Test that Get returns NotFound error when no informers are configured.
+		ifs := &ForResource{
+			informers: []InformLister{}, // Empty informers slice
+		}
+
+		obj, err := ifs.Get("nonexistent")
+		if obj != nil {
+			t.Errorf("expected nil object, got %v", obj)
+		}
+		if !apierrors.IsNotFound(err) {
+			t.Errorf("expected IsNotFound error, got %v", err)
+		}
+	})
+
+	t.Run("TestGetNeverReturnsNilNil", func(t *testing.T) {
+		// Test that Get never returns (nil, nil) for any case with configured informers.
+		// This is a regression test for nil pointer panic bugs.
+		testCases := []struct {
+			name       string
+			informers  []InformLister
+			objectName string
+		}{
+			{
+				name: "object not found in single informer",
+				informers: []InformLister{
+					&mockFactory{
+						namespaces: sets.New[string]("ns1"),
+						objects:    map[string]runtime.Object{},
+					},
+				},
+				objectName: "nonexistent",
+			},
+			{
+				name: "object not found in multiple informers",
+				informers: []InformLister{
+					&mockFactory{
+						namespaces: sets.New[string]("ns1"),
+						objects:    map[string]runtime.Object{},
+					},
+					&mockFactory{
+						namespaces: sets.New[string]("ns2"),
+						objects:    map[string]runtime.Object{},
+					},
+				},
+				objectName: "nonexistent",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				ifs := &ForResource{
+					informers: tc.informers,
+				}
+
+				obj, err := ifs.Get(tc.objectName)
+
+				// The key invariant: we should never get (nil, nil)
+				if obj == nil && err == nil {
+					t.Error("Get returned (nil, nil) which can cause nil pointer panics")
+				}
+
+				// If object is nil, error must be NotFound
+				if obj == nil && !apierrors.IsNotFound(err) {
+					t.Errorf("expected IsNotFound error when object is nil, got %v", err)
+				}
+			})
+		}
+	})
+
+	t.Run("TestGetReturnsObjectWhenFound", func(t *testing.T) {
+		// Test that Get returns the object without error when it exists.
+		expectedObj := &monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "my-prometheus",
+			},
+		}
+
+		ifs := &ForResource{
+			informers: []InformLister{
+				&mockFactory{
+					namespaces: sets.New[string]("ns1"),
+					objects: map[string]runtime.Object{
+						"my-prometheus": expectedObj,
+					},
+				},
+			},
+		}
+
+		obj, err := ifs.Get("my-prometheus")
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if obj == nil {
+			t.Error("expected non-nil object")
+		}
+		if obj != expectedObj {
+			t.Errorf("expected %v, got %v", expectedObj, obj)
+		}
+	})
+
+	t.Run("TestGetSearchesAllInformers", func(t *testing.T) {
+		// Test that Get searches through all informers and returns the first found object.
+		expectedObj := &monitoringv1.Prometheus{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "my-prometheus",
+				Namespace: "ns2",
+			},
+		}
+
+		ifs := &ForResource{
+			informers: []InformLister{
+				&mockFactory{
+					namespaces: sets.New[string]("ns1"),
+					objects:    map[string]runtime.Object{}, // Object not in first informer
+				},
+				&mockFactory{
+					namespaces: sets.New[string]("ns2"),
+					objects: map[string]runtime.Object{
+						"my-prometheus": expectedObj, // Object in second informer
+					},
+				},
+			},
+		}
+
+		obj, err := ifs.Get("my-prometheus")
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if obj != expectedObj {
+			t.Errorf("expected object from second informer, got %v", obj)
 		}
 	})
 }

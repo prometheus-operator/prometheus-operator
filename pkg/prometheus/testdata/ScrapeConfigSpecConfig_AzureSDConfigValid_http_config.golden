@@ -7,7 +7,16 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   azure_sd_configs:
-  - authentication_method: SDK
+  - authorization:
+      type: Bearer
+      credentials: 00000000-0000-0000-0000-000000000000
+    proxy_url: http://no-proxy.com
+    no_proxy: 0.0.0.0
+    proxy_from_environment: false
+    proxy_connect_header:
+      header:
+      - value
+    authentication_method: SDK
     subscription_id: 11AAAA11-A11A-111A-A111-1111A1111A11
   relabel_configs:
   - source_labels:

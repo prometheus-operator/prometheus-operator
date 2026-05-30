@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
@@ -109,7 +109,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	svc := framework.MakePrometheusService(prometheus.Name, name, corev1.ServiceTypeClusterIP)
 	if _, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, svc); err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", v1.ServiceTypeClusterIP)
+	thanosService := framework.MakeThanosRulerService(thanos.Name, "not-relevant", corev1.ServiceTypeClusterIP)
 	if finalizerFn, err := framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), thanosNamespace, thanosService); err != nil {
 		t.Fatalf("creating Thanos ruler service failed: %v", err)
 	} else {
@@ -275,7 +275,7 @@ func testTRMinReadySeconds(t *testing.T) {
 	kubeClient := framework.KubeClient
 
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
-	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(5))
+	thanosRuler.Spec.MinReadySeconds = new(int32(5))
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	require.NoError(t, err)
 
@@ -283,7 +283,7 @@ func testTRMinReadySeconds(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(5), trSS.Spec.MinReadySeconds)
 
-	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(10))
+	thanosRuler.Spec.MinReadySeconds = new(int32(10))
 	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
 	require.NoError(t, err)
 
@@ -314,7 +314,7 @@ func testTRAlertmanagerConfig(t *testing.T) {
 	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), framework.MakeBasicAlertmanager(ns, name, 1))
 	require.NoError(t, err)
 
-	amSVC := framework.MakeAlertmanagerService(alertmanager.Name, group, v1.ServiceTypeClusterIP)
+	amSVC := framework.MakeAlertmanagerService(alertmanager.Name, group, corev1.ServiceTypeClusterIP)
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, amSVC)
 	require.NoError(t, err)
 
@@ -322,12 +322,12 @@ func testTRAlertmanagerConfig(t *testing.T) {
 	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, framework.MakeBasicPrometheus(ns, name, name, 1))
 	require.NoError(t, err)
 
-	svc := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	svc := framework.MakePrometheusService(prometheus.Name, name, corev1.ServiceTypeClusterIP)
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
 	require.NoError(t, err)
 
 	// Create Secret with Alertmanager config,
-	trAmConfigSecret := &v1.Secret{
+	trAmConfigSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
@@ -347,8 +347,8 @@ alertmanagers:
 	// Create Thanos ruler resource and service
 	thanos := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", svc.Name, svc.Spec.Ports[0].Port))
 	thanos.Spec.EvaluationInterval = "1s"
-	thanos.Spec.AlertManagersConfig = &v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	thanos.Spec.AlertManagersConfig = &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: secretName,
 		},
 		Key: configKey,
@@ -357,7 +357,7 @@ alertmanagers:
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
 	require.NoError(t, err)
 
-	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP))
+	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, framework.MakeThanosRulerService(thanos.Name, group, corev1.ServiceTypeClusterIP))
 	require.NoError(t, err)
 
 	// Create firing rule
@@ -401,7 +401,7 @@ func testTRQueryConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create Secret with query config,
-	trQueryConfSecret := &v1.Secret{
+	trQueryConfSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
@@ -420,8 +420,8 @@ func testTRQueryConfig(t *testing.T) {
 	// setting queryEndpoint to "" as it will be ignored because we set QueryConfig
 	thanos := framework.MakeBasicThanosRuler(name, 1, "")
 	thanos.Spec.EvaluationInterval = "1s"
-	thanos.Spec.QueryConfig = &v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	thanos.Spec.QueryConfig = &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: secretName,
 		},
 		Key: configKey,
@@ -430,7 +430,7 @@ func testTRQueryConfig(t *testing.T) {
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanos)
 	require.NoError(t, err)
 
-	svc := framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP)
+	svc := framework.MakeThanosRulerService(thanos.Name, group, corev1.ServiceTypeClusterIP)
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, svc)
 	require.NoError(t, err)
 
@@ -471,11 +471,11 @@ func testTRCheckStorageClass(t *testing.T) {
 		monitoringv1.ThanosRulerSpec{
 			Storage: &monitoringv1.StorageSpec{
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-					Spec: v1.PersistentVolumeClaimSpec{
-						StorageClassName: ptr.To("unknown-storage-class"),
-						Resources: v1.VolumeResourceRequirements{
-							Requests: v1.ResourceList{
-								v1.ResourceStorage: resource.MustParse("200Mi"),
+					Spec: corev1.PersistentVolumeClaimSpec{
+						StorageClassName: new("unknown-storage-class"),
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("200Mi"),
 							},
 						},
 					},
@@ -515,14 +515,14 @@ func testThanosRulerServiceName(t *testing.T) {
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	name := "test-servicename"
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-service", name),
 			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
 					Port: 9090,
@@ -574,17 +574,17 @@ func testThanosRulerStateless(t *testing.T) {
 	// remote-write receiver for Thanos ruler.
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prometheus.Spec.EnableRemoteWriteReceiver = true
-	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
-	// Ensure that the Promehteus resource selects no rule.
+	// Ensure that Prometheus does not evaluate rules; only Thanos Ruler should.
 	prometheus.Spec.RuleSelector = nil
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
 	require.NoError(t, err)
 
-	promSVC := framework.MakePrometheusService(prometheus.Name, name, v1.ServiceTypeClusterIP)
+	promSVC := framework.MakePrometheusService(prometheus.Name, name, corev1.ServiceTypeClusterIP)
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, promSVC)
 	require.NoError(t, err)
 
 	// Create the query config secret.
-	trQueryConfSecret := &v1.Secret{
+	trQueryConfSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: secretName,
 		},
@@ -604,15 +604,15 @@ func testThanosRulerStateless(t *testing.T) {
 	thanos.Spec.EvaluationInterval = "1s"
 	thanos.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{
 		{
-			URL: fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
+			URL: monitoringv1.URL(fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
 			// Ensure that samples are sent ASAP to the remote write receiver.
 			QueueConfig: &monitoringv1.QueueConfig{
 				MaxSamplesPerSend: 1,
 			},
 		},
 	}
-	thanos.Spec.QueryConfig = &v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	thanos.Spec.QueryConfig = &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: secretName,
 		},
 		Key: configKey,
@@ -621,7 +621,7 @@ func testThanosRulerStateless(t *testing.T) {
 	_, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, thanos)
 	require.NoError(t, err)
 
-	svc := framework.MakeThanosRulerService(thanos.Name, group, v1.ServiceTypeClusterIP)
+	svc := framework.MakeThanosRulerService(thanos.Name, group, corev1.ServiceTypeClusterIP)
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc)
 	require.NoError(t, err)
 
@@ -635,4 +635,89 @@ func testThanosRulerStateless(t *testing.T) {
 	// Check that the ALERTS metric is present in Prometheus.
 	err = framework.WaitForPrometheusFiringAlert(context.Background(), ns, promSVC.Name, testAlert)
 	require.NoError(t, err)
+}
+
+func testThanosRulerScaleUpWithoutLabels(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create a ThanosRuler resource with 1 replica
+	tr, err := framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com"))
+	require.NoError(t, err)
+
+	// Remove all labels on the StatefulSet using Patch
+	stsName := fmt.Sprintf("thanos-ruler-%s", name)
+	err = framework.RemoveAllLabelsFromStatefulSet(ctx, stsName, ns)
+	require.NoError(t, err)
+
+	// Scale up the ThanosRuler resource to 2 replicas
+	_, err = framework.UpdateThanosRulerReplicasAndWaitUntilReady(ctx, tr.Name, ns, 2)
+	require.NoError(t, err)
+
+	// Verify the StatefulSet now has labels again (restored by the operator)
+	stsClient := framework.KubeClient.AppsV1().StatefulSets(ns)
+	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}
+
+func testThanosRulerStatusUpdatedReplicasRollback(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+
+	// Create a ThanosRuler resource with 1 replica.
+	_, err := framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, framework.MakeBasicThanosRuler(name, 1, "http://test.example.com"))
+	require.NoError(t, err)
+
+	// Verify the initial status has updatedReplicas=1.
+	tr, err := framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, int32(1), tr.Status.UpdatedReplicas, "expected initial updatedReplicas to be 1")
+
+	// Patch the status.updatedReplicas field to 0 to simulate a race condition
+	// in the status reconciliation.
+	tr, err = framework.MonClientV1.ThanosRulers(ns).Patch(
+		ctx,
+		name,
+		types.JSONPatchType,
+		[]byte(`[{"op":"replace","path":"/status/updatedReplicas","value":0}]`),
+		metav1.PatchOptions{},
+		"status",
+	)
+	require.NoError(t, err)
+	// Verify the field was set to 0
+	require.Equal(t, int32(0), tr.Status.UpdatedReplicas, "expected updatedReplicas to be 0 after patch")
+
+	// Wait for the operator to reconcile and rollback the status field to 1.
+	var loopError error
+	err = wait.PollUntilContextTimeout(ctx, time.Second, 2*framework.DefaultTimeout, true, func(_ context.Context) (bool, error) {
+		ctx := context.Background()
+		tr, loopError = framework.MonClientV1.ThanosRulers(ns).Get(ctx, name, metav1.GetOptions{})
+		if loopError != nil {
+			return false, nil
+		}
+
+		if tr.Status.UpdatedReplicas == 1 {
+			return true, nil
+		}
+
+		loopError = fmt.Errorf("expected updatedReplicas to be rolled back to 1, but got %d", tr.Status.UpdatedReplicas)
+		return false, nil
+	})
+
+	if err != nil {
+		t.Fatalf("waiting for status field to be rolled back: %v: %v", err, loopError)
+	}
 }

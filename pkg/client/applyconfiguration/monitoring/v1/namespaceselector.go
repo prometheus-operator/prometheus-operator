@@ -18,8 +18,17 @@ package v1
 
 // NamespaceSelectorApplyConfiguration represents a declarative configuration of the NamespaceSelector type for use
 // with apply.
+//
+// NamespaceSelector is a selector for selecting either all namespaces or a
+// list of namespaces.
+// If `any` is true, it takes precedence over `matchNames`.
+// If `matchNames` is empty and `any` is false, it means that the objects are
+// selected from the current namespace.
 type NamespaceSelectorApplyConfiguration struct {
-	Any        *bool    `json:"any,omitempty"`
+	// any defines the boolean describing whether all namespaces are selected in contrast to a
+	// list restricting them.
+	Any *bool `json:"any,omitempty"`
+	// matchNames defines the list of namespace names to select from.
 	MatchNames []string `json:"matchNames,omitempty"`
 }
 

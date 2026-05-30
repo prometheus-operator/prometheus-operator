@@ -16,16 +16,20 @@
 
 package v1beta1
 
-import (
-	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
-)
-
 // RocketChatActionConfigApplyConfiguration represents a declarative configuration of the RocketChatActionConfig type for use
 // with apply.
+//
+// RocketChatActionConfig defines actions for RocketChat messages.
 type RocketChatActionConfigApplyConfiguration struct {
-	Text *string                `json:"text,omitempty"`
-	URL  *monitoringv1beta1.URL `json:"url,omitempty"`
-	Msg  *string                `json:"msg,omitempty"`
+	// text defines the button text displayed to users.
+	// This is the label that appears on the interactive button.
+	Text *string `json:"text,omitempty"`
+	// url defines the URL the button links to when clicked.
+	// This creates a clickable button that opens the specified URL.
+	URL *string `json:"url,omitempty"`
+	// msg defines the message to send when the button is clicked.
+	// This allows the button to post a predefined message to the channel.
+	Msg *string `json:"msg,omitempty"`
 }
 
 // RocketChatActionConfigApplyConfiguration constructs a declarative configuration of the RocketChatActionConfig type for use with
@@ -45,7 +49,7 @@ func (b *RocketChatActionConfigApplyConfiguration) WithText(value string) *Rocke
 // WithURL sets the URL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the URL field is set to the value of the last call.
-func (b *RocketChatActionConfigApplyConfiguration) WithURL(value monitoringv1beta1.URL) *RocketChatActionConfigApplyConfiguration {
+func (b *RocketChatActionConfigApplyConfiguration) WithURL(value string) *RocketChatActionConfigApplyConfiguration {
 	b.URL = &value
 	return b
 }

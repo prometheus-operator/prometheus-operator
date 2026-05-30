@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,9 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
@@ -64,6 +65,10 @@ func TestMakeRulesConfigMaps(t *testing.T) {
 
 	// UTF-8 validation.
 	t.Run("UTF8Validation", TestUTF8Validation)
+
+	// Experimental functions.
+	t.Run("shouldRejectRuleWithExperimentalFunction", shouldRejectRuleWithExperimentalFunction)
+	t.Run("shouldAcceptRuleWithExperimentalFunction", shouldAcceptRuleWithExperimentalFunction)
 }
 
 func newRuleSelectorForConfigGeneration(ruleFormat RuleConfigurationFormat, version semver.Version) PrometheusRuleSelector {
@@ -523,10 +528,10 @@ func shouldErrorOnTooLargePrometheusRule(t *testing.T) {
 		},
 	}
 
-	err := ValidateRule(ruleSpec, model.UTF8Validation)
+	err := ValidateRule(ruleSpec, model.UTF8Validation, parser.Options{})
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with UTF8Validation")
 
-	err = ValidateRule(ruleSpec, model.LegacyValidation)
+	err = ValidateRule(ruleSpec, model.LegacyValidation, parser.Options{})
 	require.NotEmpty(t, err, "expected ValidateRule to return error of size limit with LegacyValidation")
 }
 
@@ -689,10 +694,37 @@ func createUTF8Rule() *monitoringv1.PrometheusRule {
 	}
 }
 
+// mad_over_time is an experimental PromQL function gated by EnableExperimentalFunctions.
+func ruleSpecWithExperimentalFunction() monitoringv1.PrometheusRuleSpec {
+	return monitoringv1.PrometheusRuleSpec{
+		Groups: []monitoringv1.RuleGroup{
+			{
+				Name: "group",
+				Rules: []monitoringv1.Rule{
+					{
+						Record: "record",
+						Expr:   intstr.FromString("mad_over_time(some_metric[5m])"),
+					},
+				},
+			},
+		},
+	}
+}
+
+func shouldRejectRuleWithExperimentalFunction(t *testing.T) {
+	errs := ValidateRule(ruleSpecWithExperimentalFunction(), model.LegacyValidation, parser.Options{})
+	require.NotEmpty(t, errs, "expected ValidateRule to return an error when experimental functions are disabled")
+}
+
+func shouldAcceptRuleWithExperimentalFunction(t *testing.T) {
+	errs := ValidateRule(ruleSpecWithExperimentalFunction(), model.LegacyValidation, parser.Options{EnableExperimentalFunctions: true})
+	require.Empty(t, errs, "expected ValidateRule to succeed when experimental functions are enabled")
+}
+
 func TestPrometheusRuleSync(t *testing.T) {
 	c := fake.NewClientset(
 		// This configmap should be left untouched.
-		&v1.ConfigMap{
+		&corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "prometheus-bar-rulefiles-0",
 				Namespace: "monitoring",

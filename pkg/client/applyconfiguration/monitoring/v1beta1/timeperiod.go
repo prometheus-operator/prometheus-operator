@@ -22,12 +22,19 @@ import (
 
 // TimePeriodApplyConfiguration represents a declarative configuration of the TimePeriod type for use
 // with apply.
+//
+// TimePeriod describes periods of time.
 type TimePeriodApplyConfiguration struct {
-	Times       []TimeRangeApplyConfiguration       `json:"times,omitempty"`
-	Weekdays    []monitoringv1beta1.WeekdayRange    `json:"weekdays,omitempty"`
+	// times defines a list of TimeRange
+	Times []TimeRangeApplyConfiguration `json:"times,omitempty"`
+	// weekdays defines a list of WeekdayRange
+	Weekdays []monitoringv1beta1.WeekdayRange `json:"weekdays,omitempty"`
+	// daysOfMonth defines a list of DayOfMonthRange
 	DaysOfMonth []DayOfMonthRangeApplyConfiguration `json:"daysOfMonth,omitempty"`
-	Months      []monitoringv1beta1.MonthRange      `json:"months,omitempty"`
-	Years       []monitoringv1beta1.YearRange       `json:"years,omitempty"`
+	// months defines a list of MonthRange
+	Months []monitoringv1beta1.MonthRange `json:"months,omitempty"`
+	// years defines a list of YearRange
+	Years []monitoringv1beta1.YearRange `json:"years,omitempty"`
 }
 
 // TimePeriodApplyConfiguration constructs a declarative configuration of the TimePeriod type for use with

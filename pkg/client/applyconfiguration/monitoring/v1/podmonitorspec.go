@@ -24,25 +24,84 @@ import (
 
 // PodMonitorSpecApplyConfiguration represents a declarative configuration of the PodMonitorSpec type for use
 // with apply.
+//
+// PodMonitorSpec contains specification parameters for a PodMonitor.
 type PodMonitorSpecApplyConfiguration struct {
-	JobLabel                                *string                                 `json:"jobLabel,omitempty"`
-	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
-	PodMetricsEndpoints                     []PodMetricsEndpointApplyConfiguration  `json:"podMetricsEndpoints,omitempty"`
-	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
-	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
-	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
-	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
-	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
-	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
-	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
+	// jobLabel defines the label to use to retrieve the job name from.
+	// `jobLabel` selects the label from the associated Kubernetes `Pod`
+	// object which will be used as the `job` label for all metrics.
+	//
+	// For example if `jobLabel` is set to `foo` and the Kubernetes `Pod`
+	// object is labeled with `foo: bar`, then Prometheus adds the `job="bar"`
+	// label to all ingested metrics.
+	//
+	// If the value of this field is empty, the `job` label of the metrics
+	// defaults to the namespace and name of the PodMonitor object (e.g. `<namespace>/<name>`).
+	JobLabel *string `json:"jobLabel,omitempty"`
+	// podTargetLabels defines the labels which are transferred from the
+	// associated Kubernetes `Pod` object onto the ingested metrics.
+	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// podMetricsEndpoints defines how to scrape metrics from the selected pods.
+	PodMetricsEndpoints []PodMetricsEndpointApplyConfiguration `json:"podMetricsEndpoints,omitempty"`
+	// selector defines the label selector to select the Kubernetes `Pod` objects to scrape metrics from.
+	Selector *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	// selectorMechanism defines the mechanism used to select the endpoints to scrape.
+	// By default, the selection process relies on relabel configurations to filter the discovered targets.
+	// Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+	// Which strategy is best for your use case needs to be carefully evaluated.
+	//
+	// It requires Prometheus >= v2.17.0.
+	SelectorMechanism *monitoringv1.SelectorMechanism `json:"selectorMechanism,omitempty"`
+	// namespaceSelector defines in which namespace(s) Prometheus should discover the pods.
+	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
+	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
+	// sampleLimit defines a per-scrape limit on the number of scraped samples
+	// that will be accepted.
+	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	// targetLimit defines a limit on the number of scraped targets that will
+	// be accepted.
+	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelValueLengthLimit                   *uint64 `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                           `json:"keepDroppedTargets,omitempty"`
-	AttachMetadata                          *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
-	ScrapeClassName                         *string                           `json:"scrapeClass,omitempty"`
-	BodySizeLimit                           *monitoringv1.ByteSize            `json:"bodySizeLimit,omitempty"`
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	// attachMetadata defines additional metadata which is added to the
+	// discovered targets.
+	//
+	// It requires Prometheus >= v2.35.0.
+	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	// scrapeClass defines the scrape class to apply.
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
+	// bodySizeLimit when defined specifies a job level limit on the size
+	// of uncompressed response body that will be accepted by Prometheus.
+	//
+	// It requires Prometheus >= v2.28.0.
+	BodySizeLimit *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
 }
 
 // PodMonitorSpecApplyConfiguration constructs a declarative configuration of the PodMonitorSpec type for use with

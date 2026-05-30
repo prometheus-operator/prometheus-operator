@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -42,7 +42,7 @@ type tlsAssetKey struct {
 }
 
 // tlsAssetKeyFromSecretSelector returns a tlsAssetKey struct from a secret key selector.
-func tlsAssetKeyFromSecretSelector(ns string, sel *v1.SecretKeySelector) tlsAssetKey {
+func tlsAssetKeyFromSecretSelector(ns string, sel *corev1.SecretKeySelector) tlsAssetKey {
 	return tlsAssetKeyFromSelector(
 		ns,
 		monitoringv1.SecretOrConfigMap{
@@ -172,9 +172,9 @@ func (s *StoreBuilder) TLSAssets() map[string][]byte {
 
 		var b []byte
 		switch v := obj.(type) {
-		case *v1.ConfigMap:
+		case *corev1.ConfigMap:
 			b = []byte(v.Data[tak.key])
-		case *v1.Secret:
+		case *corev1.Secret:
 			b = v.Data[tak.key]
 		}
 

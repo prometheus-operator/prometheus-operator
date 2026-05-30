@@ -17,18 +17,33 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // OAuth2ApplyConfiguration represents a declarative configuration of the OAuth2 type for use
 // with apply.
+//
+// OAuth2 configures OAuth2 settings.
 type OAuth2ApplyConfiguration struct {
-	ClientID                      *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
-	ClientSecret                  *corev1.SecretKeySelector            `json:"clientSecret,omitempty"`
-	TokenURL                      *string                              `json:"tokenUrl,omitempty"`
-	Scopes                        []string                             `json:"scopes,omitempty"`
-	EndpointParams                map[string]string                    `json:"endpointParams,omitempty"`
-	TLSConfig                     *SafeTLSConfigApplyConfiguration     `json:"tlsConfig,omitempty"`
+	// clientId defines a key of a Secret or ConfigMap containing the
+	// OAuth2 client's ID.
+	ClientID *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
+	// clientSecret defines a key of a Secret containing the OAuth2
+	// client's secret.
+	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
+	// tokenUrl defines the URL to fetch the token from.
+	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
+	// scopes defines the OAuth2 scopes used for the token request.
+	Scopes []string `json:"scopes,omitempty"`
+	// endpointParams configures the HTTP parameters to append to the token
+	// URL.
+	EndpointParams map[string]string `json:"endpointParams,omitempty"`
+	// tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
+	// It requires Prometheus >= v2.43.0.
+	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// Proxy configuration to use when connecting to the OAuth2 server.
+	// It requires Prometheus >= v2.43.0.
 	ProxyConfigApplyConfiguration `json:",inline"`
 }
 
@@ -57,7 +72,7 @@ func (b *OAuth2ApplyConfiguration) WithClientSecret(value corev1.SecretKeySelect
 // WithTokenURL sets the TokenURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TokenURL field is set to the value of the last call.
-func (b *OAuth2ApplyConfiguration) WithTokenURL(value string) *OAuth2ApplyConfiguration {
+func (b *OAuth2ApplyConfiguration) WithTokenURL(value monitoringv1.URL) *OAuth2ApplyConfiguration {
 	b.TokenURL = &value
 	return b
 }

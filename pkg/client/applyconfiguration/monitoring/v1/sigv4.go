@@ -22,13 +22,28 @@ import (
 
 // Sigv4ApplyConfiguration represents a declarative configuration of the Sigv4 type for use
 // with apply.
+//
+// Sigv4 defines AWS's Signature Verification 4 signing process to
+// sign requests.
 type Sigv4ApplyConfiguration struct {
-	Region             *string                   `json:"region,omitempty"`
-	AccessKey          *corev1.SecretKeySelector `json:"accessKey,omitempty"`
-	SecretKey          *corev1.SecretKeySelector `json:"secretKey,omitempty"`
-	Profile            *string                   `json:"profile,omitempty"`
-	RoleArn            *string                   `json:"roleArn,omitempty"`
-	UseFIPSSTSEndpoint *bool                     `json:"useFIPSSTSEndpoint,omitempty"`
+	// region defines the AWS region. If blank, the region from the default credentials chain used.
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the AWS API key. If not specified, the environment variable
+	// `AWS_ACCESS_KEY_ID` is used.
+	AccessKey *corev1.SecretKeySelector `json:"accessKey,omitempty"`
+	// secretKey defines the AWS API secret. If not specified, the environment
+	// variable `AWS_SECRET_ACCESS_KEY` is used.
+	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// profile defines the named AWS profile used to authenticate.
+	Profile *string `json:"profile,omitempty"`
+	// roleArn defines the named AWS profile used to authenticate.
+	RoleArn *string `json:"roleArn,omitempty"`
+	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+	ExternalID *string `json:"externalId,omitempty"`
+	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
+	// It requires Prometheus >= v2.54.0.
+	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
 }
 
 // Sigv4ApplyConfiguration constructs a declarative configuration of the Sigv4 type for use with
@@ -74,6 +89,14 @@ func (b *Sigv4ApplyConfiguration) WithProfile(value string) *Sigv4ApplyConfigura
 // If called multiple times, the RoleArn field is set to the value of the last call.
 func (b *Sigv4ApplyConfiguration) WithRoleArn(value string) *Sigv4ApplyConfiguration {
 	b.RoleArn = &value
+	return b
+}
+
+// WithExternalID sets the ExternalID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExternalID field is set to the value of the last call.
+func (b *Sigv4ApplyConfiguration) WithExternalID(value string) *Sigv4ApplyConfiguration {
+	b.ExternalID = &value
 	return b
 }
 

@@ -24,19 +24,44 @@ import (
 
 // KubernetesSDConfigApplyConfiguration represents a declarative configuration of the KubernetesSDConfig type for use
 // with apply.
+//
+// KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 type KubernetesSDConfigApplyConfiguration struct {
-	APIServer                        *string                                 `json:"apiServer,omitempty"`
-	Role                             *monitoringv1alpha1.KubernetesRole      `json:"role,omitempty"`
-	Namespaces                       *NamespaceDiscoveryApplyConfiguration   `json:"namespaces,omitempty"`
-	AttachMetadata                   *AttachMetadataApplyConfiguration       `json:"attachMetadata,omitempty"`
-	Selectors                        []K8SSelectorConfigApplyConfiguration   `json:"selectors,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
+	// apiServer defines the API server address consisting of a hostname or IP address followed
+	// by an optional port number.
+	// If left empty, Prometheus is assumed to run inside
+	// of the cluster. It will discover API servers automatically and use the pod's
+	// CA certificate and bearer token file at /var/run/secrets/kubernetes.io/serviceaccount/.
+	APIServer *string `json:"apiServer,omitempty"`
+	// role defines the Kubernetes role of the entities that should be discovered.
+	// Role `Endpointslice` requires Prometheus >= v2.21.0
+	Role *monitoringv1alpha1.KubernetesRole `json:"role,omitempty"`
+	// namespaces defines the namespace discovery. If omitted, Prometheus discovers targets across all namespaces.
+	Namespaces *NamespaceDiscoveryApplyConfiguration `json:"namespaces,omitempty"`
+	// attachMetadata defines the metadata to attach to discovered targets.
+	// It requires Prometheus >= v2.35.0 when using the `Pod` role and
+	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
+	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	// selectors defines the selector to select objects.
+	// It requires Prometheus >= v2.17.0
+	Selectors []K8SSelectorConfigApplyConfiguration `json:"selectors,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the authorization header to use on every scrape request.
+	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
+	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	OAuth2                           *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Kubernetes API.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 
 // KubernetesSDConfigApplyConfiguration constructs a declarative configuration of the KubernetesSDConfig type for use with

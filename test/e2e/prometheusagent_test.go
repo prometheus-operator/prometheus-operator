@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,12 +30,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -139,11 +138,11 @@ func testAgentCheckStorageClass(t *testing.T) {
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Storage: &monitoringv1.StorageSpec{
 					VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-						Spec: v1.PersistentVolumeClaimSpec{
-							StorageClassName: ptr.To("unknown-storage-class"),
-							Resources: v1.VolumeResourceRequirements{
-								Requests: v1.ResourceList{
-									v1.ResourceStorage: resource.MustParse("200Mi"),
+						Spec: corev1.PersistentVolumeClaimSpec{
+							StorageClassName: new("unknown-storage-class"),
+							Resources: corev1.VolumeResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceStorage: resource.MustParse("200Mi"),
 								},
 							},
 						},
@@ -214,9 +213,9 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("100Mi"),
+	p.Spec.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 
@@ -236,9 +235,9 @@ func testPromAgentDaemonSetResourceUpdate(t *testing.T) {
 		ns,
 		monitoringv1alpha1.PrometheusAgentSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Resources: v1.ResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceMemory: resource.MustParse("200Mi"),
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceMemory: resource.MustParse("200Mi"),
 					},
 				},
 			},
@@ -286,9 +285,9 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	name := "test"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("100Mi"),
+	p.Spec.Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("100Mi"),
 		},
 	}
 
@@ -302,9 +301,9 @@ func testPromAgentReconcileDaemonSetResourceUpdate(t *testing.T) {
 	res := dms.Spec.Template.Spec.Containers[0].Resources
 	require.Equal(t, res, p.Spec.Resources)
 
-	dms.Spec.Template.Spec.Containers[0].Resources = v1.ResourceRequirements{
-		Requests: v1.ResourceList{
-			v1.ResourceMemory: resource.MustParse("200Mi"),
+	dms.Spec.Template.Spec.Containers[0].Resources = corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
 		},
 	}
 	framework.KubeClient.AppsV1().DaemonSets(ns).Update(ctx, dms, metav1.UpdateOptions{})
@@ -394,7 +393,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 	require.NoError(t, err)
 
 	var pollErr error
-	var paPods *v1.PodList
+	var paPods *corev1.PodList
 	var firstTargetIP string
 	var secondTargetIP string
 
@@ -594,14 +593,14 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 	name := "test-agent-servicename"
 
-	svc := &v1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-service", name),
 			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
-			Type: v1.ServiceTypeLoadBalancer,
-			Ports: []v1.ServicePort{
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
 				{
 					Name: "web",
 					Port: 9090,
@@ -686,7 +685,7 @@ func testDaemonSetInvalidReplicas(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// no replicas should be set in Daemonsets
-	p.Spec.Replicas = ptr.To(int32(3))
+	p.Spec.Replicas = new(int32(3))
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -716,11 +715,11 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 	// storage should not be set in Daemonsets
 	p.Spec.CommonPrometheusFields.Storage = &monitoringv1.StorageSpec{
 		VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
-			Spec: v1.PersistentVolumeClaimSpec{
-				StorageClassName: ptr.To("standard"),
-				Resources: v1.VolumeResourceRequirements{
-					Requests: v1.ResourceList{
-						v1.ResourceStorage: resource.MustParse("200Mi"),
+			Spec: corev1.PersistentVolumeClaimSpec{
+				StorageClassName: new("standard"),
+				Resources: corev1.VolumeResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: resource.MustParse("200Mi"),
 					},
 				},
 			},
@@ -753,7 +752,7 @@ func testDaemonSetInvalidShards(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// shards cannot be greater than 1 in DaemonSets
-	p.Spec.Shards = ptr.To(int32(2))
+	p.Spec.Shards = new(int32(2))
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -998,8 +997,8 @@ func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 	name := "test-invalid-additional-scrape-configs"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.AdditionalScrapeConfigs = &v1.SecretKeySelector{
-		LocalObjectReference: v1.LocalObjectReference{
+	p.Spec.AdditionalScrapeConfigs = &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{
 			Name: "test-secret",
 		},
 		Key: "key",

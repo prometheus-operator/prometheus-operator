@@ -18,9 +18,15 @@ package v1alpha1
 
 // NamespaceDiscoveryApplyConfiguration represents a declarative configuration of the NamespaceDiscovery type for use
 // with apply.
+//
+// NamespaceDiscovery is the configuration for discovering
+// Kubernetes namespaces.
 type NamespaceDiscoveryApplyConfiguration struct {
-	IncludeOwnNamespace *bool    `json:"ownNamespace,omitempty"`
-	Names               []string `json:"names,omitempty"`
+	// ownNamespace includes the namespace in which the Prometheus pod runs to the list of watched namespaces.
+	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"`
+	// names defines a list of namespaces where to watch for resources.
+	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	Names []string `json:"names,omitempty"`
 }
 
 // NamespaceDiscoveryApplyConfiguration constructs a declarative configuration of the NamespaceDiscovery type for use with

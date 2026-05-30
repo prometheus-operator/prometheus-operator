@@ -18,8 +18,14 @@ package v1
 
 // WebHTTPConfigApplyConfiguration represents a declarative configuration of the WebHTTPConfig type for use
 // with apply.
+//
+// WebHTTPConfig defines HTTP parameters for web server.
 type WebHTTPConfigApplyConfiguration struct {
-	HTTP2   *bool                             `json:"http2,omitempty"`
+	// http2 enable HTTP/2 support. Note that HTTP/2 is only supported with TLS.
+	// When TLSConfig is not configured, HTTP/2 will be disabled.
+	// Whenever the value of the field changes, a rolling update will be triggered.
+	HTTP2 *bool `json:"http2,omitempty"`
+	// headers defines a list of headers that can be added to HTTP responses.
 	Headers *WebHTTPHeadersApplyConfiguration `json:"headers,omitempty"`
 }
 
