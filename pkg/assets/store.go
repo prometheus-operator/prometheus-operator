@@ -20,11 +20,13 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -317,6 +319,8 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel c
 		return "", errors.New("namespace cannot be empty")
 	}
 
+	optional := ptr.Deref(sel.Optional, false)
+
 	sec := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sel.Name,
@@ -332,6 +336,9 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel c
 	if !exists {
 		secret, err := s.sClient.Secrets(namespace).Get(ctx, sel.Name, metav1.GetOptions{})
 		if err != nil {
+			if apierrors.IsNotFound(err) && optional {
+				return "", nil
+			}
 			return "", fmt.Errorf("unable to get secret %q: %w", sel.Name, err)
 		}
 		if err = s.objStore.Add(secret); err != nil {
@@ -342,6 +349,9 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel c
 
 	secret := obj.(*corev1.Secret)
 	if _, found := secret.Data[sel.Key]; !found {
+		if optional {
+			return "", nil
+		}
 		return "", fmt.Errorf("key %q in secret %q not found", sel.Key, sel.Name)
 	}
 
@@ -387,17 +397,25 @@ func (cos *cacheOnlyStore) GetConfigMapKey(sel corev1.ConfigMapKeySelector) (str
 }
 
 func (cos *cacheOnlyStore) GetSecretKey(sel corev1.SecretKeySelector) ([]byte, error) {
+	optional := ptr.Deref(sel.Optional, false)
+
 	obj, exists, err := cos.c.Get(&corev1.Secret{ObjectMeta: metav1.ObjectMeta{Name: sel.Name, Namespace: cos.ns}})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret %s/%s: %w", cos.ns, sel.Name, err)
 	}
 
 	if !exists {
+		if optional {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("secret %s/%s not found", cos.ns, sel.Name)
 	}
 
 	s := obj.(*corev1.Secret)
 	if _, found := s.Data[sel.Key]; !found {
+		if optional {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("key %q in secret %s/%s not found", sel.Key, cos.ns, sel.Name)
 	}
 
