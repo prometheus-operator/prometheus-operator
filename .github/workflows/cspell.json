@@ -425,6 +425,9 @@
     "FIPSSTS",
     "checkmark",
     "STARTTLS",
-    "MLKEM"
+    "MLKEM",
+    "slashexx",
+    "Errorf",
+    "prompkg"
   ]
 }
