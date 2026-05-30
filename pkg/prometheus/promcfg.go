@@ -90,7 +90,7 @@ type ConfigGenerator struct {
 	daemonSet                   bool
 	prometheusTopologySharding  bool
 	prometheusRetentionPolicies bool
-	podTopologyLabelsSupported  bool // True when K8s >= 1.35 (PodTopologyLabelsAdmission).
+	podTopologyLabelsSupported  bool
 	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
@@ -122,11 +122,9 @@ func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
 	}
 }
 
-// WithPodTopologyLabelsSupport tells the config generator that K8s >= 1.35 is
-// available, meaning the PodTopologyLabelsAdmission feature gate automatically
-// injects topology.kubernetes.io/zone as a pod label. When enabled, the operator
+// WithPodTopologyLabelsSupport tells the config generator that the topology.kubernetes.io/zone label is injected as a pod label. In that case, the operator
 // no longer forces attach_metadata.node=true for topology sharding and instead
-// uses the pod label SD meta label for zone detection.
+// uses the pod label for zone detection.
 func WithPodTopologyLabelsSupport() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.podTopologyLabelsSupported = true
@@ -5408,11 +5406,11 @@ func (cg *ConfigGenerator) InzoneShardForShard(shardIndex int32) int32 {
 	return shardIndex / numZones
 }
 
-// mergeAttachMetadataForTopology forces attach_metadata.node=true when topology
-// sharding is active, unless K8s >= 1.35 (podTopologyLabelsSupported). In the
-// latter case, PodTopologyLabelsAdmission injects the zone label onto pods so
-// node metadata is no longer required.
-// Returns amc unchanged when topology sharding is not active or node is already true.
+// mergeAttachMetadataForTopology returns amc unchanged when topology sharding is
+// not active, when podTopologyLabelsSupported is true (zone label is injected
+// directly onto pods), or when node metadata is already requested.
+// Otherwise it forces attach_metadata.node=true so that zone detection via node
+// labels is available.
 func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataConfig, minimumVersion string) *attachMetadataConfig {
 	if !cg.isTopologyShardingActive() {
 		return amc
