@@ -10940,6 +10940,40 @@ func TestScrapeClass(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:   "Monitor object with valid ServerName Go template in Scrape Class",
+			golden: "monitorObjectWithScrapeClassAndValidServerNameTemplate.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name:    "test-tls-scrape-class",
+					Default: new(true),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							ServerName: new(monitoringv1.TemplateString("{{ .Name }}.example.com")),
+						},
+					},
+				},
+			},
+		},
+		// An invalid ServerName in a ScrapeClass doesn't return an error
+		// because we don't have the information about the resoure metadata
+		// when we load the scrape class. Instead invalid templates are
+		// injected as-is into the generated configuration.
+		{
+			name:   "Monitor object with invalid ServerName Go template in Scrape Class",
+			golden: "monitorObjectWithScrapeClassAndInvalidServerNameTemplate.golden",
+			scrapeClass: []monitoringv1.ScrapeClass{
+				{
+					Name:    "test-tls-scrape-class",
+					Default: new(true),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							ServerName: new(monitoringv1.TemplateString("{{ .Name")),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -14937,6 +14971,290 @@ func TestInzoneShardForShard(t *testing.T) {
 			for i, exp := range tc.expected {
 				require.Equal(t, exp, cg.InzoneShardForShard(int32(i)))
 			}
+		})
+	}
+}
+
+func TestServerNameTemplate(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		golden      string
+		scrapeClass *monitoringv1.ScrapeClass
+		smon        *monitoringv1.ServiceMonitor
+		pmon        *monitoringv1.PodMonitor
+		probe       *monitoringv1.Probe
+		sc          *monitoringv1alpha1.ScrapeConfig
+	}{
+		{
+			name:   "ServiceMonitor with serverName template",
+			golden: "ServerNameTemplate_ServiceMonitor.golden",
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-service-monitor",
+					Namespace: "my-namespace",
+					Labels:    map[string]string{"tls-server-name": "my-server"},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "my-app"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+								HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+									TLSConfig: &monitoringv1.TLSConfig{
+										SafeTLSConfig: monitoringv1.SafeTLSConfig{
+											ServerName: new(monitoringv1.TemplateString(`{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`)),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with serverName template using labels",
+			golden: "ServerNameTemplate_PodMonitor.golden",
+			pmon: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-pod-monitor",
+					Namespace: "my-namespace",
+					Labels:    map[string]string{"tls-server-name": "my-server"},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "my-app"},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     new("web"),
+							Interval: "30s",
+							HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+								HTTPConfig: monitoringv1.HTTPConfig{
+									TLSConfig: &monitoringv1.SafeTLSConfig{
+										ServerName: new(monitoringv1.TemplateString(`{{ index .Labels "tls-server-name" }}`)),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "Probe with serverName template",
+			golden: "ServerNameTemplate_Probe.golden",
+			probe: &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-probe",
+					Namespace: "my-namespace",
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{"prometheus.io"},
+						},
+					},
+					HTTPConfig: monitoringv1.HTTPConfig{
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							ServerName: new(monitoringv1.TemplateString(`{{ .Namespace }}.example.com`)),
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "ScrapeConfig with serverName template",
+			golden: "ServerNameTemplate_ScrapeConfig.golden",
+			sc: &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-scrape-config",
+					Namespace: "my-namespace",
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					StaticConfigs: []monitoringv1alpha1.StaticConfig{
+						{
+							Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+						},
+					},
+					TLSConfig: &monitoringv1.SafeTLSConfig{
+						ServerName: new(monitoringv1.TemplateString(`{{ .Name }}.{{ .Namespace }}.svc`)),
+					},
+				},
+			},
+		},
+		{
+			name:   "ServiceMonitor with serverName template injected by scrape class",
+			golden: "ServerNameTemplate_ServiceMonitor.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:    "serverNameTemplate",
+				Default: new(true),
+				TLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						ServerName: new(monitoringv1.TemplateString(`{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`)),
+					},
+				},
+			},
+			smon: &monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-service-monitor",
+					Namespace: "my-namespace",
+					Labels:    map[string]string{"tls-server-name": "my-server"},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "my-app"},
+					},
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "PodMonitor with serverName template injected by scrape class using labels",
+			golden: "ServerNameTemplate_PodMonitor.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:    "serverNameTemplate",
+				Default: new(true),
+				TLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						ServerName: new(monitoringv1.TemplateString(`{{ index .Labels "tls-server-name" }}`)),
+					},
+				},
+			},
+			pmon: &monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-pod-monitor",
+					Namespace: "my-namespace",
+					Labels:    map[string]string{"tls-server-name": "my-server"},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					Selector: metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": "my-app"},
+					},
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     new("web"),
+							Interval: "30s",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "Probe with serverName template injected by scrape class",
+			golden: "ServerNameTemplate_Probe.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:    "serverNameTemplate",
+				Default: new(true),
+				TLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						ServerName: new(monitoringv1.TemplateString(`{{ .Namespace }}.example.com`)),
+					},
+				},
+			},
+			probe: &monitoringv1.Probe{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-probe",
+					Namespace: "my-namespace",
+				},
+				Spec: monitoringv1.ProbeSpec{
+					ProberSpec: monitoringv1.ProberSpec{
+						Scheme: ptr.To(monitoringv1.SchemeHTTP),
+						URL:    "blackbox.exporter.io",
+						Path:   "/probe",
+					},
+					Module: "http_2xx",
+					Targets: monitoringv1.ProbeTargets{
+						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+							Targets: []string{"prometheus.io"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:   "ScrapeConfig with serverName template injected by scrape class",
+			golden: "ServerNameTemplate_ScrapeConfig.golden",
+			scrapeClass: &monitoringv1.ScrapeClass{
+				Name:    "serverNameTemplate",
+				Default: new(true),
+				TLSConfig: &monitoringv1.TLSConfig{
+					SafeTLSConfig: monitoringv1.SafeTLSConfig{
+						ServerName: new(monitoringv1.TemplateString(`{{ .Name }}.{{ .Namespace }}.svc`)),
+					},
+				},
+			},
+			sc: &monitoringv1alpha1.ScrapeConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "my-scrape-config",
+					Namespace: "my-namespace",
+				},
+				Spec: monitoringv1alpha1.ScrapeConfigSpec{
+					StaticConfigs: []monitoringv1alpha1.StaticConfig{
+						{
+							Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			if tc.scrapeClass != nil {
+				p.Spec.ScrapeClasses = append(p.Spec.ScrapeClasses, *tc.scrapeClass)
+			}
+			cg := mustNewConfigGenerator(t, p)
+
+			var smons map[string]*monitoringv1.ServiceMonitor
+			if tc.smon != nil {
+				smons = map[string]*monitoringv1.ServiceMonitor{"monitor": tc.smon}
+			}
+
+			var pmons map[string]*monitoringv1.PodMonitor
+			if tc.pmon != nil {
+				pmons = map[string]*monitoringv1.PodMonitor{"monitor": tc.pmon}
+			}
+
+			var probes map[string]*monitoringv1.Probe
+			if tc.probe != nil {
+				probes = map[string]*monitoringv1.Probe{"monitor": tc.probe}
+			}
+
+			var scs map[string]*monitoringv1alpha1.ScrapeConfig
+			if tc.sc != nil {
+				scs = map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": tc.sc}
+			}
+
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				smons,
+				pmons,
+				probes,
+				scs,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
 		})
 	}
 }

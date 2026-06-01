@@ -3406,7 +3406,7 @@ func (in *SafeTLSConfig) DeepCopyInto(out *SafeTLSConfig) {
 	}
 	if in.ServerName != nil {
 		in, out := &in.ServerName, &out.ServerName
-		*out = new(string)
+		*out = new(TemplateString)
 		**out = **in
 	}
 	if in.InsecureSkipVerify != nil {
