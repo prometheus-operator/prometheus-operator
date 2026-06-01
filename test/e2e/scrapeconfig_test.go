@@ -255,11 +255,11 @@ func testScrapeConfigLifecycle(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "scrapeconfig",
 		},
-	}
+	})
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
@@ -332,17 +332,17 @@ func testScrapeConfigLifecycleInDifferentNS(t *testing.T) {
 	// Make a prometheus object in promns which will select any ScrapeConfig resource with
 	// "group": "sc" and/or "kubernetes.io/metadata.name": <scns>
 	p := framework.MakeBasicPrometheus(promns, "prom", scns, 1)
-	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"kubernetes.io/metadata.name": scns,
 		},
-	}
+	})
 
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": "sc",
 		},
-	}
+	})
 
 	// Make the Prometheus selection surface thin
 	p.Spec.PodMonitorSelector = nil
@@ -504,11 +504,11 @@ func testScrapeConfigKubernetesNodeRole(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "scrapeconfig",
 		},
-	}
+	})
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 
@@ -552,11 +552,11 @@ func testScrapeConfigDNSSDConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	p := framework.MakeBasicPrometheus(ns, "prom", "group", 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"role": "scrapeconfig",
 		},
-	}
+	})
 	_, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 	require.NoError(t, err)
 

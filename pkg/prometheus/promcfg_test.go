@@ -44,14 +44,18 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				PodMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
-				ProbeSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				ProbeSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 				Version:        operator.DefaultPrometheusVersion,
@@ -3129,14 +3133,18 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 				},
 				Version:  version,
 				Replicas: new(int32(1)),
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				ServiceMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": "group1",
+				PodMonitorSelector: &monitoringv1.ValidatedLabelSelector{
+					LabelSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"group": "group1",
+						},
 					},
 				},
 				Resources: corev1.ResourceRequirements{
@@ -3148,9 +3156,11 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 					URL: "https://example.com/remote_write",
 				}},
 			},
-			RuleSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"role": "rulefile",
+			RuleSelector: &monitoringv1.ValidatedLabelSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"role": "rulefile",
+					},
 				},
 			},
 			RemoteRead: []monitoringv1.RemoteReadSpec{{

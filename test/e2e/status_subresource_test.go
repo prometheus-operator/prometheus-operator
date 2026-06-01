@@ -370,11 +370,11 @@ func testProbeStatusSubresource(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -541,11 +541,11 @@ func testScrapeConfigStatusSubresource(t *testing.T) {
 	name := "scfg-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -629,11 +629,11 @@ func testGarbageCollectionOfScrapeConfigBinding(t *testing.T) {
 	name := "scfg-status-binding-cleanup-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -676,11 +676,11 @@ func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
 
 	name := "workload-del-scfg-test"
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err, "failed to create Prometheus")
@@ -757,11 +757,11 @@ func testGarbageCollectionOfProbeBinding(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -814,11 +814,11 @@ func testRmProbeBindingDuringWorkloadDelete(t *testing.T) {
 	targets := []string{svc.Name + ":9090"}
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -865,11 +865,11 @@ func testPrometheusRuleStatusSubresource(t *testing.T) {
 	name := "prometheusrule-status-subresource-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.RuleSelector = &metav1.LabelSelector{
+	p.Spec.RuleSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -969,11 +969,11 @@ func testGarbageCollectionOfPrometheusRuleBinding(t *testing.T) {
 	name := "prom-rule-status-binding-cleanup-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.RuleSelector = &metav1.LabelSelector{
+	p.Spec.RuleSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
@@ -1022,11 +1022,11 @@ func testRmPrometheusRuleBindingDuringWorkloadDelete(t *testing.T) {
 	name := "prom-rule-status-binding-cleanup-test"
 
 	p := framework.MakeBasicPrometheus(ns, name, name, 1)
-	p.Spec.RuleSelector = &metav1.LabelSelector{
+	p.Spec.RuleSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"group": name,
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
 	require.NoError(t, err)
