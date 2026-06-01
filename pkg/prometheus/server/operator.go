@@ -109,6 +109,7 @@ type Operator struct {
 	retentionPoliciesEnabled      bool
 	configResourcesStatusEnabled  bool
 	topologyShardingEnabled       bool
+	podTopologyLabelsSupported    bool
 
 	newEventRecorder operator.NewEventRecorderFunc
 	finalizerSyncer  *operator.FinalizerSyncer
@@ -169,6 +170,16 @@ func WithoutUnmanagedConfiguration() ControllerOption {
 func WithConfigResourceStatus() ControllerOption {
 	return func(o *Operator) {
 		o.configResourcesStatusEnabled = true
+	}
+}
+
+// WithPodTopologyLabels tells that the cluster runs K8s >= 1.35 where
+// PodTopologyLabelsAdmission automatically injects topology labels onto pods.
+// When set, the operator uses pod label SD meta labels for zone detection in
+// topology sharding instead of forcing attach_metadata.node=true.
+func WithPodTopologyLabels() ControllerOption {
+	return func(o *Operator) {
+		o.podTopologyLabelsSupported = true
 	}
 }
 
@@ -957,6 +968,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	}
 	if c.topologyShardingEnabled {
 		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
+	if c.podTopologyLabelsSupported {
+		opts = append(opts, prompkg.WithPodTopologyLabelsSupport())
 	}
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
