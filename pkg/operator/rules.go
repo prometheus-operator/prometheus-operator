@@ -231,7 +231,7 @@ func ValidateRule(promRuleSpec monitoringv1.PrometheusRuleSpec, validationScheme
 		return []error{fmt.Errorf("the length of rendered Prometheus Rule is %d bytes which is above the maximum limit of %d bytes", promRuleSize, MaxConfigMapDataSize)}
 	}
 
-	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parserOptions))
+	_, errs := rulefmt.Parse(content, false, validationScheme, parser.NewParser(parserOptions), slog.New(slog.DiscardHandler))
 	return errs
 }
 
