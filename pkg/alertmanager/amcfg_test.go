@@ -35,6 +35,7 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
@@ -128,7 +129,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					From: new("from"),
 					SmartHost: &monitoringv1.HostPort{
 						Host: "smtp.example.org",
-						Port: "587",
+						Port: intstr.FromString("587"),
 					},
 					Hello:        new("smtp.example.org"),
 					AuthUsername: new("dev@smtp.example.org"),
@@ -842,7 +843,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					From: new("from"),
 					SmartHost: &monitoringv1.HostPort{
 						Host: "smtp.example.org",
-						Port: "587",
+						Port: intstr.FromString("587"),
 					},
 					Hello:        new("smtp.example.org"),
 					AuthUsername: new("dev@smtp.example.org"),
@@ -913,7 +914,7 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 					From: new("from"),
 					SmartHost: &monitoringv1.HostPort{
 						Host: "smtp.example.org",
-						Port: "587",
+						Port: intstr.FromInt32(587),
 					},
 					Hello:        new("smtp.example.org"),
 					AuthUsername: new("dev@smtp.example.org"),

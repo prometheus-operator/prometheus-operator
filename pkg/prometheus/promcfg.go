@@ -2044,16 +2044,28 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	}
 
 	// Filter targets based on correct port for the endpoint.
-	if ep.Port != "" {
-		sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
-		if role == kubernetesSDRoleEndpointSlice {
-			sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+	if ep.Port != nil {
+		if ep.Port.StrVal != "" {
+			sourceLabels := []string{"__meta_kubernetes_endpoint_port_name"}
+			if role == kubernetesSDRoleEndpointSlice {
+				sourceLabels = []string{"__meta_kubernetes_endpointslice_port_name"}
+			}
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				yaml.MapItem{Key: "source_labels", Value: sourceLabels},
+				{Key: "regex", Value: ep.Port.String()},
+			})
+		} else if ep.Port.IntVal != 0 {
+			sourceLabels := []string{"__meta_kubernetes_endpoint_port_number"}
+			if role == kubernetesSDRoleEndpointSlice {
+				sourceLabels = []string{"__meta_kubernetes_endpointslice_port_number"}
+			}
+			relabelings = append(relabelings, yaml.MapSlice{
+				{Key: "action", Value: "keep"},
+				yaml.MapItem{Key: "source_labels", Value: sourceLabels},
+				{Key: "regex", Value: ep.Port.IntValue()},
+			})
 		}
-		relabelings = append(relabelings, yaml.MapSlice{
-			{Key: "action", Value: "keep"},
-			yaml.MapItem{Key: "source_labels", Value: sourceLabels},
-			{Key: "regex", Value: ep.Port},
-		})
 	} else if ep.TargetPort != nil {
 		if ep.TargetPort.StrVal != "" {
 			relabelings = append(relabelings, yaml.MapSlice{
@@ -2153,10 +2165,10 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	// A single service may potentially have multiple metrics
 	//	endpoints, therefore the endpoints labels is filled with the ports name or
 	//	as a fallback the port number.
-	if ep.Port != "" {
+	if ep.Port != nil && ep.Port.String() != "" {
 		relabelings = append(relabelings, yaml.MapSlice{
 			{Key: "target_label", Value: "endpoint"},
-			{Key: "replacement", Value: ep.Port},
+			{Key: "replacement", Value: ep.Port.String()},
 		})
 	} else if ep.TargetPort != nil && ep.TargetPort.String() != "" {
 		relabelings = append(relabelings, yaml.MapSlice{

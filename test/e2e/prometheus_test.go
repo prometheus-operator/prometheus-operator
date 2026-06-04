@@ -136,7 +136,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
 		{
-			Port:     "mtls",
+			Port:     new(intstr.FromString("mtls")),
 			Interval: "1s",
 			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
@@ -2971,7 +2971,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: false,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port:            "web",
+				Port:            new(intstr.FromString("web")),
 				BearerTokenFile: "/etc/ca-certificates/bearer-token",
 			},
 			expectTargets: true,
@@ -2982,7 +2982,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: true,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port:            "web",
+				Port:            new(intstr.FromString("web")),
 				BearerTokenFile: "/etc/ca-certificates/bearer-token",
 			},
 			expectTargets: false,
@@ -2993,7 +2993,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: true,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port: "web",
+				Port: new(intstr.FromString("web")),
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 						HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
@@ -3018,7 +3018,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: false,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port: "web",
+				Port: new(intstr.FromString("web")),
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 						TLSConfig: &monitoringv1.TLSConfig{
@@ -3039,7 +3039,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: true,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port: "web",
+				Port: new(intstr.FromString("web")),
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 						TLSConfig: &monitoringv1.TLSConfig{
@@ -3060,7 +3060,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: true,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port: "web",
+				Port: new(intstr.FromString("web")),
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 						TLSConfig: &monitoringv1.TLSConfig{
@@ -3101,7 +3101,7 @@ func testPromArbitraryFSAcc(t *testing.T) {
 				Deny: true,
 			},
 			endpoint: monitoringv1.Endpoint{
-				Port: "web",
+				Port: new(intstr.FromString("web")),
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 						TLSConfig: &monitoringv1.TLSConfig{
@@ -3359,7 +3359,7 @@ func testPromTLSConfigViaSecret(t *testing.T) {
 	sm := framework.MakeBasicServiceMonitor(name)
 	sm.Spec.Endpoints = []monitoringv1.Endpoint{
 		{
-			Port:     "mtls",
+			Port:     new(intstr.FromString("mtls")),
 			Interval: "30s",
 			Scheme:   ptr.To(monitoringv1.SchemeHTTPS),
 			HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
@@ -5659,7 +5659,7 @@ func testPrometheusUTF8MetricsSupport(t *testing.T) {
 				MatchLabels: map[string]string{"app": "instrumented-sample-app"},
 			},
 			Endpoints: []monitoringv1.Endpoint{{
-				Port:     "web",
+				Port:     new(intstr.FromString("web")),
 				Interval: "30s",
 				HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 					HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
@@ -5891,7 +5891,7 @@ func testPrometheusUTF8LabelSupport(t *testing.T) {
 				MatchLabels: map[string]string{"app.name": "instrumented-sample-app"},
 			},
 			Endpoints: []monitoringv1.Endpoint{{
-				Port:     "web",
+				Port:     new(intstr.FromString("web")),
 				Interval: "2s",
 				RelabelConfigs: []monitoringv1.RelabelConfig{{
 					SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_service_label_cluster"},

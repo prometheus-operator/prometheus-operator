@@ -19,6 +19,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -116,7 +117,7 @@ func (f *Framework) DeployAppServiceMonitor(ctx context.Context, ns string) erro
 	sm := f.MakeBasicServiceMonitor(AppGroupLabel)
 	sm.Spec.Endpoints[0] = monitoringv1.Endpoint{
 		Interval: monitoringv1.Duration("5s"),
-		Port:     "web",
+		Port:     new(intstr.FromString("web")),
 		HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
 			HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
 				HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{

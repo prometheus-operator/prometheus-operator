@@ -1877,9 +1877,16 @@
                                     "type": "string"
                                   },
                                   "port": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer"
+                                      },
+                                      {
+                                        "type": "string"
+                                      }
+                                    ],
                                     "description": "port defines the host's port, it can be a literal port number or a port name.",
-                                    "minLength": 1,
-                                    "type": "string"
+                                    "x-kubernetes-int-or-string": true
                                   }
                                 },
                                 "required": [
