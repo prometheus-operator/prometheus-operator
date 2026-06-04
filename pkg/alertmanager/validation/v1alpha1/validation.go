@@ -55,7 +55,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		receiverNames[receiver.Name] = struct{}{}
 
 		if err := validateOpsGenieConfigs(receiver.OpsGenieConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'opsgenieConfigs': %w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %s: 'opsgenieConfigs'%w", receiver.Name, err)
 		}
 
 		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
@@ -83,7 +83,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'victoropsConfis%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %s: 'victoropsConfis'%w", receiver.Name, err)
 		}
 
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
