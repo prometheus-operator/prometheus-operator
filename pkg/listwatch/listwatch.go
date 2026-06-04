@@ -349,10 +349,7 @@ func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
 	pblw.cancelPoll = cancel
 	pblw.mtx.Unlock()
 
-	pblw.pollWg.Add(1)
-	go func() {
-		defer pblw.pollWg.Done()
-
+	pblw.pollWg.Go(func() {
 		jitter, err := rand.Int(rand.Reader, big.NewInt(int64(pollInterval)))
 		if err == nil {
 			select {
@@ -365,7 +362,7 @@ func (pblw *pollBasedListerWatcher) ResultChan() <-chan watch.Event {
 		}
 
 		_ = wait.PollUntilContextCancel(pollCtx, pollInterval, false, pblw.poll)
-	}()
+	})
 
 	return pblw.ch
 }
