@@ -785,7 +785,7 @@ type OAuth2 struct {
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	//
-	// +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i -> i.key == e.key).size() == 1)",message="claims keys must be unique"
+	// +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i, i.key == e.key).size() == 1)",message="claims keys must be unique"
 	// +optional
 	Claims []Entry `json:"claims,omitempty"`
 

@@ -291,7 +291,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -1224,7 +1224,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -2046,7 +2046,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -2946,7 +2946,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -3791,7 +3791,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -4969,7 +4969,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -5884,7 +5884,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -6714,7 +6714,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -7468,7 +7468,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -8336,7 +8336,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -9192,7 +9192,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -10046,7 +10046,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -10829,7 +10829,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -11794,7 +11794,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
@@ -12494,8 +12494,7 @@ spec:
                     type: array
                     x-kubernetes-validations:
                     - message: claims keys must be unique
-                      rule: self.all(e, self.filter(i -> i.key == e.key).size() ==
-                        1)
+                      rule: self.all(e, self.filter(i, i.key == e.key).size() == 1)
                   clientCertificateKey:
                     description: |-
                       clientCertificateKey defines a key of a Secret containing the RSA
@@ -13550,7 +13549,7 @@ spec:
                           type: array
                           x-kubernetes-validations:
                           - message: claims keys must be unique
-                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                            rule: self.all(e, self.filter(i, i.key == e.key).size()
                               == 1)
                         clientCertificateKey:
                           description: |-
