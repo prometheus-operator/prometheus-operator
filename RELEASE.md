@@ -18,7 +18,12 @@ The release cycle for cutting releases is every 6 weeks
 
 | Release | Date of release (year-month-day) | Release shepherd                          |
 |---------|----------------------------------|-------------------------------------------|
-| v0.92   | 2026-06-10                       | **searching for volunteer**               |
+| v0.97   | 2027-01-06                       | **searching for volunteer**               |
+| v0.96   | 2026-11-25                       | **searching for volunteer**               |
+| v0.95   | 2026-10-14                       | **searching for volunteer**               |
+| v0.94   | 2026-09-02                       | **searching for volunteer**               |
+| v0.93   | 2026-07-22                       | Simon Pasquier (GitHub: @simonpasquier)   |
+| v0.92   | 2026-06-10                       | Jayapriya Pai (Github: @slashpai)         |
 | v0.91   | 2026-04-29                       | Simon Pasquier (GitHub: @simonpasquier)   |
 | v0.90   | 2026-03-18                       | Jayapriya Pai (Github: @slashpai)         |
 | v0.89   | 2026-02-04                       | Simon Pasquier (GitHub: @simonpasquier)   |
@@ -41,11 +46,6 @@ The release cycle for cutting releases is every 6 weeks
 | v0.72   | 2024-02-21                       | Arthur Sens (Github: @ArthurSens)         |
 | v0.71   | 2024-01-10                       | Simon Pasquier (GitHub: @simonpasquier)   |
 | v0.70   | 2023-11-29                       | Pawel Krupa (GitHub: @paulfantom)         |
-| v0.69   | 2023-10-18                       | Simon Pasquier (GitHub: @simonpasquier)   |
-| v0.68   | 2023-09-06                       | Arthur Sens (Github: @ArthurSens)         |
-| v0.67   | 2023-07-26                       | Simon Pasquier (GitHub: @simonpasquier)   |
-| v0.66   | 2023-06-14                       | Arthur Sens (Github: @ArthurSens)         |
-| v0.65   | 2023-05-03                       | Philip Gough (GitHub: @PhilipGough)       |
 
 If any of the maintainers is interested in volunteering please create a pull request against the [prometheus-operator/prometheus-operator](https://github.com/prometheus-operator/prometheus-operator) repository and propose yourself for the release series of your choice.
 
