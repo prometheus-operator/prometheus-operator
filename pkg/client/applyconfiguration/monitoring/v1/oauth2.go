@@ -72,7 +72,7 @@ type OAuth2ApplyConfiguration struct {
 	// Only used when grantType is set to "JWTBearer".
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
-	Claims []EntryApplyConfiguration `json:"claims,omitempty"`
+	Claims *monitoringv1.Entries `json:"claims,omitempty"`
 	// tokenUrl defines the URL to fetch the token from.
 	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
 	// scopes defines the OAuth2 scopes used for the token request.
@@ -158,16 +158,11 @@ func (b *OAuth2ApplyConfiguration) WithAudience(value string) *OAuth2ApplyConfig
 	return b
 }
 
-// WithClaims adds the given value to the Claims field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Claims field.
-func (b *OAuth2ApplyConfiguration) WithClaims(values ...*EntryApplyConfiguration) *OAuth2ApplyConfiguration {
-	for i := range values {
-		if values[i] == nil {
-			panic("nil value passed to WithClaims")
-		}
-		b.Claims = append(b.Claims, *values[i])
-	}
+// WithClaims sets the Claims field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Claims field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithClaims(value monitoringv1.Entries) *OAuth2ApplyConfiguration {
+	b.Claims = &value
 	return b
 }
 

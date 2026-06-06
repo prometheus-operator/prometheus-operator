@@ -90,6 +90,17 @@ type PrometheusRuleExcludeConfig struct {
 	RuleName string `json:"ruleName"`
 }
 
+// +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i, i.key == e.key).size() == 1)",message="keys must be unique"
+type Entries []Entry
+
+func (e Entries) ToMap() map[string]string {
+	m := make(map[string]string, len(e))
+	for _, entry := range e {
+		m[entry.Key] = entry.Value
+	}
+	return m
+}
+
 // Entry represents a key-value pair and is used as a general-purpose
 // replacement for `map[string]string` in the API. Kubernetes API
 // conventions discourage the use of map types in certain contexts
@@ -785,9 +796,8 @@ type OAuth2 struct {
 	//
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	//
-	// +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i, i.key == e.key).size() == 1)",message="claims keys must be unique"
 	// +optional
-	Claims []Entry `json:"claims,omitempty"`
+	Claims Entries `json:"claims,omitempty"`
 
 	// tokenUrl defines the URL to fetch the token from.
 	//

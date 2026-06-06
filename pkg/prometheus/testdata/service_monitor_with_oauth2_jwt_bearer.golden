@@ -20,10 +20,8 @@ scrape_configs:
     iss: my-issuer
     audience: my-audience
     claims:
-    - key: sub
-      value: user
-    - key: role
-      value: admin
+      role: admin
+      sub: user
     token_url: http://test.url
     scopes:
     - scope1

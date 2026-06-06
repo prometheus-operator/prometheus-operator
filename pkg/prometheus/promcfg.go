@@ -2820,7 +2820,7 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "audience", oauth2.Audience)
 		}
 		if len(oauth2.Claims) > 0 {
-			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "claims", oauth2.Claims)
+			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "claims", oauth2.Claims.ToMap())
 		}
 	}
 

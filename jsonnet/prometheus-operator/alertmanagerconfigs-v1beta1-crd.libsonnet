@@ -295,7 +295,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -1378,7 +1378,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -2181,7 +2181,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -3047,7 +3047,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -3930,7 +3930,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -4814,7 +4814,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -5740,7 +5740,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -6739,7 +6739,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -7584,7 +7584,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -8491,7 +8491,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -9331,7 +9331,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -10124,7 +10124,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -10901,7 +10901,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
@@ -11736,7 +11736,7 @@
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
-                                        message: 'claims keys must be unique',
+                                        message: 'keys must be unique',
                                         rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
                                       },
                                     ],
