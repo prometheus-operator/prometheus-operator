@@ -90,6 +90,16 @@ type PrometheusRuleExcludeConfig struct {
 	RuleName string `json:"ruleName"`
 }
 
+type Entry struct {
+	// name of the map.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Key string `json:"key"`
+	// value defines the map value.
+	// +optional
+	Value string `json:"value,omitempty"`
+}
+
 type ProxyConfig struct {
 	// proxyUrl defines the HTTP proxy server to use.
 	//
@@ -769,7 +779,7 @@ type OAuth2 struct {
 	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
 	//
 	// +optional
-	Claims map[string]string `json:"claims,omitempty"` //nolint:kubeapilinter
+	Claims []Entry `json:"claims,omitempty"`
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
@@ -833,10 +843,6 @@ func (o *OAuth2) Validate() error {
 
 	if err := o.TLSConfig.Validate(); err != nil {
 		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
-	}
-
-	if err := o.ProxyConfig.Validate(); err != nil {
-		return fmt.Errorf("invalid OAuth2 proxyConfig: %w", err)
 	}
 
 	return nil
