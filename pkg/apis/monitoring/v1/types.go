@@ -90,8 +90,14 @@ type PrometheusRuleExcludeConfig struct {
 	RuleName string `json:"ruleName"`
 }
 
+// Entry represents a key-value pair and is used as a general-purpose
+// replacement for `map[string]string` in the API. Kubernetes API
+// conventions discourage the use of map types in certain contexts
+// (e.g. list-type fields), so this struct provides an equivalent
+// representation as a list of entries.
 type Entry struct {
-	// name of the map.
+	// key defines the map key.
+	//
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Key string `json:"key"`

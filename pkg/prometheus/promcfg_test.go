@@ -2966,7 +2966,7 @@ func TestEndpointOAuth2(t *testing.T) {
 												SignatureAlgorithm:     ptr.To(monitoringv1.SignatureAlgorithmRS256),
 												Issuer:                 "my-issuer",
 												Audience:               "my-audience",
-												Claims:                 map[string]string{"sub": "user", "role": "admin"},
+												Claims:                 []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "role", Value: "admin"}},
 												Scopes:                 []string{"scope1"},
 												EndpointParams:         map[string]string{"param1": "value1"},
 											},

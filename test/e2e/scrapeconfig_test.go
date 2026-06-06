@@ -2165,7 +2165,7 @@ var OAuth2CELTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OAuth2: &monitoringv1.OAuth2{
 				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
-				Claims:               map[string]string{"sub": "user", "role": "admin"},
+				Claims:               []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "role", Value: "admin"}},
 				GrantType:            ptr.To(monitoringv1.GrantTypeJWTBearer),
 				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
 				TokenURL:             "https://example.com/token",
@@ -2178,7 +2178,7 @@ var OAuth2CELTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OAuth2: &monitoringv1.OAuth2{
 				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
-				Claims:               map[string]string{"sub": "user", "role": "admin"},
+				Claims:               []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "role", Value: "admin"}},
 				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
 				GrantType:            ptr.To(monitoringv1.GrantTypeClientCredentials),
 				TokenURL:             "https://example.com/token",

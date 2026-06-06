@@ -273,11 +273,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -1335,11 +1349,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -2117,11 +2145,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -2962,11 +3004,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -3824,11 +3880,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -4687,11 +4757,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -5592,11 +5676,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -6570,11 +6668,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -7394,11 +7506,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -8280,11 +8406,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -9099,11 +9239,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -9871,11 +10025,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -10627,11 +10795,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -11441,11 +11623,25 @@
                                     type: 'string',
                                   },
                                   claims: {
-                                    additionalProperties: {
-                                      type: 'string',
-                                    },
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
-                                    type: 'object',
+                                    items: {
+                                      properties: {
+                                        key: {
+                                          description: 'name of the map.',
+                                          minLength: 1,
+                                          type: 'string',
+                                        },
+                                        value: {
+                                          description: 'value defines the map value.',
+                                          type: 'string',
+                                        },
+                                      },
+                                      required: [
+                                        'key',
+                                      ],
+                                      type: 'object',
+                                    },
+                                    type: 'array',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
