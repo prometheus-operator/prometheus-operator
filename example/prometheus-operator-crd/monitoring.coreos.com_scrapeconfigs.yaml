@@ -271,9 +271,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -283,6 +289,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -1194,9 +1204,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -1206,6 +1222,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -2006,9 +2026,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -2018,6 +2044,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -2896,9 +2926,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -2908,6 +2944,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -3731,9 +3771,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -3743,6 +3789,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -4899,9 +4949,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -4911,6 +4967,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -5804,9 +5864,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -5816,6 +5882,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -6624,9 +6694,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -6636,6 +6712,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -7368,9 +7448,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -7380,6 +7466,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -8226,9 +8316,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -8238,6 +8334,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -9072,9 +9172,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -9084,6 +9190,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -9916,9 +10026,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -9928,6 +10044,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -10689,9 +10809,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -10701,6 +10827,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -11644,9 +11774,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -11656,6 +11792,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -12334,9 +12474,15 @@ spec:
 
                       It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                     items:
+                      description: |-
+                        Entry represents a key-value pair and is used as a general-purpose
+                        replacement for `map[string]string` in the API. Kubernetes API
+                        conventions discourage the use of map types in certain contexts
+                        (e.g. list-type fields), so this struct provides an equivalent
+                        representation as a list of entries.
                       properties:
                         key:
-                          description: name of the map.
+                          description: key defines the map key.
                           minLength: 1
                           type: string
                         value:
@@ -12346,6 +12492,10 @@ spec:
                       - key
                       type: object
                     type: array
+                    x-kubernetes-validations:
+                    - message: claims keys must be unique
+                      rule: self.all(e, self.filter(i -> i.key == e.key).size() ==
+                        1)
                   clientCertificateKey:
                     description: |-
                       clientCertificateKey defines a key of a Secret containing the RSA
@@ -13380,9 +13530,15 @@ spec:
 
                             It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
                           items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
                             properties:
                               key:
-                                description: name of the map.
+                                description: key defines the map key.
                                 minLength: 1
                                 type: string
                               value:
@@ -13392,6 +13548,10 @@ spec:
                             - key
                             type: object
                           type: array
+                          x-kubernetes-validations:
+                          - message: claims keys must be unique
+                            rule: self.all(e, self.filter(i -> i.key == e.key).size()
+                              == 1)
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA

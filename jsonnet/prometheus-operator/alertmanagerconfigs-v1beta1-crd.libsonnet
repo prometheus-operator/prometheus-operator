@@ -275,9 +275,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -292,6 +293,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -1351,9 +1358,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -1368,6 +1376,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -2147,9 +2161,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -2164,6 +2179,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -3006,9 +3027,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -3023,6 +3045,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -3882,9 +3910,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -3899,6 +3928,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -4759,9 +4794,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -4776,6 +4812,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -5678,9 +5720,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -5695,6 +5738,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -6670,9 +6719,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -6687,6 +6737,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -7508,9 +7564,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -7525,6 +7582,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -8408,9 +8471,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -8425,6 +8489,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -9241,9 +9311,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -9258,6 +9329,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -10027,9 +10104,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -10044,6 +10122,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -10797,9 +10881,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -10814,6 +10899,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -11625,9 +11716,10 @@
                                   claims: {
                                     description: 'claims defines a map of additional claims to include in the JWT token.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
                                     items: {
+                                      description: 'Entry represents a key-value pair and is used as a general-purpose\nreplacement for `map[string]string` in the API. Kubernetes API\nconventions discourage the use of map types in certain contexts\n(e.g. list-type fields), so this struct provides an equivalent\nrepresentation as a list of entries.',
                                       properties: {
                                         key: {
-                                          description: 'name of the map.',
+                                          description: 'key defines the map key.',
                                           minLength: 1,
                                           type: 'string',
                                         },
@@ -11642,6 +11734,12 @@
                                       type: 'object',
                                     },
                                     type: 'array',
+                                    'x-kubernetes-validations': [
+                                      {
+                                        message: 'claims keys must be unique',
+                                        rule: 'self.all(e, self.filter(i -> i.key == e.key).size() == 1)',
+                                      },
+                                    ],
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',

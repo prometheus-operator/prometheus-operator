@@ -2186,6 +2186,60 @@ var OAuth2CELTestCases = []scrapeCRDTestCase{
 		},
 		expectedError: true,
 	},
+
+	// claims: keys must be unique
+	{
+		name: "OAuth2 claims with unique keys is valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				Claims:               []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "role", Value: "admin"}, {Key: "iss", Value: "issuer"}},
+				GrantType:            ptr.To(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
+				TokenURL:             "https://example.com/token",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "OAuth2 claims with duplicate keys is invalid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				Claims:               []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "sub", Value: "admin"}},
+				GrantType:            ptr.To(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
+				TokenURL:             "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "OAuth2 claims with single entry is valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				Claims:               []monitoringv1.Entry{{Key: "sub", Value: "user"}},
+				GrantType:            ptr.To(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
+				TokenURL:             "https://example.com/token",
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "OAuth2 empty claims is valid",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OAuth2: &monitoringv1.OAuth2{
+				ClientID:             monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+				Claims:               []monitoringv1.Entry{},
+				GrantType:            ptr.To(monitoringv1.GrantTypeJWTBearer),
+				ClientCertificateKey: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "private-key"},
+				TokenURL:             "https://example.com/token",
+			},
+		},
+		expectedError: false,
+	},
 }
 
 var staticConfigTestCases = []scrapeCRDTestCase{

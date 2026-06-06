@@ -18,8 +18,14 @@ package v1
 
 // EntryApplyConfiguration represents a declarative configuration of the Entry type for use
 // with apply.
+//
+// Entry represents a key-value pair and is used as a general-purpose
+// replacement for `map[string]string` in the API. Kubernetes API
+// conventions discourage the use of map types in certain contexts
+// (e.g. list-type fields), so this struct provides an equivalent
+// representation as a list of entries.
 type EntryApplyConfiguration struct {
-	// name of the map.
+	// key defines the map key.
 	Key *string `json:"key,omitempty"`
 	// value defines the map value.
 	Value *string `json:"value,omitempty"`
