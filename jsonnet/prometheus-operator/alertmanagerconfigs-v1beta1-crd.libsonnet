@@ -296,12 +296,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -1382,12 +1380,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -2188,12 +2184,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -3057,12 +3051,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -3943,12 +3935,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -4830,12 +4820,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -5759,12 +5747,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -6761,12 +6747,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -7609,12 +7593,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -8519,12 +8501,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -9362,12 +9342,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -10158,12 +10136,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -10938,12 +10914,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',
@@ -11776,12 +11750,10 @@
                                     },
                                     maxItems: 100,
                                     type: 'array',
-                                    'x-kubernetes-validations': [
-                                      {
-                                        message: 'keys must be unique',
-                                        rule: 'self.all(e, self.filter(i, i.key == e.key).size() == 1)',
-                                      },
+                                    'x-kubernetes-list-map-keys': [
+                                      'key',
                                     ],
+                                    'x-kubernetes-list-type': 'map',
                                   },
                                   clientCertificateKey: {
                                     description: 'clientCertificateKey defines a key of a Secret containing the RSA\nprivate key used to sign JWT tokens.\nOnly used when grantType is set to "JWTBearer".\n\nIt requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.',

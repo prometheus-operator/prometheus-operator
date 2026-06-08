@@ -91,7 +91,8 @@ type PrometheusRuleExcludeConfig struct {
 }
 
 // +kubebuilder:validation:MaxItems=100
-// +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i, i.key == e.key).size() == 1)",message="keys must be unique"
+// +listType=map
+// +listMapKey=key
 type Entries []Entry
 
 func (e Entries) ToMap() map[string]string {

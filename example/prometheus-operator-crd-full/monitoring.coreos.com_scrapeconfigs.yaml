@@ -292,10 +292,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -1228,10 +1227,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -2053,10 +2051,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -2956,10 +2953,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -3804,10 +3800,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -4985,10 +4980,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -5903,10 +5897,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -6736,10 +6729,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -7493,10 +7485,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -8364,10 +8355,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -9223,10 +9213,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -10080,10 +10069,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -10866,10 +10854,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -11834,10 +11821,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
@@ -12537,9 +12523,9 @@ spec:
                       type: object
                     maxItems: 100
                     type: array
-                    x-kubernetes-validations:
-                    - message: keys must be unique
-                      rule: self.all(e, self.filter(i, i.key == e.key).size() == 1)
+                    x-kubernetes-list-map-keys:
+                    - key
+                    x-kubernetes-list-type: map
                   clientCertificateKey:
                     description: |-
                       clientCertificateKey defines a key of a Secret containing the RSA
@@ -13595,10 +13581,9 @@ spec:
                             type: object
                           maxItems: 100
                           type: array
-                          x-kubernetes-validations:
-                          - message: keys must be unique
-                            rule: self.all(e, self.filter(i, i.key == e.key).size()
-                              == 1)
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
                         clientCertificateKey:
                           description: |-
                             clientCertificateKey defines a key of a Secret containing the RSA
