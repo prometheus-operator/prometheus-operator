@@ -523,14 +523,6 @@ func TestValidateOAuth2(t *testing.T) {
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
-			name: "valid ProxyConfig with proxyUrl",
-			config: &OAuth2{
-				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
-				TokenURL:     "http://tokenurl.org",
-				ProxyConfig: ProxyConfig{
-					ProxyURL: new("http://proxy.example.com:8080"),
-				},
 			},
 			err: false,
 		},
@@ -549,14 +541,6 @@ func TestValidateOAuth2(t *testing.T) {
 				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				GrantType:    new(GrantTypeClientCredentials),
-			name: "valid ProxyConfig with proxyFromEnvironment",
-			config: &OAuth2{
-				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
-				TokenURL:     "http://tokenurl.org",
-				ProxyConfig: ProxyConfig{
-					ProxyFromEnvironment: new(true),
-				},
 			},
 			err: false,
 		},
@@ -566,15 +550,6 @@ func TestValidateOAuth2(t *testing.T) {
 				ClientID:  SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
 				TokenURL:  "http://tokenurl.org",
 				GrantType: new(GrantTypeClientCredentials),
-			name: "invalid ProxyConfig with proxyFromEnvironment and proxyUrl",
-			config: &OAuth2{
-				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
-				TokenURL:     "http://tokenurl.org",
-				ProxyConfig: ProxyConfig{
-					ProxyFromEnvironment: new(true),
-					ProxyURL:             new("http://proxy.example.com:8080"),
-				},
 			},
 			err: true,
 		},
@@ -649,10 +624,60 @@ func TestValidateOAuth2(t *testing.T) {
 			},
 			err: false,
 		},
+		{
 			name: "invalid ProxyConfig with noProxy but no proxyUrl",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					NoProxy: new("localhost"),
+				},
+			},
+			err: true,
+		},
+		{
+			name: "valid ProxyConfig with proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyURL: new("http://proxy.example.com:8080"),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "valid ProxyConfig with proxyFromEnvironment",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyFromEnvironment: new(true),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "invalid ProxyConfig with proxyFromEnvironment and proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyFromEnvironment: new(true),
+					ProxyURL:             new("http://proxy.example.com:8080"),
+				},
+			},
+			err: true,
+		},
+		{
+			name: "invalid ProxyConfig with noProxy but no proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
 				ProxyConfig: ProxyConfig{
 					NoProxy: new("localhost"),
