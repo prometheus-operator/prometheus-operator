@@ -279,11 +279,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -292,6 +294,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -1362,11 +1365,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -1375,6 +1380,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -2165,11 +2171,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -2178,6 +2186,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -3031,11 +3040,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -3044,6 +3055,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -3914,11 +3926,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -3927,6 +3941,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -4798,11 +4813,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -4811,6 +4828,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -5724,11 +5742,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -5737,6 +5757,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -6723,11 +6744,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -6736,6 +6759,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -7568,11 +7592,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -7581,6 +7607,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -8475,11 +8502,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -8488,6 +8517,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -9315,11 +9345,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -9328,6 +9360,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -10108,11 +10141,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -10121,6 +10156,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -10885,11 +10921,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -10898,6 +10936,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {
@@ -11720,11 +11759,13 @@
                                       properties: {
                                         key: {
                                           description: 'key defines the map key.',
+                                          maxLength: 253,
                                           minLength: 1,
                                           type: 'string',
                                         },
                                         value: {
                                           description: 'value defines the map value.',
+                                          maxLength: 2048,
                                           type: 'string',
                                         },
                                       },
@@ -11733,6 +11774,7 @@
                                       ],
                                       type: 'object',
                                     },
+                                    maxItems: 100,
                                     type: 'array',
                                     'x-kubernetes-validations': [
                                       {

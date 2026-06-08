@@ -388,14 +388,17 @@ spec:
                       properties:
                         key:
                           description: key defines the map key.
+                          maxLength: 253
                           minLength: 1
                           type: string
                         value:
                           description: value defines the map value.
+                          maxLength: 2048
                           type: string
                       required:
                       - key
                       type: object
+                    maxItems: 100
                     type: array
                     x-kubernetes-validations:
                     - message: keys must be unique

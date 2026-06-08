@@ -90,6 +90,7 @@ type PrometheusRuleExcludeConfig struct {
 	RuleName string `json:"ruleName"`
 }
 
+// +kubebuilder:validation:MaxItems=100
 // +kubebuilder:validation:XValidation:rule="self.all(e, self.filter(i, i.key == e.key).size() == 1)",message="keys must be unique"
 type Entries []Entry
 
@@ -110,10 +111,12 @@ type Entry struct {
 	// key defines the map key.
 	//
 	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=253
 	// +required
 	Key string `json:"key"`
 	// value defines the map value.
 	//
+	// +kubebuilder:validation:MaxLength=2048
 	// +optional
 	Value string `json:"value,omitempty"`
 }
