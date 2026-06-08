@@ -867,6 +867,10 @@ func (o *OAuth2) Validate() error {
 		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
 	}
 
+	if err := o.ProxyConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid OAuth2 proxyConfig: %w", err)
+	}
+
 	return nil
 }
 
