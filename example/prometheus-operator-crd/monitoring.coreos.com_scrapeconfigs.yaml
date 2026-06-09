@@ -12024,6 +12024,7 @@ spec:
                       type: object
                   required:
                   - accessKey
+                  - secretKey
                   type: object
                 type: array
               ovhcloudSDConfigs:

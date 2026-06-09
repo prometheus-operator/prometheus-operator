@@ -11188,7 +11188,8 @@
                         }
                       },
                       "required": [
-                        "accessKey"
+                        "accessKey",
+                        "secretKey"
                       ],
                       "type": "object"
                     },

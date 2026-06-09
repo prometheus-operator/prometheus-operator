@@ -1371,10 +1371,8 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 
 func (rs *ResourceSelector) validateOutscaleSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.OutscaleSDConfigs {
-		if config.SecretKey != nil {
-			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.SecretKey); err != nil {
-				return fmt.Errorf("[%d]: %w", i, err)
-			}
+		if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), config.SecretKey); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {

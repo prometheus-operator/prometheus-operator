@@ -1972,11 +1972,7 @@ func (in *OutscaleSDConfig) DeepCopyInto(out *OutscaleSDConfig) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.SecretKey != nil {
-		in, out := &in.SecretKey, &out.SecretKey
-		*out = new(corev1.SecretKeySelector)
-		(*in).DeepCopyInto(*out)
-	}
+	in.SecretKey.DeepCopyInto(&out.SecretKey)
 	if in.Endpoint != nil {
 		in, out := &in.Endpoint, &out.Endpoint
 		*out = new(string)

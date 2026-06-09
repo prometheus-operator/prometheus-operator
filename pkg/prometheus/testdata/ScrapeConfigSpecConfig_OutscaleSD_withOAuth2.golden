@@ -19,6 +19,7 @@ scrape_configs:
         param2: value2
     region: eu-west-2
     access_key: AKXXXXXXXXXXXXXXXXXX
+    secret_key: SK0000000000000000000000000000000000000000
   relabel_configs:
   - source_labels:
     - job
