@@ -70,8 +70,8 @@ Arguments:
     	Feature gates are a set of key=value pairs that describe Prometheus-Operator features.
     	Available feature gates:
     	  PrometheusAgentDaemonSet: Enables the DaemonSet mode for PrometheusAgent (enabled: false)
-    	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: false)
-    	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: false)
+    	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: true)
+    	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: true)
     	  RemoteWriteCustomResourceDefinition: Enables the RemoteWrite CRD support (enabled: false)
     	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
   -key-file string
@@ -101,13 +101,15 @@ Arguments:
   -namespaces value
     	Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.
   -prometheus-config-reloader string
-    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.89.0")
+    	Prometheus config reloader image (default "quay.io/prometheus-operator/prometheus-config-reloader:v0.91.0")
   -prometheus-default-base-image string
     	Prometheus default base image (path without tag/version) (default "quay.io/prometheus/prometheus")
   -prometheus-instance-namespaces value
     	Namespaces where Prometheus and PrometheusAgent custom resources and corresponding Secrets, Configmaps and StatefulSets are watched/created. If set this takes precedence over --namespaces or --deny-namespaces for Prometheus custom resources.
   -prometheus-instance-selector value
     	Label selector to filter Prometheus and PrometheusAgent Custom Resources to watch.
+  -repair-policy-for-statefulsets value
+    	Policy to use when a StatefulSet rollout is stuck. Possible values: 'none' (default), 'evict' or 'delete'. (default none)
   -secret-field-selector value
     	Field selector to filter Secrets to watch
   -secret-label-selector value

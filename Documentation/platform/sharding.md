@@ -80,7 +80,7 @@ spec:
 
 ### Topology-aware sharding
 
-> **Alpha:** Topology-aware sharding requires the `PrometheusTopologySharding` feature gate to be enabled on the operator.
+> **Beta:** Topology-aware sharding requires the `PrometheusTopologySharding` feature gate to be enabled on the operator.
 
 In multi-zone clusters, the default address-based sharding distributes targets without regard for their zone, which can generate costly cross-zone traffic. Topology-aware sharding pins each Prometheus shard to a specific zone so that it only scrapes targets local to that zone.
 
@@ -111,7 +111,7 @@ With this configuration and 4 shards across 2 zones, shards 0 and 2 are schedule
 
 ### Retaining shards
 
-> **Alpha:** Shard retention requires the `PrometheusShardRetentionPolicy` feature gate to be enabled on the operator.
+> **Beta:** Shard retention requires the `PrometheusShardRetentionPolicy` feature gate to be enabled on the operator.
 
 When scaling down the number of shards, the pods from the removed shards are deleted by default along with access to their historical data. To preserve scaled-down shards so their data remains queryable until the retention duration expires, set `.spec.shardRetentionPolicy.whenScaled` to `Retain`:
 
