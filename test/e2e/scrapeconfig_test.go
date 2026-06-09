@@ -2203,6 +2203,12 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -2214,6 +2220,12 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 				},
 			},
 		},
@@ -2225,7 +2237,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Region:    new("eu-west-2"),
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Region: new("eu-west-2"),
 				},
 			},
 		},
@@ -2237,7 +2255,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Region:    new(""),
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Region: new(""),
 				},
 			},
 		},
@@ -2249,7 +2273,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Endpoint:  new("https://api.eu-west-2.outscale.com/api/v1"),
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Endpoint: new("https://api.eu-west-2.outscale.com/api/v1"),
 				},
 			},
 		},
@@ -2261,7 +2291,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Endpoint:  new(""),
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Endpoint: new(""),
 				},
 			},
 		},
@@ -2273,7 +2309,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Port:      new(int32(8080)),
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(8080)),
 				},
 			},
 		},
@@ -2285,7 +2327,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Port:      new(int32(65536)), // maximum Port number = 65535
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(65536)), // maximum Port number = 65535
 				},
 			},
 		},
@@ -2297,7 +2345,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
 					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-					Port:      new(int32(-1)), // minimum Port number = 0
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(-1)), // minimum Port number = 0
 				},
 			},
 		},
@@ -2308,7 +2362,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
-					AccessKey:       "AKXXXXXXXXXXXXXXXXXX",
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
 				},
 			},
@@ -2320,7 +2380,13 @@ var OutscaleSDTestCases = []scrapeCRDTestCase{
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 				{
-					AccessKey:       "AKXXXXXXXXXXXXXXXXXX",
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
 					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},

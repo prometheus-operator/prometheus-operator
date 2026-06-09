@@ -1558,8 +1558,8 @@ type OutscaleSDConfig struct {
 	// +required
 	AccessKey string `json:"accessKey"`
 	// secretKey defines the Outscale secret key.
-	// +optional
-	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
+	// +required
+	SecretKey corev1.SecretKeySelector `json:"secretKey"`
 	// endpoint defines the Outscale API endpoint URL.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

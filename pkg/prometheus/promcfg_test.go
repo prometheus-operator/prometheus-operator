@@ -12995,7 +12995,7 @@ func TestScrapeConfigSpecConfigWithOutscaleSD(t *testing.T) {
 				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-						SecretKey: &corev1.SecretKeySelector{
+						SecretKey: corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
@@ -13020,7 +13020,7 @@ func TestScrapeConfigSpecConfigWithOutscaleSD(t *testing.T) {
 				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-						SecretKey: &corev1.SecretKeySelector{
+						SecretKey: corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
@@ -13064,7 +13064,13 @@ func TestScrapeConfigSpecConfigWithOutscaleSD(t *testing.T) {
 				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-						Region:    new("eu-west-2"),
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secret-key",
+						},
+						Region: new("eu-west-2"),
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							OAuth2: &monitoringv1.OAuth2{
 								ClientID: monitoringv1.SecretOrConfigMap{

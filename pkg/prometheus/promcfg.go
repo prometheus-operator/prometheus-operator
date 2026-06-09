@@ -5037,17 +5037,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			if config.SecretKey != nil {
-				value, err := s.GetSecretKey(*config.SecretKey)
-				if err != nil {
-					return cfg, fmt.Errorf("failed to get %s secret key %s: %w", config.SecretKey.Name, jobName, err)
-				}
-
-				configs[i] = append(configs[i], yaml.MapItem{
-					Key:   "secret_key",
-					Value: string(value),
-				})
-			}
+			value, _ := s.GetSecretKey(config.SecretKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "secret_key",
+				Value: string(value),
+			})
 
 			if config.Endpoint != nil {
 				configs[i] = append(configs[i], yaml.MapItem{

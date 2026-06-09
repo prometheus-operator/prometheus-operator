@@ -4619,7 +4619,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-						SecretKey: &corev1.SecretKeySelector{
+						SecretKey: corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "secret",
 							},
@@ -4640,7 +4640,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
-						SecretKey: &corev1.SecretKeySelector{
+						SecretKey: corev1.SecretKeySelector{
 							LocalObjectReference: corev1.LocalObjectReference{
 								Name: "wrong",
 							},
@@ -4657,6 +4657,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							TLSConfig: &monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -4694,6 +4700,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							TLSConfig: &monitoringv1.SafeTLSConfig{
 								CA: monitoringv1.SecretOrConfigMap{
@@ -4717,6 +4729,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							ProxyConfig: monitoringv1.ProxyConfig{
 								ProxyURL:             new("http://no-proxy.com"),
@@ -4745,6 +4763,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							ProxyConfig: monitoringv1.ProxyConfig{
 								ProxyURL:             new("http://no-proxy.com"),
@@ -4772,6 +4796,12 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
 					{
 						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
 						HTTPConfig: monitoringv1alpha1.HTTPConfig{
 							Authorization: &monitoringv1.SafeAuthorization{
 								Credentials: &corev1.SecretKeySelector{
