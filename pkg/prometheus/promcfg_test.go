@@ -12983,6 +12983,179 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 	}
 }
 
+func TestScrapeConfigSpecConfigWithOutscaleSD(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		scSpec monitoringv1alpha1.ScrapeConfigSpec
+		golden string
+	}{
+		{
+			name: "outscale_sd_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secret-key",
+						},
+						Region:          new("eu-west-2"),
+						Endpoint:        new("https://api.eu-west-2.outscale.com/api/v1"),
+						Port:            new(int32(9100)),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							FollowRedirects: new(true),
+							EnableHTTP2:     new(true),
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_OutscaleSD.golden",
+		},
+		{
+			name: "outscale_sd_config_tls",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "secret-key",
+						},
+						Region: new("eu-west-2"),
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							TLSConfig: &monitoringv1.SafeTLSConfig{
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "ca",
+									},
+								},
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "tls",
+										},
+										Key: "cert",
+									},
+								},
+								KeySecret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "tls",
+									},
+									Key: "private-key",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_OutscaleSD_withTLSConfig.golden",
+		},
+		{
+			name: "outscale_sd_config_with_oauth2",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						Region:    new("eu-west-2"),
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							OAuth2: &monitoringv1.OAuth2{
+								ClientID: monitoringv1.SecretOrConfigMap{
+									ConfigMap: &corev1.ConfigMapKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "oauth2",
+										},
+										Key: "client_id",
+									},
+								},
+								ClientSecret: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "oauth2",
+									},
+									Key: "client_secret",
+								},
+								TokenURL: "http://test.url",
+								Scopes:   []string{"scope 1", "scope 2"},
+								EndpointParams: map[string]string{
+									"param1": "value1",
+									"param2": "value2",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_OutscaleSD_withOAuth2.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewTestStoreBuilder(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "secret",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"secret-key": []byte("SK0000000000000000000000000000000000000000"),
+					},
+				},
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string]string{
+						"client_id": "client-id",
+					},
+				},
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "oauth2",
+						Namespace: "default",
+					},
+					Data: map[string][]byte{
+						"client_secret": []byte("client-secret"),
+					},
+				},
+			)
+
+			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
+				"sc": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testscrapeconfig1",
+						Namespace: "default",
+					},
+					Spec: tc.scSpec,
+				},
+			}
+
+			p := defaultPrometheus()
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				scs,
+				store,
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 	p := defaultPrometheus()
 	serviceMonitor := defaultServiceMonitor()
