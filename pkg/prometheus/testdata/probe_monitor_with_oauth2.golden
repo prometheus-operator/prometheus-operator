@@ -61,3 +61,7 @@ scrape_configs:
     tls_config:
       insecure_skip_verify: true
       ca_file: /etc/prometheus/certs/0_default_tls_ca2
+storage:
+  tsdb:
+    retention:
+      time: 24h

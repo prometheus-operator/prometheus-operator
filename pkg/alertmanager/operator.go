@@ -1451,6 +1451,10 @@ func checkWebhookConfigs(
 			}
 		}
 
+		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
+			return fmt.Errorf(`payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}

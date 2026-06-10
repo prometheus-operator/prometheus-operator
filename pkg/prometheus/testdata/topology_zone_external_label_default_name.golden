@@ -6,3 +6,7 @@ global:
     zone: $(TOPOLOGY_ZONE)
   evaluation_interval: 30s
 scrape_configs: []
+storage:
+  tsdb:
+    retention:
+      time: 24h
