@@ -73,6 +73,12 @@ const (
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
+// oauth2GrantTypeNames maps monitoringv1 grant types to their Prometheus configuration values.
+var oauth2GrantTypeNames = map[monitoringv1.OAuth2GrantType]string{
+	monitoringv1.GrantTypeClientCredentials: "client_credentials",
+	monitoringv1.GrantTypeJWTBearer:         "urn:ietf:params:oauth:grant-type:jwt-bearer",
+}
+
 func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
@@ -2793,31 +2799,33 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 	oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "client_id", Value: clientID})
 
 	// Handle client secret based on grant type
-	grantType := oauth2.GrantType
-	if grantType == nil {
-		grantType = new(monitoringv1.GrantTypeClientCredentials)
-	}
+	grantType := ptr.Deref(oauth2.GrantType, monitoringv1.GrantTypeClientCredentials)
 
 	cgOauth2Config := cg.WithMinimumVersion("3.9.0")
-	switch *grantType {
+	switch grantType {
 	case monitoringv1.GrantTypeClientCredentials:
-		if oauth2.ClientSecret != nil {
-			clientSecret, err := store.GetSecretKey(*oauth2.ClientSecret)
-			if err != nil {
-				cg.logger.Error("invalid OAuth2 client secret reference", "err", err)
-				return cfg
-			}
-			oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "client_secret", Value: string(clientSecret)})
+		if oauth2.ClientSecret == nil {
+			cg.logger.Error("oauth2 client secret is empty")
+			return cfg
 		}
+		clientSecret, err := store.GetSecretKey(*oauth2.ClientSecret)
+		if err != nil {
+			cg.logger.Error("invalid OAuth2 client secret reference", "err", err)
+			return cfg
+		}
+		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "client_secret", Value: string(clientSecret)})
+
 	case monitoringv1.GrantTypeJWTBearer:
-		if oauth2.ClientCertificateKey != nil {
-			clientCertKey, err := store.GetSecretKey(*oauth2.ClientCertificateKey)
-			if err != nil {
-				cg.logger.Error("invalid OAuth2 client certificate key reference", "err", err)
-				return cfg
-			}
-			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "client_certificate_key", string(clientCertKey))
+		if oauth2.ClientCertificateKey == nil {
+			cg.logger.Error("oauth2 client certificate key is empty")
+			return cfg
 		}
+		clientCertKey, err := store.GetSecretKey(*oauth2.ClientCertificateKey)
+		if err != nil {
+			cg.logger.Error("invalid OAuth2 client certificate key reference", "err", err)
+			return cfg
+		}
+		oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "client_certificate_key", string(clientCertKey))
 
 		if oauth2.ClientCertificateKeyID != "" {
 			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "client_certificate_key_id", oauth2.ClientCertificateKeyID)
@@ -2846,14 +2854,9 @@ func (cg *ConfigGenerator) addOAuth2ToYaml(
 		oauth2Cfg = append(oauth2Cfg, yaml.MapItem{Key: "endpoint_params", Value: oauth2.EndpointParams})
 	}
 
+	// conversion to prometheus values.
 	if oauth2.GrantType != nil {
-		// conversion to prometheus values.
-		nameMap := map[monitoringv1.OAuth2GrantType]string{
-			monitoringv1.GrantTypeClientCredentials: "client_credentials",
-			monitoringv1.GrantTypeJWTBearer:         "urn:ietf:params:oauth:grant-type:jwt-bearer",
-		}
-
-		if v, ok := nameMap[*oauth2.GrantType]; ok {
+		if v, ok := oauth2GrantTypeNames[grantType]; ok {
 			oauth2Cfg = cgOauth2Config.AppendMapItem(oauth2Cfg, "grant_type", v)
 		}
 	}

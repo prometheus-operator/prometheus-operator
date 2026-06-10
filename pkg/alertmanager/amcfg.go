@@ -1898,10 +1898,15 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 			return nil, fmt.Errorf("failed to get clientID: %w", err)
 		}
 
+		if in.OAuth2.ClientSecret == nil {
+			return nil, fmt.Errorf("oauth2 client secret is required for client_credentials grant type")
+		}
+
 		clientSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.OAuth2.ClientSecret)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get client secret: %w", err)
 		}
+
 		proxyConfig, err := cb.convertProxyConfig(ctx, in.OAuth2.ProxyConfig, crKey)
 		if err != nil {
 			return nil, err
