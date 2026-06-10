@@ -9305,6 +9305,23 @@ func TestSanitizeSlackConfig(t *testing.T) {
 			},
 			golden: "test_slack_update_message_supported_version.golden",
 		},
+		{
+			name:           "Test slack update_message custom api url",
+			againstVersion: versionSlackUpdateMessageAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:        "https://api.url",
+								UpdateMessage: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
