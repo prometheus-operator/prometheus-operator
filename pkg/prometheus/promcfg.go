@@ -1055,7 +1055,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1092,9 +1092,15 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(
+	cfg yaml.MapSlice,
+	exemplars *monitoringv1.Exemplars,
+	retention monitoringv1.Duration,
+	retentionSize monitoringv1.ByteSize,
+) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
+		tsdbSlice yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
 		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
@@ -1115,22 +1121,28 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 
 	if tsdb != nil {
 		if tsdb.OutOfOrderTimeWindow != nil {
-			storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-				{
-					Key:   "out_of_order_time_window",
-					Value: *tsdb.OutOfOrderTimeWindow,
-				},
-			})
+			tsdbSlice = cg.WithMinimumVersion("2.39.0").AppendMapItem(tsdbSlice, "out_of_order_time_window", *tsdb.OutOfOrderTimeWindow)
 		}
 
 		if tsdb.StaleSeriesCompactionThreshold != nil {
-			storage = cg.WithMinimumVersion("3.10.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-				{
-					Key:   "stale_series_compaction_threshold",
-					Value: tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64(),
-				},
-			})
+			tsdbSlice = cg.WithMinimumVersion("3.10.0").AppendMapItem(tsdbSlice, "stale_series_compaction_threshold", tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64())
 		}
+	}
+
+	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
+		var retentionSlice yaml.MapSlice
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
+		if retentionTime != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
+		}
+		if retentionSize != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
+		}
+		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
+	}
+
+	if len(tsdbSlice) > 0 {
+		storage = append(storage, yaml.MapItem{Key: "tsdb", Value: tsdbSlice})
 	}
 
 	if len(storage) == 0 {
