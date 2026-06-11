@@ -555,7 +555,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -773,7 +774,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -1093,7 +1095,8 @@
                                 type: 'string',
                               },
                               serverName: {
-                                description: 'serverName is used to verify the hostname for the targets.',
+                                description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                minLength: 1,
                                 type: 'string',
                               },
                             },
@@ -1525,7 +1528,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -1743,7 +1747,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -2215,7 +2220,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -2433,7 +2439,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -2968,7 +2975,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -3186,7 +3194,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -3738,7 +3747,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -3956,7 +3966,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -4509,7 +4520,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -4727,7 +4739,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -5322,7 +5335,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -5540,7 +5554,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -6208,7 +6223,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -6426,7 +6442,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -6940,7 +6957,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -7158,7 +7176,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -7734,7 +7753,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -7952,7 +7972,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -8461,7 +8482,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -8679,7 +8701,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -9141,7 +9164,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -9359,7 +9383,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -9805,7 +9830,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -10023,7 +10049,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },
@@ -10532,7 +10559,8 @@
                                         type: 'string',
                                       },
                                       serverName: {
-                                        description: 'serverName is used to verify the hostname for the targets.',
+                                        description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                        minLength: 1,
                                         type: 'string',
                                       },
                                     },
@@ -10750,7 +10778,8 @@
                                     type: 'string',
                                   },
                                   serverName: {
-                                    description: 'serverName is used to verify the hostname for the targets.',
+                                    description: 'serverName is used to verify the hostname for the targets.\n\nFor ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the\nfield supports Go template syntax, with the following template\nvariables:\n  - `.Name`, the name of the resource.\n  - `.Namespace`, the namespace of the resource.\n  - `.Labels`, a map of labels of the resource.\n  - `.Annotations`, a map of annotations of the resource.\n\nFor instance:\n- `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`\n- `{{ index .Labels "tls-server-name" }}`',
+                                    minLength: 1,
                                     type: 'string',
                                   },
                                 },

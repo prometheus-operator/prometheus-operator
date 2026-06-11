@@ -234,7 +234,7 @@ func (prwtc PromRemoteWriteTestConfig) AddRemoteWriteWithTLSToPrometheus(p *moni
 
 	p.Spec.RemoteWrite[0].TLSConfig = &monitoringv1.TLSConfig{
 		SafeTLSConfig: monitoringv1.SafeTLSConfig{
-			ServerName: new("caandserver.com"),
+			ServerName: new(monitoringv1.TemplateString("caandserver.com")),
 		},
 	}
 
