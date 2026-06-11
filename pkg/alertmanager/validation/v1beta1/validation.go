@@ -15,6 +15,7 @@
 package v1beta1
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -134,7 +135,7 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 		}
 
 		if conf.RoutingKey == nil && conf.ServiceKey == nil {
-			return fmt.Errorf("one of 'routingKey' or 'serviceKey' is required")
+			return errors.New("one of 'routingKey' or 'serviceKey' is required")
 		}
 
 		for j, lc := range conf.PagerDutyLinkConfigs {
@@ -220,7 +221,7 @@ func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
 func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 	v := func(conf monitoringv1beta1.WebhookConfig) error {
 		if conf.URL == nil && conf.URLSecret == nil {
-			return fmt.Errorf("one of 'url' or 'urlSecret' must be specified")
+			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
 
 		if err := validation.ValidateTemplateURLPtr(conf.URL); err != nil {
@@ -268,7 +269,7 @@ func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
 	v := func(conf monitoringv1beta1.EmailConfig) error {
 		if ptr.Deref(conf.To, "") == "" {
-			return fmt.Errorf("missing 'to' address")
+			return errors.New("missing 'to' address")
 		}
 
 		if ptr.Deref(conf.Smarthost, "") != "" {
@@ -324,7 +325,7 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 		}
 
 		if conf.RoutingKey == "" {
-			return fmt.Errorf("missing 'routingKey' key")
+			return errors.New("missing 'routingKey' key")
 		}
 
 		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
@@ -350,15 +351,15 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 	v := func(conf monitoringv1beta1.PushoverConfig) error {
 		if conf.UserKey == nil && conf.UserKeyFile == nil {
-			return fmt.Errorf("one of 'userKey' or 'userKeyFile' must be configured")
+			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
 		if conf.Token == nil && conf.TokenFile == nil {
-			return fmt.Errorf("one of 'token' or 'tokenFile' must be configured")
+			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
 		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
-			return fmt.Errorf("'html' and 'monospace' options are mutually exclusive")
+			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
 		if conf.URL != "" {
@@ -386,7 +387,7 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 	v := func(conf monitoringv1beta1.SNSConfig) error {
 		if (ptr.Deref(conf.TargetARN, "") == "") != (ptr.Deref(conf.TopicARN, "") == "") != (ptr.Deref(conf.PhoneNumber, "") == "") {
-			return fmt.Errorf("must provide one of 'targetARN', 'topicARN', or 'phoneNumber'")
+			return errors.New("must provide one of 'targetARN', 'topicARN', or 'phoneNumber'")
 		}
 
 		if conf.ApiURL != nil {
@@ -414,15 +415,15 @@ func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	v := func(conf monitoringv1beta1.TelegramConfig) error {
 		if conf.BotToken == nil && conf.BotTokenFile == nil {
-			return fmt.Errorf("mandatory field botToken or botTokenfile is empty")
+			return errors.New("mandatory field botToken or botTokenfile is empty")
 		}
 
 		if conf.BotToken != nil && conf.BotTokenFile != nil {
-			return fmt.Errorf("only one of 'botToken' or 'botTokenfile' must be configured")
+			return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 		}
 
 		if conf.ChatID == 0 {
-			return fmt.Errorf("mandatory field 'chatID' is empty")
+			return errors.New("mandatory field 'chatID' is empty")
 		}
 
 		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
@@ -572,7 +573,7 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 
 	if r.Receiver == "" {
 		if topLevelRoute {
-			return fmt.Errorf("root route must define a receiver")
+			return errors.New("root route must define a receiver")
 		}
 	} else {
 		if _, found := receivers[r.Receiver]; !found {
