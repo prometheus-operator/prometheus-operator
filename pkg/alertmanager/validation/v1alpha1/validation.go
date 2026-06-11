@@ -55,63 +55,63 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		receiverNames[receiver.Name] = struct{}{}
 
 		if err := validateOpsGenieConfigs(receiver.OpsGenieConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'opsgenieConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'opsgenieConfigs'%w", receiver.Name, err)
 		}
 
 		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'pagerdutyConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'pagerdutyConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'discordConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'discordConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'slackConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'slackConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'webhookConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'webhookConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'wechatConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'wechatConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'emailConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'emailConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'victoropsConfis'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'victoropsConfis'%w", receiver.Name, err)
 		}
 
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'pushoverConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'pushoverConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'snsConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'snsConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'telegramConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'telegramConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'webexConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'webexConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'msteamsConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'msteamsConfigs'%w", receiver.Name, err)
 		}
 
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'msteamsv2Configs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'msteamsv2Configs'%w", receiver.Name, err)
 		}
 
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate receiver %s: 'rocketchatConfigs'%w", receiver.Name, err)
+			return nil, fmt.Errorf("failed to validate receiver %q: 'rocketchatConfigs'%w", receiver.Name, err)
 		}
 	}
 
