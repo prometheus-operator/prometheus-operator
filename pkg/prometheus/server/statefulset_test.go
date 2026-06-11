@@ -1288,47 +1288,58 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		{"v2.7.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
 		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
 		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v3.10.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v3.11.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v3.11.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
 	}
 
 	for _, test := range tests {
-		sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
-				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Version: test.version,
+		t.Run(fmt.Sprintf("%s retention=%q retentionSize=%q", test.version, test.specRetention, test.specRetentionSize), func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: test.version,
+					},
+					Retention:     test.specRetention,
+					RetentionSize: test.specRetentionSize,
 				},
-				Retention:     test.specRetention,
-				RetentionSize: test.specRetentionSize,
-			},
+			})
+			require.NoError(t, err)
+
+			promArgs := sset.Spec.Template.Spec.Containers[0].Args
+			retentionFlag := strings.Split(test.expectedRetentionArg, "=")[0]
+			foundRetentionFlag := false
+			foundRetentionSizeFlag := false
+			foundRetention := false
+			foundRetentionSize := false
+			for _, flag := range promArgs {
+				if flag == test.expectedRetentionArg {
+					foundRetention = true
+				} else if flag == test.expectedRetentionSizeArg {
+					foundRetentionSize = true
+				}
+
+				if strings.HasPrefix(flag, retentionFlag) {
+					foundRetentionFlag = true
+				} else if strings.HasPrefix(flag, "--storage.tsdb.retention.size") {
+					foundRetentionSizeFlag = true
+				}
+			}
+
+			if test.shouldContainRetention {
+				require.True(t, (foundRetention && foundRetentionFlag))
+			} else {
+				require.False(t, foundRetentionFlag, "retention flag must not be set for Prometheus %s", test.version)
+			}
+
+			if test.shouldContainRetentionSize {
+				require.True(t, (foundRetentionSize && foundRetentionSizeFlag))
+			} else {
+				require.False(t, foundRetentionSizeFlag, "retention size flag must not be set for Prometheus %s", test.version)
+			}
 		})
-		require.NoError(t, err)
-
-		promArgs := sset.Spec.Template.Spec.Containers[0].Args
-		retentionFlag := strings.Split(test.expectedRetentionArg, "=")[0]
-		foundRetentionFlag := false
-		foundRetentionSizeFlag := false
-		foundRetention := false
-		foundRetentionSize := false
-		for _, flag := range promArgs {
-			if flag == test.expectedRetentionArg {
-				foundRetention = true
-			} else if flag == test.expectedRetentionSizeArg {
-				foundRetentionSize = true
-			}
-
-			if strings.HasPrefix(flag, retentionFlag) {
-				foundRetentionFlag = true
-			} else if strings.HasPrefix(flag, "--storage.tsdb.retention.size") {
-				foundRetentionSizeFlag = true
-			}
-		}
-
-		if test.shouldContainRetention {
-			require.True(t, (foundRetention && foundRetentionFlag))
-		}
-
-		if test.shouldContainRetentionSize {
-			require.True(t, (foundRetentionSize && foundRetentionSizeFlag))
-		}
 	}
 }
 
@@ -2334,7 +2345,6 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 
 	for _, argTest := range argTests {
 		t.Run(argTest.version, func(t *testing.T) {
-
 			labels := map[string]string{
 				"testlabel": "testlabelvalue",
 			}
@@ -2368,7 +2378,6 @@ func TestPrometheusAdditionalArgsNoError(t *testing.T) {
 			// web.console.templates and web.console.libraries should be present in prometheus versisons < 3
 			require.Equal(t, argTest.expectedArgs, ssetContainerArgs, "expected Prometheus container args to match, want %s, got %s", argTest.expectedArgs, ssetContainerArgs)
 		})
-
 	}
 }
 
