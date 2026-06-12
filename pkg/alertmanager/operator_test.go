@@ -204,13 +204,16 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version26, err := semver.ParseTolerant("v0.26.0")
 	require.NoError(t, err)
 
-	version31, err := semver.ParseTolerant("v0.31.0")
+	version29, err := semver.ParseTolerant("v0.29.0")
 	require.NoError(t, err)
 
 	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
-	version29, err := semver.ParseTolerant("v0.29.0")
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	version32, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
 	c := fake.NewClientset(
@@ -662,6 +665,60 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			ok: false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-payload-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URLSecret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Payload: new(`{"foo":"bar}`),
+							},
+						},
+					}},
+				},
+			},
+			version: &version31,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "webhook-with-payload",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+							{
+								URLSecret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Payload: new(`{"foo":"bar}`),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{

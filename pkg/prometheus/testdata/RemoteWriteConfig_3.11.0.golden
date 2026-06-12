@@ -5,6 +5,10 @@ global:
     prometheus_replica: $(POD_NAME)
   evaluation_interval: 30s
 scrape_configs: []
+storage:
+  tsdb:
+    retention:
+      time: 24h
 remote_write:
 - url: http://example.com
   sigv4:

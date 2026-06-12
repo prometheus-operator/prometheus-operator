@@ -13,3 +13,7 @@ scrape_configs:
   - target_label: job
     action: replace
     replacement: explicit-test-scrape-config3
+storage:
+  tsdb:
+    retention:
+      time: 24h
