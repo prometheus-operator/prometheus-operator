@@ -213,7 +213,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
-	version32, err := semver.ParseTolerant("v0.31.0")
+	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
 	c := fake.NewClientset(
@@ -718,7 +718,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version32,
-			ok:      false,
+			ok:      true,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
