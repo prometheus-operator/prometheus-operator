@@ -1251,6 +1251,22 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						},
 					},
 				}},
+				//JiraConfigs: []monitoringv1alpha1.JiraConfig{{
+				//	APIURL:      ptr.To(monitoringv1alpha1.URL("https://jira.example.com/")),
+				//	Project:     "example",
+				//	Summary:     ptr.To("example alert 1"),
+				//	Description: ptr.To("example alert 1"),
+				//	Labels:      []string{"foo", "bar"},
+				//	IssueType:   "Bug",
+				//	Fields: []monitoringv1alpha1.JiraField{
+				//		{
+				//			Key: "foo", Value: apiextensionsv1.JSON{
+				//				Raw: []byte(`{"foo": "bar"}`),
+				//			},
+				//		},
+				//	},
+				//	APIType: ptr.To(monitoringv1alpha1.JiraAPITypeDatacenter),
+				//}},
 				MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{{
 					WebhookURL: corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
