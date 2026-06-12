@@ -9213,6 +9213,63 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			},
 			version: "2.40.0",
 			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_TLSConfig.golden",
+		}, {
+			name: "digitalocean_sd_config_role_databases",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Role: new(monitoringv1alpha1.DigitalOceanRoleDatabases),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version: "3.12.0",
+			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_role_databases.golden",
+		}, {
+			name: "digitalocean_sd_config_role_databases_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Role: new(monitoringv1alpha1.DigitalOceanRoleDatabases),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version: "3.11.0",
+			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_role_databases_unsupported_version.golden",
+		}, {
+			name: "digitalocean_sd_config_role_droplets",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+					{
+						Role: new(monitoringv1alpha1.DigitalOceanRoleDroplets),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						},
+					},
+				},
+			},
+			version: "3.12.0",
+			golden:  "ScrapeConfigSpecConfig_DigitalOceanSD_with_role_droplets.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			store := assets.NewTestStoreBuilder(
