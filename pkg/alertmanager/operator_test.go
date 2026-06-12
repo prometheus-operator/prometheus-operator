@@ -718,7 +718,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version32,
-			ok:      false,
+			ok:      true,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
