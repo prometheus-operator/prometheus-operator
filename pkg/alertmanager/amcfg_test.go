@@ -2295,10 +2295,10 @@ func TestGenerateConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
-	version31, err := semver.ParseTolerant("v0.31.0")
+	version30, err := semver.ParseTolerant("v0.30.0")
 	require.NoError(t, err)
 
-	version30, err := semver.ParseTolerant("v0.30.0")
+	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
 	version32, err := semver.ParseTolerant("v0.32.0")
@@ -4687,6 +4687,78 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_WebhookConfig_with_Timeout_Setup_Older_Version.golden",
+		},
+		{
+			name:      "CR with WebhookConfig with Payload",
+			amVersion: &version32,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Payload: new("{\"foo\": \"bar\"}"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_WebhookConfig_with_Payload.golden",
+		},
+		{
+			name:      "CR with WebhookConfig with Payload Unsupported Version",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Payload: new("{\"foo\": \"bar\"}"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_WebhookConfig_with_Payload_Unsupported_Version.golden",
 		},
 	}
 
@@ -9501,6 +9573,23 @@ func TestSanitizeSlackConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_update_message_supported_version.golden",
+		},
+		{
+			name:           "Test slack update_message custom api url",
+			againstVersion: versionSlackUpdateMessageAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:        "https://api.url",
+								UpdateMessage: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
