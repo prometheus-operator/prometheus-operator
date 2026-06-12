@@ -94,7 +94,7 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 			return receiverValidationFailedFormat(err)
 		}
 
-		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
+		if err := validateSNSConfigs(receiver.SNSConfigs); err != nil {
 			return receiverValidationFailedFormat(err)
 		}
 
@@ -442,7 +442,7 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 	return nil
 }
 
-func validateSnsConfigs(configs []monitoringv1alpha1.SNSConfig) error {
+func validateSNSConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 	v := func(conf monitoringv1alpha1.SNSConfig) error {
 		if (ptr.Deref(conf.TargetARN, "") == "") != (ptr.Deref(conf.TopicARN, "") == "") != (ptr.Deref(conf.PhoneNumber, "") == "") {
 			return errors.New("must provide one of 'targetARN', 'topicARN', or 'phoneNumber'")
