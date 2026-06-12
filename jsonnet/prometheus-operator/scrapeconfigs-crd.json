@@ -123,6 +123,11 @@
                           "minLength": 1,
                           "type": "string"
                         },
+                        "externalID": {
+                          "description": "externalID defines the External ID that can go along with role_arn.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
                         "filters": {
                           "description": "filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
                           "items": {

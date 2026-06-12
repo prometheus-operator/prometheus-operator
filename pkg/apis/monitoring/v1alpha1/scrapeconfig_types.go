@@ -1625,4 +1625,8 @@ type AWSSDConfig struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	Clusters []string `json:"clusters,omitempty"`
+	// externalID defines the External ID that can go along with role_arn.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ExternalID *string `json:"externalID,omitempty"`
 }

@@ -70,6 +70,8 @@ type AWSSDConfigApplyConfiguration struct {
 	// If empty, all clusters in the region are discovered.
 	// This can significantly improve performance when you only need to monitor specific clusters.
 	Clusters []string `json:"clusters,omitempty"`
+	// externalID defines the External ID that can go along with role_arn.
+	ExternalID *string `json:"externalID,omitempty"`
 }
 
 // AWSSDConfigApplyConfiguration constructs a declarative configuration of the AWSSDConfig type for use with
@@ -227,5 +229,13 @@ func (b *AWSSDConfigApplyConfiguration) WithClusters(values ...string) *AWSSDCon
 	for i := range values {
 		b.Clusters = append(b.Clusters, values[i])
 	}
+	return b
+}
+
+// WithExternalID sets the ExternalID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExternalID field is set to the value of the last call.
+func (b *AWSSDConfigApplyConfiguration) WithExternalID(value string) *AWSSDConfigApplyConfiguration {
+	b.ExternalID = &value
 	return b
 }

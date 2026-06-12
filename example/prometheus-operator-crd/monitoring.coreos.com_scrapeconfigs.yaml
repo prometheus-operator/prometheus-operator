@@ -135,6 +135,11 @@ spec:
                       description: endpoint defines the custom endpoint to be used.
                       minLength: 1
                       type: string
+                    externalID:
+                      description: externalID defines the External ID that can go
+                        along with role_arn.
+                      minLength: 1
+                      type: string
                     filters:
                       description: |-
                         filters can be used optionally to filter the instance list by other criteria.

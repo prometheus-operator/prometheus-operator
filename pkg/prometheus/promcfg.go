@@ -5131,6 +5131,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					cg.logger.Warn(fmt.Sprintf("ignoring clusters field not supported by role: %s", string(config.Role)))
 				}
 			}
+
+			if config.ExternalID != nil {
+				configs[i] = cg.WithMinimumVersion("3.12.0").AppendMapItem(configs[i], "external_id", config.ExternalID)
+			}
 		}
 		cfg = cg.WithMinimumVersion("3.8.0").AppendMapItem(cfg, "aws_sd_configs", configs)
 	}
