@@ -13241,6 +13241,34 @@ func TestScrapeConfigSpecConfigWithAWSSD(t *testing.T) {
 			},
 			version: "3.11.0",
 			golden:  "ScrapeConfigSpecConfig_AWSSD_with_RDS.golden",
+		},
+		{
+			name: "aws_sd_config_with_external_id",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:       monitoringv1alpha1.AWSRoleEC2,
+						Region:     new("us-east-1"),
+						ExternalID: new("thisisanexternalid"),
+					},
+				},
+			},
+			version: "3.12.0",
+			golden:  "ScrapeConfigSpecConfig_AWSSD_with_ExternalID.golden",
+		},
+		{
+			name: "aws_sd_config_with_external_id_unsupported_version",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AWSSDConfigs: []monitoringv1alpha1.AWSSDConfig{
+					{
+						Role:       monitoringv1alpha1.AWSRoleRDS,
+						Region:     new("us-east-1"),
+						ExternalID: new("thisisanexternalid"),
+					},
+				},
+			},
+			version: "3.11.0",
+			golden:  "ScrapeConfigSpecConfig_AWSSD_with_ExternalID_unsupported_version.golden",
 		}} {
 		t.Run(tc.name, func(t *testing.T) {
 			scs := map[string]*monitoringv1alpha1.ScrapeConfig{
