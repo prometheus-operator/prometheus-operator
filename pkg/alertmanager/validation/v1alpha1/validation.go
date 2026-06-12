@@ -54,68 +54,68 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		}
 		receiverNames[receiver.Name] = struct{}{}
 
-		receiverValidationFailedFormat := func(name string, err error) (map[string]struct{}, error) {
-			return nil, fmt.Errorf("failed to validate receiver %q: %w", name, err)
+		receiverValidationFailedFormat := func(err error) (map[string]struct{}, error) {
+			return nil, fmt.Errorf("failed to validate receiver %q: %w", receiver.Name, err)
 		}
 
 		if err := validateOpsGenieConfigs(receiver.OpsGenieConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
-			return receiverValidationFailedFormat(receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 	}
 
