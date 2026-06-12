@@ -928,11 +928,24 @@ type OpenStackSDConfig struct {
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
 
+// Service of the targets to retrieve. Must be `Droplets` or `Databases`.
+// +kubebuilder:validation:Enum=Droplets;Databases
+type DigitalOceanRole string
+
+const (
+	DigitalOceanRoleDroplets  DigitalOceanRole = "Droplets"
+	DigitalOceanRoleDatabases DigitalOceanRole = "Databases"
+)
+
 // DigitalOceanSDConfig allow retrieving scrape targets from DigitalOcean's Droplets API.
 // This service discovery uses the public IPv4 address by default, by that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 // +k8s:openapi-gen=true
 type DigitalOceanSDConfig struct {
+	// role defines the DigitalOcean role to use for service discovery.
+	// Must be one of: Droplets or Databases. Default: Droplets
+	// +optional
+	Role *DigitalOceanRole `json:"role,omitempty"`
 	// authorization defines the header configuration to authenticate against the DigitalOcean API.
 	// Cannot be set at the same time as `oauth2`.
 	// +optional
