@@ -213,9 +213,6 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
-	version32, err := semver.ParseTolerant("v0.31.0")
-	require.NoError(t, err)
-
 	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
