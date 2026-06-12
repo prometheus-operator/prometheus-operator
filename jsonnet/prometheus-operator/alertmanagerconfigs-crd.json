@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.20.1",
+      "controller-gen.kubebuilder.io/version": "v0.21.0",
       "operator.prometheus.io/version": "0.91.0"
     },
     "name": "alertmanagerconfigs.monitoring.coreos.com"
@@ -11025,6 +11025,11 @@
                                 "format": "int32",
                                 "minimum": 0,
                                 "type": "integer"
+                              },
+                              "payload": {
+                                "description": "payload define custom payload to be sent to the webhook endpoint.\nThis is an advanced configuration option that allows you\nto define a custom payload using Go templates.\nIt requires Alertmanager >= v0.32.0.",
+                                "minLength": 1,
+                                "type": "string"
                               },
                               "sendResolved": {
                                 "description": "sendResolved defines whether or not to notify about resolved alerts.",

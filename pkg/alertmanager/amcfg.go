@@ -932,6 +932,10 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 		}
 	}
 
+	if in.Payload != nil {
+		out.Payload = *in.Payload
+	}
+
 	return out, nil
 }
 
@@ -2970,10 +2974,16 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 		sc.MessageText = ""
 	}
 
-	if sc.UpdateMessage != nil && lessThanV0_32 {
-		msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
-		logger.Warn(msg)
-		sc.UpdateMessage = nil
+	if sc.UpdateMessage != nil {
+		if lessThanV0_32 {
+			msg := "'update_message' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
+			logger.Warn(msg)
+			sc.UpdateMessage = nil
+		} else if *sc.UpdateMessage && sc.APIURL != "" {
+			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
+				return fmt.Errorf(`update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+			}
+		}
 	}
 
 	if sc.AppToken != "" && sc.AppTokenFile != "" {
@@ -3056,7 +3066,7 @@ func (whc *webhookConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		whc.Timeout = nil
 	}
 
-	if len(whc.Payload) != 0 && amVersion.LT(semver.MustParse("0.32.0")) {
+	if whc.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
 		msg := "'payload' supported in Alertmanager >= 0.32.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		whc.Payload = nil

@@ -5934,6 +5934,7 @@ func TestRuntimeConfig(t *testing.T) {
 		},
 		{
 			Scenario: "Runtime GoGC not specified",
+			Version:  "v2.52.0",
 			Golden:   "RuntimeConfig_GoGC_Not_Set.golden",
 		},
 	} {
@@ -6091,6 +6092,71 @@ func TestTSDBConfig(t *testing.T) {
 				require.Error(t, err)
 				return
 			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestRetentionConfigFile(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		version       string
+		retention     monitoringv1.Duration
+		retentionSize monitoringv1.ByteSize
+		golden        string
+	}{
+		{
+			name:      "retention.time set with Prometheus >= v3.11.0",
+			version:   "v3.11.0",
+			retention: "2d",
+			golden:    "RetentionConfigFile_time_v3.11.0.golden",
+		},
+		{
+			name:          "retention.size set with Prometheus >= v3.11.0",
+			version:       "v3.11.0",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_size_v3.11.0.golden",
+		},
+		{
+			name:          "retention.time and retention.size set with Prometheus >= v3.11.0",
+			version:       "v3.11.0",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_time_size_v3.11.0.golden",
+		},
+		{
+			name:    "retention defaults to 24h when neither field is set with Prometheus >= v3.11.0",
+			version: "v3.11.0",
+			golden:  "RetentionConfigFile_default_v3.11.0.golden",
+		},
+		{
+			name:          "retention is not in the configuration file for Prometheus < v3.11.0",
+			version:       "v3.10.0",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_v3.10.0.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+			p.Spec.Retention = tc.retention
+			p.Spec.RetentionSize = tc.retentionSize
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -14573,13 +14639,13 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		name           string
-		shards         int32
-		zones          []string
-		serviceMonitor map[string]*monitoringv1.ServiceMonitor
-		podMonitor     map[string]*monitoringv1.PodMonitor
-		attachMetadata *monitoringv1.AttachMetadata
-		golden         string
+		name              string
+		shards            int32
+		zones             []string
+		serviceMonitor    map[string]*monitoringv1.ServiceMonitor
+		podMonitor        map[string]*monitoringv1.PodMonitor
+		podTopologyLabels bool
+		golden            string
 	}{
 		{
 			name:           "service_monitor_4shards_2zones",
@@ -14627,6 +14693,43 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 			}(),
 			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_false.golden",
 		},
+		// Pod topology labels (K8s >= 1.35) — no attach_metadata.node required.
+		{
+			name:              "pod_topology_labels_service_monitor_4shards_2zones",
+			shards:            4,
+			zones:             []string{"zone-a", "zone-b"},
+			serviceMonitor:    basicServiceMonitor(),
+			podTopologyLabels: true,
+			golden:            "TopologySharding_PodTopologyLabels_ServiceMonitor_4shards_2zones.golden",
+		},
+		{
+			name:              "pod_topology_labels_pod_monitor_4shards_2zones",
+			shards:            4,
+			zones:             []string{"zone-a", "zone-b"},
+			podMonitor:        basicPodMonitor(),
+			podTopologyLabels: true,
+			golden:            "TopologySharding_PodTopologyLabels_PodMonitor_4shards_2zones.golden",
+		},
+		{
+			name:              "pod_topology_labels_service_monitor_6shards_3zones",
+			shards:            6,
+			zones:             []string{"zone-a", "zone-b", "zone-c"},
+			serviceMonitor:    basicServiceMonitor(),
+			podTopologyLabels: true,
+			golden:            "TopologySharding_PodTopologyLabels_ServiceMonitor_6shards_3zones.golden",
+		},
+		{
+			name:   "pod_topology_labels_attach_metadata_false_is_respected",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			serviceMonitor: func() map[string]*monitoringv1.ServiceMonitor {
+				sm := basicServiceMonitor()
+				sm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{Node: new(bool)}
+				return sm
+			}(),
+			podTopologyLabels: true,
+			golden:            "TopologySharding_PodTopologyLabels_ServiceMonitor_attach_metadata_false.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -14636,7 +14739,12 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: tc.zones},
 			}
 
-			cg := mustNewConfigGenerator(t, p, WithPrometheusTopologySharding())
+			opts := []ConfigGeneratorOption{WithPrometheusTopologySharding()}
+			if tc.podTopologyLabels {
+				opts = append(opts, WithPodTopologyLabelsSupport())
+			}
+
+			cg := mustNewConfigGenerator(t, p, opts...)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
 				tc.serviceMonitor,
