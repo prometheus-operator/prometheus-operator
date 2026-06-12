@@ -20,3 +20,7 @@ scrape_configs:
   metric_relabel_configs:
   - target_label: namespace
     replacement: default
+storage:
+  tsdb:
+    retention:
+      time: 24h

@@ -34,7 +34,6 @@ import (
 )
 
 const (
-	defaultRetention                     = "24h"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
@@ -396,17 +395,18 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
 		if p.Spec.Retention == "" {
-			retentionTimeFlagValue = defaultRetention
+			retentionTimeFlagValue = prompkg.DefaultRetention
 		}
-	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
-		retentionTimeFlagValue = defaultRetention
+	} else {
+		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize))
 	}
 
-	if retentionTimeFlagValue != "" {
+	// Starting with Prometheus v3.11.0, retention settings are populated in the configuration file.
+	if retentionTimeFlagValue != "" && cg.Version().LT(semver.MustParse("3.11.0")) {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
 
-	if p.Spec.RetentionSize != "" {
+	if p.Spec.RetentionSize != "" && cg.Version().LT(semver.MustParse("3.11.0")) {
 		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
