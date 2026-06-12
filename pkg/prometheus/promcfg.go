@@ -5132,6 +5132,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				}
 			}
 
+			// TODO: Add test for external ID
 			if config.ExternalID != nil {
 				configs[i] = cg.WithMinimumVersion("3.12.0").AppendMapItem(configs[i], "external_id", config.ExternalID)
 			}
