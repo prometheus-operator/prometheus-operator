@@ -3,7 +3,7 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.20.1",
+      "controller-gen.kubebuilder.io/version": "v0.21.0",
       "operator.prometheus.io/version": "0.91.0"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
@@ -521,7 +521,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -1258,7 +1258,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -1905,7 +1905,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -2628,7 +2628,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -3299,7 +3299,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -4274,7 +4274,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -4996,7 +4996,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -5647,7 +5647,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -6231,7 +6231,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -6908,7 +6908,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -7590,7 +7590,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -8264,7 +8264,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -8875,7 +8875,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -9638,7 +9638,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -10177,7 +10177,7 @@
                       },
                       "tokenUrl": {
                         "description": "tokenUrl defines the URL to fetch the token from.",
-                        "minLength": 1,
+                        "pattern": "^(http|https)://.+$",
                         "type": "string"
                       }
                     },
@@ -11037,7 +11037,7 @@
                             },
                             "tokenUrl": {
                               "description": "tokenUrl defines the URL to fetch the token from.",
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },

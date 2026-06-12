@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
       - name: Import environment variables from file
         run: cat ".github/env" >> "$GITHUB_ENV"
       - name: Reclaim disk space
@@ -36,21 +36,21 @@ jobs:
           go-version: '${{ env.golang-version }}'
           check-latest: true
       - name: Install cosign
-        uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Check the Docker version
         run: docker version
       - name: Check the cosign version
         run: cosign version
       - name: Install crane
-        uses: imjasonh/setup-crane@6da1ae018866400525525ce74ff892880c099987 # v0.5
+        uses: imjasonh/setup-crane@59c71e96a00b28651f10369ba3359a6d730740a0 # v0.6
       - name: Login to quay.io
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: quay.io
           username: ${{ secrets.quay_username }}
           password: ${{ secrets.quay_password }}
       - name: Login to ghcr.io
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}

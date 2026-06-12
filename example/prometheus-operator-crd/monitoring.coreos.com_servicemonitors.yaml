@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
     operator.prometheus.io/version: 0.91.0
   name: servicemonitors.monitoring.coreos.com
 spec:
@@ -68,6 +68,10 @@ spec:
 
                       The Prometheus service account must have the `list` and `watch`
                       permissions on the `Nodes` objects.
+
+                      Node metadata labels are not automatically added to scraped metrics. They are
+                      exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+                      with relabeling configuration.
                     type: boolean
                 type: object
               bodySizeLimit:
@@ -689,7 +693,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -711,7 +715,8 @@ spec:
                       type: string
                     port:
                       description: |-
-                        port defines the name of the Service port which this endpoint refers to.
+                        port defines the name of the Service port which this endpoint refers to
+                        (e.g. `.spec.ports[].name`).
 
                         It takes precedence over `targetPort`.
                       type: string
@@ -877,8 +882,10 @@ spec:
                       - type: integer
                       - type: string
                       description: |-
-                        targetPort defines the name or number of the target port of the `Pod` object behind the
-                        Service. The port must be specified with the container's port property.
+                        targetPort defines the name or number of a container port on Pods selected
+                        by the Service.
+                        If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
+                        If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: tlsConfig defines TLS configuration used by the
