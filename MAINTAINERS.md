@@ -14,7 +14,7 @@
 | Nicolas Takashi   | nicolas.tcs@hotmail.com   | `@ntakashi`          | [@nicolastakashi](https://github.com/nicolastakashi) | Coralogix                      |
 | M Viswanath Sai   | viswanathsai021@gmail.com | `@mviswanathsai`     | [@mviswanathsai](https://github.com/mviswanathsai)   | Student, IIT(BHU)              |
 | Hélia Barroso     | helia_barroso@hotmail.com | `@Hélia Barroso`     | [@heliapb](https://github.com/heliapb)               | Five9                          |
-| Mos Nattapong E   | nuttapong_mos@hotmail.com | `@Nutmos`            | [@nutmos](https://github.com/nutmos)                | Red Hat                          |
+| Mos Nattapong E   | nuttapong_mos@hotmail.com | `@Nutmos`            | [@nutmos](https://github.com/nutmos)                 | Red Hat                          |
 
 
 Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
