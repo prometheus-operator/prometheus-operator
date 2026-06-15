@@ -718,15 +718,15 @@ func (o *OAuth2) Validate() error {
 	}
 
 	if o.ClientID == (SecretOrConfigMap{}) {
-		return errors.New("OAuth2 clientID must be specified")
+		return errors.New("OAuth2 'clientID' must be specified")
 	}
 
 	if err := o.ClientID.Validate(); err != nil {
-		return fmt.Errorf("invalid OAuth2 clientID: %w", err)
+		return fmt.Errorf("invalid OAuth2 'clientID': %w", err)
 	}
 
 	if err := o.TLSConfig.Validate(); err != nil {
-		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
+		return fmt.Errorf("invalid OAuth2 'tlsConfig': %w", err)
 	}
 
 	if err := o.ProxyConfig.Validate(); err != nil {
