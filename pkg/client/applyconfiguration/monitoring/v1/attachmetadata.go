@@ -29,6 +29,16 @@ type AttachMetadataApplyConfiguration struct {
 	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
 	// with relabeling configuration.
 	Node *bool `json:"node,omitempty"`
+	// namespace when set to true, Prometheus attaches namespace metadata to the discovered
+	// targets.
+	//
+	// The Prometheus service account must have the `list` and `watch`
+	// permissions on the `Namespaces` objects.
+	//
+	// Only valid for pod, endpoints, endpointslice, service, ingress.
+	//
+	// It requires Prometheus >= v3.6.0.
+	Namespace *bool `json:"namespace,omitempty"`
 }
 
 // AttachMetadataApplyConfiguration constructs a declarative configuration of the AttachMetadata type for use with
@@ -42,5 +52,13 @@ func AttachMetadata() *AttachMetadataApplyConfiguration {
 // If called multiple times, the Node field is set to the value of the last call.
 func (b *AttachMetadataApplyConfiguration) WithNode(value bool) *AttachMetadataApplyConfiguration {
 	b.Node = &value
+	return b
+}
+
+// WithNamespace sets the Namespace field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Namespace field is set to the value of the last call.
+func (b *AttachMetadataApplyConfiguration) WithNamespace(value bool) *AttachMetadataApplyConfiguration {
+	b.Namespace = &value
 	return b
 }
