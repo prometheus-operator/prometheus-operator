@@ -80,7 +80,7 @@ spec:
 
 ### Topology-aware sharding
 
-> **Alpha:** Topology-aware sharding requires the `PrometheusTopologySharding` feature gate to be enabled on the operator.
+> **Beta:** Topology-aware sharding requires the `PrometheusTopologySharding` feature gate to be enabled on the operator.
 
 In multi-zone clusters, the default address-based sharding distributes targets without regard for their zone, which can generate costly cross-zone traffic. Topology-aware sharding pins each Prometheus shard to a specific zone so that it only scrapes targets local to that zone.
 
@@ -111,7 +111,7 @@ With this configuration and 4 shards across 2 zones, shards 0 and 2 are schedule
 
 ### Retaining shards
 
-> **Alpha:** Shard retention requires the `PrometheusShardRetentionPolicy` feature gate to be enabled on the operator.
+> **Beta:** Shard retention requires the `PrometheusShardRetentionPolicy` feature gate to be enabled on the operator.
 
 When scaling down the number of shards, the pods from the removed shards are deleted by default along with access to their historical data. To preserve scaled-down shards so their data remains queryable until the retention duration expires, set `.spec.shardRetentionPolicy.whenScaled` to `Retain`:
 
@@ -146,8 +146,6 @@ spec:
 
 ## Example
 
-View the complete [Shards manifests](../../example/shards).
-
 The following manifest creates a Prometheus server with two replicas:
 
 ```yaml
@@ -169,14 +167,14 @@ spec:
 This can be verified with the following command:
 
 ```bash
-> kubectl get pods -n <namespace>
+kubectl get pods -n default
 ```
 
 The output is similar to this:
 
 ```bash
 prometheus-prometheus-0                2/2     Running   1          10s
-prometheus-prometheus-1                1/2     Running   1          10s
+prometheus-prometheus-1                2/2     Running   1          10s
 ```
 
 Deploy the example application and monitor it:
@@ -186,6 +184,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: example-app
+  namespace: default
 spec:
   replicas: 3
   selector:
@@ -209,6 +208,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: example-app
+  namespace: default
   labels:
     app: example-app
 spec:
@@ -224,6 +224,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: example-app
+  namespace: default
   labels:
     team: frontend
 spec:
@@ -237,14 +238,12 @@ spec:
 Explore one of the monitoring Prometheus instances:
 
 ```bash
-> kubectl port-forward pod/prometheus-prometheus-0 9090:9090
+kubectl port-forward pod/prometheus-prometheus-0 9090:9090
 ```
 
 We find the prometheus server scrapes three targets.
 
-### Reshard Targets and Expand Prometheus
-
-Expand prometheus to two shards as shown below:
+Now let's expand the Prometheus resource to two shards as shown below:
 
 ```yaml mdox-exec="cat example/shards/prometheus.yaml"
 apiVersion: monitoring.coreos.com/v1
@@ -266,7 +265,7 @@ spec:
 This can be verified with the following command:
 
 ```bash
-> kubectl get pods -n <namespace>
+kubectl get pods -n <namespace>
 ```
 
 The output is similar to this:
@@ -281,9 +280,7 @@ prometheus-prometheus-shard-1-1        2/2     Running   1          12s
 Explore one of the monitoring Prometheus instances added for sharding:
 
 ```bash
-> kubectl port-forward prometheus-prometheus-shard-1-0 9091:9090
+kubectl port-forward prometheus-prometheus-shard-1-0 9091:9090
 ```
 
-We find two targets are being scraped. The original Prometheus instance scrapes one target.
-
-//To query globally, we must use the Thanos sidecar, since the original data in Prometheus will not be rebalanced.
+We should find that one or two targets are being scraped by this instance while the original Prometheus shard scrapes the remaining target(s).

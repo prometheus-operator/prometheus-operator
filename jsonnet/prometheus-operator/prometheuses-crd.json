@@ -8246,7 +8246,7 @@
                     "type": "string"
                   },
                   "shardRetentionPolicy": {
-                    "description": "shardRetentionPolicy defines the retention policy for the Prometheus shards.\n(Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.",
+                    "description": "shardRetentionPolicy defines the retention policy for the Prometheus shards.\n\n(Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).",
                     "properties": {
                       "retain": {
                         "description": "retain defines the config for retention when the retention policy is set\nto `Retain`.\n\nIf not defined, the operator will use the retention duration configured\nfor the Prometheus data. If the resource uses size-based retention, the\nshard(s) are kept forever (unless manually deleted).",
