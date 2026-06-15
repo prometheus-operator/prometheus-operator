@@ -177,6 +177,30 @@ func (f *Framework) CreateCertificateResources(namespace, certsDir string, prwtc
 	return nil
 }
 
+func NewValidatedLabelSelector(matchLabels map[string]string) *monitoringv1.ValidatedLabelSelector {
+	return &monitoringv1.ValidatedLabelSelector{
+		LabelSelector: metav1.LabelSelector{
+			MatchLabels: matchLabels,
+		},
+	}
+}
+
+func NewValidatedLabelSelectorFrom(ls metav1.LabelSelector) *monitoringv1.ValidatedLabelSelector {
+	return &monitoringv1.ValidatedLabelSelector{LabelSelector: ls}
+}
+
+func (f *Framework) NewValidatedLabelSelector(matchLabels map[string]string) *monitoringv1.ValidatedLabelSelector {
+	return NewValidatedLabelSelector(matchLabels)
+}
+
+func (f *Framework) NewValidatedLabelSelectorFrom(ls metav1.LabelSelector) *monitoringv1.ValidatedLabelSelector {
+	return NewValidatedLabelSelectorFrom(ls)
+}
+
+func validatedLabelSelector(matchLabels map[string]string) *monitoringv1.ValidatedLabelSelector {
+	return NewValidatedLabelSelector(matchLabels)
+}
+
 func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) *monitoringv1.Prometheus {
 	promVersion := operator.DefaultPrometheusVersion
 	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
@@ -192,16 +216,12 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 				Replicas: &replicas,
 				Version:  promVersion,
-				ServiceMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
-					},
-				},
-				PodMonitorSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						"group": group,
-					},
-				},
+				ServiceMonitorSelector: validatedLabelSelector(map[string]string{
+					"group": group,
+				}),
+				PodMonitorSelector: validatedLabelSelector(map[string]string{
+					"group": group,
+				}),
 				ServiceAccountName: "prometheus",
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
@@ -209,11 +229,9 @@ func (f *Framework) MakeBasicPrometheus(ns, name, group string, replicas int32) 
 					},
 				},
 			},
-			RuleSelector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"role": "rulefile",
-				},
-			},
+			RuleSelector: validatedLabelSelector(map[string]string{
+				"role": "rulefile",
+			}),
 		},
 	}
 }

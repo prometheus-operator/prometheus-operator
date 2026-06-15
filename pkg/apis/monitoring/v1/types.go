@@ -24,6 +24,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -535,6 +536,31 @@ func (c *WebTLSConfig) Validate() error {
 	}
 
 	return nil
+}
+
+// ValidatedLabelSelector is a LabelSelector with CEL validation for label key length and matchExpressions operators.
+// Label keys follow the Kubernetes syntax: an optional prefix (<=253 chars) and a required name segment (<=63 chars),
+// separated by a slash. See https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+// +kubebuilder:validation:XValidation:rule="(!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$'))) && (!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))",message="label keys must follow Kubernetes label syntax: optional prefix (<=253 chars) and name segment (<=63 chars)"
+// +kubebuilder:validation:XValidation:rule="!has(self.matchExpressions) || self.matchExpressions.all(expr, expr.operator in ['In', 'NotIn', 'Exists', 'DoesNotExist'])",message="matchExpressions operator must be one of: In, NotIn, Exists, DoesNotExist"
+type ValidatedLabelSelector struct {
+	metav1.LabelSelector `json:",inline"`
+}
+
+// AsLabelSelector returns a pointer to the underlying metav1.LabelSelector.
+func (v *ValidatedLabelSelector) AsLabelSelector() *metav1.LabelSelector {
+	if v == nil {
+		return nil
+	}
+	return &v.LabelSelector
+}
+
+// AsSelector converts the ValidatedLabelSelector to a labels.Selector.
+func (v *ValidatedLabelSelector) AsSelector() (labels.Selector, error) {
+	if v == nil {
+		return labels.Nothing(), nil
+	}
+	return metav1.LabelSelectorAsSelector(v.AsLabelSelector())
 }
 
 // LabelName is a valid Prometheus label name.

@@ -736,7 +736,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for Prometheus instances selecting ServiceMonitors in
 		// the namespace.
-		smNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ServiceMonitorNamespaceSelector)
+		smNSSelector, err := p.Spec.ServiceMonitorNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ServiceMonitorNamespaceSelector of %q to selector", p.Name),
@@ -751,7 +751,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		// Check for Prometheus instances selecting PodMonitors in the NS.
-		pmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.PodMonitorNamespaceSelector)
+		pmNSSelector, err := p.Spec.PodMonitorNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert PodMonitorNamespaceSelector of %q to selector", p.Name),
@@ -766,7 +766,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 
 		// Check for Prometheus instances selecting Probes in the NS.
-		bmNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ProbeNamespaceSelector)
+		bmNSSelector, err := p.Spec.ProbeNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ProbeNamespaceSelector of %q to selector", p.Name),
@@ -782,7 +782,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 
 		// Check for Prometheus instances selecting PrometheusRules in
 		// the NS.
-		ruleNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.RuleNamespaceSelector)
+		ruleNSSelector, err := p.Spec.RuleNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert RuleNamespaceSelector of %q to selector", p.Name),
@@ -797,7 +797,7 @@ func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
 		}
 		// Check for Prometheus instances selecting ScrapeConfigs in
 		// the NS.
-		scrapeConfigNSSelector, err := metav1.LabelSelectorAsSelector(p.Spec.ScrapeConfigNamespaceSelector)
+		scrapeConfigNSSelector, err := p.Spec.ScrapeConfigNamespaceSelector.AsSelector()
 		if err != nil {
 			c.logger.Error(
 				fmt.Sprintf("failed to convert ScrapeConfigNamespaceSelector of %q to selector", p.Name),
@@ -840,7 +840,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 	err := c.promInfs.ListAll(labels.Everything(), func(obj any) {
 		p := obj.(*monitoringv1.Prometheus)
 
-		for name, selector := range map[string]*metav1.LabelSelector{
+		for name, selector := range map[string]*monitoringv1.ValidatedLabelSelector{
 			"PodMonitors":     p.Spec.PodMonitorNamespaceSelector,
 			"Probes":          p.Spec.ProbeNamespaceSelector,
 			"PrometheusRules": p.Spec.RuleNamespaceSelector,
@@ -848,7 +848,7 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
 
-			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
+			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector.AsLabelSelector())
 			if err != nil {
 				c.logger.Error(
 					"failed to detect label selection change",
