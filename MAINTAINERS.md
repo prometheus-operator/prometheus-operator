@@ -15,7 +15,6 @@
 | M Viswanath Sai   | viswanathsai021@gmail.com | `@mviswanathsai`     | [@mviswanathsai](https://github.com/mviswanathsai)   | Student, IIT(BHU)              |
 | Hélia Barroso     | helia_barroso@hotmail.com | `@Hélia Barroso`     | [@heliapb](https://github.com/heliapb)               | Five9                          |
 
-
 Please reach any of the maintainers on slack (#prometheus-operator on https://kubernetes.slack.com) or email if you want to help.
 
 ## Triage
