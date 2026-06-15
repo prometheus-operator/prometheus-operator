@@ -4774,7 +4774,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},
@@ -4801,7 +4801,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},
@@ -4817,7 +4817,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},

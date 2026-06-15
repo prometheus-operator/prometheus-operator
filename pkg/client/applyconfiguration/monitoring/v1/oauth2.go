@@ -29,9 +29,50 @@ type OAuth2ApplyConfiguration struct {
 	// clientId defines a key of a Secret or ConfigMap containing the
 	// OAuth2 client's ID.
 	ClientID *SecretOrConfigMapApplyConfiguration `json:"clientId,omitempty"`
+	// grantType defines the OAuth2 grant type to use. It can be one of
+	// "ClientCredentials" or "JWTBearer".
+	// If empty, defaults to "ClientCredentials".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	GrantType *monitoringv1.OAuth2GrantType `json:"grantType,omitempty"`
 	// clientSecret defines a key of a Secret containing the OAuth2
 	// client's secret.
+	// Only used when grantType is set to "ClientCredentials" or empty.
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
+	// clientCertificateKey defines a key of a Secret containing the RSA
+	// private key used to sign JWT tokens.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	ClientCertificateKey *corev1.SecretKeySelector `json:"clientCertificateKey,omitempty"`
+	// clientCertificateKeyId defines the JWT key identifier to include
+	// in the JWT token header.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	ClientCertificateKeyID *string `json:"clientCertificateKeyId,omitempty"`
+	// signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+	// Valid values are RS256, RS384, RS512. Defaults to RS256.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	SignatureAlgorithm *monitoringv1.SignatureAlgorithm `json:"signatureAlgorithm,omitempty"`
+	// issuer defines the issuer claim for JWT tokens.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	Issuer *string `json:"issuer,omitempty"`
+	// audience defines the intended audience of the JWT token request.
+	// If empty, the value of TokenURL is used as the intended audience.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	Audience *string `json:"audience,omitempty"`
+	// claims defines a map of additional claims to include in the JWT token.
+	// Only used when grantType is set to "JWTBearer".
+	//
+	// It requires Prometheus >= v3.9.0. Currently not supported by Alertmanager.
+	Claims *monitoringv1.Entries `json:"claims,omitempty"`
 	// tokenUrl defines the URL to fetch the token from.
 	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
 	// scopes defines the OAuth2 scopes used for the token request.
@@ -61,11 +102,67 @@ func (b *OAuth2ApplyConfiguration) WithClientID(value *SecretOrConfigMapApplyCon
 	return b
 }
 
+// WithGrantType sets the GrantType field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the GrantType field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithGrantType(value monitoringv1.OAuth2GrantType) *OAuth2ApplyConfiguration {
+	b.GrantType = &value
+	return b
+}
+
 // WithClientSecret sets the ClientSecret field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientSecret field is set to the value of the last call.
 func (b *OAuth2ApplyConfiguration) WithClientSecret(value corev1.SecretKeySelector) *OAuth2ApplyConfiguration {
 	b.ClientSecret = &value
+	return b
+}
+
+// WithClientCertificateKey sets the ClientCertificateKey field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ClientCertificateKey field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithClientCertificateKey(value corev1.SecretKeySelector) *OAuth2ApplyConfiguration {
+	b.ClientCertificateKey = &value
+	return b
+}
+
+// WithClientCertificateKeyID sets the ClientCertificateKeyID field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ClientCertificateKeyID field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithClientCertificateKeyID(value string) *OAuth2ApplyConfiguration {
+	b.ClientCertificateKeyID = &value
+	return b
+}
+
+// WithSignatureAlgorithm sets the SignatureAlgorithm field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SignatureAlgorithm field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithSignatureAlgorithm(value monitoringv1.SignatureAlgorithm) *OAuth2ApplyConfiguration {
+	b.SignatureAlgorithm = &value
+	return b
+}
+
+// WithIssuer sets the Issuer field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Issuer field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithIssuer(value string) *OAuth2ApplyConfiguration {
+	b.Issuer = &value
+	return b
+}
+
+// WithAudience sets the Audience field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Audience field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithAudience(value string) *OAuth2ApplyConfiguration {
+	b.Audience = &value
+	return b
+}
+
+// WithClaims sets the Claims field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Claims field is set to the value of the last call.
+func (b *OAuth2ApplyConfiguration) WithClaims(value monitoringv1.Entries) *OAuth2ApplyConfiguration {
+	b.Claims = &value
 	return b
 }
 
