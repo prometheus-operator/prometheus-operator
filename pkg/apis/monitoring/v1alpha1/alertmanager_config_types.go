@@ -1135,7 +1135,7 @@ type SNSConfig struct {
 	//
 	// It requires Alertmanager >= 0.33.0.
 	// +optional
-	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"`
+	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"` // nolint:kubeapilinter
 }
 
 // TelegramConfig configures notifications via Telegram.

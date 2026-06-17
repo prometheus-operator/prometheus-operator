@@ -57,6 +57,8 @@ type SNSConfigApplyConfiguration struct {
 	// useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
 	// alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
 	// is set; set explicitly when configuring ca_bundle via shared AWS config.
+	//
+	// It requires Alertmanager >= 0.33.0.
 	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"`
 }
 
