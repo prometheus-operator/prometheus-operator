@@ -49,6 +49,7 @@
 * [ENHANCEMENT] Add `healthFilter` field for ConsulSD in `ScrapeConfig` CRD. #8529
 * [BUGFIX] Ensure that inactive shards don't scrape any targets when the sharding retention policy is `Retain`. #8513
 * [BUGFIX] Fix Telegram bot token validation in Alertmanager configuration Secret. #8465
+* [BUGFIX] Consider mute and active time intervals from the global AlertmanagerConfig when validating selected AlertmanagerConfig resources. #8006
 
 ## 0.90.1 / 2026-03-25
 
