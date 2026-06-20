@@ -58,9 +58,13 @@ type ConsulSDConfigApplyConfiguration struct {
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// filter defines the filter expression used to filter the catalog results.
-	// See https://www.consul.io/api-docs/catalog#list-services
+	// See https://developer.hashicorp.com/consul/api-docs/catalog#filtering
 	// It requires Prometheus >= 3.0.0.
 	Filter *string `json:"filter,omitempty"`
+	// healthFilter defines the filter expression used to filter the health results.
+	// See https://developer.hashicorp.com/consul/api-docs/health#filtering
+	// It requires Prometheus >= 3.11.2.
+	HealthFilter *string `json:"healthFilter,omitempty"`
 	// allowStale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	AllowStale *bool `json:"allowStale,omitempty"`
@@ -195,6 +199,14 @@ func (b *ConsulSDConfigApplyConfiguration) WithNodeMeta(entries map[string]strin
 // If called multiple times, the Filter field is set to the value of the last call.
 func (b *ConsulSDConfigApplyConfiguration) WithFilter(value string) *ConsulSDConfigApplyConfiguration {
 	b.Filter = &value
+	return b
+}
+
+// WithHealthFilter sets the HealthFilter field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HealthFilter field is set to the value of the last call.
+func (b *ConsulSDConfigApplyConfiguration) WithHealthFilter(value string) *ConsulSDConfigApplyConfiguration {
+	b.HealthFilter = &value
 	return b
 }
 

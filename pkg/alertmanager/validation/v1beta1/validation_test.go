@@ -84,7 +84,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											Type: "a",
 											Text: "b",
 											URL:  "www.test.com",
-											Name: ptr.To("c"),
+											Name: new("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -172,8 +172,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        ptr.To("a"),
-									Smarthost: ptr.To("invalid"),
+									To:        new("a"),
+									Smarthost: new("invalid"),
 								},
 							},
 						},
@@ -287,7 +287,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "user",
 									},
-									TokenFile: ptr.To("/path/token_file"),
+									TokenFile: new("/path/token_file"),
 								},
 							},
 						},
@@ -312,7 +312,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "user",
 									},
-									UserKeyFile: ptr.To("/path/user_key_file"),
+									UserKeyFile: new("/path/user_key_file"),
 								},
 							},
 						},
@@ -365,8 +365,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									HTML:      ptr.To(true),
-									Monospace: ptr.To(true),
+									HTML:      new(true),
+									Monospace: new(true),
 								},
 							},
 						},
@@ -395,7 +395,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									HTML: ptr.To(true),
+									HTML: new(true),
 									URL:  "http://%><invalid.com",
 								},
 							},
@@ -486,9 +486,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 								{
 									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
-											ID:       ptr.To("a"),
-											Name:     ptr.To("b"),
-											Username: ptr.To("c"),
+											ID:       new("a"),
+											Name:     new("b"),
+											Username: new("c"),
 											Type:     "user",
 										},
 									},
@@ -501,7 +501,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											Type: "a",
 											Text: "b",
 											URL:  "https://www.test.com",
-											Name: ptr.To("c"),
+											Name: new("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -517,7 +517,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To("https://www.test.com"),
+									URL: new("https://www.test.com"),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -531,8 +531,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        ptr.To("a"),
-									Smarthost: ptr.To("b:8080"),
+									To:        new("a"),
+									Smarthost: new("b:8080"),
 									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",
@@ -562,8 +562,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									Retry:  ptr.To("10m"),
-									Expire: ptr.To("5m"),
+									Retry:  new("10m"),
+									Expire: new("5m"),
 								},
 							},
 						},

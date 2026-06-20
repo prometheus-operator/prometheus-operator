@@ -21,10 +21,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -45,6 +47,7 @@ func main() {
 		logConfig            logging.Config
 		memlimitRatio        float64
 		nameValidationScheme string
+		promqlOptionsStr     string
 	)
 
 	server.RegisterFlags(flagset, &serverConfig)
@@ -53,6 +56,7 @@ func main() {
 
 	flagset.Float64Var(&memlimitRatio, "auto-gomemlimit-ratio", defaultGOMemlimitRatio, "The ratio of reserved GOMEMLIMIT memory to the detected maximum container or system memory. The value should be greater than 0.0 and less than 1.0. Default: 0.0 (disabled).")
 	flagset.StringVar(&nameValidationScheme, "name-validation-scheme", defaultValidationScheme, "The name validation scheme to use ('legacy' or 'utf8').")
+	flagset.StringVar(&promqlOptionsStr, "promql-options", "", "Comma-separated list of PromQL parser options to enable. Valid values: experimental-functions, duration-expression-parsing, extended-range-selectors, binop-fill-modifiers.")
 
 	_ = flagset.Parse(os.Args[1:])
 
@@ -80,12 +84,31 @@ func main() {
 		os.Exit(1)
 	}
 
+	var parserOptions parser.Options
+	for opt := range strings.SplitSeq(promqlOptionsStr, ",") {
+		switch strings.TrimSpace(opt) {
+		case "":
+			// skip empty string (flag not set)
+		case "experimental-functions":
+			parserOptions.EnableExperimentalFunctions = true
+		case "duration-expression-parsing":
+			parserOptions.ExperimentalDurationExpr = true
+		case "extended-range-selectors":
+			parserOptions.EnableExtendedRangeSelectors = true
+		case "binop-fill-modifiers":
+			parserOptions.EnableBinopFillModifiers = true
+		default:
+			logger.Error("invalid -promql-options value", "value", opt, "supported", []string{"experimental-functions", "duration-expression-parsing", "extended-range-selectors", "binop-fill-modifiers"})
+			os.Exit(1)
+		}
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	wg, ctx := errgroup.WithContext(ctx)
 
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), validationScheme)
+	admit := admission.New(logger.With("component", "admissionwebhook"), validationScheme, parserOptions)
 	admit.Register(mux)
 
 	r := metrics.NewRegistry("prometheus_operator_admission_webhook")

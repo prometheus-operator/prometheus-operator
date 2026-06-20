@@ -547,14 +547,17 @@ type LabelName string
 //
 // +k8s:openapi-gen=true
 type Endpoint struct {
-	// port defines the name of the Service port which this endpoint refers to.
+	// port defines the name of the Service port which this endpoint refers to
+	// (e.g. `.spec.ports[].name`).
 	//
 	// It takes precedence over `targetPort`.
 	// +optional
 	Port string `json:"port,omitempty"`
 
-	// targetPort defines the name or number of the target port of the `Pod` object behind the
-	// Service. The port must be specified with the container's port property.
+	// targetPort defines the name or number of a container port on Pods selected
+	// by the Service.
+	// If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
+	// If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
 	//
 	// +optional
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
@@ -653,6 +656,10 @@ type AttachMetadata struct {
 	// The Prometheus service account must have the `list` and `watch`
 	// permissions on the `Nodes` objects.
 	//
+	// Node metadata labels are not automatically added to scraped metrics. They are
+	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+	// with relabeling configuration.
+	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 }
@@ -673,9 +680,8 @@ type OAuth2 struct {
 
 	// tokenUrl defines the URL to fetch the token from.
 	//
-	// +kubebuilder:validation:MinLength=1
 	// +required
-	TokenURL string `json:"tokenUrl"`
+	TokenURL URL `json:"tokenUrl"`
 
 	// scopes defines the OAuth2 scopes used for the token request.
 	//
@@ -707,20 +713,24 @@ func (o *OAuth2) Validate() error {
 		return nil
 	}
 
-	if o.TokenURL == "" {
+	if string(o.TokenURL) == "" {
 		return errors.New("OAuth2 tokenURL must be specified")
 	}
 
 	if o.ClientID == (SecretOrConfigMap{}) {
-		return errors.New("OAuth2 clientID must be specified")
+		return errors.New("OAuth2 'clientID' must be specified")
 	}
 
 	if err := o.ClientID.Validate(); err != nil {
-		return fmt.Errorf("invalid OAuth2 clientID: %w", err)
+		return fmt.Errorf("invalid OAuth2 'clientID': %w", err)
 	}
 
 	if err := o.TLSConfig.Validate(); err != nil {
-		return fmt.Errorf("invalid OAuth2 tlsConfig: %w", err)
+		return fmt.Errorf("invalid OAuth2 'tlsConfig': %w", err)
+	}
+
+	if err := o.ProxyConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid OAuth2 proxyConfig: %w", err)
 	}
 
 	return nil
@@ -1078,10 +1088,8 @@ func (tc *TracingConfig) Validate() error {
 	}
 
 	if tc.SamplingFraction != nil {
-		min, _ := resource.ParseQuantity("0")
-		max, _ := resource.ParseQuantity("1")
-
-		if tc.SamplingFraction.Cmp(min) < 0 || tc.SamplingFraction.Cmp(max) > 0 {
+		v := tc.SamplingFraction.AsApproximateFloat64()
+		if v < 0 || v > 1 {
 			return fmt.Errorf("`samplingFraction` must be between 0 and 1")
 		}
 	}

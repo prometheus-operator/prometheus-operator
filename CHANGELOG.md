@@ -1,10 +1,54 @@
-## UNRELEASED
+## 0.92.0 / 2026-06-18
 
+> **Note:** The `PrometheusTopologySharding` and `PrometheusShardRetentionPolicy` feature gates have been promoted to **Beta** in this release and are now enabled by default. See the [sharding documentation](https://prometheus-operator.dev/docs/platform/sharding/) for details.
+
+* [CHANGE] Add URL validation for the `tokenUrl` field in OAuth2 configuration across all CRDs. #8579
+* [CHANGE] Add URL validation for the `url` field in `RemoteReadSpec` in `Prometheus` CRD. #8596
+* [FEATURE] Migrate retention options from CLI flags to the config file for `Prometheus` CRD (Prometheus >= v3 uses the config file; older versions continue to use CLI flags). #8547
+* [FEATURE] Add `staleSeriesCompactionThreshold` field to `TSDBSpec` in `Prometheus` and `PrometheusAgent` CRDs. #8563
+* [FEATURE] Add `labelNameUnderscoreSanitization` and `labelNamePreserveMultipleUnderscores` fields to `OTLPConfig` in `Prometheus` and `PrometheusAgent` CRDs. #8562
+* [FEATURE] Add `payload` field to Webhook receiver in `AlertmanagerConfig` CRD. #8507
+* [ENHANCEMENT] Use pod topology labels for zone sharding on Kubernetes >= 1.35 when the `PrometheusTopologySharding` feature gate is enabled (removes the need for `attachMetadata.node=true`). #8564
+* [ENHANCEMENT] Add validation for the Slack `update_message` field in Alertmanager configuration Secret. #8556
+* [BUGFIX] Validate target labels in `Probe` static configuration to prevent invalid Prometheus scrape configs. #7901
+* [BUGFIX] Fix goroutine leak and data race in `pollBasedListerWatcher`. #8593
+* [BUGFIX] Validate `ProxyConfig` in OAuth2 configuration. #8610
+* [BUGFIX] Fix SMTP smarthost format error handling in Alertmanager configuration. #8586
+* [BUGFIX] Fix missing `return` in admission webhook after marshal failure. #8582
+* [BUGFIX] Fix `FindOwner` to return `nil` on `meta.Accessor` error. #8585
+* [BUGFIX] Fix dropped gzip `Close` errors in `GzipConfig` and `GunzipConfig`. #8573
+* [BUGFIX] Fix panic on malformed key=value flag input (e.g. `--labels "key"`). #8560
+
+## 0.91.0 / 2026-05-05
+
+* [CHANGE] Enforce mutual exclusion of `basicAuth`, `authorization` and `oauth2` in `ScrapeConfig` CRD. #8480
+* [CHANGE] Add minimum length validations to string fields in `ScrapeConfig` CRD. #8479
+* [CHANGE] Add validations for VictorOps receiver in `AlertmanagerConfig` CRD. #8220
+* [CHANGE] Add validations for OpsGenie receiver in `AlertmanagerConfig` CRD. #8267
+* [CHANGE] Add validations for Email receiver in `AlertmanagerConfig` CRD. #8270
 * [FEATURE] Implement shard retention based on Prometheus data retention (it requires the `PrometheusShardRetentionPolicy` feature gate). #8478
-* [ENHANCEMENT] Add `cipherSuites` support for Thanos Sidecars and Rulers. #8524
-* [BUGFIX] Ensure that inactive shards don't scrape any targets when the sharding retention policy is `Retain`. #8513
 * [FEATURE] Configure node selector when sharding mode is `Topology` for `Prometheus` and `PrometheusAgent` custom resources (it requires the `PrometheusTopologySharding` feature gate). #8486
 * [FEATURE] Configure external label with topology information when sharding mode is `Topology` for `Prometheus` and `PrometheusAgent` custom resources (it requires the `PrometheusTopologySharding` feature gate). #8519
+* [FEATURE] Distribute scrape targets within topology zones when sharding mode is `Topology` for `Prometheus` and `PrometheusAgent` custom resources (it requires the `PrometheusTopologySharding` feature gate). #8538
+* [FEATURE] Add `--promql-options` CLI argument to the admission-webhook binary. #8531
+* [FEATURE] Validate `PrometheusRule` resources selected by `Prometheus` resources based on the PromQL enabled features. #8545
+* [FEATURE] Add workload identity authentication method for AzureSD in `ScrapeConfig` CRD. #8489
+* [ENHANCEMENT] Support strategic merge patch of container probes when workloads are configured with HTTPS. #8427
+* [ENHANCEMENT] Support `auth_secret_file` field for Email receiver in Alertmanager configuration Secret. #8394
+* [ENHANCEMENT] Support `smtp_auth_secret_file` field in Alertmanager configuration Secret. #8396
+* [ENHANCEMENT] Add `externalId` field to SigV4 configuration in `Alertmanager`, `Prometheus`, `PrometheusAgent` and `ThanosRuler` CRDs. #8494
+* [ENHANCEMENT] Add `cipherSuites` support for Thanos Sidecars and Rulers. #8524
+* [ENHANCEMENT] Add `curves` support for Thanos Sidecars and Rulers. #8542
+* [ENHANCEMENT] Speed up configuration reloads by watching the config file's parent directory. #7366
+* [ENHANCEMENT] Support Mattermost global webhook URL support in Alertmanager configuration Secret. #8501
+* [ENHANCEMENT] Add Mattermost global webhook URL support in `Alertmanager` CRD. #8503 #8534
+* [ENHANCEMENT] Support `payload` field for Webhook receiver in Alertmanager configuration Secret. #8505
+* [ENHANCEMENT] Support attachment fields for Mattermost receiver in Alertmanager configuration Secret. #8508
+* [ENHANCEMENT] Support `update_message` field for Slack receiver in Alertmanager configuration Secret. #8502
+* [ENHANCEMENT] Add threading configuration for email receiver in `AlertmanagerConfig` CRD. #8400
+* [ENHANCEMENT] Add `healthFilter` field for ConsulSD in `ScrapeConfig` CRD. #8529
+* [BUGFIX] Ensure that inactive shards don't scrape any targets when the sharding retention policy is `Retain`. #8513
+* [BUGFIX] Fix Telegram bot token validation in Alertmanager configuration Secret. #8465
 
 ## 0.90.1 / 2026-03-25
 

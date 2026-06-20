@@ -24,7 +24,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 )
 
 const (
@@ -47,6 +46,11 @@ const (
 	// the config-reloader container that contains the topology zone assigned to
 	// the shard.
 	TopologyZoneEnvVar = "TOPOLOGY_ZONE"
+
+	// InzoneShardEnvVar is the name of the environment variable injected into
+	// the config-reloader container that contains the in-zone shard position
+	// (floor(shardIndex / numZones)) when topology sharding is active.
+	InzoneShardEnvVar = "INZONE_SHARD"
 )
 
 // ConfigReloader contains the options to configure
@@ -67,6 +71,7 @@ type ConfigReloader struct {
 	initContainer      bool
 	shard              *int32
 	zone               string
+	inzoneShard        *int32
 	volumeMounts       []corev1.VolumeMount
 	watchedDirectories []string
 	useSignal          bool
@@ -193,7 +198,7 @@ func ImagePullPolicy(imagePullPolicy corev1.PullPolicy) ReloaderOption {
 func WithDaemonSetMode() ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.withNodeNameEnv = true
-		c.shard = ptr.To(int32(0))
+		c.shard = new(int32(0))
 	}
 }
 
@@ -203,6 +208,16 @@ func WithDaemonSetMode() ReloaderOption {
 func Zone(zone string) ReloaderOption {
 	return func(c *ConfigReloader) {
 		c.zone = zone
+	}
+}
+
+// InzoneShard sets the in-zone shard position for the config-reloader container.
+// When set to a non-nil value, an INZONE_SHARD environment variable is
+// injected into the container.
+// It should only be called when topology sharding is active.
+func InzoneShard(isp *int32) ReloaderOption {
+	return func(c *ConfigReloader) {
+		c.inzoneShard = isp
 	}
 }
 
@@ -332,6 +347,13 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		})
 	}
 
+	if configReloader.inzoneShard != nil {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  InzoneShardEnvVar,
+			Value: strconv.Itoa(int(*configReloader.inzoneShard)),
+		})
+	}
+
 	c := corev1.Container{
 		Name:                     name,
 		Image:                    configReloader.config.Image,
@@ -344,8 +366,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		VolumeMounts:             configReloader.volumeMounts,
 		Resources:                configReloader.config.ResourceRequirements(),
 		SecurityContext: &corev1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},

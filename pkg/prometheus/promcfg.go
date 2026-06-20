@@ -60,6 +60,15 @@ const (
 
 	hashLabelNameForSharding          = "__tmp_hash"
 	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
+
+	topologyTmpLabel           = "__tmp_topology"
+	nodeZoneMetaLabel          = "__meta_kubernetes_node_label_topology_kubernetes_io_zone"
+	nodeZonePresentMetaLabel   = "__meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone"
+	endpointSliceZoneMetaLabel = "__meta_kubernetes_endpointslice_endpoint_zone"
+	// podZoneMetaLabel and podZonePresentMetaLabel are the SD meta labels for the
+	// topology.kubernetes.io/zone pod label injected by PodTopologyLabelsAdmission (K8s >= 1.35).
+	podZoneMetaLabel        = "__meta_kubernetes_pod_label_topology_kubernetes_io_zone"
+	podZonePresentMetaLabel = "__meta_kubernetes_pod_labelpresent_topology_kubernetes_io_zone"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -81,6 +90,7 @@ type ConfigGenerator struct {
 	daemonSet                   bool
 	prometheusTopologySharding  bool
 	prometheusRetentionPolicies bool
+	podTopologyLabelsSupported  bool
 	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
@@ -112,6 +122,17 @@ func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
 	}
 }
 
+// WithPodTopologyLabelsSupport tells the config generator that the topology.kubernetes.io/zone label is injected as a pod label. In that case, the operator
+// no longer forces attach_metadata.node=true for topology sharding and instead
+// uses the pod label for zone detection.
+func WithPodTopologyLabelsSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.podTopologyLabelsSupported = true
+	}
+}
+
+// WithInlineTLSConfig is an API only used by
+// https://github.com/open-telemetry/opentelemetry-operator.
 func WithInlineTLSConfig() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.inlineTLSConfig = true
@@ -263,6 +284,7 @@ func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 		daemonSet:                   cg.daemonSet,
 		prometheusTopologySharding:  cg.prometheusTopologySharding,
 		prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+		podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 		inlineTLSConfig:             cg.inlineTLSConfig,
 		bypassVersionCheck:          cg.bypassVersionCheck,
 	}
@@ -289,6 +311,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 			daemonSet:                   cg.daemonSet,
 			prometheusTopologySharding:  cg.prometheusTopologySharding,
 			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 			inlineTLSConfig:             cg.inlineTLSConfig,
 			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
@@ -318,6 +341,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 			daemonSet:                   cg.daemonSet,
 			prometheusTopologySharding:  cg.prometheusTopologySharding,
 			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
 			inlineTLSConfig:             cg.inlineTLSConfig,
 			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
@@ -682,6 +706,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
 
+	if sigv4.ExternalID != "" {
+		sigv4Cfg = cg.WithMinimumVersion("3.11.0").AppendMapItem(sigv4Cfg, "external_id", sigv4.ExternalID)
+	}
+
 	if sigv4.UseFIPSSTSEndpoint != nil {
 		sigv4Cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(sigv4Cfg, "use_fips_sts_endpoint", *sigv4.UseFIPSSTSEndpoint)
 	}
@@ -1027,7 +1055,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1064,12 +1092,23 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(
+	cfg yaml.MapSlice,
+	exemplars *monitoringv1.Exemplars,
+	retention monitoringv1.Duration,
+	retentionSize monitoringv1.ByteSize,
+) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
+		tsdbSlice yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
 		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
+
+	err := tsdb.Validate()
+	if err != nil {
+		return cfg, err
+	}
 
 	if exemplars != nil && exemplars.MaxSize != nil {
 		storage = cgStorage.AppendMapItem(storage, "exemplars", yaml.MapSlice{
@@ -1080,13 +1119,30 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			tsdbSlice = cg.WithMinimumVersion("2.39.0").AppendMapItem(tsdbSlice, "out_of_order_time_window", *tsdb.OutOfOrderTimeWindow)
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			tsdbSlice = cg.WithMinimumVersion("3.10.0").AppendMapItem(tsdbSlice, "stale_series_compaction_threshold", tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64())
+		}
+	}
+
+	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
+		var retentionSlice yaml.MapSlice
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
+		if retentionTime != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
+		}
+		if retentionSize != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
+		}
+		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
+	}
+
+	if len(tsdbSlice) > 0 {
+		storage = append(storage, yaml.MapItem{Key: "tsdb", Value: tsdbSlice})
 	}
 
 	if len(storage) == 0 {
@@ -1380,6 +1436,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.35.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -1882,6 +1939,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
+	//TODO(simonpasquier): don't add node metadata if service discovery role ==
+	//EndpointSlice because it already carries topology zone information.
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.37.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -2228,7 +2288,60 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 				{Key: "source_labels", Value: []string{"__tmp_current_shard"}},
 				{Key: "regex", Value: generateInRangeShardPattern(shards)},
 				{Key: "action", Value: "keep"},
-			})
+			},
+		)
+	}
+
+	modulus := shards
+	shardEnvVar := operator.ShardEnvVar
+	if cg.isTopologyShardingActive() {
+		modulus = cg.shardsPerZone(shards)
+		shardEnvVar = operator.InzoneShardEnvVar
+
+		// Step 1: populate __tmp_topology from endpointslice zone (no-op for pod role).
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
+				{Key: "target_label", Value: topologyTmpLabel},
+				{Key: "regex", Value: "(.+);"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+		)
+
+		// Step 2: if __tmp_topology is still empty, use the pod topology label
+		// (K8s >= 1.35, PodTopologyLabelsAdmission) or the node label (older clusters,
+		// requires attach_metadata: {node: true}) as fallback.
+		if cg.podTopologyLabelsSupported {
+			relabelings = append(relabelings,
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{podZoneMetaLabel, podZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+			)
+		} else {
+			relabelings = append(relabelings,
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+			)
+		}
+
+		// Step 3: keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+				{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+				{Key: "action", Value: "keep"},
+			},
+		)
 	}
 
 	return append(relabelings,
@@ -2243,11 +2356,11 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
 			{Key: "target_label", Value: hashLabelNameForSharding},
-			{Key: "modulus", Value: shards},
+			{Key: "modulus", Value: modulus},
 			{Key: "action", Value: "hashmod"},
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding, hashLabelNameForDisablingSharding}},
-			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.ShardEnvVar)},
+			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", shardEnvVar)},
 			{Key: "action", Value: "keep"},
 		})
 }
@@ -3209,15 +3322,34 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// TSDB
 	tsdb := cpf.TSDB
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		var storage yaml.MapSlice
-		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
-		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+
+	err = tsdb.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "out_of_order_time_window",
+					Value: *tsdb.OutOfOrderTimeWindow,
+				},
+			})
+			cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "stale_series_compaction_threshold",
+					Value: tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64(),
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "storage", storage)
+		}
 	}
 
 	// Remote write config
@@ -3633,6 +3765,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "filter",
 					Value: config.Filter,
+				})
+			}
+
+			if config.HealthFilter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "health_filter",
+					Value: config.HealthFilter,
 				})
 			}
 
@@ -4973,6 +5112,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 			otlpConfig.PromoteScopeMetadata)
 	}
 
+	if otlpConfig.LabelNameUnderscoreSanitization != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_underscore_sanitization",
+			otlpConfig.LabelNameUnderscoreSanitization)
+	}
+
+	if otlpConfig.LabelNamePreserveMultipleUnderscores != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_preserve_multiple_underscores",
+			otlpConfig.LabelNamePreserveMultipleUnderscores)
+	}
+
 	if len(otlp) == 0 {
 		return cfg, nil
 	}
@@ -5200,32 +5351,92 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	return cfg
 }
 
+// TopologyZoneForShard returns the zone assigned to the shard index.
+// It returns an empty string if topology sharding isn't enabled.
 func (cg *ConfigGenerator) TopologyZoneForShard(shardIndex int32) string {
-	if !cg.prometheusTopologySharding {
+	if !cg.isTopologyShardingActive() {
 		return ""
 	}
+
 	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
-	if ss == nil ||
-		ss.Mode == nil ||
-		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
-		ss.Topology == nil ||
-		len(ss.Topology.Values) == 0 {
-		return ""
-	}
 	numZones := int32(len(ss.Topology.Values))
 	return ss.Topology.Values[shardIndex%numZones]
 }
 
+// NodeSelectorWithTopologyZone returns the pod's node selector for the given
+// shard index taking into account topology sharding if enabled.
 func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
 	cpf := cg.prom.GetCommonPrometheusFields()
+
 	zone := cg.TopologyZoneForShard(shardIndex)
 	if zone == "" {
 		return cpf.NodeSelector
 	}
+
 	result := maps.Clone(cpf.NodeSelector)
 	if result == nil {
 		result = make(map[string]string)
 	}
 	result[corev1.LabelTopologyZone] = zone
+
 	return result
+}
+
+// isTopologyShardingActive returns true when the topology sharding feature gate
+// is enabled and the Prometheus resource is configured with mode=Topology.
+func (cg *ConfigGenerator) isTopologyShardingActive() bool {
+	if !cg.prometheusTopologySharding {
+		return false
+	}
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	return ss != nil &&
+		ss.Mode != nil &&
+		*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+		ss.Topology != nil &&
+		len(ss.Topology.Values) > 0
+}
+
+// shardsPerZone returns max(1, floor(totalShards / numZones)).
+// Only call when isTopologyShardingActive() is true.
+func (cg *ConfigGenerator) shardsPerZone(totalShards int32) int32 {
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+
+	numZones := int32(len(ss.Topology.Values))
+	return max(totalShards/numZones, 1)
+}
+
+// InzoneShardForShard returns floor(shardIndex / numZones), which is the
+// position of the shard within its zone (0-indexed). Returns shardIndex
+// unmodified when topology sharding is not active.
+func (cg *ConfigGenerator) InzoneShardForShard(shardIndex int32) int32 {
+	if !cg.isTopologyShardingActive() {
+		return shardIndex
+	}
+
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	numZones := int32(len(ss.Topology.Values))
+	return shardIndex / numZones
+}
+
+// mergeAttachMetadataForTopology returns amc unchanged when topology sharding is
+// not active, when podTopologyLabelsSupported is true (zone label is injected
+// directly onto pods), or when node metadata is already requested.
+// Otherwise it forces attach_metadata.node=true so that zone detection via node
+// labels is available.
+func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataConfig, minimumVersion string) *attachMetadataConfig {
+	if !cg.isTopologyShardingActive() {
+		return amc
+	}
+	if cg.podTopologyLabelsSupported {
+		return amc
+	}
+	if amc != nil && amc.node() {
+		return amc
+	}
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		attachMetadata: &monitoringv1.AttachMetadata{
+			Node: new(true),
+		},
+	}
 }

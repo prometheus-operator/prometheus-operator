@@ -6,7 +6,7 @@
 # https://github.com/kubernetes-sigs/kube-api-linter/blob/main/docs/linters.md
 version: "2"
 run:
-  go: "1.25"
+  go: "1.26"
   allow-parallel-runners: true
 linters:
   default: none
@@ -23,20 +23,23 @@ linters:
             # Whenever a new linter is added, it should not break the backward
             # compatibility of existing APIs (at least for v1 APIs).
             enable:
-              - "nobools"
               - "commentstart"
               - "conflictingmarkers"
               - "duplicatemarkers"
+              - "forbiddenmarkers"
+              - "nobools"
+              - "nodurations"
               - "nofloats"
-              - "optionalorrequired"
-              - "statussubresource"
-              - "uniquemarkers"
-              - "jsontags"
-              - "statusoptional"
+              - "nomaps"
               - "nophase"
               - "nonullable"
-              - "forbiddenmarkers"
-              - "nomaps"
+              - "noreferences"
+              - "notimestamp"
+              - "optionalorrequired"
+              - "jsontags"
+              - "statusoptional"
+              - "statussubresource"
+              - "uniquemarkers"
             disable:
               - "*"
           lintersConfig:

@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
-    operator.prometheus.io/version: 0.90.1
+    controller-gen.kubebuilder.io/version: v0.21.0
+    operator.prometheus.io/version: 0.92.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1555,6 +1555,12 @@ spec:
                               - key
                               type: object
                               x-kubernetes-map-type: atomic
+                            externalId:
+                              description: |-
+                                externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+                                It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+                              minLength: 1
+                              type: string
                             profile:
                               description: profile defines the named AWS profile used
                                 to authenticate.
@@ -1599,6 +1605,9 @@ spec:
                                 It requires Prometheus >= v2.54.0.
                               type: boolean
                           type: object
+                          x-kubernetes-validations:
+                          - message: externalId can only be used when roleArn is specified
+                            rule: '!has(self.externalId) || has(self.roleArn)'
                         timeout:
                           description: timeout defines a per-target Alertmanager timeout
                             when pushing alerts.
@@ -3328,7 +3337,6 @@ spec:
                             procMount denotes the type of proc mount to use for the containers.
                             The default value is Default which uses the container runtime defaults for
                             readonly paths and masked paths.
-                            This requires the ProcMountType feature flag to be enabled.
                             Note that this field cannot be set when spec.os.name is windows.
                           type: string
                         readOnlyRootFilesystem:
@@ -5291,7 +5299,6 @@ spec:
                             procMount denotes the type of proc mount to use for the containers.
                             The default value is Default which uses the container runtime defaults for
                             readonly paths and masked paths.
-                            This requires the ProcMountType feature flag to be enabled.
                             Note that this field cannot be set when spec.os.name is windows.
                           type: string
                         readOnlyRootFilesystem:
@@ -5845,6 +5852,26 @@ spec:
                       resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
 
                       It requires Prometheus >= v3.1.0.
+                    type: boolean
+                  labelNamePreserveMultipleUnderscores:
+                    description: |-
+                      labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+                      underscore escaping.
+                      When true (default), multiple consecutive underscores are preserved during label name sanitization.
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
+                    type: boolean
+                  labelNameUnderscoreSanitization:
+                    description: |-
+                      labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+                      Reserved labels starting with '__' are not modified.
+                      This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+
+                      Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+
+                      It requires Prometheus >= v3.8.0.
                     type: boolean
                   promoteAllResourceAttributes:
                     description: |-
@@ -6776,7 +6803,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -7024,7 +7051,11 @@ spec:
                           type: string
                       type: object
                     url:
-                      description: url defines the URL of the endpoint to query from.
+                      description: |-
+                        url defines the URL of the endpoint to query from.
+
+                        It must use the HTTP or HTTPS scheme.
+                      pattern: ^(http|https)://.+$
                       type: string
                   required:
                   - url
@@ -7679,7 +7710,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -7850,6 +7881,12 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        externalId:
+                          description: |-
+                            externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+                            It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+                          minLength: 1
+                          type: string
                         profile:
                           description: profile defines the named AWS profile used
                             to authenticate.
@@ -7894,6 +7931,9 @@ spec:
                             It requires Prometheus >= v2.54.0.
                           type: boolean
                       type: object
+                      x-kubernetes-validations:
+                      - message: externalId can only be used when roleArn is specified
+                        rule: '!has(self.externalId) || has(self.roleArn)'
                     tlsConfig:
                       description: tlsConfig to use for the URL.
                       properties:
@@ -8465,6 +8505,10 @@ spec:
 
                             The Prometheus service account must have the `list` and `watch`
                             permissions on the `Nodes` objects.
+
+                            Node metadata labels are not automatically added to scraped metrics. They are
+                            exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+                            with relabeling configuration.
                           type: boolean
                       type: object
                     authorization:
@@ -9476,11 +9520,8 @@ spec:
               shardRetentionPolicy:
                 description: |-
                   shardRetentionPolicy defines the retention policy for the Prometheus shards.
-                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
 
-                  The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
-                  however, the feature is not yet fully implemented in this PR. The limitation being:
-                  * Retention duration is not settable, for now, shards are retained forever.
+                  (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
                 properties:
                   retain:
                     description: |-
@@ -10386,7 +10427,7 @@ spec:
                     description: |-
                       grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 
-                      Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+                      Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
                     properties:
                       ca:
                         description: ca defines the Certificate authority used when
@@ -10512,6 +10553,22 @@ spec:
                           If not defined, the Go default cipher suites are used.
                           Available cipher suites are documented in the Go documentation:
                           https://golang.org/pkg/crypto/tls/#pkg-constants
+
+                          It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+                          the Thanos version supports the provided values.
+                        items:
+                          type: string
+                        minItems: 1
+                        type: array
+                        x-kubernetes-list-type: set
+                      curves:
+                        description: |-
+                          curves defines the list of preferred elliptic curves for
+                          TLS handshakes.
+
+                          If not defined, the Go default curves are used.
+                          Available curves are documented in the Go documentation:
+                          https://golang.org/pkg/crypto/tls/#CurveID
 
                           It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
                           the Thanos version supports the provided values.
@@ -11331,6 +11388,26 @@ spec:
                       It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  staleSeriesCompactionThreshold:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      staleSeriesCompactionThreshold configures the trigger point for compacting
+                      stale series from memory into persistent blocks and removing those stale
+                      series from memory.
+
+                      The threshold is a number between 0.0 and 1.0. It represents the ratio of
+                      stale series in memory to the total series in memory. The stale series
+                      compaction is triggered when this ratio crosses the configured threshold.
+                      It may not trigger the stale series compaction if the usual head compaction
+                      is about to happen soon.
+
+                      If set to 0, stale series compaction is disabled.
+
+                      It requires Prometheus >= v3.10.0.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
                 type: object
               updateStrategy:
                 description: |-
@@ -12371,7 +12448,7 @@ spec:
                         A failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.
                         The types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.
                         The OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.
-                        The volume will be mounted read-only (ro) and non-executable files (noexec).
+                        The volume will be mounted read-only (ro).
                         Sub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.
                         The field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.
                       properties:
@@ -12543,8 +12620,7 @@ spec:
                       description: |-
                         portworxVolume represents a portworx volume attached and mounted on kubelets host machine.
                         Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type
-                        are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate
-                        is on.
+                        are redirected to the pxd.portworx.com CSI driver.
                       properties:
                         fsType:
                           description: |-

@@ -124,7 +124,7 @@ func repairPrometheus(ns string) func(t *testing.T) {
 			prom.Namespace,
 			monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Image: ptr.To(badImage),
+					Image: new(badImage),
 				},
 			},
 		)
@@ -141,7 +141,7 @@ func repairPrometheus(ns string) func(t *testing.T) {
 			prom.Namespace,
 			monitoringv1.PrometheusSpec{
 				CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-					Image: ptr.To(operator.DefaultPrometheusImage),
+					Image: new(operator.DefaultPrometheusImage),
 				},
 			},
 		)
@@ -166,7 +166,7 @@ func repairAlertmanager(ns string) func(t *testing.T) {
 			am.Name,
 			am.Namespace,
 			monitoringv1.AlertmanagerSpec{
-				Image: ptr.To(badImage),
+				Image: new(badImage),
 			},
 		)
 		require.NoError(t, err)

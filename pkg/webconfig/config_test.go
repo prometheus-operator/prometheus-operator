@@ -23,7 +23,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -140,11 +139,11 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 						},
 						Key: "tls.keySecret",
 					},
-					ClientAuthType:           ptr.To("RequireAnyClientCert"),
-					MinVersion:               ptr.To("TLS11"),
-					MaxVersion:               ptr.To("TLS13"),
+					ClientAuthType:           new("RequireAnyClientCert"),
+					MinVersion:               new("TLS11"),
+					MaxVersion:               new("TLS13"),
 					CipherSuites:             []string{"cipher-1", "cipher-2"},
-					PreferServerCipherSuites: ptr.To(false),
+					PreferServerCipherSuites: new(false),
 					CurvePreferences:         []string{"curve-1", "curve-2"},
 				},
 			},
@@ -154,9 +153,9 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			name: "TLS config with client CA, cert and key files",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{
 				TLSConfig: &monitoringv1.WebTLSConfig{
-					ClientCAFile: ptr.To("/etc/ssl/certs/tls.client_ca"),
-					CertFile:     ptr.To("/etc/ssl/certs/tls.crt"),
-					KeyFile:      ptr.To("/etc/ssl/secrets/tls.key"),
+					ClientCAFile: new("/etc/ssl/certs/tls.client_ca"),
+					CertFile:     new("/etc/ssl/certs/tls.crt"),
+					KeyFile:      new("/etc/ssl/secrets/tls.key"),
 				},
 			},
 			golden: "TLS_config_with_client_CA_cert_and_key_files.golden",
@@ -165,7 +164,7 @@ func TestCreateOrUpdateWebConfigSecret(t *testing.T) {
 			name: "HTTP config with all parameters",
 			webConfigFileFields: monitoringv1.WebConfigFileFields{
 				HTTPConfig: &monitoringv1.WebHTTPConfig{
-					HTTP2: ptr.To(false),
+					HTTP2: new(false),
 					Headers: &monitoringv1.WebHTTPHeaders{
 						ContentSecurityPolicy:   "test",
 						StrictTransportSecurity: "test",

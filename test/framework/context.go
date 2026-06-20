@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -570,8 +571,8 @@ func (ctx *TestCtx) Cleanup(t *testing.T) {
 	t.Helper()
 	var eg errgroup.Group
 
-	for i := len(ctx.cleanUpFns) - 1; i >= 0; i-- {
-		eg.Go(ctx.cleanUpFns[i])
+	for _, v := range slices.Backward(ctx.cleanUpFns) {
+		eg.Go(v)
 	}
 
 	if err := eg.Wait(); err != nil {

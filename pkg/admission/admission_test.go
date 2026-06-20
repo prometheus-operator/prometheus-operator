@@ -27,6 +27,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
@@ -326,6 +327,7 @@ func apiWithValidationScheme(validationScheme model.ValidationScheme) *Admission
 	return New(
 		slog.New(slog.DiscardHandler),
 		validationScheme,
+		parser.Options{},
 	)
 }
 

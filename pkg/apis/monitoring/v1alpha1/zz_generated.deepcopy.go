@@ -274,6 +274,11 @@ func (in *ConsulSDConfig) DeepCopyInto(out *ConsulSDConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.HealthFilter != nil {
+		in, out := &in.HealthFilter, &out.HealthFilter
+		*out = new(string)
+		**out = **in
+	}
 	if in.AllowStale != nil {
 		in, out := &in.AllowStale, &out.AllowStale
 		*out = new(bool)
@@ -3718,6 +3723,11 @@ func (in *WebhookConfig) DeepCopyInto(out *WebhookConfig) {
 	if in.Timeout != nil {
 		in, out := &in.Timeout, &out.Timeout
 		*out = new(v1.Duration)
+		**out = **in
+	}
+	if in.Payload != nil {
+		in, out := &in.Payload, &out.Payload
+		*out = new(string)
 		**out = **in
 	}
 }

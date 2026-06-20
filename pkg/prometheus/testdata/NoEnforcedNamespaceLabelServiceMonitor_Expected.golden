@@ -93,3 +93,7 @@ scrape_configs:
     - __name__
     regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
     action: drop
+storage:
+  tsdb:
+    retention:
+      time: 24h

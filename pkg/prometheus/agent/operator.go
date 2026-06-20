@@ -99,6 +99,7 @@ type Operator struct {
 	daemonSetFeatureGateEnabled  bool
 	configResourcesStatusEnabled bool
 	topologyShardingEnabled      bool
+	podTopologyLabelsSupported   bool
 
 	finalizerSyncer *operator.FinalizerSyncer
 }
@@ -132,6 +133,14 @@ func WithStorageClassValidation() ControllerOption {
 func WithConfigResourceStatus() ControllerOption {
 	return func(o *Operator) {
 		o.configResourcesStatusEnabled = true
+	}
+}
+
+// WithPodTopologyLabels tells that the cluster runs K8s >= 1.35 where
+// PodTopologyLabelsAdmission automatically injects topology labels onto pods.
+func WithPodTopologyLabels() ControllerOption {
+	return func(o *Operator) {
+		o.podTopologyLabelsSupported = true
 	}
 }
 
@@ -676,6 +685,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 	if c.topologyShardingEnabled {
 		opts = append(opts, prompkg.WithPrometheusTopologySharding())
+	}
+	if c.podTopologyLabelsSupported {
+		opts = append(opts, prompkg.WithPodTopologyLabelsSupport())
 	}
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)

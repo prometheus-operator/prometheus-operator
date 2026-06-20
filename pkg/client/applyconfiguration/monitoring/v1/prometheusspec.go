@@ -43,11 +43,8 @@ type PrometheusSpecApplyConfiguration struct {
 	// retentionSize defines the maximum number of bytes used by the Prometheus data.
 	RetentionSize *monitoringv1.ByteSize `json:"retentionSize,omitempty"`
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
-	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
 	//
-	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
-	// however, the feature is not yet fully implemented in this PR. The limitation being:
-	// * Retention duration is not settable, for now, shards are retained forever.
+	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
 	ShardRetentionPolicy *ShardRetentionPolicyApplyConfiguration `json:"shardRetentionPolicy,omitempty"`
 	// disableCompaction when true, the Prometheus compaction is disabled.
 	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically

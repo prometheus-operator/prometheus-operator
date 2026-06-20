@@ -505,6 +505,55 @@ func TestValidateOAuth2(t *testing.T) {
 			},
 			err: false,
 		},
+		{
+			name: "valid ProxyConfig with proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyURL: new("http://proxy.example.com:8080"),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "valid ProxyConfig with proxyFromEnvironment",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyFromEnvironment: new(true),
+				},
+			},
+			err: false,
+		},
+		{
+			name: "invalid ProxyConfig with proxyFromEnvironment and proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					ProxyFromEnvironment: new(true),
+					ProxyURL:             new("http://proxy.example.com:8080"),
+				},
+			},
+			err: true,
+		},
+		{
+			name: "invalid ProxyConfig with noProxy but no proxyUrl",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: v1.SecretKeySelector{},
+				TokenURL:     "http://tokenurl.org",
+				ProxyConfig: ProxyConfig{
+					NoProxy: new("localhost"),
+				},
+			},
+			err: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.config.Validate()

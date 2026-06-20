@@ -204,12 +204,12 @@ func createTestCasesForTestAutomountServiceAccountToken() []testcaseForTestAutom
 		},
 		{
 			name:                         "automountServiceAccountToken set to true",
-			automountServiceAccountToken: ptr.To(true),
+			automountServiceAccountToken: new(true),
 			expectedValue:                true,
 		},
 		{
 			name:                         "automountServiceAccountToken set to false",
-			automountServiceAccountToken: ptr.To(false),
+			automountServiceAccountToken: new(false),
 			expectedValue:                false,
 		},
 	}
@@ -240,7 +240,7 @@ func createTestCasesForTestStartupProbeTimeoutSeconds() []testcaseForTestStartup
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   new(int32(600)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 10,
 		},

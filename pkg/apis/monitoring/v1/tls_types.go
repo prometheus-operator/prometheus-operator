@@ -58,6 +58,21 @@ type GRPCServerTLSConfig struct {
 	// +listType=set
 	// +kubebuilder:validation:MinItems=1
 	CipherSuites []string `json:"cipherSuites,omitempty"`
+
+	// curves defines the list of preferred elliptic curves for
+	// TLS handshakes.
+	//
+	// If not defined, the Go default curves are used.
+	// Available curves are documented in the Go documentation:
+	// https://golang.org/pkg/crypto/tls/#CurveID
+	//
+	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
+	// the Thanos version supports the provided values.
+	//
+	// +optional
+	// +listType=set
+	// +kubebuilder:validation:MinItems=1
+	Curves []string `json:"curves,omitempty"`
 }
 
 // Validate semantically validates the given TLSConfig.
@@ -66,25 +81,17 @@ func (c *TLSConfig) Validate() error {
 		return nil
 	}
 
-	if !reflect.ValueOf(c.CA).IsZero() {
-		if c.CAFile != "" {
-			return fmt.Errorf("cannot specify both 'caFile' and 'ca'")
-		}
+	if err := c.innerValidate(); err != nil {
+		return err
+	}
 
-		if err := c.CA.Validate(); err != nil {
-			return fmt.Errorf("ca: %w", err)
-		}
+	if !reflect.ValueOf(c.CA).IsZero() && c.CAFile != "" {
+		return fmt.Errorf("cannot specify both 'caFile' and 'ca'")
 	}
 
 	hasCert := !reflect.ValueOf(c.Cert).IsZero()
-	if hasCert {
-		if c.CertFile != "" {
-			return fmt.Errorf("cannot specify both 'certFile' and 'cert'")
-		}
-
-		if err := c.Cert.Validate(); err != nil {
-			return fmt.Errorf("cert: %w", err)
-		}
+	if hasCert && c.CertFile != "" {
+		return fmt.Errorf("cannot specify both 'certFile' and 'cert'")
 	}
 
 	if c.KeyFile != "" && c.KeySecret != nil {
@@ -100,10 +107,6 @@ func (c *TLSConfig) Validate() error {
 
 	if hasKey && !hasCert {
 		return fmt.Errorf("cannot specify client key without client cert")
-	}
-
-	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {
-		return fmt.Errorf("'maxVersion' must greater than or equal to 'minVersion'")
 	}
 
 	return nil
@@ -151,6 +154,22 @@ func (c *SafeTLSConfig) Validate() error {
 		return nil
 	}
 
+	if err := c.innerValidate(); err != nil {
+		return err
+	}
+
+	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
+		return fmt.Errorf("client cert specified without client key")
+	}
+
+	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
+		return fmt.Errorf("client key specified without client cert")
+	}
+
+	return nil
+}
+
+func (c *SafeTLSConfig) innerValidate() error {
 	if c.CA != (SecretOrConfigMap{}) {
 		if err := c.CA.Validate(); err != nil {
 			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
@@ -161,14 +180,6 @@ func (c *SafeTLSConfig) Validate() error {
 		if err := c.Cert.Validate(); err != nil {
 			return fmt.Errorf("cert %s: %w", c.Cert.String(), err)
 		}
-	}
-
-	if c.Cert != (SecretOrConfigMap{}) && c.KeySecret == nil {
-		return fmt.Errorf("client cert specified without client key")
-	}
-
-	if c.KeySecret != nil && c.Cert == (SecretOrConfigMap{}) {
-		return fmt.Errorf("client key specified without client cert")
 	}
 
 	if c.MaxVersion != nil && c.MinVersion != nil && strings.Compare(string(*c.MaxVersion), string(*c.MinVersion)) == -1 {

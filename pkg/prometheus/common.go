@@ -50,6 +50,7 @@ const (
 	DefaultPortName        = "web"
 	DefaultLogFileVolume   = "log-file"
 	DefaultLogDirectory    = "/var/log/prometheus"
+	DefaultRetention       = "24h"
 
 	// DefaultTerminationGracePeriodSeconds defines how long Kubernetes should
 	// wait before killing Prometheus on pod termination.
@@ -72,6 +73,16 @@ var (
 	ProbeTimeoutSeconds int32 = 3
 	LabelPrometheusName       = "prometheus-name"
 )
+
+// RetentionTimeOrDefault returns the configured time-based retention or the
+// default retention when neither time nor size are configured.
+func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize) monitoringv1.Duration {
+	if retention == "" && retentionSize == "" {
+		return monitoringv1.Duration(DefaultRetention)
+	}
+
+	return retention
+}
 
 // LabelSelectorForStatefulSets returns a label selector which selects
 // statefulsets deployed with the server or agent mode.
@@ -398,7 +409,7 @@ func BuildConfigReloader(
 }
 
 func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
-	return ptr.To(
+	return new(
 		ptr.Deref(
 			p.GetCommonPrometheusFields().ReloadStrategy,
 			monitoringv1.HTTPReloadStrategyType,

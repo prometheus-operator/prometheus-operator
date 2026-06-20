@@ -28,12 +28,15 @@ import (
 // Endpoint defines an endpoint serving Prometheus metrics to be scraped by
 // Prometheus.
 type EndpointApplyConfiguration struct {
-	// port defines the name of the Service port which this endpoint refers to.
+	// port defines the name of the Service port which this endpoint refers to
+	// (e.g. `.spec.ports[].name`).
 	//
 	// It takes precedence over `targetPort`.
 	Port *string `json:"port,omitempty"`
-	// targetPort defines the name or number of the target port of the `Pod` object behind the
-	// Service. The port must be specified with the container's port property.
+	// targetPort defines the name or number of a container port on Pods selected
+	// by the Service.
+	// If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
+	// If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 	// path defines the HTTP path from which to scrape for metrics.
 	//

@@ -21,6 +21,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -1214,11 +1215,8 @@ type PrometheusSpec struct {
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
-	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
 	//
-	// The final goals for this feature can be seen at https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202310-shard-autoscaling.md#graceful-scale-down-of-prometheus-servers,
-	// however, the feature is not yet fully implemented in this PR. The limitation being:
-	// * Retention duration is not settable, for now, shards are retained forever.
+	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
 	//
 	// +optional
 	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
@@ -1395,7 +1393,8 @@ const (
 
 	// TopologyShardingStrategyMode enables zone-aware sharding.
 	// Each shard is assigned to a specific topology zone and only scrapes targets in that zone.
-	// (Alpha) Using this mode requires the `PrometheusTopologySharding` feature gate to be enabled.
+	//
+	// (Beta) Using this mode requires the `PrometheusTopologySharding` feature gate (enabled by default).
 	TopologyShardingStrategyMode ShardingStrategyMode = "Topology"
 )
 
@@ -1654,7 +1653,7 @@ type ThanosSpec struct {
 
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
-	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, and `cipherSuites` fields are supported.
+	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
 	//
 	// +optional
 	GRPCServerTLSConfig *GRPCServerTLSConfig `json:"grpcServerTlsConfig,omitempty"`
@@ -1942,6 +1941,7 @@ type QueueConfig struct {
 
 // Sigv4 defines AWS's Signature Verification 4 signing process to
 // sign requests.
+// +kubebuilder:validation:XValidation:rule="!has(self.externalId) || has(self.roleArn)",message="externalId can only be used when roleArn is specified"
 // +k8s:openapi-gen=true
 type Sigv4 struct {
 	// region defines the AWS region. If blank, the region from the default credentials chain used.
@@ -1961,6 +1961,12 @@ type Sigv4 struct {
 	// roleArn defines the named AWS profile used to authenticate.
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
+	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ExternalID string `json:"externalId,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
 	//
@@ -2061,8 +2067,10 @@ type AzureWorkloadIdentity struct {
 // +k8s:openapi-gen=true
 type RemoteReadSpec struct {
 	// url defines the URL of the endpoint to query from.
+	//
+	// It must use the HTTP or HTTPS scheme.
 	// +required
-	URL string `json:"url"`
+	URL URL `json:"url"`
 
 	// name of the remote read queue, it must be unique if specified. The
 	// name is used in metrics and logging in order to differentiate read
@@ -2459,6 +2467,35 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
 	// +optional
 	OutOfOrderTimeWindow *Duration `json:"outOfOrderTimeWindow,omitempty"`
+
+	// staleSeriesCompactionThreshold configures the trigger point for compacting
+	// stale series from memory into persistent blocks and removing those stale
+	// series from memory.
+	//
+	// The threshold is a number between 0.0 and 1.0. It represents the ratio of
+	// stale series in memory to the total series in memory. The stale series
+	// compaction is triggered when this ratio crosses the configured threshold.
+	// It may not trigger the stale series compaction if the usual head compaction
+	// is about to happen soon.
+	//
+	// If set to 0, stale series compaction is disabled.
+	//
+	// It requires Prometheus >= v3.10.0.
+	// +optional
+	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
+}
+
+// Validate semantically validates the given TSDBSpec.
+func (ts *TSDBSpec) Validate() error {
+	if ts == nil || ts.StaleSeriesCompactionThreshold == nil {
+		return nil
+	}
+	v := ts.StaleSeriesCompactionThreshold.AsApproximateFloat64()
+	if v < 0 || v > 1 {
+		return fmt.Errorf("`staleSeriesCompactionThreshold` must be between 0 and 1. The current value is %s", ts.StaleSeriesCompactionThreshold.String())
+	}
+
+	return nil
 }
 
 type Exemplars struct {
@@ -2500,11 +2537,11 @@ func (c *SafeAuthorization) Validate() error {
 	}
 
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
-		return errors.New("authorization type cannot be set to \"basic\", use \"basicAuth\" instead")
+		return errors.New("'authorization' type cannot be set to \"basic\", use \"basicAuth\" instead")
 	}
 
 	if c.Credentials == nil {
-		return errors.New("authorization credentials are required")
+		return errors.New("'authorization' credentials are required")
 	}
 
 	return nil
@@ -2674,6 +2711,26 @@ type OTLPConfig struct {
 	// It requires Prometheus >= v3.6.0.
 	// +optional
 	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"` // nolint:kubeapilinter
+
+	// labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+	// Reserved labels starting with '__' are not modified.
+	// This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNameUnderscoreSanitization *bool `json:"labelNameUnderscoreSanitization,omitempty"` // nolint:kubeapilinter
+
+	// labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+	// underscore escaping.
+	// When true (default), multiple consecutive underscores are preserved during label name sanitization.
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	// +optional
+	LabelNamePreserveMultipleUnderscores *bool `json:"labelNamePreserveMultipleUnderscores,omitempty"` // nolint:kubeapilinter
 }
 
 // Validate semantically validates the given OTLPConfig section.

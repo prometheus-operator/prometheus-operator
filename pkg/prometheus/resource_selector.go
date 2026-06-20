@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
 	"slices"
@@ -470,6 +471,9 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	}
 
 	if probe.Spec.Targets.StaticConfig != nil {
+		if err := rs.validateStaticConfigLabels(probe.Spec.Targets.StaticConfig.Labels); err != nil {
+			return fmt.Errorf("targets.staticConfig.labels: %w", err)
+		}
 		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
 			return fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
 		}
@@ -489,6 +493,17 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 		return fmt.Errorf("%q url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
 	}
 
+	return nil
+}
+
+func (rs *ResourceSelector) validateStaticConfigLabels(labels map[string]string) error {
+	keys := slices.Collect(maps.Keys(labels))
+	slices.Sort(keys)
+	for _, labelName := range keys {
+		if !isValidLabelName(labelName, rs.version) {
+			return fmt.Errorf("invalid label %q", labelName)
+		}
+	}
 	return nil
 }
 
@@ -768,6 +783,10 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 
 		if config.Filter != nil && rs.version.Major < 3 {
 			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
+		}
+
+		if config.HealthFilter != nil && rs.version.LT(semver.MustParse("3.11.2")) {
+			return fmt.Errorf("field `config.HealthFilter` is only supported for Prometheus version >= 3.11.2")
 		}
 
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
@@ -1313,10 +1332,8 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
-		for labelName := range config.Labels {
-			if !isValidLabelName(labelName, rs.version) {
-				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
-			}
+		if err := rs.validateStaticConfigLabels(config.Labels); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 

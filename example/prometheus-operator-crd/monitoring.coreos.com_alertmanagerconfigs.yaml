@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
-    operator.prometheus.io/version: 0.90.1
+    controller-gen.kubebuilder.io/version: v0.21.0
+    operator.prometheus.io/version: 0.92.0
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -760,7 +760,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -1833,7 +1833,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -2600,7 +2600,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -3438,7 +3438,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -4286,7 +4286,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -5146,7 +5146,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -6074,7 +6074,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -7067,7 +7067,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -7874,7 +7874,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -8151,6 +8151,12 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              externalId:
+                                description: |-
+                                  externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+                                  It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+                                minLength: 1
+                                type: string
                               profile:
                                 description: profile defines the named AWS profile
                                   used to authenticate.
@@ -8195,6 +8201,10 @@ spec:
                                   It requires Prometheus >= v2.54.0.
                                 type: boolean
                             type: object
+                            x-kubernetes-validations:
+                            - message: externalId can only be used when roleArn is
+                                specified
+                              rule: '!has(self.externalId) || has(self.roleArn)'
                           subject:
                             description: |-
                               subject defines the subject line when the message is delivered to email endpoints.
@@ -8751,7 +8761,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -9559,7 +9569,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -10309,7 +10319,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -11039,7 +11049,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -11276,6 +11286,14 @@ spec:
                             format: int32
                             minimum: 0
                             type: integer
+                          payload:
+                            description: |-
+                              payload define custom payload to be sent to the webhook endpoint.
+                              This is an advanced configuration option that allows you
+                              to define a custom payload using Go templates.
+                              It requires Alertmanager >= v0.32.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -11851,7 +11869,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId

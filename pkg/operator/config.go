@@ -104,11 +104,11 @@ func DefaultConfig(cpu, memory string) Config {
 			},
 			PrometheusTopologyShardingFeature: FeatureGate{
 				description: "Enables the zone aware sharding for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			PrometheusShardRetentionPolicyFeature: FeatureGate{
 				description: "Enables shard retention policy for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			StatusForConfigurationResourcesFeature: FeatureGate{
 				description: "Updates the status subresource for configuration resources",
@@ -237,8 +237,11 @@ func (m *Map) Set(value string) error {
 	}
 
 	for pair := range strings.SplitSeq(value, ",") {
-		pair := strings.Split(pair, "=")
-		(*m)[pair[0]] = pair[1]
+		k, v, ok := strings.Cut(pair, "=")
+		if !ok {
+			return fmt.Errorf("invalid key=value pair: %q", pair)
+		}
+		(*m)[k] = v
 	}
 
 	return nil

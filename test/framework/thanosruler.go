@@ -96,7 +96,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -114,7 +114,7 @@ func (f *Framework) UpdateThanosRulerReplicasAndWaitUntilReady(ctx context.Conte
 		name,
 		ns,
 		monitoringv1.ThanosRulerSpec{
-			Replicas: ptr.To(replicas),
+			Replicas: new(replicas),
 		},
 	)
 }

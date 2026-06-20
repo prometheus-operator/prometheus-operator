@@ -1,6 +1,6 @@
 version: "2"
 run:
-  go: "1.25"
+  go: "1.26"
   timeout: 10m
   modules-download-mode: readonly
   allow-parallel-runners: true
@@ -13,6 +13,7 @@ linters:
     - iface
     - importas
     - iotamixing
+    - misspell
     - modernize
     - nilnesserr
     - recvcheck
@@ -70,6 +71,8 @@ linters:
           alias: monitoringv1alpha1
         - pkg: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1
           alias: monitoringv1beta1
+    misspell:
+      mode: default
     modernize:
       disable:
         - omitzero

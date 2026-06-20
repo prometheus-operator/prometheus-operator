@@ -563,7 +563,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -1533,7 +1533,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -2223,7 +2223,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -2976,7 +2976,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -3746,7 +3746,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -4517,7 +4517,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -5330,7 +5330,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -6216,7 +6216,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -6948,7 +6948,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -7207,6 +7207,11 @@
                                 type: 'object',
                                 'x-kubernetes-map-type': 'atomic',
                               },
+                              externalId: {
+                                description: 'externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.\nIt requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.',
+                                minLength: 1,
+                                type: 'string',
+                              },
                               profile: {
                                 description: 'profile defines the named AWS profile used to authenticate.',
                                 type: 'string',
@@ -7248,6 +7253,12 @@
                               },
                             },
                             type: 'object',
+                            'x-kubernetes-validations': [
+                              {
+                                message: 'externalId can only be used when roleArn is specified',
+                                rule: '!has(self.externalId) || has(self.roleArn)',
+                              },
+                            ],
                           },
                           subject: {
                             description: 'subject defines the subject line when the message is delivered to email endpoints.\nThis field is only used when sending to email subscribers of an SNS topic.',
@@ -7731,7 +7742,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -8458,7 +8469,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -9138,7 +9149,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -9802,7 +9813,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },
@@ -10026,6 +10037,11 @@
                             format: 'int32',
                             minimum: 0,
                             type: 'integer',
+                          },
+                          payload: {
+                            description: 'payload define custom payload to be sent to the webhook endpoint.\nThis is an advanced configuration option that allows you\nto define a custom payload using Go templates.\nIt requires Alertmanager >= v0.32.0.',
+                            minLength: 1,
+                            type: 'string',
                           },
                           sendResolved: {
                             description: 'sendResolved defines whether or not to notify about resolved alerts.',
@@ -10524,7 +10540,7 @@
                                   },
                                   tokenUrl: {
                                     description: 'tokenUrl defines the URL to fetch the token from.',
-                                    minLength: 1,
+                                    pattern: '^(http|https)://.+$',
                                     type: 'string',
                                   },
                                 },

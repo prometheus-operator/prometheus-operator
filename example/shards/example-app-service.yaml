@@ -2,6 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: example-app
+  namespace: default
   labels:
     app: example-app
 spec:

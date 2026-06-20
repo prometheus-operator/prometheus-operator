@@ -32,6 +32,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -42,7 +43,6 @@ import (
 	"k8s.io/client-go/rest"
 	k8sflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 
 	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -130,7 +130,7 @@ var (
 	kubeletSyncPeriod    time.Duration
 	kubeletHTTPMetrics   bool
 
-	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
+	featureGates = k8sflag.NewMapStringBool(new(map[string]bool{}))
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -432,6 +432,16 @@ func start() int {
 		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithEndpointSlice())
 	}
 
+	// PodTopologyLabelsAdmission (KEP-4742) is enabled by default in K8s >= 1.35.
+	// It injects topology.kubernetes.io/zone as a pod label, removing the need
+	// for attach_metadata.node=true in topology sharding configurations.
+	podTopologyLabelsSupported := cfg.KubernetesVersion.GTE(semver.MustParse("1.35.0"))
+	logger.Info("Kubernetes API capabilities", "pod_topology_labels", podTopologyLabelsSupported)
+	if podTopologyLabelsSupported {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithPodTopologyLabels())
+		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithPodTopologyLabels())
+	}
+
 	prometheusSupported, err := checkPrerequisites(
 		ctx,
 		logger,
@@ -730,7 +740,7 @@ func start() int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation, parser.Options{})
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)

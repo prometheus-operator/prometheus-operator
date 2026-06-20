@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"strings"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const (
@@ -580,6 +580,13 @@ type WebhookConfig struct {
 	// It requires Alertmanager >= v0.28.0.
 	// +optional
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// payload define custom payload to be sent to the webhook endpoint.
+	// This is an advanced configuration option that allows you
+	// to define a custom payload using Go templates.
+	// It requires Alertmanager >= v0.32.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Payload *string `json:"payload,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.

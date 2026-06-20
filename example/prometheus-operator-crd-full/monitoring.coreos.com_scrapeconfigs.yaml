@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
-    operator.prometheus.io/version: 0.90.1
+    controller-gen.kubebuilder.io/version: v0.21.0
+    operator.prometheus.io/version: 0.92.0
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -573,7 +573,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -1014,7 +1014,7 @@ spec:
                     filter:
                       description: |-
                         filter defines the filter expression used to filter the catalog results.
-                        See https://www.consul.io/api-docs/catalog#list-services
+                        See https://developer.hashicorp.com/consul/api-docs/catalog#filtering
                         It requires Prometheus >= 3.0.0.
                       minLength: 1
                       type: string
@@ -1022,6 +1022,13 @@ spec:
                       description: followRedirects defines whether HTTP requests follow
                         HTTP 3xx redirects.
                       type: boolean
+                    healthFilter:
+                      description: |-
+                        healthFilter defines the filter expression used to filter the health results.
+                        See https://developer.hashicorp.com/consul/api-docs/health#filtering
+                        It requires Prometheus >= 3.11.2.
+                      minLength: 1
+                      type: string
                     namespace:
                       description: |-
                         namespace are only supported in Consul Enterprise.
@@ -1368,7 +1375,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -2059,7 +2066,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -2828,7 +2835,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -3542,7 +3549,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -4589,7 +4596,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -5373,7 +5380,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -6072,7 +6079,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -6695,7 +6702,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -7432,7 +7439,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -8157,7 +8164,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -8880,7 +8887,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -9532,7 +9539,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -10366,7 +10373,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
@@ -10934,7 +10941,7 @@ spec:
                     type: object
                   tokenUrl:
                     description: tokenUrl defines the URL to fetch the token from.
-                    minLength: 1
+                    pattern: ^(http|https)://.+$
                     type: string
                 required:
                 - clientId
@@ -11864,7 +11871,7 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
-                          minLength: 1
+                          pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
