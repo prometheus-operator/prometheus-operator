@@ -1,0 +1,5 @@
+route:
+  receiver: mynamespace/global-config/null
+receivers:
+- name: mynamespace/global-config/null
+templates: []

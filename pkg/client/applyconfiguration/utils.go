@@ -298,6 +298,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.FilterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("GCESDConfig"):
 		return &monitoringv1alpha1.GCESDConfigApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Header"):
+		return &monitoringv1alpha1.HeaderApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("Headers"):
+		return &monitoringv1alpha1.HeadersApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HetznerSDConfig"):
 		return &monitoringv1alpha1.HetznerSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPConfig"):
@@ -388,6 +392,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.TimeIntervalApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("TimeRange"):
 		return &monitoringv1alpha1.TimeRangeApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("TracingConfig"):
+		return &monitoringv1alpha1.TracingConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("VictorOpsConfig"):
 		return &monitoringv1alpha1.VictorOpsConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("WebexConfig"):
@@ -410,6 +416,10 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.EmailConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("EmailThreadingConfig"):
 		return &monitoringv1beta1.EmailThreadingConfigApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("Header"):
+		return &monitoringv1beta1.HeaderApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("Headers"):
+		return &monitoringv1beta1.HeadersApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1beta1.HTTPConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("InhibitRule"):
@@ -464,6 +474,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.TimePeriodApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("TimeRange"):
 		return &monitoringv1beta1.TimeRangeApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("TracingConfig"):
+		return &monitoringv1beta1.TracingConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("VictorOpsConfig"):
 		return &monitoringv1beta1.VictorOpsConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("WebexConfig"):

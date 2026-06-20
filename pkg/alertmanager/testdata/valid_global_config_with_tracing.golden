@@ -1,0 +1,19 @@
+route:
+  receiver: mynamespace/global-config/null
+receivers:
+- name: mynamespace/global-config/null
+tracing:
+  client_type: http
+  endpoint: tempo.example.com:4318
+  sampling_fraction: 0.5
+  insecure: true
+  tls_config:
+    server_name: tempo.example.com
+    insecure_skip_verify: true
+  headers:
+    X-Scope-OrgID:
+      values:
+      - tenant-a
+  compression: gzip
+  timeout: 5s
+templates: []

@@ -20,6 +20,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -128,6 +129,55 @@ func convertTimeIntervalsTo(in []TimePeriod) []v1alpha1.TimeInterval {
 	}
 
 	return out
+}
+
+func convertHeadersTo(in *Headers) *v1alpha1.Headers {
+	if in == nil {
+		return nil
+	}
+
+	out := &v1alpha1.Headers{Headers: make(map[string]v1alpha1.Header, len(in.Headers))}
+	for key, header := range in.Headers {
+		out.Headers[key] = v1alpha1.Header{
+			Values:  append([]string(nil), header.Values...),
+			Secrets: convertSecretsTo(header.Secrets),
+			Files:   append([]string(nil), header.Files...),
+		}
+	}
+
+	return out
+}
+
+func convertSecretsTo(in []string) []string {
+	out := make([]string, len(in))
+	for i := range in {
+		out[i] = in[i]
+	}
+
+	return out
+}
+
+func convertTracingConfigTo(in *TracingConfig) *v1alpha1.TracingConfig {
+	if in == nil {
+		return nil
+	}
+
+	var samplingFraction *resource.Quantity
+	if in.SamplingFraction != nil {
+		copied := in.SamplingFraction.DeepCopy()
+		samplingFraction = &copied
+	}
+
+	return &v1alpha1.TracingConfig{
+		ClientType:       v1alpha1.TracingClientType(in.ClientType),
+		Endpoint:         in.Endpoint,
+		SamplingFraction: samplingFraction,
+		Insecure:         in.Insecure,
+		TLSConfig:        in.TLSConfig,
+		Headers:          convertHeadersTo(in.Headers),
+		Compression:      in.Compression,
+		Timeout:          in.Timeout,
+	}
 }
 
 func convertHTTPConfigTo(in *HTTPConfig) *v1alpha1.HTTPConfig {
@@ -692,6 +742,7 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 		return err
 	}
 	dst.Spec.Route = r
+	dst.Spec.Tracing = convertTracingConfigTo(src.Spec.Tracing)
 
 	return nil
 }

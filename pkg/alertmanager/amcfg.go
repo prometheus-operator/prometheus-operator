@@ -24,6 +24,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/alertmanager/config"
@@ -323,6 +324,8 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		}
 		globalAlertmanagerConfig.MuteTimeIntervals = append(globalAlertmanagerConfig.MuteTimeIntervals, mti)
 	}
+
+	globalAlertmanagerConfig.Tracing = cb.convertTracingConfig(amConfig.Spec.Tracing, crKey)
 
 	if err := globalAlertmanagerConfig.sanitize(cb.amVersion, cb.logger); err != nil {
 		return err
@@ -1955,6 +1958,53 @@ func (cb *ConfigBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	return &out
 }
 
+func (cb *ConfigBuilder) convertTracingConfig(in *monitoringv1alpha1.TracingConfig, crKey types.NamespacedName) *tracingConfig {
+	if in == nil {
+		return nil
+	}
+
+	out := &tracingConfig{
+		ClientType:  string(in.ClientType),
+		Endpoint:    in.Endpoint,
+		Insecure:    in.Insecure,
+		Compression: in.Compression,
+	}
+
+	if in.SamplingFraction != nil {
+		out.SamplingFraction = in.SamplingFraction.AsApproximateFloat64()
+	}
+
+	if in.Timeout != nil {
+		timeout, err := model.ParseDuration(string(*in.Timeout))
+		if err != nil {
+			panic(fmt.Sprintf("invalid tracing timeout %q: %v", *in.Timeout, err))
+		}
+		out.Timeout = time.Duration(timeout)
+	}
+
+	if in.TLSConfig != nil {
+		out.TLSConfig = cb.convertTLSConfig(in.TLSConfig, crKey)
+	}
+
+	if in.Headers != nil {
+		headers := make(map[string]tracingHeader, len(in.Headers.Headers))
+		for key, header := range in.Headers.Headers {
+			secrets := make([]string, len(header.Secrets))
+			copy(secrets, header.Secrets)
+
+			headers[key] = tracingHeader{
+				Values:  append([]string(nil), header.Values...),
+				Secrets: secrets,
+				Files:   append([]string(nil), header.Files...),
+			}
+		}
+
+		out.Headers = &tracingHeaders{Headers: headers}
+	}
+
+	return out
+}
+
 func (cb *ConfigBuilder) convertProxyConfig(ctx context.Context, in monitoringv1.ProxyConfig, crKey types.NamespacedName) (proxyConfig, error) {
 	out := proxyConfig{}
 
@@ -2189,7 +2239,47 @@ func (c *alertmanagerConfig) sanitize(amVersion semver.Version, logger *slog.Log
 		}
 	}
 
+	if c.Tracing != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		msg := "'tracing' supported in Alertmanager >= 0.30.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		c.Tracing = nil
+	}
+
+	if err := c.Tracing.sanitize(amVersion, logger); err != nil {
+		return fmt.Errorf("tracing: %w", err)
+	}
+
 	return c.Route.sanitize(amVersion, logger)
+}
+
+func (tc *tracingConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
+	if tc == nil {
+		return nil
+	}
+
+	if err := tc.TLSConfig.sanitize(amVersion, logger); err != nil {
+		return err
+	}
+
+	if tc.Headers == nil {
+		return nil
+	}
+
+	commonHeaders := &commoncfg.Headers{Headers: make(map[string]commoncfg.Header, len(tc.Headers.Headers))}
+	for key, header := range tc.Headers.Headers {
+		secrets := make([]commoncfg.Secret, len(header.Secrets))
+		for i := range header.Secrets {
+			secrets[i] = commoncfg.Secret(header.Secrets[i])
+		}
+
+		commonHeaders.Headers[key] = commoncfg.Header{
+			Values:  header.Values,
+			Secrets: secrets,
+			Files:   header.Files,
+		}
+	}
+
+	return commonHeaders.Validate()
 }
 
 // sanitize globalConfig.

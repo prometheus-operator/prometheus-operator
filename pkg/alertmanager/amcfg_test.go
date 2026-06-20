@@ -33,6 +33,7 @@ import (
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -210,6 +211,72 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				Type: "OnNamespace",
 			},
 			golden: "valid_global_config.golden",
+		},
+		{
+			name:      "valid global config with tracing",
+			amVersion: &version31,
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "null"}},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+					Tracing: &monitoringv1alpha1.TracingConfig{
+						ClientType:       monitoringv1alpha1.TracingClientHTTP,
+						Endpoint:         "tempo.example.com:4318",
+						SamplingFraction: func(v resource.Quantity) *resource.Quantity { return &v }(resource.MustParse("0.5")),
+						Insecure:         true,
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							ServerName:         new("tempo.example.com"),
+							InsecureSkipVerify: new(true),
+						},
+						Headers: &monitoringv1alpha1.Headers{Headers: map[string]monitoringv1alpha1.Header{
+							"X-Scope-OrgID": {
+								Values: []string{"tenant-a"},
+							},
+						}},
+						Compression: monitoringv1alpha1.GzipCompression,
+						Timeout:     func(v monitoringv1.Duration) *monitoringv1.Duration { return &v }("5s"),
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: "OnNamespace"},
+			golden:          "valid_global_config_with_tracing.golden",
+		},
+		{
+			name:      "tracing unsupported version",
+			amVersion: &version28,
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{Name: "null"}},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+					},
+					Tracing: &monitoringv1alpha1.TracingConfig{
+						ClientType:       monitoringv1alpha1.TracingClientHTTP,
+						Endpoint:         "tempo.example.com:4318",
+						SamplingFraction: func(v resource.Quantity) *resource.Quantity { return &v }(resource.MustParse("0.5")),
+						Insecure:         true,
+						Headers: &monitoringv1alpha1.Headers{Headers: map[string]monitoringv1alpha1.Header{
+							"X-Scope-OrgID": {
+								Values: []string{"tenant-a"},
+							},
+						}},
+						Compression: monitoringv1alpha1.GzipCompression,
+						Timeout:     func(v monitoringv1.Duration) *monitoringv1.Duration { return &v }("5s"),
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: "OnNamespace"},
+			wantErr:         true,
 		},
 		{
 			name:      "valid global config with global HTTPConfig CA",

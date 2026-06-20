@@ -15,6 +15,8 @@
 package alertmanager
 
 import (
+	"time"
+
 	"github.com/prometheus/alertmanager/config"
 	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
@@ -33,6 +35,7 @@ type alertmanagerConfig struct {
 	Receivers         []*receiver     `yaml:"receivers,omitempty"`
 	MuteTimeIntervals []*timeInterval `yaml:"mute_time_intervals,omitempty"`
 	TimeIntervals     []*timeInterval `yaml:"time_intervals,omitempty"`
+	Tracing           *tracingConfig  `yaml:"tracing,omitempty"`
 	Templates         []string        `yaml:"templates"`
 }
 
@@ -260,6 +263,27 @@ type tlsConfig struct {
 	InsecureSkipVerify bool   `yaml:"insecure_skip_verify"`
 	MinVersion         string `yaml:"min_version,omitempty"`
 	MaxVersion         string `yaml:"max_version,omitempty"`
+}
+
+type tracingConfig struct {
+	ClientType       string          `yaml:"client_type,omitempty"`
+	Endpoint         string          `yaml:"endpoint,omitempty"`
+	SamplingFraction float64         `yaml:"sampling_fraction,omitempty"`
+	Insecure         bool            `yaml:"insecure,omitempty"`
+	TLSConfig        *tlsConfig      `yaml:"tls_config,omitempty"`
+	Headers          *tracingHeaders `yaml:"headers,omitempty"`
+	Compression      string          `yaml:"compression,omitempty"`
+	Timeout          time.Duration   `yaml:"timeout,omitempty"`
+}
+
+type tracingHeaders struct {
+	Headers map[string]tracingHeader `yaml:",inline"`
+}
+
+type tracingHeader struct {
+	Values  []string `yaml:"values,omitempty" json:"values,omitempty"`
+	Secrets []string `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+	Files   []string `yaml:"files,omitempty" json:"files,omitempty"`
 }
 
 type authorization struct {

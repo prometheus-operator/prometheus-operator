@@ -34,6 +34,8 @@ type AlertmanagerConfigSpecApplyConfiguration struct {
 	InhibitRules []InhibitRuleApplyConfiguration `json:"inhibitRules,omitempty"`
 	// timeIntervals defines the list of timeIntervals specifying when the routes should be muted.
 	TimeIntervals []TimeIntervalApplyConfiguration `json:"timeIntervals,omitempty"`
+	// tracing defines the tracing configuration.
+	Tracing *TracingConfigApplyConfiguration `json:"tracing,omitempty"`
 }
 
 // AlertmanagerConfigSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerConfigSpec type for use with
@@ -86,5 +88,13 @@ func (b *AlertmanagerConfigSpecApplyConfiguration) WithTimeIntervals(values ...*
 		}
 		b.TimeIntervals = append(b.TimeIntervals, *values[i])
 	}
+	return b
+}
+
+// WithTracing sets the Tracing field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Tracing field is set to the value of the last call.
+func (b *AlertmanagerConfigSpecApplyConfiguration) WithTracing(value *TracingConfigApplyConfiguration) *AlertmanagerConfigSpecApplyConfiguration {
+	b.Tracing = value
 	return b
 }

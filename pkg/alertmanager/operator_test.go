@@ -249,6 +249,38 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
+					Name:      "tracing-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Tracing: &monitoringv1alpha1.TracingConfig{
+						ClientType: monitoringv1alpha1.TracingClientHTTP,
+						Endpoint:   "otel-collector.monitoring.svc:4318",
+					},
+				},
+			},
+			version: &version29,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "tracing-supported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Tracing: &monitoringv1alpha1.TracingConfig{
+						ClientType: monitoringv1alpha1.TracingClientHTTP,
+						Endpoint:   "otel-collector.monitoring.svc:4318",
+					},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
 					Name:      "inhibitRulesOnly",
 					Namespace: "ns1",
 				},

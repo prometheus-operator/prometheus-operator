@@ -20,6 +20,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/conversion"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -135,6 +136,55 @@ func convertTimeIntervalsFrom(in []v1alpha1.TimeInterval) []TimePeriod {
 	}
 
 	return out
+}
+
+func convertHeadersFrom(in *v1alpha1.Headers) *Headers {
+	if in == nil {
+		return nil
+	}
+
+	out := &Headers{Headers: make(map[string]Header, len(in.Headers))}
+	for key, header := range in.Headers {
+		out.Headers[key] = Header{
+			Values:  append([]string(nil), header.Values...),
+			Secrets: convertSecretsFrom(header.Secrets),
+			Files:   append([]string(nil), header.Files...),
+		}
+	}
+
+	return out
+}
+
+func convertSecretsFrom(in []string) []string {
+	out := make([]string, len(in))
+	for i := range in {
+		out[i] = in[i]
+	}
+
+	return out
+}
+
+func convertTracingConfigFrom(in *v1alpha1.TracingConfig) *TracingConfig {
+	if in == nil {
+		return nil
+	}
+
+	var samplingFraction *resource.Quantity
+	if in.SamplingFraction != nil {
+		copied := in.SamplingFraction.DeepCopy()
+		samplingFraction = &copied
+	}
+
+	return &TracingConfig{
+		ClientType:       TracingClientType(in.ClientType),
+		Endpoint:         in.Endpoint,
+		SamplingFraction: samplingFraction,
+		Insecure:         in.Insecure,
+		TLSConfig:        in.TLSConfig,
+		Headers:          convertHeadersFrom(in.Headers),
+		Compression:      in.Compression,
+		Timeout:          in.Timeout,
+	}
 }
 
 func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
@@ -695,6 +745,7 @@ func (dst *AlertmanagerConfig) ConvertFrom(srcRaw conversion.Hub) error {
 		return err
 	}
 	dst.Spec.Route = r
+	dst.Spec.Tracing = convertTracingConfigFrom(src.Spec.Tracing)
 
 	return nil
 }

@@ -1098,6 +1098,10 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 		return err
 	}
 
+	if amc.Spec.Tracing != nil && amVersion.LT(semver.MustParse("0.30.0")) {
+		return fmt.Errorf(`tracing' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
+	}
+
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).

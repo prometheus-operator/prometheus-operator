@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -94,6 +95,9 @@ type AlertmanagerConfigSpec struct {
 	// timeIntervals defines the list of timeIntervals specifying when the routes should be muted.
 	// +optional
 	TimeIntervals []TimeInterval `json:"timeIntervals,omitempty"`
+	// tracing defines the tracing configuration.
+	// +optional
+	Tracing *TracingConfig `json:"tracing,omitempty"`
 }
 
 // Route defines a node in the routing tree.
@@ -1420,6 +1424,64 @@ type SecretKeySelector struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	Key string `json:"key"`
+}
+
+type TracingClientType string
+
+const (
+	TracingClientHTTP TracingClientType = "http"
+	TracingClientGRPC TracingClientType = "grpc"
+
+	GzipCompression = "gzip"
+)
+
+type Headers struct {
+	// headers defines a map of header names to their values.
+	//nolint:kubeapilinter
+	Headers map[string]Header `json:"headers,omitempty"`
+}
+
+type Header struct {
+	// values defines the literal header values.
+	// +listType=atomic
+	// +optional
+	Values []string `json:"values,omitempty"`
+	// secrets defines the header values loaded from secrets.
+	// +listType=atomic
+	// +optional
+	Secrets []string `json:"secrets,omitempty"`
+	// files defines the header values loaded from files.
+	// +listType=atomic
+	// +optional
+	Files []string `json:"files,omitempty"`
+}
+
+// TracingConfig configures the tracing options.
+type TracingConfig struct {
+	// clientType defines the client used to export traces.
+	// +optional
+	ClientType TracingClientType `json:"clientType,omitempty"`
+	// endpoint defines the remote endpoint where traces are sent.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+	// samplingFraction defines the probability that a trace will be sampled.
+	// +optional
+	SamplingFraction *resource.Quantity `json:"samplingFraction,omitempty"`
+	// insecure defines whether to disable client transport security.
+	// +optional
+	Insecure bool `json:"insecure,omitempty"` // nolint:kubeapilinter
+	// tlsConfig defines the TLS configuration used by the tracing client.
+	// +optional
+	TLSConfig *monitoringv1.SafeTLSConfig `json:"tlsConfig,omitempty"`
+	// headers defines request headers associated with gRPC or HTTP requests.
+	// +optional
+	Headers *Headers `json:"headers,omitempty"`
+	// compression defines the compression type used when sending traces.
+	// +optional
+	Compression string `json:"compression,omitempty"`
+	// timeout defines the maximum time the exporter waits for each batch export.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // DeepCopyObject implements the runtime.Object interface.
