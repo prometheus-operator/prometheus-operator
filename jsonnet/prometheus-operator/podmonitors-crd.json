@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.21.0",
-      "operator.prometheus.io/version": "0.91.0"
+      "operator.prometheus.io/version": "0.92.0"
     },
     "name": "podmonitors.monitoring.coreos.com"
   },
