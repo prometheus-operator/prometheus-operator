@@ -6151,6 +6151,13 @@ func TestRetentionConfigFile(t *testing.T) {
 			retentionSize: "512MB",
 			golden:        "RetentionConfigFile_v3.10.0.golden",
 		},
+		{
+			name:          "retention is not in the configuration file for Prometheus v3.5.4",
+			version:       "v3.5.4",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_v3.10.0.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
