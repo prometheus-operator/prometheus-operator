@@ -1129,7 +1129,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		}
 	}
 
-	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
+	if cg.Version().GTE(semver.MustParse("3.11.0")) {
 		var retentionSlice yaml.MapSlice
 		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
 		if retentionTime != "" {
