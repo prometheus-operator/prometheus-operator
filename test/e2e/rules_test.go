@@ -369,7 +369,7 @@ func testPrometheusRuleWithParserOptions(t *testing.T) {
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	// Skip the admission webhook because the test exercices PromQL features
+	// Skip the admission webhook because the test exercises PromQL features
 	// which aren't enabled by default.
 	ruleNamespaceSelector := map[string]string{"excludeFromWebhook": "true"}
 	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleNamespaceSelector)

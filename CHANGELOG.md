@@ -1,6 +1,23 @@
-## UNRELEASED
+## 0.92.0 / 2026-06-18
 
+> **Note:** The `PrometheusTopologySharding` and `PrometheusShardRetentionPolicy` feature gates have been promoted to **Beta** in this release and are now enabled by default. See the [sharding documentation](https://prometheus-operator.dev/docs/platform/sharding/) for details.
+
+* [CHANGE] Add URL validation for the `tokenUrl` field in OAuth2 configuration across all CRDs. #8579
+* [CHANGE] Add URL validation for the `url` field in `RemoteReadSpec` in `Prometheus` CRD. #8596
+* [FEATURE] Migrate retention options from CLI flags to the config file for `Prometheus` CRD (Prometheus >= v3 uses the config file; older versions continue to use CLI flags). #8547
+* [FEATURE] Add `staleSeriesCompactionThreshold` field to `TSDBSpec` in `Prometheus` and `PrometheusAgent` CRDs. #8563
+* [FEATURE] Add `labelNameUnderscoreSanitization` and `labelNamePreserveMultipleUnderscores` fields to `OTLPConfig` in `Prometheus` and `PrometheusAgent` CRDs. #8562
+* [FEATURE] Add `payload` field to Webhook receiver in `AlertmanagerConfig` CRD. #8507
+* [ENHANCEMENT] Use pod topology labels for zone sharding on Kubernetes >= 1.35 when the `PrometheusTopologySharding` feature gate is enabled (removes the need for `attachMetadata.node=true`). #8564
+* [ENHANCEMENT] Add validation for the Slack `update_message` field in Alertmanager configuration Secret. #8556
 * [BUGFIX] Validate target labels in `Probe` static configuration to prevent invalid Prometheus scrape configs. #7901
+* [BUGFIX] Fix goroutine leak and data race in `pollBasedListerWatcher`. #8593
+* [BUGFIX] Validate `ProxyConfig` in OAuth2 configuration. #8610
+* [BUGFIX] Fix SMTP smarthost format error handling in Alertmanager configuration. #8586
+* [BUGFIX] Fix missing `return` in admission webhook after marshal failure. #8582
+* [BUGFIX] Fix `FindOwner` to return `nil` on `meta.Accessor` error. #8585
+* [BUGFIX] Fix dropped gzip `Close` errors in `GzipConfig` and `GunzipConfig`. #8573
+* [BUGFIX] Fix panic on malformed key=value flag input (e.g. `--labels "key"`). #8560
 
 ## 0.91.0 / 2026-05-05
 
