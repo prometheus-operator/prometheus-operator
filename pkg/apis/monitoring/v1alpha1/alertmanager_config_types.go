@@ -204,6 +204,11 @@ type Receiver struct {
 	// +listType=atomic
 	// +optional
 	WebhookConfigs []WebhookConfig `json:"webhookConfigs,omitempty"`
+	// incidentioConfigs defines the list of Incident.io configurations.
+	// It requires Alertmanager >= 0.29.0.
+	// +listType=atomic
+	// +optional
+	IncidentioConfigs []IncidentioConfig `json:"incidentioConfigs,omitempty"`
 	// wechatConfigs defines the list of WeChat configurations.
 	// +listType=atomic
 	// +optional
@@ -614,6 +619,42 @@ type WebhookConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Payload *string `json:"payload,omitempty"`
+}
+
+// IncidentioConfig configures notifications via Incident.io.
+// See https://prometheus.io/docs/alerting/latest/configuration/#incidentio_config
+// It requires Alertmanager >= v0.29.0.
+type IncidentioConfig struct {
+	// sendResolved defines whether or not to notify about resolved alerts.
+	// +optional
+	SendResolved *bool `json:"sendResolved,omitempty"` // nolint:kubeapilinter
+	// url defines the Incident.io webhook URL to send HTTP POST requests to.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	// +optional
+	URL *string `json:"url,omitempty"`
+	// urlSecret defines the secret's key that contains the Incident.io webhook URL.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// +optional
+	URLSecret *v1.SecretKeySelector `json:"urlSecret,omitempty"`
+	// alertSourceToken defines the secret's key that contains the Incident.io alert source token.
+	// This token authenticates requests against the Incident.io API.
+	// +optional
+	AlertSourceToken *v1.SecretKeySelector `json:"alertSourceToken,omitempty"`
+	// httpConfig defines the HTTP client configuration for Incident.io webhook requests.
+	// +optional
+	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// maxAlerts defines the maximum number of alerts to be sent per Incident.io request.
+	// When 0, all alerts are included in the request payload.
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	MaxAlerts int32 `json:"maxAlerts,omitempty"`
+	// timeout defines the maximum time to wait for an Incident.io request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.29.0.
+	// +optional
+	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.
