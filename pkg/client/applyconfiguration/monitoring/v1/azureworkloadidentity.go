@@ -25,6 +25,12 @@ type AzureWorkloadIdentityApplyConfiguration struct {
 	ClientID *string `json:"clientId,omitempty"`
 	// tenantId is the tenant ID of the Azure Active Directory application.
 	TenantID *string `json:"tenantId,omitempty"`
+	// tokenFilePath is the path to the file containing the federated token,
+	// projected into the pod by the Kubernetes service account, that is used
+	// to authenticate.
+	//
+	// When empty, Prometheus defaults to `/var/run/secrets/azure/tokens/azure-identity-token`.
+	TokenFilePath *string `json:"tokenFilePath,omitempty"`
 }
 
 // AzureWorkloadIdentityApplyConfiguration constructs a declarative configuration of the AzureWorkloadIdentity type for use with
@@ -46,5 +52,13 @@ func (b *AzureWorkloadIdentityApplyConfiguration) WithClientID(value string) *Az
 // If called multiple times, the TenantID field is set to the value of the last call.
 func (b *AzureWorkloadIdentityApplyConfiguration) WithTenantID(value string) *AzureWorkloadIdentityApplyConfiguration {
 	b.TenantID = &value
+	return b
+}
+
+// WithTokenFilePath sets the TokenFilePath field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TokenFilePath field is set to the value of the last call.
+func (b *AzureWorkloadIdentityApplyConfiguration) WithTokenFilePath(value string) *AzureWorkloadIdentityApplyConfiguration {
+	b.TokenFilePath = &value
 	return b
 }

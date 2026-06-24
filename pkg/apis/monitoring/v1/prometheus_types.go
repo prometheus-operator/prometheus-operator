@@ -2060,6 +2060,16 @@ type AzureWorkloadIdentity struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	TenantID string `json:"tenantId"`
+
+	// tokenFilePath is the path to the file containing the federated token,
+	// projected into the pod by the Kubernetes service account, that is used
+	// to authenticate.
+	//
+	// When empty, Prometheus defaults to `/var/run/secrets/azure/tokens/azure-identity-token`.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	TokenFilePath *string `json:"tokenFilePath,omitempty"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

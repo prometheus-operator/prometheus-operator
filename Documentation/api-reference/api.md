@@ -8239,6 +8239,21 @@ string
 <p>tenantId is the tenant ID of the Azure Active Directory application.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>tokenFilePath</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tokenFilePath is the path to the file containing the federated token,
+projected into the pod by the Kubernetes service account, that is used
+to authenticate.</p>
+<p>When empty, Prometheus defaults to <code>/var/run/secrets/azure/tokens/azure-identity-token</code>.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.BasicAuth">BasicAuth

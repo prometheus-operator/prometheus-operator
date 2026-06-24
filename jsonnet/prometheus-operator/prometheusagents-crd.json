@@ -4716,6 +4716,11 @@
                                   "description": "tenantId is the tenant ID of the Azure Active Directory application.",
                                   "minLength": 1,
                                   "type": "string"
+                                },
+                                "tokenFilePath": {
+                                  "description": "tokenFilePath is the path to the file containing the federated token,\nprojected into the pod by the Kubernetes service account, that is used\nto authenticate.\n\nWhen empty, Prometheus defaults to `/var/run/secrets/azure/tokens/azure-identity-token`.",
+                                  "minLength": 1,
+                                  "type": "string"
                                 }
                               },
                               "required": [
