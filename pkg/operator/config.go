@@ -46,6 +46,11 @@ type Config struct {
 	PrometheusDefaultBaseImage   string
 	ThanosDefaultBaseImage       string
 
+	// Default versions for operands.
+	AlertmanagerDefaultVersion string
+	PrometheusDefaultVersion   string
+	ThanosDefaultVersion       string
+
 	// Allow and deny lists for namespace watchers.
 	Namespaces Namespaces
 
@@ -89,6 +94,12 @@ func DefaultConfig(cpu, memory string) Config {
 			MemoryRequests: Quantity{q: resource.MustParse(memory)},
 			MemoryLimits:   Quantity{q: resource.MustParse(memory)},
 		},
+		AlertmanagerDefaultBaseImage: DefaultAlertmanagerBaseImage,
+		PrometheusDefaultBaseImage:   DefaultPrometheusBaseImage,
+		ThanosDefaultBaseImage:       DefaultThanosBaseImage,
+		AlertmanagerDefaultVersion:   DefaultAlertmanagerVersion,
+		PrometheusDefaultVersion:     DefaultPrometheusVersion,
+		ThanosDefaultVersion:         DefaultThanosVersion,
 		Namespaces: Namespaces{
 			AllowList:                   StringSet{},
 			DenyList:                    StringSet{},

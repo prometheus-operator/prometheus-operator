@@ -33,6 +33,9 @@ var (
 			MemoryLimits:   Quantity{q: resource.MustParse("50Mi")},
 			Image:          "quay.io/prometheus-operator/prometheus-config-reloader:latest",
 		},
+		AlertmanagerDefaultVersion: DefaultAlertmanagerVersion,
+		PrometheusDefaultVersion:   DefaultPrometheusVersion,
+		ThanosDefaultVersion:       DefaultThanosVersion,
 	}
 )
 

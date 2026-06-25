@@ -94,6 +94,8 @@ type ConfigGenerator struct {
 	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
+
+	defaultPrometheusVersion string
 }
 
 type ConfigGeneratorOption func(*ConfigGenerator)
@@ -147,6 +149,12 @@ func WithoutVersionCheck() ConfigGeneratorOption {
 	}
 }
 
+func WithDefaultPrometheusVersion(version string) ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.defaultPrometheusVersion = version
+	}
+}
+
 // NewConfigGenerator creates a ConfigGenerator for the provided Prometheus resource.
 func NewConfigGenerator(
 	logger *slog.Logger,
@@ -169,8 +177,17 @@ func NewConfigGenerator(
 		return cg, nil
 	}
 
+	for _, opt := range opts {
+		opt(cg)
+	}
+
+	defaultVersion := operator.DefaultPrometheusVersion
+	if cg.defaultPrometheusVersion != "" {
+		defaultVersion = cg.defaultPrometheusVersion
+	}
+
 	cpf := p.GetCommonPrometheusFields()
-	promVersion := operator.StringValOrDefault(cpf.Version, operator.DefaultPrometheusVersion)
+	promVersion := operator.StringValOrDefault(cpf.Version, defaultVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)
@@ -183,7 +200,7 @@ func NewConfigGenerator(
 
 	cg.logger = logger.With("version", promVersion)
 
-	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p)
+	scrapeClasses, defaultScrapeClassName, err := getScrapeClassConfig(p, defaultVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse scrape classes: %w", err)
 	}
@@ -221,7 +238,7 @@ func (cg *ConfigGenerator) endpointRoleFlavor(sdr *monitoringv1.ServiceDiscovery
 	return kubernetesSDRoleEndpoint
 }
 
-func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monitoringv1.ScrapeClass, string, error) {
+func getScrapeClassConfig(p monitoringv1.PrometheusInterface, defaultVersion string) (map[string]monitoringv1.ScrapeClass, string, error) {
 	var (
 		cpf                = p.GetCommonPrometheusFields()
 		scrapeClasses      = make(map[string]monitoringv1.ScrapeClass, len(cpf.ScrapeClasses))
@@ -229,7 +246,7 @@ func getScrapeClassConfig(p monitoringv1.PrometheusInterface) (map[string]monito
 	)
 
 	for _, scrapeClass := range cpf.ScrapeClasses {
-		lcv, err := validation.NewLabelConfigValidator(p)
+		lcv, err := validation.NewLabelConfigValidator(p, defaultVersion)
 		if err != nil {
 			return nil, "", err
 		}
@@ -5433,10 +5450,11 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 	if amc != nil && amc.node() {
 		return amc
 	}
+	node := true
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
 		attachMetadata: &monitoringv1.AttachMetadata{
-			Node: new(true),
+			Node: &node,
 		},
 	}
 }

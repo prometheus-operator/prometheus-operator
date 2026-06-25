@@ -52,7 +52,7 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 
 	var (
 		nsLabeler     = namespacelabeler.New(p.Spec.EnforcedNamespaceLabel, excludedFromEnforcement, true)
-		promVersion   = operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+		promVersion   = operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, c.config.PrometheusDefaultVersion)
 		parserOptions parser.Options
 	)
 

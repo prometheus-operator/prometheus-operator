@@ -101,7 +101,13 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cs := fake.NewClientset()
-			o := &Operator{kclient: cs, logger: slog.Default()}
+			o := &Operator{
+				kclient: cs,
+				logger:  slog.Default(),
+				config: Config{
+					ThanosDefaultVersion: operator.DefaultThanosVersion,
+				},
+			}
 			tr := &monitoringv1.ThanosRuler{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "foo",
