@@ -417,6 +417,24 @@ func TestSelectProbes(t *testing.T) {
 			valid:       true,
 		},
 		{
+			scenario: "valid TLS config with ServerName Go template",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.TLSConfig = &monitoringv1.SafeTLSConfig{
+					ServerName: new(monitoringv1.TemplateString("{{ .Name }}.example.com")),
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "invalid TLS config with invalid ServerName Go template",
+			updateSpec: func(ps *monitoringv1.ProbeSpec) {
+				ps.TLSConfig = &monitoringv1.SafeTLSConfig{
+					ServerName: new(monitoringv1.TemplateString("{{ .Name")),
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario:    "inexistent scrape class",
 			scrapeClass: new("inexistent"),
 			updateSpec: func(ps *monitoringv1.ProbeSpec) {
@@ -1064,6 +1082,40 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "valid TLS config with ServerName Go template",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									ServerName: new(monitoringv1.TemplateString("{{ .Name }}.example.com")),
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "invalid TLS config with invalid ServerName Go template",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+						HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+							TLSConfig: &monitoringv1.TLSConfig{
+								SafeTLSConfig: monitoringv1.SafeTLSConfig{
+									ServerName: new(monitoringv1.TemplateString("{{ .Name")),
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
 			scenario:    "inexistent Scrape Class",
 			scrapeClass: new("inexistent"),
 			updateSpec: func(_ *monitoringv1.ServiceMonitorSpec) {
@@ -1449,6 +1501,36 @@ func TestSelectPodMonitors(t *testing.T) {
 										Key: "key1",
 									},
 								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "valid TLS config with ServerName Go template",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						HTTPConfig: monitoringv1.HTTPConfig{
+							TLSConfig: &monitoringv1.SafeTLSConfig{
+								ServerName: new(monitoringv1.TemplateString("{{ .Name }}.example.com")),
+							},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "invalid TLS config with invalid ServerName Go template",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPConfigWithProxy: monitoringv1.HTTPConfigWithProxy{
+						HTTPConfig: monitoringv1.HTTPConfig{
+							TLSConfig: &monitoringv1.SafeTLSConfig{
+								ServerName: new(monitoringv1.TemplateString("{{ .Name")),
 							},
 						},
 					},
@@ -4665,6 +4747,24 @@ func TestSelectScrapeConfigs(t *testing.T) {
 							},
 						},
 					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "valid TLS config with ServerName Go template",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.TLSConfig = &monitoringv1.SafeTLSConfig{
+					ServerName: new(monitoringv1.TemplateString("{{ .Name }}.example.com")),
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "invalid TLS config with invalid ServerName Go template",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.TLSConfig = &monitoringv1.SafeTLSConfig{
+					ServerName: new(monitoringv1.TemplateString("{{ .Name")),
 				}
 			},
 			valid: false,

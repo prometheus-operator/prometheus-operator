@@ -82,7 +82,7 @@ func (b *GRPCServerTLSConfigApplyConfiguration) WithKeySecret(value corev1.Secre
 // WithServerName sets the ServerName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerName field is set to the value of the last call.
-func (b *GRPCServerTLSConfigApplyConfiguration) WithServerName(value string) *GRPCServerTLSConfigApplyConfiguration {
+func (b *GRPCServerTLSConfigApplyConfiguration) WithServerName(value monitoringv1.TemplateString) *GRPCServerTLSConfigApplyConfiguration {
 	b.SafeTLSConfigApplyConfiguration.ServerName = &value
 	return b
 }
