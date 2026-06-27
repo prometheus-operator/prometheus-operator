@@ -1215,7 +1215,8 @@ type PrometheusSpec struct {
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
 
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
-	// (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+	//
+	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
 	//
 	// +optional
 	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
@@ -1392,7 +1393,8 @@ const (
 
 	// TopologyShardingStrategyMode enables zone-aware sharding.
 	// Each shard is assigned to a specific topology zone and only scrapes targets in that zone.
-	// (Alpha) Using this mode requires the `PrometheusTopologySharding` feature gate to be enabled.
+	//
+	// (Beta) Using this mode requires the `PrometheusTopologySharding` feature gate (enabled by default).
 	TopologyShardingStrategyMode ShardingStrategyMode = "Topology"
 )
 
@@ -2535,11 +2537,11 @@ func (c *SafeAuthorization) Validate() error {
 	}
 
 	if strings.ToLower(strings.TrimSpace(c.Type)) == "basic" {
-		return errors.New("authorization type cannot be set to \"basic\", use \"basicAuth\" instead")
+		return errors.New("'authorization' type cannot be set to \"basic\", use \"basicAuth\" instead")
 	}
 
 	if c.Credentials == nil {
-		return errors.New("authorization credentials are required")
+		return errors.New("'authorization' credentials are required")
 	}
 
 	return nil

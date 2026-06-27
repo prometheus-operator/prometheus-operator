@@ -7,6 +7,14 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
+SHELLCHECK_ARCH=$(GOARCH)
+ifeq ($(GOARCH),amd64)
+	SHELLCHECK_ARCH=x86_64
+else ifeq ($(GOARCH),arm64)
+	SHELLCHECK_ARCH=aarch64
+else ifeq ($(GOARCH),arm)
+	SHELLCHECK_ARCH=armv6hf
+endif
 GODEBUG :=
 
 CONTAINER_CLI ?= docker
@@ -459,7 +467,7 @@ $(TOOLING): $(TOOLS_BIN_DIR) ## Install required tools and binaries.
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
 	@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
 	@echo Downloading shellcheck
-	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
+	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).$(SHELLCHECK_ARCH).tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
 # generate k8s generator variable and target,
 # i.e. if $(1)=informer-gen:

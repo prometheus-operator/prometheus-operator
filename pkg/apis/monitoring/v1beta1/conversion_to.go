@@ -506,16 +506,17 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 
 func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 	return v1alpha1.SNSConfig{
-		SendResolved: in.SendResolved,
-		ApiURL:       in.ApiURL,
-		Sigv4:        in.Sigv4,
-		TopicARN:     in.TopicARN,
-		Subject:      in.Subject,
-		PhoneNumber:  in.PhoneNumber,
-		TargetARN:    in.TargetARN,
-		Message:      in.Message,
-		Attributes:   in.Attributes,
-		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		SendResolved:     in.SendResolved,
+		ApiURL:           in.ApiURL,
+		Sigv4:            in.Sigv4,
+		TopicARN:         in.TopicARN,
+		Subject:          in.Subject,
+		PhoneNumber:      in.PhoneNumber,
+		TargetARN:        in.TargetARN,
+		Message:          in.Message,
+		Attributes:       in.Attributes,
+		HTTPConfig:       convertHTTPConfigTo(in.HTTPConfig),
+		UseAWSHTTPClient: in.UseAWSHTTPClient,
 	}
 }
 
