@@ -54,64 +54,68 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		}
 		receiverNames[receiver.Name] = struct{}{}
 
-		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'pagerDutyConfig' - receiver %s: %w", receiver.Name, err)
+		receiverValidationFailedFormat := func(err error) (map[string]struct{}, error) {
+			return nil, fmt.Errorf("failed to validate receiver %q: %w", receiver.Name, err)
 		}
 
 		if err := validateOpsGenieConfigs(receiver.OpsGenieConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'opsGenieConfig' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
-		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'slackConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'webhookConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'weChatConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'emailConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'victorOpsConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'pushOverConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateSnsConfigs(receiver.SNSConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'snsConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'telegramConfig' - receiver %s: %w", receiver.Name, err)
+		if err = validatePagerDutyConfigs(receiver.PagerDutyConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateDiscordConfigs(receiver.DiscordConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'discordConfig' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateSlackConfigs(receiver.SlackConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateWebhookConfigs(receiver.WebhookConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateWechatConfigs(receiver.WeChatConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateEmailConfig(receiver.EmailConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateVictorOpsConfigs(receiver.VictorOpsConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validatePushoverConfigs(receiver.PushoverConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateSNSConfigs(receiver.SNSConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateTelegramConfigs(receiver.TelegramConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateWebexConfigs(receiver.WebexConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'webexConfig' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateMSTeamsConfigs(receiver.MSTeamsConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'msteamsConfig' - receiver %s: %w", receiver.Name, err)
-		}
-
-		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'rocketchatConfig' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 
 		if err := validateMSTeamsV2Configs(receiver.MSTeamsV2Configs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'msteamsv2Config' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
+		}
+
+		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
+			return receiverValidationFailedFormat(err)
 		}
 	}
 
@@ -119,14 +123,14 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 }
 
 func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error {
-	for i, conf := range configs {
+	v := func(conf monitoringv1beta1.PagerDutyConfig) error {
 		if err := validation.ValidateURLPtr((*string)(conf.URL)); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+			return fmt.Errorf("invalid 'url': %w", err)
 		}
 
 		if conf.ClientURL != nil && *conf.ClientURL != "" {
 			if err := validation.ValidateTemplateURL(*conf.ClientURL); err != nil {
-				return fmt.Errorf("[%d]: clientURL: %w", i, err)
+				return fmt.Errorf("invalid 'clientURL': %w", err)
 			}
 		}
 
@@ -137,7 +141,7 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 		for j, lc := range conf.PagerDutyLinkConfigs {
 			if lc.Href != nil && *lc.Href != "" {
 				if err := validation.ValidateTemplateURL(*lc.Href); err != nil {
-					return fmt.Errorf("[%d]: pagerDutyLinkConfigs[%d]: href: %w", i, j, err)
+					return fmt.Errorf("'pagerDutyLinkConfigs'[%d]: invalid 'href': %w", j, err)
 				}
 			}
 		}
@@ -145,30 +149,47 @@ func validatePagerDutyConfigs(configs []monitoringv1beta1.PagerDutyConfig) error
 		for j, ic := range conf.PagerDutyImageConfigs {
 			if ic.Href != nil && *ic.Href != "" {
 				if err := validation.ValidateTemplateURL(*ic.Href); err != nil {
-					return fmt.Errorf("[%d]: pagerDutyImageConfigs[%d]: href: %w", i, j, err)
+					return fmt.Errorf("'pagerDutyImageConfigs'[%d]: invalid 'href': %w", j, err)
 				}
 			}
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'pagerdutyConfigs'[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
-	for i, config := range configs {
-		if err := config.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+	v := func(conf monitoringv1beta1.OpsGenieConfig) error {
+		if err := conf.Validate(); err != nil {
+			return err
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'opsgenieConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -176,30 +197,47 @@ func validateOpsGenieConfigs(configs []monitoringv1beta1.OpsGenieConfig) error {
 }
 
 func validateSlackConfigs(configs []monitoringv1beta1.SlackConfig) error {
-	for _, config := range configs {
-		if err := config.Validate(); err != nil {
+	v := func(conf monitoringv1beta1.SlackConfig) error {
+		if err := conf.Validate(); err != nil {
 			return err
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'slackConfigs'[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
-	for i, config := range configs {
-		if config.URL == nil && config.URLSecret == nil {
-			return fmt.Errorf("[%d]: one of 'url' or 'urlSecret' must be specified", i)
+	v := func(conf monitoringv1beta1.WebhookConfig) error {
+		if conf.URL == nil && conf.URLSecret == nil {
+			return errors.New("one of 'url' or 'urlSecret' must be specified")
 		}
 
-		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
-			return fmt.Errorf("[%d]: url: %w", i, err)
+		if err := validation.ValidateTemplateURLPtr(conf.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'webhookConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -207,13 +245,21 @@ func validateWebhookConfigs(configs []monitoringv1beta1.WebhookConfig) error {
 }
 
 func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
-	for i, config := range configs {
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+	v := func(conf monitoringv1beta1.WeChatConfig) error {
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'wechatConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -221,36 +267,44 @@ func validateWechatConfigs(configs []monitoringv1beta1.WeChatConfig) error {
 }
 
 func validateEmailConfig(configs []monitoringv1beta1.EmailConfig) error {
-	for _, config := range configs {
-		if ptr.Deref(config.To, "") == "" {
+	v := func(conf monitoringv1beta1.EmailConfig) error {
+		if ptr.Deref(conf.To, "") == "" {
 			return errors.New("missing 'to' address")
 		}
 
-		if ptr.Deref(config.Smarthost, "") != "" {
-			_, _, err := net.SplitHostPort(*config.Smarthost)
+		if ptr.Deref(conf.Smarthost, "") != "" {
+			_, _, err := net.SplitHostPort(*conf.Smarthost)
 			if err != nil {
-				return fmt.Errorf("invalid 'smarthost' %s: %w", *config.Smarthost, err)
+				return fmt.Errorf("invalid 'smarthost' %q: %w", *conf.Smarthost, err)
 			}
 		}
 
-		if config.Headers != nil {
+		if conf.Headers != nil {
 			// Header names are case-insensitive, check for collisions.
 			normalizedHeaders := map[string]struct{}{}
-			for _, v := range config.Headers {
-				normalized := strings.ToLower(v.Key)
+			for _, h := range conf.Headers {
+				normalized := strings.ToLower(h.Key)
 				if _, ok := normalizedHeaders[normalized]; ok {
 					return fmt.Errorf("duplicate header %q", normalized)
 				}
 				normalizedHeaders[normalized] = struct{}{}
 			}
 		}
+
+		return nil
 	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'emailConfigs'[%d]: %w", i, err)
+		}
+	}
+
 	return nil
 }
 
 func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error {
-	for i, config := range configs {
-
+	v := func(conf monitoringv1beta1.VictorOpsConfig) error {
 		// from https://github.com/prometheus/alertmanager/blob/a7f9fdadbecbb7e692d2cd8d3334e3d6de1602e1/config/notifiers.go#L497
 		reservedFields := map[string]struct{}{
 			"routing_key":         {},
@@ -262,96 +316,130 @@ func validateVictorOpsConfigs(configs []monitoringv1beta1.VictorOpsConfig) error
 			"entity_state":        {},
 		}
 
-		if len(config.CustomFields) > 0 {
-			for _, v := range config.CustomFields {
-				if _, ok := reservedFields[v.Key]; ok {
-					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", v.Key)
+		if len(conf.CustomFields) > 0 {
+			for _, f := range conf.CustomFields {
+				if _, ok := reservedFields[f.Key]; ok {
+					return fmt.Errorf("usage of reserved word %q is not allowed in custom fields", f.Key)
 				}
 			}
 		}
 
-		if config.RoutingKey == "" {
+		if conf.RoutingKey == "" {
 			return errors.New("missing 'routingKey' key")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'victoropsConfigs'[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
-	for i, config := range configs {
-		if config.UserKey == nil && config.UserKeyFile == nil {
-			return fmt.Errorf("one of userKey or userKeyFile must be configured")
+	v := func(conf monitoringv1beta1.PushoverConfig) error {
+		if conf.UserKey == nil && conf.UserKeyFile == nil {
+			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
-		if config.Token == nil && config.TokenFile == nil {
-			return fmt.Errorf("one of token or tokenFile must be configured")
+		if conf.Token == nil && conf.TokenFile == nil {
+			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return fmt.Errorf("html and monospace options are mutually exclusive")
+		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
-		if config.URL != "" {
-			if err := validation.ValidateTemplateURL(config.URL); err != nil {
-				return fmt.Errorf("[%d]: url: %w", i, err)
+		if conf.URL != "" {
+			if err := validation.ValidateTemplateURL(conf.URL); err != nil {
+				return fmt.Errorf("invalid 'url': %w", err)
 			}
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'pushoverConfigs'[%d]: %w", i, err)
 		}
 	}
 
 	return nil
 }
 
-func validateSnsConfigs(configs []monitoringv1beta1.SNSConfig) error {
-	for i, config := range configs {
-		if (ptr.Deref(config.TargetARN, "") == "") != (ptr.Deref(config.TopicARN, "") == "") != (ptr.Deref(config.PhoneNumber, "") == "") {
-			return fmt.Errorf("[%d]: must provide either a targetARN, topicARN, or phoneNumber for SNS config", i)
+func validateSNSConfigs(configs []monitoringv1beta1.SNSConfig) error {
+	v := func(conf monitoringv1beta1.SNSConfig) error {
+		if (ptr.Deref(conf.TargetARN, "") == "") != (ptr.Deref(conf.TopicARN, "") == "") != (ptr.Deref(conf.PhoneNumber, "") == "") {
+			return errors.New("must provide one of 'targetARN', 'topicARN', or 'phoneNumber'")
 		}
 
-		if config.ApiURL != nil {
-			if err := validation.ValidateTemplateURL(*config.ApiURL); err != nil {
-				return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if conf.ApiURL != nil {
+			if err := validation.ValidateTemplateURL(*conf.ApiURL); err != nil {
+				return fmt.Errorf("invalid 'apiURL': %w", err)
 			}
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'snsConfigs'[%d]: %w", i, err)
 		}
 	}
+
 	return nil
 }
 
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
-	for i, config := range configs {
-		if config.BotToken == nil && config.BotTokenFile == nil {
-			return fmt.Errorf("[%d]: mandatory field botToken or botTokenfile is empty", i)
+	v := func(conf monitoringv1beta1.TelegramConfig) error {
+		if conf.BotToken == nil && conf.BotTokenFile == nil {
+			return errors.New("mandatory field botToken or botTokenfile is empty")
 		}
 
-		if config.BotToken != nil && config.BotTokenFile != nil {
-			return fmt.Errorf("[%d]: only one of 'botToken' or 'botTokenfile' must be configured", i)
+		if conf.BotToken != nil && conf.BotTokenFile != nil {
+			return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 		}
 
-		if config.ChatID == 0 {
-			return fmt.Errorf("[%d]: mandatory field %q is empty", i, "chatID")
+		if conf.ChatID == 0 {
+			return errors.New("mandatory field 'chatID' is empty")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'telegramConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -359,13 +447,21 @@ func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 }
 
 func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
-	for i, config := range configs {
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+	v := func(conf monitoringv1beta1.WebexConfig) error {
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'webexConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -373,9 +469,17 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 }
 
 func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
-	for _, config := range configs {
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+	v := func(conf monitoringv1beta1.DiscordConfig) error {
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'discordConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -383,31 +487,39 @@ func validateDiscordConfigs(configs []monitoringv1beta1.DiscordConfig) error {
 }
 
 func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) error {
-	for i, config := range configs {
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+	v := func(conf monitoringv1beta1.RocketChatConfig) error {
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("invalid 'apiURL': %w", err)
 		}
 
-		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
-			return fmt.Errorf("[%d]: invalid 'iconURL': %w", i, err)
+		if err := validation.ValidateTemplateURLPtr(conf.IconURL); err != nil {
+			return fmt.Errorf("invalid 'iconURL': %w", err)
 		}
 
-		if err := validation.ValidateTemplateURLPtr(config.ImageURL); err != nil {
-			return fmt.Errorf("[%d]: invalid 'imageURL': %w", i, err)
+		if err := validation.ValidateTemplateURLPtr(conf.ImageURL); err != nil {
+			return fmt.Errorf("invalid 'imageURL': %w", err)
 		}
 
-		if err := validation.ValidateTemplateURLPtr(config.ThumbURL); err != nil {
-			return fmt.Errorf("[%d]: invalid 'thumbURL': %w", i, err)
+		if err := validation.ValidateTemplateURLPtr(conf.ThumbURL); err != nil {
+			return fmt.Errorf("invalid 'thumbURL': %w", err)
 		}
 
-		for j, a := range config.Actions {
+		for j, a := range conf.Actions {
 			if err := validation.ValidateTemplateURLPtr(a.URL); err != nil {
-				return fmt.Errorf("%d: actions[%d]: invalid 'url': %w", i, j, err)
+				return fmt.Errorf("'actions'[%d]: invalid 'url': %w", j, err)
 			}
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return fmt.Errorf("[%d]: %w", i, err)
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'rocketchatConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -415,9 +527,17 @@ func validateRocketchatConfigs(configs []monitoringv1beta1.RocketChatConfig) err
 }
 
 func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
-	for _, config := range configs {
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+	v := func(conf monitoringv1beta1.MSTeamsConfig) error {
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'msteamsConfigs'[%d]: %w", i, err)
 		}
 	}
 
@@ -425,9 +545,17 @@ func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 }
 
 func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error {
-	for _, config := range configs {
-		if err := config.HTTPConfig.Validate(); err != nil {
-			return err
+	v := func(conf monitoringv1beta1.MSTeamsV2Config) error {
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'msteamsv2Configs'[%d]: %w", i, err)
 		}
 	}
 
@@ -445,7 +573,7 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 
 	if r.Receiver == "" {
 		if topLevelRoute {
-			return fmt.Errorf("root route must define a receiver")
+			return errors.New("root route must define a receiver")
 		}
 	} else {
 		if _, found := receivers[r.Receiver]; !found {
