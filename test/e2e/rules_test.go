@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -364,12 +365,16 @@ func TestPrometheusRuleApply(t *testing.T) {
 }
 
 func testPrometheusRuleWithParserOptions(t *testing.T) {
+	if os.Getenv("TEST_PROMETHEUS_V2") == "true" {
+		t.Skip("Skipping PromQL parser options with Prometheus v2 because not all options are supported")
+	}
 	t.Parallel()
+
 	testCtx := framework.NewTestCtx(t)
 	defer testCtx.Cleanup(t)
 	ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-	// Skip the admission webhook because the test exercices PromQL features
+	// Skip the admission webhook because the test exercises PromQL features
 	// which aren't enabled by default.
 	ruleNamespaceSelector := map[string]string{"excludeFromWebhook": "true"}
 	err := framework.AddLabelsToNamespace(context.Background(), ns, ruleNamespaceSelector)

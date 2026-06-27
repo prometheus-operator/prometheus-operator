@@ -6127,7 +6127,7 @@ func testPrometheusShardingStrategyCELValidations(t *testing.T) {
 				p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 					Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 					Topology: &monitoringv1.TopologyShardingStrategy{
-						Values: []string{"zone1", "zone2"},
+						Values: []string{"zone-a", "zone-b"},
 					},
 				}
 			},
@@ -6140,7 +6140,7 @@ func testPrometheusShardingStrategyCELValidations(t *testing.T) {
 				p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 					Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 					Topology: &monitoringv1.TopologyShardingStrategy{
-						Values: []string{"zone1", "zone2", "zone3"},
+						Values: []string{"zone-a", "zone-b", "zone-c"},
 					},
 				}
 			},
@@ -6153,7 +6153,7 @@ func testPrometheusShardingStrategyCELValidations(t *testing.T) {
 				p.Spec.ShardingStrategy = &monitoringv1.ShardingStrategy{
 					Mode: ptr.To(monitoringv1.TopologyShardingStrategyMode),
 					Topology: &monitoringv1.TopologyShardingStrategy{
-						Values: []string{"zone1", "zone2"},
+						Values: []string{"zone-a", "zone-b"},
 					},
 				}
 			},

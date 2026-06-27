@@ -375,16 +375,17 @@ type pushoverConfig struct {
 }
 
 type snsConfig struct {
-	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
-	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
-	APIUrl        string            `yaml:"api_url,omitempty"`
-	Sigv4         sigV4Config       `yaml:"sigv4,omitempty"`
-	TopicARN      string            `yaml:"topic_arn,omitempty"`
-	PhoneNumber   string            `yaml:"phone_number,omitempty"`
-	TargetARN     string            `yaml:"target_arn,omitempty"`
-	Subject       string            `yaml:"subject,omitempty"`
-	Message       string            `yaml:"message,omitempty"`
-	Attributes    map[string]string `yaml:"attributes,omitempty"`
+	VSendResolved    *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig       *httpClientConfig `yaml:"http_config,omitempty"`
+	APIUrl           string            `yaml:"api_url,omitempty"`
+	Sigv4            sigV4Config       `yaml:"sigv4,omitempty"`
+	TopicARN         string            `yaml:"topic_arn,omitempty"`
+	PhoneNumber      string            `yaml:"phone_number,omitempty"`
+	TargetARN        string            `yaml:"target_arn,omitempty"`
+	Subject          string            `yaml:"subject,omitempty"`
+	Message          string            `yaml:"message,omitempty"`
+	Attributes       map[string]string `yaml:"attributes,omitempty"`
+	UseAWSHTTPClient bool              `yaml:"use_aws_http_client,omitempty"`
 }
 
 type telegramConfig struct {
