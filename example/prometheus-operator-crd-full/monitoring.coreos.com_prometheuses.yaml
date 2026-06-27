@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.21.0
-    operator.prometheus.io/version: 0.91.0
+    operator.prometheus.io/version: 0.92.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -9520,7 +9520,8 @@ spec:
               shardRetentionPolicy:
                 description: |-
                   shardRetentionPolicy defines the retention policy for the Prometheus shards.
-                  (Alpha) Using this field requires the 'PrometheusShardRetentionPolicy' feature gate to be enabled.
+
+                  (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
                 properties:
                   retain:
                     description: |-

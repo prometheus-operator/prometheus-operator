@@ -104,11 +104,11 @@ func DefaultConfig(cpu, memory string) Config {
 			},
 			PrometheusTopologyShardingFeature: FeatureGate{
 				description: "Enables the zone aware sharding for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			PrometheusShardRetentionPolicyFeature: FeatureGate{
 				description: "Enables shard retention policy for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			StatusForConfigurationResourcesFeature: FeatureGate{
 				description: "Updates the status subresource for configuration resources",

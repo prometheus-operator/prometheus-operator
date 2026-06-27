@@ -29,6 +29,7 @@ Full list of triage people is displayed below:
 | João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 | Dong Jiang      | `@dongjiang`       | [@dongjiang1989](https://github.com/dongjiang1989)     | iFlytek         |
 | S Ashwin        | `@Ashwin Sriram`   | [@AshwinSriram11](https://github.com/AshwinSriram11)   | Deutsche Bank   |
+| Mos Nattapong E | `@Nutmos`          | [@nutmos](https://github.com/nutmos)                   | Red Hat         |
 
 ## Emeritus maintainers
 
