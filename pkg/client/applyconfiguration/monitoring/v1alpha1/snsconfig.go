@@ -54,6 +54,12 @@ type SNSConfigApplyConfiguration struct {
 	Attributes map[string]string `json:"attributes,omitempty"`
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+	// alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+	// is set; set explicitly when configuring ca_bundle via shared AWS config.
+	//
+	// It requires Alertmanager >= 0.33.0.
+	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"`
 }
 
 // SNSConfigApplyConfiguration constructs a declarative configuration of the SNSConfig type for use with
@@ -145,5 +151,13 @@ func (b *SNSConfigApplyConfiguration) WithAttributes(entries map[string]string) 
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *SNSConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *SNSConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithUseAWSHTTPClient sets the UseAWSHTTPClient field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UseAWSHTTPClient field is set to the value of the last call.
+func (b *SNSConfigApplyConfiguration) WithUseAWSHTTPClient(value bool) *SNSConfigApplyConfiguration {
+	b.UseAWSHTTPClient = &value
 	return b
 }
