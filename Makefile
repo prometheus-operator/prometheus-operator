@@ -61,15 +61,18 @@ MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
 TOOLING=$(CONTROLLER_GEN_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
+TOOLS_GO_MOD := scripts/go.mod scripts/go.sum
+GO_INSTALL_TOOL = GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
+K8S_GEN_TOOLING:=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
 
 K8S_GEN_DEPS:=.header
 K8S_GEN_DEPS+=$(TYPES_V1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1ALPHA1_TARGET)
 K8S_GEN_DEPS+=$(TYPES_V1BETA1_TARGET)
-K8S_GEN_DEPS+=$(foreach bin,$(K8S_GEN_BINARIES),$(TOOLS_BIN_DIR)/$(bin))
+K8S_GEN_DEPS+=$(K8S_GEN_TOOLING)
 
 CERTS_DIR := test/e2e/tls_certs
 
@@ -246,7 +249,7 @@ generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/th
 # (example/prometheus-operator-crd-full) and we generate jsonnet code that can
 # be used to patch the "default" jsonnet CRD.
 .PHONY: generate-crds
-generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) ## Generate operator CRDs.
+generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNETFMT_BINARY) $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) ## Generate operator CRDs.
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) $(CRD_OPTIONS) paths=./v1/. paths=./v1alpha1/. output:crd:dir=$(PWD)/example/prometheus-operator-crd/
 	cd pkg/apis/monitoring && $(CONTROLLER_GEN_BINARY) $(CRD_OPTIONS) paths=./... output:crd:dir=$(PWD)/example/prometheus-operator-crd-full
 	VERSION=$(VERSION) ./scripts/generate/append-operator-version.sh
@@ -278,7 +281,9 @@ stripped-down-crds.yaml: $(shell find example/prometheus-operator-crd/*.yaml -ty
 scripts/generate/vendor: $(JB_BINARY) $(shell find jsonnet/prometheus-operator -type f) ## Install jsonnet dependencies.
 	cd scripts/generate; $(JB_BINARY) install;
 
-example/non-rbac/prometheus-operator.yaml: scripts/generate/vendor VERSION $(shell find jsonnet -type f) ## Generate non-RBAC Prometheus Operator manifests.
+JSONNET_MANIFEST_DEPS := scripts/generate/vendor $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY)
+
+example/non-rbac/prometheus-operator.yaml: $(JSONNET_MANIFEST_DEPS) VERSION $(shell find jsonnet -type f) ## Generate non-RBAC Prometheus Operator manifests.
 	scripts/generate/build-non-rbac-prometheus-operator.sh
 
 example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY) ## Generate alert rules from jsonnet mixin.
@@ -286,16 +291,16 @@ example/mixin/alerts.yaml: $(JSONNET_BINARY) $(GOJSONTOYAML_BINARY) ## Generate 
 	$(JSONNET_BINARY) jsonnet/mixin/alerts.jsonnet | $(GOJSONTOYAML_BINARY) > $@
 
 RBAC_MANIFESTS = example/rbac/prometheus-operator/prometheus-operator-cluster-role.yaml example/rbac/prometheus-operator/prometheus-operator-cluster-role-binding.yaml example/rbac/prometheus-operator/prometheus-operator-service-account.yaml example/rbac/prometheus-operator/prometheus-operator-deployment.yaml
-$(RBAC_MANIFESTS): scripts/generate/vendor VERSION $(shell find jsonnet -type f) ## Generate RBAC manifests.
+$(RBAC_MANIFESTS): $(JSONNET_MANIFEST_DEPS) VERSION $(shell find jsonnet -type f) ## Generate RBAC manifests.
 	scripts/generate/build-rbac-prometheus-operator.sh
 
-example/thanos/thanos.yaml: scripts/generate/vendor scripts/generate/thanos.jsonnet $(shell find jsonnet -type f) ## Generate Thanos example manifests.
+example/thanos/thanos.yaml: $(JSONNET_MANIFEST_DEPS) scripts/generate/thanos.jsonnet $(shell find jsonnet -type f) ## Generate Thanos example manifests.
 	scripts/generate/build-thanos-example.sh
 
-example/admission-webhook: scripts/generate/vendor scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f) ## Generate admission webhook example manifests.
+example/admission-webhook: $(JSONNET_MANIFEST_DEPS) scripts/generate/admission-webhook.jsonnet $(shell find jsonnet -type f) ## Generate admission webhook example manifests.
 	scripts/generate/build-admission-webhook-example.sh
 
-example/alertmanager-crd-conversion: scripts/generate/vendor scripts/generate/conversion-webhook-patch-for-alertmanagerconfig-crd.jsonnet $(shell find jsonnet -type f) ## Generate Alertmanager CRD conversion webhook manifests.
+example/alertmanager-crd-conversion: scripts/generate/vendor $(JSONNET_BINARY) scripts/generate/conversion-webhook-patch-for-alertmanagerconfig-crd.jsonnet $(shell find jsonnet -type f) ## Generate Alertmanager CRD conversion webhook manifests.
 	scripts/generate/build-conversion-webhook-patch-for-alertmanagerconfig-crd.sh
 
 FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-started/compatibility.md Documentation/platform/operator.md
@@ -461,11 +466,31 @@ endif
 $(TOOLS_BIN_DIR): ## Create tools binary directory.
 	mkdir -p $(TOOLS_BIN_DIR)
 
-$(TOOLING): $(TOOLS_BIN_DIR) ## Install required tools and binaries.
-	@echo Installing tools from scripts/tools.go
-	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
-	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
-	@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
+.PHONY: tools
+tools: $(TOOLING) $(K8S_GEN_TOOLING) ## Install all required tools and binaries.
+
+# Install tools independently so targets only bootstrap the binaries they use.
+define _GO_TOOL_TARGET_
+$(1): $(TOOLS_GO_MOD) | $(TOOLS_BIN_DIR)
+	$$(GO_INSTALL_TOOL) $(2)
+
+endef
+
+$(eval $(call _GO_TOOL_TARGET_,$(CONTROLLER_GEN_BINARY),sigs.k8s.io/controller-tools/cmd/controller-gen))
+$(eval $(call _GO_TOOL_TARGET_,$(JB_BINARY),github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb))
+$(eval $(call _GO_TOOL_TARGET_,$(GOJSONTOYAML_BINARY),github.com/brancz/gojsontoyaml))
+$(eval $(call _GO_TOOL_TARGET_,$(JSONNET_BINARY),github.com/google/go-jsonnet/cmd/jsonnet))
+$(eval $(call _GO_TOOL_TARGET_,$(JSONNETFMT_BINARY),github.com/google/go-jsonnet/cmd/jsonnetfmt))
+$(eval $(call _GO_TOOL_TARGET_,$(PROMLINTER_BINARY),github.com/yeya24/promlinter/cmd/promlinter))
+$(eval $(call _GO_TOOL_TARGET_,$(PROMTOOL_BINARY),github.com/prometheus/prometheus/cmd/promtool))
+$(eval $(call _GO_TOOL_TARGET_,$(GOLANGCILINTER_BINARY),github.com/golangci/golangci-lint/v2/cmd/golangci-lint))
+$(eval $(call _GO_TOOL_TARGET_,$(MDOX_BINARY),github.com/bwplotka/mdox))
+$(eval $(call _GO_TOOL_TARGET_,$(API_DOC_GEN_BINARY),github.com/ahmetb/gen-crd-api-reference-docs))
+
+$(GOLANGCIKUBEAPILINTER_BINARY): .custom-gcl.yaml $(GOLANGCILINTER_BINARY) | $(TOOLS_BIN_DIR)
+	$(GOLANGCILINTER_BINARY) custom --destination $(TOOLS_BIN_DIR)
+
+$(SHELLCHECK_BINARY): | $(TOOLS_BIN_DIR)
 	@echo Downloading shellcheck
 	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).$(SHELLCHECK_ARCH).tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
@@ -482,8 +507,8 @@ $(TOOLING): $(TOOLS_BIN_DIR) ## Install required tools and binaries.
 define _K8S_GEN_VAR_TARGET_
 $(shell echo $(1) | tr '[:lower:]' '[:upper:]' | tr '-' '_')_BINARY:=$(TOOLS_BIN_DIR)/$(1)
 
-$(TOOLS_BIN_DIR)/$(1):
-	@GOBIN=$(TOOLS_BIN_DIR) go install -mod=readonly -modfile=scripts/go.mod k8s.io/code-generator/cmd/$(1)
+$(TOOLS_BIN_DIR)/$(1): $(TOOLS_GO_MOD) | $(TOOLS_BIN_DIR)
+	@$$(GO_INSTALL_TOOL) k8s.io/code-generator/cmd/$(1)
 
 endef
 
