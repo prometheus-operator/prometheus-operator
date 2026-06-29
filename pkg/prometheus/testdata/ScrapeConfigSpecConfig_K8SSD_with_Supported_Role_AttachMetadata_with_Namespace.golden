@@ -10,12 +10,8 @@ scrape_configs:
   - role: service
     attach_metadata:
       node: true
-      namespace: false
+      namespace: true
   relabel_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-storage:
-  tsdb:
-    retention:
-      time: 24h

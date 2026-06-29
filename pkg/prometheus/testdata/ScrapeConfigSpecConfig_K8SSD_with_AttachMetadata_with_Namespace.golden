@@ -7,15 +7,11 @@ global:
 scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   kubernetes_sd_configs:
-  - role: service
+  - role: pod
     attach_metadata:
       node: true
-      namespace: false
+      namespace: true
   relabel_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
-storage:
-  tsdb:
-    retention:
-      time: 24h

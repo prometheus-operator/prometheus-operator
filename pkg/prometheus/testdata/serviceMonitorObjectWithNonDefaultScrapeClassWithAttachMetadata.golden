@@ -14,6 +14,7 @@ scrape_configs:
       - default
     attach_metadata:
       node: true
+      namespace: false
   scrape_interval: 30s
   relabel_configs:
   - source_labels:
