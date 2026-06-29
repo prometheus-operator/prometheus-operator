@@ -195,6 +195,39 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "myreceiver",
 						},
+						{
+							Name: "jira",
+							JiraConfigs: []monitoringv1alpha1.JiraConfig{
+								{
+									Project:           "projectA",
+									SendResolved:      new(true),
+									APIURL:            new(monitoringv1alpha1.URL("https://test.com")),
+									Summary:           new("summary"),
+									Description:       new("description"),
+									Priority:          new("priority"),
+									Labels:            []string{"aa", "bb"},
+									IssueType:         "bug",
+									ResolveTransition: new("ResolveTransition"),
+									ReopenTransition:  new("ReopenTransition"),
+									WontFixResolution: new("WontFixResolution"),
+									ReopenDuration:    new(monitoringv1.Duration("5s")),
+									Fields: []monitoringv1alpha1.JiraField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
