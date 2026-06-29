@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  msteams_configs:
+  - webhook_url_file: /etc/secret/url
+templates: []

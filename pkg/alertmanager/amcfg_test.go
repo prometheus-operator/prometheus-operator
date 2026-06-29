@@ -4621,6 +4621,9 @@ func TestSanitizeConfig(t *testing.T) {
 	versionDiscordMessageFieldsAllowed := semver.Version{Major: 0, Minor: 28}
 	versionDiscordMessageFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
 
+	versionDiscordWebhookUrlFileAllowed := semver.Version{Major: 0, Minor: 28}
+	versionDiscordWebhookUrlFileNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -4635,6 +4638,9 @@ func TestSanitizeConfig(t *testing.T) {
 
 	versionMSTeamsSummaryAllowed := semver.Version{Major: 0, Minor: 27}
 	versionMSTeamsSummaryNotAllowed := semver.Version{Major: 0, Minor: 26}
+
+	versionMSTeamsWebhookUrlFileAllowed := semver.Version{Major: 0, Minor: 28}
+	versionMSTeamsWebhookUrlFileNotAllowed := semver.Version{Major: 0, Minor: 27}
 
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
@@ -5117,6 +5123,55 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
 		},
 		{
+			name:           "Test webhook_url_file is dropped in discord config for unsupported versions",
+			againstVersion: versionDiscordWebhookUrlFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_url_file_is_dropped_in_discord_config_for_unsupported_versions.golden",
+		},
+		{
+			name:           "Test webhook_url_file is added in discord config for supported versions",
+			againstVersion: versionDiscordWebhookUrlFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_url_file_is_added_in_discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "Test webhook_url and webhook_url_file do not coexist",
+			againstVersion: versionDiscordWebhookUrlFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "https://example.com/",
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "webex_config for supported versions",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
@@ -5452,6 +5507,56 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
+		},
+		{
+			name:           "webhook_url_file is dropped for unsupported versions for MSTeams config",
+			againstVersion: versionMSTeamsWebhookUrlFileNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL:     "https://example.com/",
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			golden: "webhook_url_file_is_dropped_for_unsupported_versions_for_msteams_config.golden",
+		},
+		{
+			name:           "webhook_url_file is kept for supported versions for MSTeams config",
+			againstVersion: versionMSTeamsWebhookUrlFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			golden: "webhook_url_file_is_kept_for_supported_versions_for_msteams_config.golden",
+		},
+		{
+			name:           "webhook_url and webhook_url_file cannot coexist for MSTeams config",
+			againstVersion: versionMSTeamsWebhookUrlFileAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MSTeamsConfigs: []*msTeamsConfig{
+							{
+								WebhookURL:     "https://example.com/",
+								WebhookURLFile: "/etc/secret/url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 		{
 			name:           "Test config version mattermost allowed",
