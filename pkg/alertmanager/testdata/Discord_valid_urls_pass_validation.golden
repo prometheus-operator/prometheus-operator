@@ -1,0 +1,6 @@
+receivers:
+- name: discord
+  discord_configs:
+  - webhook_url: https://discord.com/api/webhooks/123/abc
+    avatar_url: https://example.com/avatar.png
+templates: []
