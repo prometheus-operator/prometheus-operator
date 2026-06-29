@@ -1309,7 +1309,7 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 			require.NoError(t, err)
 
 			promArgs := sset.Spec.Template.Spec.Containers[0].Args
-			retentionFlag := strings.Split(test.expectedRetentionArg, "=")[0]
+			_, retentionFlag, _ := strings.Cut(test.expectedRetentionArg, "=")
 			foundRetentionFlag := false
 			foundRetentionSizeFlag := false
 			foundRetention := false
