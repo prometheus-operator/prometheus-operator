@@ -4714,6 +4714,210 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid: false,
 		},
 		{
+			scenario: "Outscale SD config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						Region:          new("eu-west-2"),
+						Endpoint:        new("https://api.eu-west-2.outscale.com/api/v1"),
+						Port:            new(int32(9100)),
+						RefreshInterval: (*monitoringv1.Duration)(new("30s")),
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "Outscale SD config with invalid secret ref for secretKey",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "wrong",
+							},
+							Key: "key1",
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "Outscale SD config with valid TLS config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							TLSConfig: &monitoringv1.SafeTLSConfig{
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "ca",
+									},
+								},
+								Cert: monitoringv1.SecretOrConfigMap{
+									Secret: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "cert",
+									},
+								},
+								KeySecret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "Outscale SD config with invalid TLS config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							TLSConfig: &monitoringv1.SafeTLSConfig{
+								CA: monitoringv1.SecretOrConfigMap{
+									Secret: &corev1.SecretKeySelector{
+										LocalObjectReference: corev1.LocalObjectReference{
+											Name: "secret",
+										},
+										Key: "invalid-ca",
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "Outscale SD config with valid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							ProxyConfig: monitoringv1.ProxyConfig{
+								ProxyURL:             new("http://no-proxy.com"),
+								NoProxy:              new("0.0.0.0"),
+								ProxyFromEnvironment: new(false),
+								ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+									"header": {
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "Outscale SD config with invalid proxy settings",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							ProxyConfig: monitoringv1.ProxyConfig{
+								ProxyURL:             new("http://no-proxy.com"),
+								ProxyFromEnvironment: new(true),
+								ProxyConnectHeader: map[string][]corev1.SecretKeySelector{
+									"header": {
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "secret",
+											},
+											Key: "key1",
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
+			scenario: "Outscale SD config with invalid authorization secret ref",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OutscaleSDConfigs = []monitoringv1alpha1.OutscaleSDConfig{
+					{
+						AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: "secret",
+							},
+							Key: "key1",
+						},
+						HTTPConfig: monitoringv1alpha1.HTTPConfig{
+							Authorization: &monitoringv1.SafeAuthorization{
+								Credentials: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "wrong",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario: "Inexistent Scrape Class",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{

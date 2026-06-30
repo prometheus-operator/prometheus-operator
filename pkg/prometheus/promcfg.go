@@ -5011,6 +5011,80 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		})
 	}
 
+	// OutscaleSDConfig
+	if len(sc.Spec.OutscaleSDConfigs) > 0 {
+		configs := make([][]yaml.MapItem, len(sc.Spec.OutscaleSDConfigs))
+		for i, config := range sc.Spec.OutscaleSDConfigs {
+			if config.OAuth2 == nil {
+				configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			}
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
+			if config.Region != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "region",
+					Value: config.Region,
+				})
+			}
+
+			if config.AccessKey != "" {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "access_key",
+					Value: config.AccessKey,
+				})
+			}
+
+			value, _ := s.GetSecretKey(config.SecretKey)
+			configs[i] = append(configs[i], yaml.MapItem{
+				Key:   "secret_key",
+				Value: string(value),
+			})
+
+			if config.Endpoint != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "endpoint",
+					Value: config.Endpoint,
+				})
+			}
+
+			if config.Port != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "port",
+					Value: config.Port,
+				})
+			}
+
+			if config.RefreshInterval != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "refresh_interval",
+					Value: config.RefreshInterval,
+				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "follow_redirects",
+					Value: config.FollowRedirects,
+				})
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "enable_http2",
+					Value: config.EnableHTTP2,
+				})
+			}
+		}
+
+		cfg = append(cfg, yaml.MapItem{
+			Key:   "outscale_sd_configs",
+			Value: configs,
+		})
+	}
+
 	if len(sc.Spec.RelabelConfigs) > 0 {
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(sc.TypeMeta, sc.ObjectMeta, sc.Spec.RelabelConfigs))...)
 	}

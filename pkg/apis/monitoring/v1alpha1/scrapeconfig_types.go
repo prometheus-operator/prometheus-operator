@@ -244,6 +244,9 @@ type ScrapeConfigSpec struct {
 	// ionosSDConfigs defines a list of IONOS service discovery configurations.
 	// +optional
 	IonosSDConfigs []IonosSDConfig `json:"ionosSDConfigs,omitempty"`
+	// outscaleSDConfigs defines a list of Outscale service discovery configurations.
+	// +optional
+	OutscaleSDConfigs []OutscaleSDConfig `json:"outscaleSDConfigs,omitempty"`
 	// relabelings defines how to rewrite the target's labels before scraping.
 	// Prometheus Operator automatically adds relabelings for a few standard Kubernetes fields.
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
@@ -1540,4 +1543,36 @@ type IonosSDConfig struct {
 	// oauth2 defines the configuration to use on every scrape request.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
+}
+
+// OutscaleSDConfig configurations allow retrieving scrape targets from Outscale VMs.
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#outscale_sd_config
+// +k8s:openapi-gen=true
+type OutscaleSDConfig struct {
+	// region defines the Outscale region.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// accessKey defines the Outscale access key.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	AccessKey string `json:"accessKey"`
+	// secretKey defines the Outscale secret key.
+	// +required
+	SecretKey corev1.SecretKeySelector `json:"secretKey"`
+	// endpoint defines the Outscale API endpoint URL.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Endpoint *string `json:"endpoint,omitempty"`
+	// port defines the port to scrape metrics from.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	// +optional
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
+	// +optional
+	HTTPConfig `json:",inline"`
 }
