@@ -1547,6 +1547,10 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 		out.Message = *in.Message
 	}
 
+	if cb.amVersion.GTE(semver.MustParse("0.33.0")) && in.UseAWSHTTPClient != nil {
+		out.UseAWSHTTPClient = *in.UseAWSHTTPClient
+	}
+
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {
 		return nil, err
@@ -3087,6 +3091,12 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 			logger.Warn(msg)
 			sc.Sigv4.ExternalID = ""
 		}
+	}
+
+	if sc.UseAWSHTTPClient && amVersion.LT(semver.MustParse("0.33.0")) {
+		msg := "'use_aws_http_client' supported in Alertmanager >= 0.33.0 only - dropping field `use_aws_http_client` from sns config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		sc.UseAWSHTTPClient = false
 	}
 
 	return sc.HTTPConfig.sanitize(amVersion, logger)

@@ -429,6 +429,7 @@
     "Errorf",
     "prompkg",
     "nutmos",
-    "nattapong"
+    "nattapong",
+    "AWSHTTP"
   ]
 }
