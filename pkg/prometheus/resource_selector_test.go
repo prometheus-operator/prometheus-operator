@@ -2475,7 +2475,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									Key: "key1",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
@@ -2503,7 +2503,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									Key: "key1",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
