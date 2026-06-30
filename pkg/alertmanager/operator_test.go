@@ -213,7 +213,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
-	version32, err := semver.ParseTolerant("v0.31.0")
+	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
 	c := fake.NewClientset(
@@ -718,7 +718,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version32,
-			ok:      false,
+			ok:      true,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -1195,6 +1195,70 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 					}},
 				},
 			},
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								UpdateMessage: new(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								UpdateMessage: new(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version31,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "slack-with-update-message-custom-api-url",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						SlackConfigs: []monitoringv1alpha1.SlackConfig{
+							{
+								APIURL: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								UpdateMessage: new(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
