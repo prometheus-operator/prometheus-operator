@@ -8301,6 +8301,10 @@
                             minLength: 1,
                             type: 'string',
                           },
+                          useAWSHTTPClient: {
+                            description: "useAWSHTTPClient forces the AWS SDK's BuildableClient instead of\nalertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE\nis set; set explicitly when configuring ca_bundle via shared AWS config.\n\nIt requires Alertmanager >= 0.33.0.",
+                            type: 'boolean',
+                          },
                         },
                         type: 'object',
                       },
