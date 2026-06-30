@@ -490,7 +490,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 
 		target := targetsResponse.Data.ActiveTargets[0]
 		instance := target.Labels.Instance
-		_, host, _ := strings.Cut(instance, ":")
+		host, _, _ := strings.Cut(instance, ":")
 		ips, err := net.LookupHost(host)
 		if err != nil {
 			pollErr = fmt.Errorf("can't find IPs from first target's host: %w", err)
@@ -558,7 +558,7 @@ func testPrometheusAgentDaemonSetSelectPodMonitor(t *testing.T) {
 
 		target := targetsResponse.Data.ActiveTargets[0]
 		instance := target.Labels.Instance
-		_, host, _ := strings.Cut(instance, ":")
+		host, _, _ := strings.Cut(instance, ":")
 		ips, err := net.LookupHost(host)
 		if err != nil {
 			pollErr = fmt.Errorf("can't find IPs from second target's host: %w", err)
