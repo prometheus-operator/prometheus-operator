@@ -138,12 +138,14 @@ func (c *Config) RegisterFeatureGatesFlags(fs *flag.FlagSet, flags *k8sflag.MapS
 type ContainerConfig struct {
 	// The struct tag are needed for github.com/mitchellh/hashstructure to take
 	// the field values into account when generating the statefulset hash.
-	CPURequests    Quantity `hash:"string"`
-	CPULimits      Quantity `hash:"string"`
-	MemoryRequests Quantity `hash:"string"`
-	MemoryLimits   Quantity `hash:"string"`
-	Image          string
-	EnableProbes   bool
+	CPURequests              Quantity `hash:"string"`
+	CPULimits                Quantity `hash:"string"`
+	MemoryRequests           Quantity `hash:"string"`
+	MemoryLimits             Quantity `hash:"string"`
+	EphemeralStorageRequests Quantity `hash:"string"`
+	EphemeralStorageLimits   Quantity `hash:"string"`
+	Image                    string
+	EnableProbes             bool
 }
 
 func (cc ContainerConfig) ResourceRequirements() corev1.ResourceRequirements {
@@ -163,6 +165,12 @@ func (cc ContainerConfig) ResourceRequirements() corev1.ResourceRequirements {
 	}
 	if cc.MemoryLimits.String() != "0" {
 		resources.Limits[corev1.ResourceMemory] = cc.MemoryLimits.q
+	}
+	if cc.EphemeralStorageRequests.String() != "0" {
+		resources.Requests[corev1.ResourceEphemeralStorage] = cc.EphemeralStorageRequests.q
+	}
+	if cc.EphemeralStorageLimits.String() != "0" {
+		resources.Limits[corev1.ResourceEphemeralStorage] = cc.EphemeralStorageLimits.q
 	}
 
 	return resources

@@ -162,6 +162,8 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.Var(&cfg.ReloaderConfig.CPULimits, "config-reloader-cpu-limit", "Config Reloader CPU limits. Value \"0\" disables it and causes no limit to be configured.")
 	fs.Var(&cfg.ReloaderConfig.MemoryRequests, "config-reloader-memory-request", "Config Reloader memory requests. Value \"0\" disables it and causes no request to be configured.")
 	fs.Var(&cfg.ReloaderConfig.MemoryLimits, "config-reloader-memory-limit", "Config Reloader memory limits. Value \"0\" disables it and causes no limit to be configured.")
+	fs.Var(&cfg.ReloaderConfig.EphemeralStorageRequests, "config-reloader-ephemeral-storage-request", "Config Reloader ephemeral-storage requests. Value \"0\" disables it and causes no request to be configured.")
+	fs.Var(&cfg.ReloaderConfig.EphemeralStorageLimits, "config-reloader-ephemeral-storage-limit", "Config Reloader ephemeral-storage limits. Value \"0\" disables it and causes no limit to be configured.")
 	fs.BoolVar(&cfg.ReloaderConfig.EnableProbes, "enable-config-reloader-probes", false, "Enable liveness, readiness, and startup probes for the config-reloader container. Default: false")
 
 	fs.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
