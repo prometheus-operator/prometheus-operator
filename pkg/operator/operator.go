@@ -611,3 +611,29 @@ func SelectNamespacesFromCache(obj metav1.Object, sel *metav1.LabelSelector, nsI
 
 	return ns, nil
 }
+
+// GetByKeyer is an interface which exposes only the GetByKey() method of the
+// cache.Store interface.
+type GetByKeyer interface {
+	GetByKey(string) (any, bool, error)
+}
+
+// NewMultiGetByKeyer returns an interface which queries multiple GetByKeyer in
+// sequence and returns the first found object.
+func NewMultiGetByKeyer(gbk ...GetByKeyer) GetByKeyer {
+	return multiGetByKeyer(gbk)
+}
+
+type multiGetByKeyer []GetByKeyer
+
+// GetByKey implements the GetByKeyer interface.
+func (m multiGetByKeyer) GetByKey(key string) (any, bool, error) {
+	for _, gbk := range m {
+		o, found, err := gbk.GetByKey(key)
+		if err != nil || found {
+			return o, found, err
+		}
+	}
+
+	return nil, false, nil
+}

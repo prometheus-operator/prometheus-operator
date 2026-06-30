@@ -3246,6 +3246,50 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "3.2.0",
 		},
 		{
+			scenario: "OpenStack SD config with valid TLS config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
+						Region: "RegionOne",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "ca",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "OpenStack SD config with TLS config referencing a non-existent secret",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
+						Region: "RegionOne",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "wrong",
+									},
+									Key: "ca",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario: "DigitalOcean SD config with valid TLS Config",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.DigitalOceanSDConfigs = []monitoringv1alpha1.DigitalOceanSDConfig{
