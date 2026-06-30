@@ -68,12 +68,13 @@ const (
 // Whenever the value of one of these parameters is changed, it triggers an
 // update of the managed statefulsets.
 type Config struct {
-	LocalHost                    string
-	ClusterDomain                string
-	ReloaderConfig               operator.ContainerConfig
-	AlertmanagerDefaultBaseImage string
-	Annotations                  operator.Map
-	Labels                       operator.Map
+	LocalHost                      string
+	ClusterDomain                  string
+	ReloaderConfig                 operator.ContainerConfig
+	AlertmanagerDefaultBaseImage   string
+	Annotations                    operator.Map
+	Labels                         operator.Map
+	WatchObjectRefsInAllNamespaces bool
 }
 
 // Operator manages the lifecycle of the Alertmanager statefulsets and their
@@ -170,12 +171,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		repairPolicy: c.RepairPolicy,
 
 		config: Config{
-			LocalHost:                    c.LocalHost,
-			ClusterDomain:                c.ClusterDomain,
-			ReloaderConfig:               c.ReloaderConfig,
-			AlertmanagerDefaultBaseImage: c.AlertmanagerDefaultBaseImage,
-			Annotations:                  c.Annotations,
-			Labels:                       c.Labels,
+			LocalHost:                      c.LocalHost,
+			ClusterDomain:                  c.ClusterDomain,
+			ReloaderConfig:                 c.ReloaderConfig,
+			AlertmanagerDefaultBaseImage:   c.AlertmanagerDefaultBaseImage,
+			Annotations:                    c.Annotations,
+			Labels:                         c.Labels,
+			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
 		},
 	}
 	for _, opt := range options {
@@ -240,7 +242,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 	}
 
 	allowList := config.Namespaces.AlertmanagerConfigAllowList
-	if config.WatchObjectRefsInAllNamespaces {
+	if c.config.WatchObjectRefsInAllNamespaces {
 		allowList = operator.MergeAllowLists(
 			config.Namespaces.AlertmanagerAllowList,
 			config.Namespaces.AlertmanagerConfigAllowList,
@@ -384,7 +386,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		monitoringv1alpha1.AlertmanagerConfigKind,
-		c.enqueueForNamespace,
+		c.enqueueForNamespaceFunc(c.nsAlrtCfgInf.GetStore()),
 		operator.WithFilter(
 			operator.AnyFilter(
 				operator.GenerationChanged,
@@ -397,12 +399,19 @@ func (c *Operator) addHandlers() {
 		c.alrtInfs,
 		c.reconciliations,
 	)
+	var gbk operator.GetByKeyer = c.nsAlrtCfgInf.GetStore()
+	if c.config.WatchObjectRefsInAllNamespaces && c.nsAlrtInf != c.nsAlrtCfgInf {
+		gbk = operator.NewMultiGetByKeyer(
+			c.nsAlrtInf.GetStore(),
+			c.nsAlrtCfgInf.GetStore(),
+		)
+	}
 	c.secrInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		operator.SecretGVK().Kind,
-		c.enqueueForNamespace,
+		c.enqueueForNamespaceFunc(gbk),
 		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
@@ -412,7 +421,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		operator.ConfigMapGVK().Kind,
-		c.enqueueForNamespace,
+		c.enqueueForNamespaceFunc(gbk),
 		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
@@ -427,10 +436,16 @@ func (c *Operator) addHandlers() {
 	})
 }
 
+func (c *Operator) enqueueForNamespaceFunc(gbk operator.GetByKeyer) func(string) {
+	return func(ns string) {
+		c.enqueueForNamespace(gbk, ns)
+	}
+}
+
 // enqueueForNamespace enqueues all Alertmanager object keys that belong to the
 // given namespace or select objects in the given namespace.
-func (c *Operator) enqueueForNamespace(nsName string) {
-	nsObject, exists, err := c.nsAlrtCfgInf.GetStore().GetByKey(nsName)
+func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
+	nsObject, exists, err := gbk.GetByKey(nsName)
 	if err != nil {
 		c.logger.Error(
 			"get namespace to enqueue Alertmanager instances failed",
@@ -1406,18 +1421,31 @@ func checkSlackConfigs(
 			return err
 		}
 
+		slackAPIURL := ""
 		if config.APIURL != nil {
-			url, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
+			var err error
+			slackAPIURL, err = store.GetSecretKey(ctx, namespace, *config.APIURL)
 			if err != nil {
 				return err
 			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			if err := validation.ValidateSecretURL(strings.TrimSpace(slackAPIURL)); err != nil {
 				return fmt.Errorf("failed to validate API URL: %w", err)
 			}
 		}
 
 		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
 			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		}
+
+		if config.UpdateMessage != nil {
+			if amVersion.LT(semver.MustParse("0.32.0")) {
+				return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+			}
+			if *config.UpdateMessage && slackAPIURL != "" {
+				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
+					return fmt.Errorf(`updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
+				}
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
