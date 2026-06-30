@@ -122,6 +122,7 @@ type ServiceMonitorSpec struct {
 	// sampleLimit defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 
@@ -145,6 +146,7 @@ type ServiceMonitorSpec struct {
 	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 
@@ -152,18 +154,21 @@ type ServiceMonitorSpec struct {
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 
@@ -175,6 +180,7 @@ type ServiceMonitorSpec struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 
