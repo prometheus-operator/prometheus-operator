@@ -4216,6 +4216,17 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
+			if config.Role != nil {
+				switch *config.Role {
+				case monitoringv1alpha1.DigitalOceanRoleDroplets,
+					monitoringv1alpha1.DigitalOceanRoleDatabases:
+					configs[i] = cg.WithMinimumVersion("3.12.0").
+						AppendMapItem(configs[i], "role", strings.ToLower(string(*config.Role)))
+				default:
+					cg.logger.Warn(fmt.Sprintf("ignoring role not supported by Prometheus: %q", string(*config.Role)))
+				}
+			}
+
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "follow_redirects",
