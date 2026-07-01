@@ -681,6 +681,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
 	// enforcedTargetLimit when defined specifies a global limit on the number
@@ -698,6 +699,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
 	// enforcedLabelLimit when defined specifies a global limit on the number
@@ -714,6 +716,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
 	// enforcedLabelNameLengthLimit when defined specifies a global limit on the length
@@ -730,6 +733,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// enforcedLabelValueLengthLimit when not null defines a global limit on the length
@@ -746,6 +750,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
 	// enforcedKeepDroppedTargets when defined specifies a global limit on the number of targets
@@ -763,6 +768,7 @@ type CommonPrometheusFields struct {
 	// * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
 	//
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// enforcedBodySizeLimit when defined specifies a global limit on the size
@@ -907,6 +913,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
@@ -915,6 +922,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
 	// labelLimit defines per-scrape limit on number of labels that will be accepted for a sample.
@@ -923,6 +931,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
@@ -931,6 +940,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
@@ -939,6 +949,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
@@ -949,6 +960,7 @@ type CommonPrometheusFields struct {
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
 
@@ -2195,6 +2207,7 @@ type RelabelConfig struct {
 	// modulus to take of the hash of the source label values.
 	//
 	// Only applicable when the action is `HashMod`.
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	Modulus uint64 `json:"modulus,omitempty"`
 
