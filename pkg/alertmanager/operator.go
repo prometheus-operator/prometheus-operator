@@ -202,9 +202,6 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 }
 
 func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error {
-	c.config.AlertmanagerDefaultVersion = operator.StringValOrDefault(c.config.AlertmanagerDefaultVersion, config.AlertmanagerDefaultVersion)
-	c.config.AlertmanagerDefaultBaseImage = operator.StringValOrDefault(c.config.AlertmanagerDefaultBaseImage, config.AlertmanagerDefaultBaseImage)
-
 	c.metrics.MustRegister(c.reconciliations)
 
 	var err error
