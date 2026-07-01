@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.21.0",
-      "operator.prometheus.io/version": "0.92.0"
+      "operator.prometheus.io/version": "0.92.1"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -977,6 +977,7 @@
                                   "modulus": {
                                     "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                     "format": "int64",
+                                    "minimum": 0,
                                     "type": "integer"
                                   },
                                   "regex": {
@@ -1219,6 +1220,7 @@
                                   "modulus": {
                                     "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                     "format": "int64",
+                                    "minimum": 0,
                                     "type": "integer"
                                   },
                                   "regex": {
@@ -3332,21 +3334,25 @@
                   "enforcedKeepDroppedTargets": {
                     "description": "enforcedKeepDroppedTargets when defined specifies a global limit on the number of targets\ndropped by relabeling that will be kept in memory. The value overrides\nany `spec.keepDroppedTargets` set by\nServiceMonitor, PodMonitor, Probe objects unless `spec.keepDroppedTargets` is\ngreater than zero and less than `spec.enforcedKeepDroppedTargets`.\n\nIt requires Prometheus >= v2.47.0.\n\nWhen both `enforcedKeepDroppedTargets` and `keepDroppedTargets` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined keepDroppedTargets value will inherit the global keepDroppedTargets value (Prometheus >= 2.45.0) or the enforcedKeepDroppedTargets value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedKeepDroppedTargets` is greater than the `keepDroppedTargets`, the `keepDroppedTargets` will be set to `enforcedKeepDroppedTargets`.\n* Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.\n* Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "enforcedLabelLimit": {
                     "description": "enforcedLabelLimit when defined specifies a global limit on the number\nof labels per sample. The value overrides any `spec.labelLimit` set by\nServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is\ngreater than zero and less than `spec.enforcedLabelLimit`.\n\nIt requires Prometheus >= v2.27.0.\n\nWhen both `enforcedLabelLimit` and `labelLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined labelLimit value will inherit the global labelLimit value (Prometheus >= 2.45.0) or the enforcedLabelLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedLabelLimit` is greater than the `labelLimit`, the `labelLimit` will be set to `enforcedLabelLimit`.\n* Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.\n* Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "enforcedLabelNameLengthLimit": {
                     "description": "enforcedLabelNameLengthLimit when defined specifies a global limit on the length\nof labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by\nServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is\ngreater than zero and less than `spec.enforcedLabelNameLengthLimit`.\n\nIt requires Prometheus >= v2.27.0.\n\nWhen both `enforcedLabelNameLengthLimit` and `labelNameLengthLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined labelNameLengthLimit value will inherit the global labelNameLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelNameLengthLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedLabelNameLengthLimit` is greater than the `labelNameLengthLimit`, the `labelNameLengthLimit` will be set to `enforcedLabelNameLengthLimit`.\n* Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.\n* Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "enforcedLabelValueLengthLimit": {
                     "description": "enforcedLabelValueLengthLimit when not null defines a global limit on the length\nof labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by\nServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is\ngreater than zero and less than `spec.enforcedLabelValueLengthLimit`.\n\nIt requires Prometheus >= v2.27.0.\n\nWhen both `enforcedLabelValueLengthLimit` and `labelValueLengthLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined labelValueLengthLimit value will inherit the global labelValueLengthLimit value (Prometheus >= 2.45.0) or the enforcedLabelValueLengthLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedLabelValueLengthLimit` is greater than the `labelValueLengthLimit`, the `labelValueLengthLimit` will be set to `enforcedLabelValueLengthLimit`.\n* Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.\n* Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "enforcedNamespaceLabel": {
@@ -3356,11 +3362,13 @@
                   "enforcedSampleLimit": {
                     "description": "enforcedSampleLimit when defined specifies a global limit on the number\nof scraped samples that will be accepted. This overrides any\n`spec.sampleLimit` set by ServiceMonitor, PodMonitor, Probe objects\nunless `spec.sampleLimit` is greater than zero and less than\n`spec.enforcedSampleLimit`.\n\nIt is meant to be used by admins to keep the overall number of\nsamples/series under a desired limit.\n\nWhen both `enforcedSampleLimit` and `sampleLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined sampleLimit value will inherit the global sampleLimit value (Prometheus >= 2.45.0) or the enforcedSampleLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedSampleLimit` is greater than the `sampleLimit`, the `sampleLimit` will be set to `enforcedSampleLimit`.\n* Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.\n* Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "enforcedTargetLimit": {
                     "description": "enforcedTargetLimit when defined specifies a global limit on the number\nof scraped targets. The value overrides any `spec.targetLimit` set by\nServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is\ngreater than zero and less than `spec.enforcedTargetLimit`.\n\nIt is meant to be used by admins to to keep the overall number of\ntargets under a desired limit.\n\nWhen both `enforcedTargetLimit` and `targetLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined targetLimit value will inherit the global targetLimit value (Prometheus >= 2.45.0) or the enforcedTargetLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedTargetLimit` is greater than the `targetLimit`, the `targetLimit` will be set to `enforcedTargetLimit`.\n* Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.\n* Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "evaluationInterval": {
@@ -4845,21 +4853,25 @@
                   "keepDroppedTargets": {
                     "description": "keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\nIt requires Prometheus >= v2.47.0.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "labelLimit": {
                     "description": "labelLimit defines per-scrape limit on number of labels that will be accepted for a sample.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "labelNameLengthLimit": {
                     "description": "labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "labelValueLengthLimit": {
                     "description": "labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "listenLocal": {
@@ -6950,6 +6962,7 @@
                               "modulus": {
                                 "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
+                                "minimum": 0,
                                 "type": "integer"
                               },
                               "regex": {
@@ -7222,6 +7235,7 @@
                   "sampleLimit": {
                     "description": "sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "schedulerName": {
@@ -7332,6 +7346,7 @@
                               "modulus": {
                                 "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
+                                "minimum": 0,
                                 "type": "integer"
                               },
                               "regex": {
@@ -7405,6 +7420,7 @@
                               "modulus": {
                                 "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
+                                "minimum": 0,
                                 "type": "integer"
                               },
                               "regex": {
@@ -8633,6 +8649,7 @@
                   "targetLimit": {
                     "description": "targetLimit defines a limit on the number of scraped targets that will be accepted.\nOnly valid in Prometheus versions 2.45.0 and newer.\n\nNote that the global limit only applies to scrape objects that don't specify an explicit limit value.\nIf you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "terminationGracePeriodSeconds": {

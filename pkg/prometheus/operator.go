@@ -41,14 +41,15 @@ import (
 // Whenever the value of one of these parameters is changed, it triggers an
 // update of the managed statefulsets.
 type Config struct {
-	LocalHost                  string
-	ReloaderConfig             operator.ContainerConfig
-	PrometheusDefaultBaseImage string
-	ThanosDefaultBaseImage     string
-	PrometheusDefaultVersion   string
-	ThanosDefaultVersion       string
-	Annotations                operator.Map
-	Labels                     operator.Map
+	LocalHost                      string
+	ReloaderConfig                 operator.ContainerConfig
+	PrometheusDefaultBaseImage     string
+	ThanosDefaultBaseImage         string
+	PrometheusDefaultVersion       string
+	ThanosDefaultVersion           string
+	Annotations                    operator.Map
+	Labels                         operator.Map
+	WatchObjectRefsInAllNamespaces bool
 }
 
 // StatefulSetGetter returns a statefulset object identified by

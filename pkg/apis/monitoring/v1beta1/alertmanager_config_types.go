@@ -459,6 +459,11 @@ type SlackConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	MessageText *string `json:"messageText,omitempty"`
+	// updateMessage enables updating existing Slack messages instead of creating new ones
+	// when alert state changes. Please note that Webhook URLs do not support updates.
+	// It requires Alertmanager >= v0.32.0.
+	// +optional
+	UpdateMessage *bool `json:"updateMessage,omitempty"` // nolint:kubeapilinter
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -1095,6 +1100,13 @@ type SNSConfig struct {
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+	// alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+	// is set; set explicitly when configuring ca_bundle via shared AWS config.
+	//
+	// It requires Alertmanager >= 0.33.0.
+	// +optional
+	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"` // nolint:kubeapilinter
 }
 
 // TelegramConfig configures notifications via Telegram.

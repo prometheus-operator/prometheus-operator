@@ -2464,6 +2464,62 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "3.11.1",
 		},
 		{
+			scenario: "Consul SD config with valid OAuth2",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "configmap",
+									},
+									Key: "key1",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "key1",
+							},
+							TokenURL: "http://example.com/token",
+						},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "Consul SD config with OAuth2 referencing a non-existent secret",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server: "example.com",
+						OAuth2: &monitoringv1.OAuth2{
+							ClientID: monitoringv1.SecretOrConfigMap{
+								ConfigMap: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "configmap",
+									},
+									Key: "key1",
+								},
+							},
+							ClientSecret: corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "wrong",
+								},
+								Key: "key1",
+							},
+							TokenURL: "http://example.com/token",
+						},
+					},
+				}
+			},
+			valid: false,
+		},
+		{
 			scenario: "Consul SD proxy config with invalid secret key",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
@@ -3191,6 +3247,50 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			},
 			valid:       true,
 			promVersion: "3.2.0",
+		},
+		{
+			scenario: "OpenStack SD config with valid TLS config",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
+						Region: "RegionOne",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "ca",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: true,
+		},
+		{
+			scenario: "OpenStack SD config with TLS config referencing a non-existent secret",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OpenStackSDConfigs = []monitoringv1alpha1.OpenStackSDConfig{
+					{
+						Role:   monitoringv1alpha1.OpenStackRoleInstance,
+						Region: "RegionOne",
+						TLSConfig: &monitoringv1.SafeTLSConfig{
+							CA: monitoringv1.SecretOrConfigMap{
+								Secret: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "wrong",
+									},
+									Key: "ca",
+								},
+							},
+						},
+					},
+				}
+			},
+			valid: false,
 		},
 		{
 			scenario: "DigitalOcean SD config with valid TLS Config",
