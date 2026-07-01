@@ -894,7 +894,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
-	amVersion := operator.StringValOrDefault(am.Spec.Version, c.config.AlertmanagerDefaultVersion)
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.StringValOrDefault(c.config.AlertmanagerDefaultVersion, operator.DefaultAlertmanagerVersion))
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
 		return fmt.Errorf("failed to parse alertmanager version: %w", err)
