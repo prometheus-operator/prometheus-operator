@@ -204,7 +204,10 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			c := prompkg.Config{}
+			c := prompkg.Config{
+				PrometheusDefaultVersion: operator.DefaultPrometheusVersion,
+				ThanosDefaultVersion:     operator.DefaultThanosVersion,
+			}
 
 			p1Hash, err := createSSetInputHash(tc.a, c, []string{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
 			require.NoError(t, err)

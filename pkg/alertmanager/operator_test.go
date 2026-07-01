@@ -1920,6 +1920,7 @@ func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 			err := o.bootstrap(
 				context.Background(),
 				operator.Config{
+					AlertmanagerDefaultVersion: operator.DefaultAlertmanagerVersion,
 					Namespaces: operator.Namespaces{
 						AlertmanagerConfigAllowList: map[string]struct{}{
 							corev1.NamespaceAll: {},

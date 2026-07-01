@@ -105,6 +105,7 @@ type Config struct {
 	LocalHost              string
 	ReloaderConfig         operator.ContainerConfig
 	ThanosDefaultBaseImage string
+	ThanosDefaultVersion   string
 	Annotations            operator.Map
 	Labels                 operator.Map
 }
@@ -169,6 +170,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		config: Config{
 			ReloaderConfig:         c.ReloaderConfig,
 			ThanosDefaultBaseImage: c.ThanosDefaultBaseImage,
+			ThanosDefaultVersion:   c.ThanosDefaultVersion,
 			Annotations:            c.Annotations,
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
@@ -945,7 +947,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		operator.WithOwner(tr),
 	)
 
-	thanosVersion := operator.StringValOrDefault(ptr.Deref(tr.Spec.Version, ""), operator.DefaultThanosVersion)
+	thanosVersion := operator.StringValOrDefault(ptr.Deref(tr.Spec.Version, ""), o.config.ThanosDefaultVersion)
 	version, err := semver.ParseTolerant(thanosVersion)
 	if err != nil {
 		return fmt.Errorf("failed to parse Thanos Ruler version %q: %w", thanosVersion, err)

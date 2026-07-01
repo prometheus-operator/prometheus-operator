@@ -38,8 +38,39 @@ var (
 		LocalHost:                    "localhost",
 		ReloaderConfig:               operator.DefaultReloaderTestConfig.ReloaderConfig,
 		AlertmanagerDefaultBaseImage: operator.DefaultAlertmanagerBaseImage,
+		AlertmanagerDefaultVersion:   operator.DefaultAlertmanagerVersion,
 	}
 )
+
+func TestStatefulSetDefaultVersion(t *testing.T) {
+	replicas := int32(1)
+	am := &monitoringv1.Alertmanager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.AlertmanagerSpec{
+			Replicas: &replicas,
+		},
+	}
+
+	t.Run("use hardcoded default when no version in config", func(t *testing.T) {
+		config := defaultTestConfig
+		config.AlertmanagerDefaultVersion = operator.DefaultAlertmanagerVersion
+		spec, err := makeStatefulSetSpec(nil, am, config, &operator.ShardedSecret{})
+		require.NoError(t, err)
+		require.Contains(t, spec.Template.Spec.Containers[0].Image, operator.DefaultAlertmanagerVersion)
+	})
+
+	t.Run("use configured default version from config", func(t *testing.T) {
+		config := defaultTestConfig
+		customDefault := "v0.25.0"
+		config.AlertmanagerDefaultVersion = customDefault
+		spec, err := makeStatefulSetSpec(nil, am, config, &operator.ShardedSecret{})
+		require.NoError(t, err)
+		require.Contains(t, spec.Template.Spec.Containers[0].Image, customDefault)
+	})
+}
 
 func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 	labels := map[string]string{
@@ -862,6 +893,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 	alertManagerBaseImageConfig := Config{
 		ReloaderConfig:               defaultTestConfig.ReloaderConfig,
 		AlertmanagerDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/alertmanager",
+		AlertmanagerDefaultVersion:   operator.DefaultAlertmanagerVersion,
 	}
 
 	labels := map[string]string{
@@ -987,6 +1019,7 @@ func TestSidecarResources(t *testing.T) {
 		testConfig := Config{
 			ReloaderConfig:               reloaderConfig,
 			AlertmanagerDefaultBaseImage: operator.DefaultAlertmanagerBaseImage,
+			AlertmanagerDefaultVersion:   operator.DefaultAlertmanagerVersion,
 		}
 		am := &monitoringv1.Alertmanager{
 			Spec: monitoringv1.AlertmanagerSpec{},
