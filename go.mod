@@ -24,7 +24,7 @@ require (
 	github.com/prometheus/alertmanager v0.33.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.69.0
-	github.com/prometheus/exporter-toolkit v0.16.0
+	github.com/prometheus/exporter-toolkit v0.17.1
 	github.com/prometheus/prometheus v0.312.0
 	github.com/stretchr/testify v1.11.1
 	github.com/thanos-io/thanos v0.41.0
@@ -96,8 +96,8 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/memberlist v0.5.4 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
-	github.com/mdlayher/socket v0.5.1 // indirect
-	github.com/mdlayher/vsock v1.2.1 // indirect
+	github.com/mdlayher/socket v0.6.0 // indirect
+	github.com/mdlayher/vsock v1.3.0 // indirect
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
