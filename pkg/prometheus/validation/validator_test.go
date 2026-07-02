@@ -372,7 +372,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				TargetLabel:  "__port1",
 				Separator:    new(relabel.DefaultRelabelConfig.Separator),
 				Regex:        relabel.DefaultRelabelConfig.Regex.String(),
-				Modulus:      relabel.DefaultRelabelConfig.Modulus,
+				Modulus:      int64(relabel.DefaultRelabelConfig.Modulus),
 				Replacement:  &relabel.DefaultRelabelConfig.Replacement,
 				Action:       "keepequal",
 			},
