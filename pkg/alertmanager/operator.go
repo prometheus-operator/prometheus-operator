@@ -52,6 +52,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	alertmanagermetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -226,6 +227,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		alertmanagerStores = append(alertmanagerStores, informer.Informer().GetStore())
 	}
 	c.metrics.MustRegister(newAlertmanagerCollectorForStores(alertmanagerStores...))
+	c.metrics.MustRegister(alertmanagermetrics.NewConditionCollector(operator.StoresIter[*monitoringv1.Alertmanager](alertmanagerStores...)))
 
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
