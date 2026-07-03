@@ -683,7 +683,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
+	EnforcedSampleLimit *int64 `json:"enforcedSampleLimit,omitempty"`
 	// enforcedTargetLimit when defined specifies a global limit on the number
 	// of scraped targets. The value overrides any `spec.targetLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is
@@ -701,7 +701,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
+	EnforcedTargetLimit *int64 `json:"enforcedTargetLimit,omitempty"`
 	// enforcedLabelLimit when defined specifies a global limit on the number
 	// of labels per sample. The value overrides any `spec.labelLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is
@@ -718,7 +718,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
+	EnforcedLabelLimit *int64 `json:"enforcedLabelLimit,omitempty"`
 	// enforcedLabelNameLengthLimit when defined specifies a global limit on the length
 	// of labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is
@@ -735,7 +735,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
+	EnforcedLabelNameLengthLimit *int64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// enforcedLabelValueLengthLimit when not null defines a global limit on the length
 	// of labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is
@@ -752,7 +752,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	EnforcedLabelValueLengthLimit *int64 `json:"enforcedLabelValueLengthLimit,omitempty"`
 	// enforcedKeepDroppedTargets when defined specifies a global limit on the number of targets
 	// dropped by relabeling that will be kept in memory. The value overrides
 	// any `spec.keepDroppedTargets` set by
@@ -770,7 +770,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
+	EnforcedKeepDroppedTargets *int64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// enforcedBodySizeLimit when defined specifies a global limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	// Targets responding with a body larger than this many bytes will cause
@@ -915,7 +915,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -924,7 +924,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -933,7 +933,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -942,7 +942,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
@@ -951,7 +951,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -962,7 +962,7 @@ type CommonPrometheusFields struct {
 	//
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 
 	// reloadStrategy defines the strategy used to reload the Prometheus configuration.
 	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
@@ -2209,7 +2209,7 @@ type RelabelConfig struct {
 	// Only applicable when the action is `HashMod`.
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	Modulus uint64 `json:"modulus,omitempty"`
+	Modulus int64 `json:"modulus,omitempty"`
 
 	// replacement value against which a Replace action is performed if the
 	// regular expression matches.
