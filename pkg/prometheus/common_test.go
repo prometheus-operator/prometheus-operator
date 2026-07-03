@@ -430,6 +430,101 @@ func TestNodeSelectorWithTopologyZone(t *testing.T) {
 	}
 }
 
+func TestUnbalancedTopologyShardingMessage(t *testing.T) {
+	topologyMode := monitoringv1.TopologyShardingStrategyMode
+
+	for _, tc := range []struct {
+		name             string
+		shards           *int32
+		shardingStrategy *monitoringv1.ShardingStrategy
+		expectedWarn     bool
+	}{
+		{
+			name:             "no sharding strategy",
+			shards:           ptr.To(int32(3)),
+			shardingStrategy: nil,
+			expectedWarn:     false,
+		},
+		{
+			name:   "address mode is never unbalanced",
+			shards: ptr.To(int32(3)),
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     ptr.To(monitoringv1.AddressShardingStrategyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			expectedWarn: false,
+		},
+		{
+			name:   "shards is a multiple of the number of zones",
+			shards: ptr.To(int32(4)),
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			expectedWarn: false,
+		},
+		{
+			name:   "shards equals the number of zones",
+			shards: ptr.To(int32(3)),
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
+			},
+			expectedWarn: false,
+		},
+		{
+			name:   "shards isn't a multiple of the number of zones",
+			shards: ptr.To(int32(10)),
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
+			},
+			expectedWarn: true,
+		},
+		{
+			// nil shards normalizes to 1 which isn't a multiple of 2 zones.
+			name:   "nil shards with more than one zone",
+			shards: nil,
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
+			},
+			expectedWarn: true,
+		},
+		{
+			// This case isn't possible in practice because the API enforces
+			// that topology is only set when mode is Topology.
+			name:   "topology mode with no values",
+			shards: ptr.To(int32(3)),
+			shardingStrategy: &monitoringv1.ShardingStrategy{
+				Mode:     new(topologyMode),
+				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
+			},
+			expectedWarn: false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Shards:           tc.shards,
+						ShardingStrategy: tc.shardingStrategy,
+					},
+				},
+			}
+
+			msg, ok := UnbalancedTopologyShardingMessage(p)
+			require.Equal(t, tc.expectedWarn, ok)
+			if tc.expectedWarn {
+				require.NotEmpty(t, msg)
+			} else {
+				require.Empty(t, msg)
+			}
+		})
+	}
+}
+
 func TestLabelSelectorForStatefulSets(t *testing.T) {
 	for _, tc := range []struct {
 		mode string
