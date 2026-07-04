@@ -2089,7 +2089,17 @@
                                 "type": "string"
                               }
                             },
-                            "type": "object"
+                            "type": "object",
+                            "x-kubernetes-validations": [
+                              {
+                                "message": "Either botToken or botTokenFile is required.",
+                                "rule": "has(self.botToken) || has(self.botTokenFile)"
+                              },
+                              {
+                                "message": "botToken and botTokenFile are mutually exclusive.",
+                                "rule": "!has(self.botToken) || !has(self.botTokenFile)"
+                              }
+                            ]
                           },
                           "victorops": {
                             "description": "victorops defines the default configuration for VictorOps.",
