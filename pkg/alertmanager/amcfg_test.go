@@ -3423,7 +3423,98 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Telegram_Receiver.golden",
 		},
 		{
-			name:      "CR with Telegram Receiver using global botToken",
+			name:      "CR with Telegram Receiver BotToken Missing Secret",
+			amVersion: &version24,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-telegram-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"botToken": []byte("bipbop"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
+								BotToken: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "missing-secret",
+									},
+									Key: "botToken",
+								},
+								ChatID: 12345,
+							}},
+						}},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with Telegram Receiver BotTokenFile",
+			amVersion: &version24,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-telegram-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"botToken": []byte("bipbop"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL:       ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
+								BotTokenFile: new("/bot/token/file"),
+								ChatID:       12345,
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Telegram_Receiver_BotTokenFile.golden",
+		},
+		{
+			name:      "CR with Telegram Receiver using global BotToken",
 			amVersion: &version31,
 			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
@@ -3455,7 +3546,74 @@ func TestGenerateConfig(t *testing.T) {
 					},
 				},
 			},
-			golden: "CR_with_Telegram_Receiver_using_global_botToken.golden",
+			golden: "CR_with_Telegram_Receiver_using_global_BotToken.golden",
+		},
+		{
+			name:      "CR with Telegram Receiver using global BotTokenFile",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					TelegramBotTokenFile: "/global/bot/token/file",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
+								ChatID: 12345,
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Telegram_Receiver_using_global_BotTokenFile.golden",
+		},
+		{
+			name:      "CR with Telegram Receiver Missing Token",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
+								ChatID: 12345,
+							}},
+						}},
+					},
+				},
+			},
+			expectedError: true,
 		},
 		{
 
