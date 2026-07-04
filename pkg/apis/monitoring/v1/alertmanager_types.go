@@ -695,6 +695,8 @@ type GlobalSMTPConfig struct {
 }
 
 // GlobalTelegramConfig configures global Telegram parameters.
+// +kubebuilder:validation:XValidation:rule="has(self.botToken) || has(self.botTokenFile)",message="Either botToken or botTokenFile is required."
+// +kubebuilder:validation:XValidation:rule="!has(self.botToken) || !has(self.botTokenFile)",message="botToken and botTokenFile are mutually exclusive."
 type GlobalTelegramConfig struct {
 	// apiURL defines he default Telegram API URL.
 	//
