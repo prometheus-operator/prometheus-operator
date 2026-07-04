@@ -1630,7 +1630,8 @@ type AWSSDConfig struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	Clusters []string `json:"clusters,omitempty"`
-	// externalID defines the External ID that can go along with role_arn.
+	// externalID defines the External ID that can go along with roleARN.
+	// It requires Prometheus >= 3.12.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ExternalID *string `json:"externalID,omitempty"`

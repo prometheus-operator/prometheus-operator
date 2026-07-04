@@ -75,7 +75,8 @@ type AWSSDConfigApplyConfiguration struct {
 	// If empty, all clusters in the region are discovered.
 	// This can significantly improve performance when you only need to monitor specific clusters.
 	Clusters []string `json:"clusters,omitempty"`
-	// externalID defines the External ID that can go along with role_arn.
+	// externalID defines the External ID that can go along with roleARN.
+	// It requires Prometheus >= 3.12.0.
 	ExternalID *string `json:"externalID,omitempty"`
 }
 

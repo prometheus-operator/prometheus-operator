@@ -124,7 +124,7 @@
                           "type": "string"
                         },
                         "externalID": {
-                          "description": "externalID defines the External ID that can go along with role_arn.",
+                          "description": "externalID defines the External ID that can go along with roleARN.\nIt requires Prometheus >= 3.12.0.",
                           "minLength": 1,
                           "type": "string"
                         },
