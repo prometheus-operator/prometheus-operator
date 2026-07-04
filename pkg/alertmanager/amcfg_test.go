@@ -1201,12 +1201,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-						{
-							Name: "myreceiver",
-						},
+						{Name: "null"},
+						{Name: "myreceiver"},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -1243,12 +1239,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-						{
-							Name: "myreceiver",
-						},
+						{Name: "null"},
+						{Name: "myreceiver"},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -1280,19 +1272,13 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-						{
-							Name: "myreceiver",
-						},
+						{Name: "null"},
+						{Name: "myreceiver"},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
 						Routes: []apiextensionsv1.JSON{
-							{
-								Raw: myrouteJSON,
-							},
+							{Raw: myrouteJSON},
 						},
 					},
 				},
@@ -1317,12 +1303,8 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1alpha1.Receiver{
-						{
-							Name: "null",
-						},
-						{
-							Name: "myreceiver",
-						},
+						{Name: "null"},
+						{Name: "myreceiver"},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
