@@ -5097,7 +5097,15 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
+			// Adding Filters
+			switch config.Role {
+			case monitoringv1alpha1.AWSRoleEC2:
+				configs[i] = cg.addFiltersToYaml(configs[i], config.Filters)
+			case monitoringv1alpha1.AWSRoleRDS:
+				configs[i] = cg.WithMinimumVersion("3.12.0").addFiltersToYaml(configs[i], config.Filters)
+			default:
+				cg.logger.Warn(fmt.Sprintf("ignoring filters field not supported by role: %s", string(config.Role)))
+			}
 
 			if config.FollowRedirects != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
