@@ -16,21 +16,31 @@ package operator
 
 import (
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 )
 
 // ExecAction returns an ExecAction probing the given URL.
+// Prefer promtool (available in official Prometheus images, including distroless
+// builds that lack sh/curl/wget) so listenLocal probes work without a shell.
+// See https://github.com/prometheus-operator/prometheus-operator/issues/8605
 func ExecAction(u string) *corev1.ExecAction {
+	check := "healthy"
+	if strings.Contains(u, "/-/ready") {
+		check = "ready"
+	}
+	baseURL := u
+	if i := strings.Index(u, "/-/"); i >= 0 {
+		baseURL = u[:i]
+	}
 	return &corev1.ExecAction{
 		Command: []string{
-			"sh",
-			"-c",
-			fmt.Sprintf(
-				`if [ -x "$(command -v curl)" ]; then exec %s; elif [ -x "$(command -v wget)" ]; then exec %s; else exit 1; fi`,
-				curlProber(u),
-				wgetProber(u),
-			),
+			"promtool",
+			"check",
+			check,
+			"--url",
+			baseURL,
 		},
 	}
 }
