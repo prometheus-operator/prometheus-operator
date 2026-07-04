@@ -129,7 +129,7 @@
                           "type": "string"
                         },
                         "filters": {
-                          "description": "filters can be used optionally to filter the instance list by other criteria.\nAvailable filter criteria can be found here:\nhttps://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\nFilter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html",
+                          "description": "filters can be used optionally to filter the instance list by other criteria.\nRDS filters require Prometheus >= 3.13.0.\nAvailable filter criteria can be found here:\nEC2:\n - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html\n - Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html\nRDS:\n - https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html\n - Filter API documentation: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Filter.html",
                           "items": {
                             "description": "Filter name and value pairs to limit the discovery process to a subset of available resources.",
                             "properties": {

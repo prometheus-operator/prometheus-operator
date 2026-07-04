@@ -52,9 +52,14 @@ type AWSSDConfigApplyConfiguration struct {
 	// If not set, Prometheus uses its default value.
 	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
 	// filters can be used optionally to filter the instance list by other criteria.
+	// RDS filters require Prometheus >= 3.13.0.
 	// Available filter criteria can be found here:
-	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
-	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// EC2:
+	// - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
+	// - Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
+	// RDS:
+	// - https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html
+	// - Filter API documentation: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Filter.html
 	Filters                                                      *monitoringv1alpha1.Filters `json:"filters,omitempty"`
 	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
