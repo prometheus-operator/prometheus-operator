@@ -483,12 +483,18 @@ func TestListenLocal(t *testing.T) {
 	require.True(t, found, "Prometheus not listening on loopback when it should.")
 
 	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
+		check := "healthy"
+		if probePath == "/-/ready" {
+			check = "ready"
+		}
 		return corev1.ProbeHandler{
 			Exec: &corev1.ExecAction{
 				Command: []string{
-					`sh`,
-					`-c`,
-					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl --fail %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
+					"promtool",
+					"check",
+					check,
+					"--url",
+					"http://localhost:9090",
 				},
 			},
 		}
