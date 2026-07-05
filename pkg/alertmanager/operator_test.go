@@ -1566,7 +1566,37 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 										Name: "secret",
 									},
 								},
+								ChatID: 1234,
+							},
+						},
+					}},
+				},
+			},
+			version: &version26,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "telegram-with-bottoken-and-bottokenfile",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
+							{
+								BotToken: &corev1.SecretKeySelector{
+									Key: "token",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
 								BotTokenFile: new("/bot/token/file"),
+								ChatID:       1234,
 							},
 						},
 					}},
