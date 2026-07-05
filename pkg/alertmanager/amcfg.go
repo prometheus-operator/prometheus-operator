@@ -3640,6 +3640,10 @@ func (cb *ConfigBuilder) checkGlobalTelegramConfig(ctx context.Context, tc *moni
 		}
 	}
 
+	if tc.BotTokenFile != nil && cb.amVersion.LT(semver.MustParse("0.31.0")) {
+		return fmt.Errorf(`'botTokenFile' in telegram integration requires Alertmanager >= 0.31.0 - current %s`, cb.amVersion)
+	}
+
 	return nil
 }
 
