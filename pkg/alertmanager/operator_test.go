@@ -1566,14 +1566,14 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 										Name: "secret",
 									},
 								},
-								ChatID: 1234,
+								BotTokenFile: new("/bot/token/file"),
 							},
 						},
 					}},
 				},
 			},
 			version: &version26,
-			ok:      true,
+			ok:      false,
 		},
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
