@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -30,7 +31,7 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 		return fmt.Errorf("'httpConfig': %w", err)
 	}
 
-	if err := validatingTelegramConfig(gc.TelegramConfig); err != nil {
+	if err := validateGlobalTelegramConfig(gc.TelegramConfig); err != nil {
 		return fmt.Errorf("telegram: %w", err)
 	}
 
@@ -57,13 +58,13 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 	return nil
 }
 
-func validatingTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+func validateGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
 	if tc == nil {
 		return nil
 	}
 
 	if tc.BotToken != nil && tc.BotTokenFile != nil {
-		return fmt.Errorf("botToken and botTokenFile are mutually exclusive")
+		return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 	}
 
 	if err := validation.ValidateURLPtr((*string)(tc.APIURL)); err != nil {
