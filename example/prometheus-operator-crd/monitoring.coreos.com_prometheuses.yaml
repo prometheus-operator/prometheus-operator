@@ -11391,6 +11391,24 @@ spec:
                   tsdb defines the runtime reloadable configuration of the timeseries database(TSDB).
                   It requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.
                 properties:
+                  chunkEncoding:
+                    description: |-
+                      chunkEncoding configures per-chunk-type encoding overrides.
+
+                      It requires Prometheus >= v3.13.0.
+                    properties:
+                      floats:
+                        description: |-
+                          floats selects the encoding used for float chunks.
+                          Valid values are "xor" and "xor2".
+                          "xor2" requires the `xor2-encoding` feature flag (auto-enabled by the operator).
+
+                          It requires Prometheus >= v3.13.0.
+                        enum:
+                        - xor
+                        - xor2
+                        type: string
+                    type: object
                   outOfOrderTimeWindow:
                     description: |-
                       outOfOrderTimeWindow defines how old an out-of-order/out-of-bounds sample can be with
