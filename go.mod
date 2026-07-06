@@ -21,7 +21,7 @@ require (
 	github.com/prometheus-community/prom-label-proxy v0.14.0
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.92.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.92.1
-	github.com/prometheus/alertmanager v0.33.0
+	github.com/prometheus/alertmanager v0.33.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.69.0
 	github.com/prometheus/exporter-toolkit v0.17.1
