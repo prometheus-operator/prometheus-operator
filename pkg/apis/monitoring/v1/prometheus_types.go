@@ -2496,6 +2496,12 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v3.10.0.
 	// +optional
 	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
+
+	// chunkEncoding configures per-chunk-type encoding overrides.
+	//
+	// It requires Prometheus >= v3.13.0.
+	// +optional
+	ChunkEncoding *ChunkEncodingSpec `json:"chunkEncoding,omitempty"`
 }
 
 // Validate semantically validates the given TSDBSpec.
@@ -2509,6 +2515,18 @@ func (ts *TSDBSpec) Validate() error {
 	}
 
 	return nil
+}
+
+// ChunkEncodingSpec configures per-chunk-type encoding overrides.
+type ChunkEncodingSpec struct {
+	// floats selects the encoding used for float chunks.
+	// Valid values are "xor" and "xor2".
+	// "xor2" requires the `xor2-encoding` feature flag (auto-enabled by the operator).
+	//
+	// It requires Prometheus >= v3.13.0.
+	// +optional
+	// +kubebuilder:validation:Enum=xor;xor2
+	Floats *string `json:"floats,omitempty"`
 }
 
 type Exemplars struct {

@@ -49,6 +49,10 @@ type TSDBSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.10.0.
 	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
+	// chunkEncoding configures per-chunk-type encoding overrides.
+	//
+	// It requires Prometheus >= v3.13.0.
+	ChunkEncoding *ChunkEncodingSpecApplyConfiguration `json:"chunkEncoding,omitempty"`
 }
 
 // TSDBSpecApplyConfiguration constructs a declarative configuration of the TSDBSpec type for use with
@@ -70,5 +74,13 @@ func (b *TSDBSpecApplyConfiguration) WithOutOfOrderTimeWindow(value monitoringv1
 // If called multiple times, the StaleSeriesCompactionThreshold field is set to the value of the last call.
 func (b *TSDBSpecApplyConfiguration) WithStaleSeriesCompactionThreshold(value resource.Quantity) *TSDBSpecApplyConfiguration {
 	b.StaleSeriesCompactionThreshold = &value
+	return b
+}
+
+// WithChunkEncoding sets the ChunkEncoding field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ChunkEncoding field is set to the value of the last call.
+func (b *TSDBSpecApplyConfiguration) WithChunkEncoding(value *ChunkEncodingSpecApplyConfiguration) *TSDBSpecApplyConfiguration {
+	b.ChunkEncoding = value
 	return b
 }

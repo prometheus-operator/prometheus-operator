@@ -1127,6 +1127,12 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		if tsdb.StaleSeriesCompactionThreshold != nil {
 			tsdbSlice = cg.WithMinimumVersion("3.10.0").AppendMapItem(tsdbSlice, "stale_series_compaction_threshold", tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64())
 		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			tsdbSlice = cg.WithMinimumVersion("3.13.0").AppendMapItem(tsdbSlice, "chunk_encoding", yaml.MapSlice{
+				{Key: "floats", Value: *tsdb.ChunkEncoding.Floats},
+			})
+		}
 	}
 
 	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
@@ -1291,6 +1297,20 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 			efs[i] = string(cpf.EnableFeatures[i])
 		}
 		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
+	}
+
+	// Auto-enable xor2-encoding feature flag when chunk encoding is set to xor2.
+	if cpf.TSDB != nil && cpf.TSDB.ChunkEncoding != nil && cpf.TSDB.ChunkEncoding.Floats != nil && *cpf.TSDB.ChunkEncoding.Floats == "xor2" {
+		hasXOR2 := false
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "xor2-encoding" {
+				hasXOR2 = true
+				break
+			}
+		}
+		if !hasXOR2 {
+			promArgs = cg.WithMinimumVersion("3.13.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "xor2-encoding"})
+		}
 	}
 
 	if cpf.ExternalURL != "" {
@@ -3349,6 +3369,19 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 				},
 			})
 			cfg = cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key: "chunk_encoding",
+					Value: yaml.MapSlice{
+						{Key: "floats", Value: *tsdb.ChunkEncoding.Floats},
+					},
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.13.0").AppendMapItem(cfg, "storage", storage)
 		}
 	}
 

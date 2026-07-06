@@ -6070,6 +6070,36 @@ func TestTSDBConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor < v3.13.0",
+			version: "v3.12.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: new("xor"),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor_less_than_v3.13.0.golden",
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: new("xor"),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor_greater_than_or_equal_to_v3.13.0.golden",
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor2 >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: new("xor2"),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor2_greater_than_or_equal_to_v3.13.0.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -6229,6 +6259,16 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 				StaleSeriesCompactionThreshold: resource.NewQuantity(-1, resource.DecimalSI),
 			},
 			expectErr: true,
+		},
+		{
+			name:    "PrometheusAgent TSDB ChunkEncoding floats=xor >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: new("xor"),
+				},
+			},
+			golden: "PrometheusAgent_TSDB_ChunkEncoding_floats_xor_greater_than_or_equal_to_v3.13.0.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
