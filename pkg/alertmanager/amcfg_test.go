@@ -4704,7 +4704,7 @@ func TestGenerateConfigWebhookReceiver(t *testing.T) {
 			golden: "CR_with_Webhook_Receiver_and_Payload.golden",
 		},
 		{
-			name:      "CR with Webhook Reciever and Payload Unsupported Version",
+			name:      "CR with Webhook Receiver and Payload Unsupported Version",
 			amVersion: &version31,
 			kclient:   fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
