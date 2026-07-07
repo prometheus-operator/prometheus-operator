@@ -30,10 +30,7 @@ func ExecAction(u string) *corev1.ExecAction {
 	if strings.Contains(u, "/-/ready") {
 		check = "ready"
 	}
-	baseURL := u
-	if i := strings.Index(u, "/-/"); i >= 0 {
-		baseURL = u[:i]
-	}
+	baseURL, _, _ := strings.Cut(u, "/-/")
 	return &corev1.ExecAction{
 		Command: []string{
 			"promtool",
