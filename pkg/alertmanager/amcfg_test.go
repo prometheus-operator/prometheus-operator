@@ -2295,9 +2295,6 @@ func TestGenerateConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
-	version32, err := semver.ParseTolerant("v0.32.0")
-	require.NoError(t, err)
-
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -4498,7 +4495,7 @@ func TestGenerateConfigMSTeamsReceiver(t *testing.T) {
 		})
 	}
 }
-func TestGenerateConfigMSTeamsReceiver(t *testing.T) {
+func TestGenerateConfigWebhookReceiver(t *testing.T) {
 	type testCase struct {
 		name            string
 		kclient         kubernetes.Interface
