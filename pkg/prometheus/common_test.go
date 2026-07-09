@@ -441,13 +441,13 @@ func TestUnbalancedTopologyShardingMessage(t *testing.T) {
 	}{
 		{
 			name:             "no sharding strategy",
-			shards:           ptr.To(int32(3)),
+			shards:           new(int32(3)),
 			shardingStrategy: nil,
 			expectedWarn:     false,
 		},
 		{
 			name:   "address mode is never unbalanced",
-			shards: ptr.To(int32(3)),
+			shards: new(int32(3)),
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode:     ptr.To(monitoringv1.AddressShardingStrategyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
@@ -456,7 +456,7 @@ func TestUnbalancedTopologyShardingMessage(t *testing.T) {
 		},
 		{
 			name:   "shards is a multiple of the number of zones",
-			shards: ptr.To(int32(4)),
+			shards: new(int32(4)),
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b"}},
@@ -465,7 +465,7 @@ func TestUnbalancedTopologyShardingMessage(t *testing.T) {
 		},
 		{
 			name:   "shards equals the number of zones",
-			shards: ptr.To(int32(3)),
+			shards: new(int32(3)),
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
@@ -474,7 +474,7 @@ func TestUnbalancedTopologyShardingMessage(t *testing.T) {
 		},
 		{
 			name:   "shards isn't a multiple of the number of zones",
-			shards: ptr.To(int32(10)),
+			shards: new(int32(10)),
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{"zone-a", "zone-b", "zone-c"}},
@@ -495,7 +495,7 @@ func TestUnbalancedTopologyShardingMessage(t *testing.T) {
 			// This case isn't possible in practice because the API enforces
 			// that topology is only set when mode is Topology.
 			name:   "topology mode with no values",
-			shards: ptr.To(int32(3)),
+			shards: new(int32(3)),
 			shardingStrategy: &monitoringv1.ShardingStrategy{
 				Mode:     new(topologyMode),
 				Topology: &monitoringv1.TopologyShardingStrategy{Values: []string{}},
