@@ -496,6 +496,9 @@ type AlertmanagerConfiguration struct {
 	// global defines the global parameters of the Alertmanager configuration.
 	// +optional
 	Global *AlertmanagerGlobalConfig `json:"global,omitempty"`
+	// tracingConfig defines the tracing configuration of Alertmanager.
+	// +optional
+	TracingConfig *TracingConfig `json:"tracingConfig,omitempty"`
 	// templates defines the custom notification templates.
 	// +optional
 	Templates []SecretOrConfigMap `json:"templates,omitempty"`

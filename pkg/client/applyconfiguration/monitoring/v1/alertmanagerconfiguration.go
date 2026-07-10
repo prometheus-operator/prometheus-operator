@@ -27,6 +27,8 @@ type AlertmanagerConfigurationApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 	// global defines the global parameters of the Alertmanager configuration.
 	Global *AlertmanagerGlobalConfigApplyConfiguration `json:"global,omitempty"`
+	// tracingConfig defines the tracing configuration of Alertmanager.
+	TracingConfig *TracingConfigApplyConfiguration `json:"tracingConfig,omitempty"`
 	// templates defines the custom notification templates.
 	Templates []SecretOrConfigMapApplyConfiguration `json:"templates,omitempty"`
 }
@@ -50,6 +52,14 @@ func (b *AlertmanagerConfigurationApplyConfiguration) WithName(value string) *Al
 // If called multiple times, the Global field is set to the value of the last call.
 func (b *AlertmanagerConfigurationApplyConfiguration) WithGlobal(value *AlertmanagerGlobalConfigApplyConfiguration) *AlertmanagerConfigurationApplyConfiguration {
 	b.Global = value
+	return b
+}
+
+// WithTracingConfig sets the TracingConfig field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the TracingConfig field is set to the value of the last call.
+func (b *AlertmanagerConfigurationApplyConfiguration) WithTracingConfig(value *TracingConfigApplyConfiguration) *AlertmanagerConfigurationApplyConfiguration {
+	b.TracingConfig = value
 	return b
 }
 
