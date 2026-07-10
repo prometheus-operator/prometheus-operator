@@ -120,6 +120,11 @@ func (in *AlertmanagerConfiguration) DeepCopyInto(out *AlertmanagerConfiguration
 		*out = new(AlertmanagerGlobalConfig)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.TracingConfig != nil {
+		in, out := &in.TracingConfig, &out.TracingConfig
+		*out = new(TracingConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Templates != nil {
 		in, out := &in.Templates, &out.Templates
 		*out = make([]SecretOrConfigMap, len(*in))
