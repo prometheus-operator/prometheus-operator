@@ -9,7 +9,7 @@ require (
 	github.com/golangci/golangci-lint/v2 v2.12.1
 	github.com/google/go-jsonnet v0.22.0
 	github.com/jsonnet-bundler/jsonnet-bundler v0.6.0
-	github.com/prometheus/prometheus v0.313.0
+	github.com/prometheus/prometheus v0.313.1
 	github.com/yeya24/promlinter v0.3.0
 	k8s.io/code-generator v0.36.0
 	sigs.k8s.io/controller-tools v0.21.0
