@@ -332,35 +332,46 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 	)
 
 	for _, n := range nodes {
-		address, _, err := c.nodeAddress(n)
+		_, addrMap, err := c.nodeAddress(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
 		}
 
-		ip := net.ParseIP(address)
-		if ip == nil {
-			errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s): %w", address, n.Name, c.nodeAddressPriority, err))
-			continue
+		// Select addresses by priority: use ExternalIP if priority is "external"
+		// and external addresses exist, otherwise fall back to InternalIP.
+		addrType := corev1.NodeInternalIP
+		if c.nodeAddressPriority == "external" {
+			if len(addrMap[corev1.NodeExternalIP]) > 0 {
+				addrType = corev1.NodeExternalIP
+			}
 		}
 
-		na := nodeAddress{
-			ipAddress:  address,
-			name:       n.Name,
-			uid:        n.UID,
-			apiVersion: n.APIVersion,
-			ipv4:       ip.To4() != nil,
-			ready:      nodeReadyConditionKnown(n),
-		}
-		addresses = append(addresses, na)
+		for _, address := range addrMap[addrType] {
+			ip := net.ParseIP(address)
+			if ip == nil {
+				errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s)", address, n.Name, c.nodeAddressPriority))
+				continue
+			}
 
-		if !na.ready {
-			c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
-			readyUnknownNodes[address] = n.Name
-			continue
-		}
+			na := nodeAddress{
+				ipAddress:  address,
+				name:       n.Name,
+				uid:        n.UID,
+				apiVersion: n.APIVersion,
+				ipv4:       ip.To4() != nil,
+				ready:      nodeReadyConditionKnown(n),
+			}
+			addresses = append(addresses, na)
 
-		readyKnownNodes[address] = n.Name
+			if !na.ready {
+				c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
+				readyUnknownNodes[address] = n.Name
+				continue
+			}
+
+			readyKnownNodes[address] = n.Name
+		}
 	}
 
 	// We want to remove any nodes that have an unknown ready state *and* a
@@ -474,6 +485,12 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 	c.logger.Debug("Sync service")
 
+	// PreferDualStack requests both IPv4 and IPv6 ClusterIPs on dual-stack
+	// clusters so that Prometheus SD can match the primary IP family when
+	// selecting which EndpointSlice to scrape. On single-stack clusters it
+	// degrades gracefully to the single available family.
+	ipFamilyPolicy := corev1.IPFamilyPolicyPreferDualStack
+
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
@@ -485,9 +502,10 @@ func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 			}),
 		},
 		Spec: corev1.ServiceSpec{
-			Type:      corev1.ServiceTypeClusterIP,
-			ClusterIP: corev1.ClusterIPNone,
-			Ports:     c.servicePorts(),
+			Type:           corev1.ServiceTypeClusterIP,
+			ClusterIP:      corev1.ClusterIPNone,
+			IPFamilyPolicy: &ipFamilyPolicy,
+			Ports:          c.servicePorts(),
 		},
 	}
 

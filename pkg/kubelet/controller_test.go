@@ -243,6 +243,39 @@ func TestGetNodeAddresses(t *testing.T) {
 			expectedAddresses: []string{"10.0.0.1", "10.0.0.3"},
 			expectedErrors:    0,
 		},
+		{
+			// Dual-stack nodes report both IPv4 and IPv6 as InternalIP.
+			// Both addresses should be emitted so prometheus-operator can create
+			// separate IPv4 and IPv6 EndpointSlices for the kubelet Service.
+			name: "dual-stack node emits both addresses",
+			nodes: []corev1.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node-0",
+					},
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
+							{
+								Address: "10.0.0.1",
+								Type:    corev1.NodeInternalIP,
+							},
+							{
+								Address: "fd00::1",
+								Type:    corev1.NodeInternalIP,
+							},
+						},
+						Conditions: []corev1.NodeCondition{
+							{
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			expectedAddresses: []string{"10.0.0.1", "fd00::1"},
+			expectedErrors:    0,
+		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			controller := Controller{
