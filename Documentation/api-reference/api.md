@@ -6168,6 +6168,20 @@ AlertmanagerGlobalConfig
 </tr>
 <tr>
 <td>
+<code>tracingConfig</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.TracingConfig">
+TracingConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>tracingConfig defines the tracing configuration of Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>templates</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SecretOrConfigMap">
@@ -22612,7 +22626,7 @@ AdditionalLabelSelectors
 <h3 id="monitoring.coreos.com/v1.TracingConfig">TracingConfig
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerConfiguration">AlertmanagerConfiguration</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>)
 </p>
 <div>
 </div>

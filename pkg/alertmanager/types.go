@@ -33,7 +33,19 @@ type alertmanagerConfig struct {
 	Receivers         []*receiver     `yaml:"receivers,omitempty"`
 	MuteTimeIntervals []*timeInterval `yaml:"mute_time_intervals,omitempty"`
 	TimeIntervals     []*timeInterval `yaml:"time_intervals,omitempty"`
+	TracingConfig     *tracingConfig  `yaml:"tracing,omitempty"`
 	Templates         []string        `yaml:"templates"`
+}
+
+type tracingConfig struct {
+	ClientType       string             `yaml:"client_type,omitempty"`
+	Endpoint         string             `yaml:"endpoint,omitempty"`
+	SamplingFraction float64            `yaml:"sampling_fraction,omitempty"`
+	Insecure         bool               `yaml:"insecure,omitempty"`
+	TLSConfig        *tlsConfig         `yaml:"tls_config,omitempty"`
+	Headers          *commoncfg.Headers `yaml:"headers,omitempty"`
+	Compression      string             `yaml:"compression,omitempty"`
+	Timeout          *model.Duration    `yaml:"timeout,omitempty"`
 }
 
 type globalConfig struct {
