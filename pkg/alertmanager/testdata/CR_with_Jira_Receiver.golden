@@ -1,0 +1,30 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  jira_configs:
+  - api_url: https://test.com
+    project: projectA
+    send_resolved: true
+    summary: summary
+    description: description
+    priority: priority
+    labels:
+    - aa
+    - bb
+    issue_type: bug
+    resolve_transition: ResolveTransition
+    reopen_transition: ReopenTransition
+    wont_fix_resolution: WontFixResolution
+    reopen_duration: 5s
+  msteams_configs:
+  - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
+    title: test title
+    text: test text
+templates: []
