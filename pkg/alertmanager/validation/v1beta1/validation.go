@@ -119,7 +119,7 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		}
 
 		if err := validateJiraConfigs(receiver.JiraConfigs); err != nil {
-			return nil, fmt.Errorf("failed to validate 'JiraConfig' - receiver %s: %w", receiver.Name, err)
+			return receiverValidationFailedFormat(err)
 		}
 	}
 
@@ -566,26 +566,34 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 	return nil
 }
 
-func validateJiraConfigs(configs []monitoringv1beta1.JiraConfig) error {
-	for i, config := range configs {
-		if config.Project == "" {
-			return fmt.Errorf("[%d]: invalid 'project': this is a required field", i)
+func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
+	v := func(conf monitoringv1alpha1.JiraConfig) error {
+		if conf.Project == "" {
+			return errors.New("invalid 'project': this is a required field")
 		}
 
-		if err := validation.ValidateURLPtr((*string)(config.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
+			return fmt.Errorf("apiURL: %w", err)
 		}
 
-		if config.IssueType == "" {
-			return fmt.Errorf("[%d]: invalid 'issueType': this is a required field", i)
+		if conf.IssueType == "" {
+			return errors.New("invalid 'issueType': this is a required field")
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		if err := conf.Validate(); err != nil {
 			return err
 		}
 
-		if err := config.Validate(); err != nil {
-			return err
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'jiraConfigs'[%d]: %w", i, err)
 		}
 	}
 
