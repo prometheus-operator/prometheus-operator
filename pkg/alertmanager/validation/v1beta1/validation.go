@@ -566,8 +566,8 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 	return nil
 }
 
-func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
-	v := func(conf monitoringv1alpha1.JiraConfig) error {
+func validateJiraConfigs(configs []monitoringv1beta1.JiraConfig) error {
+	v := func(conf monitoringv1beta1.JiraConfig) error {
 		if conf.Project == "" {
 			return errors.New("invalid 'project': this is a required field")
 		}
