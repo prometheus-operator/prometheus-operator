@@ -569,19 +569,19 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 func validateJiraConfigs(configs []monitoringv1alpha1.JiraConfig) error {
 	v := func(conf monitoringv1alpha1.JiraConfig) error {
 		if conf.Project == "" {
-			return fmt.Errorf("[%d]: invalid 'project': this is a required field", i)
+			return errors.New("invalid 'project': this is a required field")
 		}
 
 		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
-			return fmt.Errorf("[%d]: apiURL: %w", i, err)
+			return fmt.Errorf("apiURL: %w", err)
 		}
 
 		if conf.IssueType == "" {
-			return fmt.Errorf("[%d]: invalid 'issueType': this is a required field", i)
+			return errors.New("invalid 'issueType': this is a required field")
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
-			return err
+			return fmt.Errorf("'httpConfig': %w", err)
 		}
 
 		if err := conf.Validate(); err != nil {
