@@ -46,7 +46,7 @@ type RelabelConfigApplyConfiguration struct {
 	// modulus to take of the hash of the source label values.
 	//
 	// Only applicable when the action is `HashMod`.
-	Modulus *uint64 `json:"modulus,omitempty"`
+	Modulus *int64 `json:"modulus,omitempty"`
 	// replacement value against which a Replace action is performed if the
 	// regular expression matches.
 	//
@@ -104,7 +104,7 @@ func (b *RelabelConfigApplyConfiguration) WithRegex(value string) *RelabelConfig
 // WithModulus sets the Modulus field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Modulus field is set to the value of the last call.
-func (b *RelabelConfigApplyConfiguration) WithModulus(value uint64) *RelabelConfigApplyConfiguration {
+func (b *RelabelConfigApplyConfiguration) WithModulus(value int64) *RelabelConfigApplyConfiguration {
 	b.Modulus = &value
 	return b
 }

@@ -442,7 +442,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedSampleLimit` is greater than the `sampleLimit`, the `sampleLimit` will be set to `enforcedSampleLimit`.
 	// * Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
 	// * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
-	EnforcedSampleLimit *uint64 `json:"enforcedSampleLimit,omitempty"`
+	EnforcedSampleLimit *int64 `json:"enforcedSampleLimit,omitempty"`
 	// enforcedTargetLimit when defined specifies a global limit on the number
 	// of scraped targets. The value overrides any `spec.targetLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.targetLimit` is
@@ -456,7 +456,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedTargetLimit` is greater than the `targetLimit`, the `targetLimit` will be set to `enforcedTargetLimit`.
 	// * Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
 	// * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
-	EnforcedTargetLimit *uint64 `json:"enforcedTargetLimit,omitempty"`
+	EnforcedTargetLimit *int64 `json:"enforcedTargetLimit,omitempty"`
 	// enforcedLabelLimit when defined specifies a global limit on the number
 	// of labels per sample. The value overrides any `spec.labelLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelLimit` is
@@ -469,7 +469,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedLabelLimit` is greater than the `labelLimit`, the `labelLimit` will be set to `enforcedLabelLimit`.
 	// * Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
 	// * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
-	EnforcedLabelLimit *uint64 `json:"enforcedLabelLimit,omitempty"`
+	EnforcedLabelLimit *int64 `json:"enforcedLabelLimit,omitempty"`
 	// enforcedLabelNameLengthLimit when defined specifies a global limit on the length
 	// of labels name per sample. The value overrides any `spec.labelNameLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelNameLengthLimit` is
@@ -482,7 +482,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedLabelNameLengthLimit` is greater than the `labelNameLengthLimit`, the `labelNameLengthLimit` will be set to `enforcedLabelNameLengthLimit`.
 	// * Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
 	// * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
-	EnforcedLabelNameLengthLimit *uint64 `json:"enforcedLabelNameLengthLimit,omitempty"`
+	EnforcedLabelNameLengthLimit *int64 `json:"enforcedLabelNameLengthLimit,omitempty"`
 	// enforcedLabelValueLengthLimit when not null defines a global limit on the length
 	// of labels value per sample. The value overrides any `spec.labelValueLengthLimit` set by
 	// ServiceMonitor, PodMonitor, Probe objects unless `spec.labelValueLengthLimit` is
@@ -495,7 +495,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedLabelValueLengthLimit` is greater than the `labelValueLengthLimit`, the `labelValueLengthLimit` will be set to `enforcedLabelValueLengthLimit`.
 	// * Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
 	// * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
-	EnforcedLabelValueLengthLimit *uint64 `json:"enforcedLabelValueLengthLimit,omitempty"`
+	EnforcedLabelValueLengthLimit *int64 `json:"enforcedLabelValueLengthLimit,omitempty"`
 	// enforcedKeepDroppedTargets when defined specifies a global limit on the number of targets
 	// dropped by relabeling that will be kept in memory. The value overrides
 	// any `spec.keepDroppedTargets` set by
@@ -509,7 +509,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// If Prometheus version is >= 2.45.0 and the `enforcedKeepDroppedTargets` is greater than the `keepDroppedTargets`, the `keepDroppedTargets` will be set to `enforcedKeepDroppedTargets`.
 	// * Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
 	// * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
-	EnforcedKeepDroppedTargets *uint64 `json:"enforcedKeepDroppedTargets,omitempty"`
+	EnforcedKeepDroppedTargets *int64 `json:"enforcedKeepDroppedTargets,omitempty"`
 	// enforcedBodySizeLimit when defined specifies a global limit on the size
 	// of uncompressed response body that will be accepted by Prometheus.
 	// Targets responding with a body larger than this many bytes will cause
@@ -605,31 +605,31 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.45.0 and newer.
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
-	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -637,7 +637,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	//
 	// Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
 	// If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// reloadStrategy defines the strategy used to reload the Prometheus configuration.
 	// If not specified, the configuration is reloaded using the /-/reload HTTP endpoint.
 	ReloadStrategy *monitoringv1.ReloadStrategyType `json:"reloadStrategy,omitempty"`
@@ -1273,7 +1273,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedNamespaceLabel(va
 // WithEnforcedSampleLimit sets the EnforcedSampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedSampleLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedSampleLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedSampleLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedSampleLimit = &value
 	return b
 }
@@ -1281,7 +1281,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedSampleLimit(value
 // WithEnforcedTargetLimit sets the EnforcedTargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedTargetLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedTargetLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedTargetLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedTargetLimit = &value
 	return b
 }
@@ -1289,7 +1289,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedTargetLimit(value
 // WithEnforcedLabelLimit sets the EnforcedLabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedLabelLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedLabelLimit = &value
 	return b
 }
@@ -1297,7 +1297,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelLimit(value 
 // WithEnforcedLabelNameLengthLimit sets the EnforcedLabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedLabelNameLengthLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelNameLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelNameLengthLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedLabelNameLengthLimit = &value
 	return b
 }
@@ -1305,7 +1305,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelNameLengthLi
 // WithEnforcedLabelValueLengthLimit sets the EnforcedLabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedLabelValueLengthLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelValueLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelValueLengthLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedLabelValueLengthLimit = &value
 	return b
 }
@@ -1313,7 +1313,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedLabelValueLengthL
 // WithEnforcedKeepDroppedTargets sets the EnforcedKeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the EnforcedKeepDroppedTargets field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedKeepDroppedTargets(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforcedKeepDroppedTargets(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.EnforcedKeepDroppedTargets = &value
 	return b
 }
@@ -1458,7 +1458,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithBodySizeLimit(value monit
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithSampleLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithSampleLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -1466,7 +1466,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithSampleLimit(value uint64)
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithTargetLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithTargetLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -1474,7 +1474,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithTargetLimit(value uint64)
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -1482,7 +1482,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelLimit(value uint64) 
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelNameLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelNameLengthLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -1490,7 +1490,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelNameLengthLimit(valu
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -1498,7 +1498,7 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithLabelValueLengthLimit(val
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value uint64) *CommonPrometheusFieldsApplyConfiguration {
+func (b *CommonPrometheusFieldsApplyConfiguration) WithKeepDroppedTargets(value int64) *CommonPrometheusFieldsApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }

@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.21.0",
-      "operator.prometheus.io/version": "0.92.0"
+      "operator.prometheus.io/version": "0.92.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -5130,6 +5130,7 @@
                               "modulus": {
                                 "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                                 "format": "int64",
+                                "minimum": 0,
                                 "type": "integer"
                               },
                               "regex": {

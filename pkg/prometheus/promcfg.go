@@ -422,7 +422,7 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	finalLimit := cg.getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
@@ -2219,7 +2219,7 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
+func (cg *ConfigGenerator) getLimit(user *int64, enforced *int64) *int64 {
 	if ptr.Deref(enforced, 0) == 0 {
 		return user
 	}
@@ -2387,7 +2387,7 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 		}
 
-		if c.Modulus != uint64(0) {
+		if c.Modulus != 0 {
 			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 		}
 
@@ -2898,7 +2898,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 			}
 
-			if c.Modulus != uint64(0) {
+			if c.Modulus != 0 {
 				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 			}
 
@@ -3108,7 +3108,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
-func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
 		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
 			cg.logger.Warn(fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)

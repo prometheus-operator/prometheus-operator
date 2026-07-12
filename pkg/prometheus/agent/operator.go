@@ -172,12 +172,13 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		mclient:  mclient,
 		logger:   logger,
 		config: prompkg.Config{
-			LocalHost:                  c.LocalHost,
-			ReloaderConfig:             c.ReloaderConfig,
-			PrometheusDefaultBaseImage: c.PrometheusDefaultBaseImage,
-			ThanosDefaultBaseImage:     c.ThanosDefaultBaseImage,
-			Annotations:                c.Annotations,
-			Labels:                     c.Labels,
+			LocalHost:                      c.LocalHost,
+			ReloaderConfig:                 c.ReloaderConfig,
+			PrometheusDefaultBaseImage:     c.PrometheusDefaultBaseImage,
+			ThanosDefaultBaseImage:         c.ThanosDefaultBaseImage,
+			Annotations:                    c.Annotations,
+			Labels:                         c.Labels,
+			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
 		},
 		metrics:                      operator.NewMetrics(r),
 		reconciliations:              &operator.ReconciliationTracker{},
@@ -535,7 +536,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		monitoringv1.ServiceMonitorsKind,
-		c.enqueueForMonitorNamespace,
+		c.enqueueForNamespaceFunc(c.nsMonInf.GetStore()),
 		operator.WithFilter(
 			operator.AnyFilter(
 				operator.GenerationChanged,
@@ -549,7 +550,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		monitoringv1.PodMonitorsKind,
-		c.enqueueForMonitorNamespace,
+		c.enqueueForNamespaceFunc(c.nsMonInf.GetStore()),
 		operator.WithFilter(
 			operator.AnyFilter(
 				operator.GenerationChanged,
@@ -563,7 +564,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		monitoringv1.ProbesKind,
-		c.enqueueForMonitorNamespace,
+		c.enqueueForNamespaceFunc(c.nsMonInf.GetStore()),
 		operator.WithFilter(
 			operator.AnyFilter(
 				operator.GenerationChanged,
@@ -578,7 +579,7 @@ func (c *Operator) addHandlers() {
 			c.accessor,
 			c.metrics,
 			monitoringv1alpha1.ScrapeConfigsKind,
-			c.enqueueForMonitorNamespace,
+			c.enqueueForNamespaceFunc(c.nsMonInf.GetStore()),
 			operator.WithFilter(
 				operator.AnyFilter(
 					operator.GenerationChanged,
@@ -592,12 +593,19 @@ func (c *Operator) addHandlers() {
 		c.promInfs,
 		c.reconciliations,
 	)
+	var gbk operator.GetByKeyer = c.nsPromInf.GetStore()
+	if c.config.WatchObjectRefsInAllNamespaces && c.nsPromInf != c.nsMonInf {
+		gbk = operator.NewMultiGetByKeyer(
+			c.nsPromInf.GetStore(),
+			c.nsMonInf.GetStore(),
+		)
+	}
 	c.cmapInfs.AddEventHandler(operator.NewEventHandler(
 		c.logger,
 		c.accessor,
 		c.metrics,
 		operator.ConfigMapGVK().Kind,
-		c.enqueueForPrometheusNamespace,
+		c.enqueueForNamespaceFunc(gbk),
 		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
@@ -607,7 +615,7 @@ func (c *Operator) addHandlers() {
 		c.accessor,
 		c.metrics,
 		operator.SecretGVK().Kind,
-		c.enqueueForPrometheusNamespace,
+		c.enqueueForNamespaceFunc(gbk),
 		operator.WithFilter(operator.ResourceVersionChanged),
 		operator.WithFilter(hasRefFunc),
 	))
@@ -1100,18 +1108,16 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitor
 	return nil
 }
 
-func (c *Operator) enqueueForPrometheusNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsPromInf.GetStore(), nsName)
-}
-
-func (c *Operator) enqueueForMonitorNamespace(nsName string) {
-	c.enqueueForNamespace(c.nsMonInf.GetStore(), nsName)
+func (c *Operator) enqueueForNamespaceFunc(gbk operator.GetByKeyer) func(string) {
+	return func(ns string) {
+		c.enqueueForNamespace(gbk, ns)
+	}
 }
 
 // enqueueForNamespace enqueues all Prometheus object keys that belong to the
 // given namespace or select objects in the given namespace.
-func (c *Operator) enqueueForNamespace(store cache.Store, nsName string) {
-	nsObject, found, err := store.GetByKey(nsName)
+func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
+	nsObject, found, err := gbk.GetByKey(nsName)
 	if err != nil {
 		c.logger.Error(
 			"get namespace to enqueue Prometheus instances failed",

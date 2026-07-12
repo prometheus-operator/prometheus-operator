@@ -16,59 +16,98 @@ package operator
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-type ImageSpec struct {
-	SpecImage string
-	Image     string
-	Version   string
-	Tag       string
-	SHA       string
-}
-
 func TestBuildImagePath(t *testing.T) {
-	defaultImageSpec := &ImageSpec{
-		Image:   "foo.com/bar",
-		Version: "0.0.1",
-	}
-	// imageWithoutVersion := "myrepo/myimage:123"
-	// imageWithVersion := "myhost:9090/myrepo/myimage:0.2"
-	// imageWithTag := "myhost:9090/myrepo/myimage:latest"
-	// imageWithSHA := "foo/bar@sha256:12345"
-	cases := []struct {
-		spec     *ImageSpec
-		expected string
+	for _, tc := range []struct {
+		name      string
+		baseImage string
+		image     string
+		version   string
+		tag       string
+		sha       string
+		expected  string
+		err       bool
 	}{
 		{
-			spec:     &ImageSpec{},
-			expected: "",
+			name: "error when no image and no base image are provided",
+			err:  true,
 		},
 		{
-			spec:     defaultImageSpec,
-			expected: defaultImageSpec.Image + ":" + defaultImageSpec.Version,
+			name:      "use base image without version",
+			baseImage: "example.com/bar",
+			err:       true,
 		},
 		{
-			spec:     &ImageSpec{"", "myrepo.com/foo", "1.0", "", ""},
-			expected: "myrepo.com/foo:1.0",
+			name:      "use base image reference including a tag",
+			baseImage: "example.com/bar:v0.0.1",
+			expected:  "example.com/bar:v0.0.1",
 		},
 		{
-			spec:     &ImageSpec{"", "myrepo.com/foo", "1.0", "latest", ""},
-			expected: "myrepo.com/foo:latest",
+			name:      "use base image reference including a invalid tag",
+			baseImage: "example.com/bar::v0.0.1",
+			err:       true,
 		},
 		{
-			spec:     &ImageSpec{"", "myrepo.com/foo", "1.0", "latest", "abcd1234"},
-			expected: "myrepo.com/foo@sha256:abcd1234",
+			name:      "use base image reference including a sha",
+			baseImage: "example.com/bar@sha256:b05f4d42b3026e0f80cf6d5f355d6218f739bc5877b2352cd7358da0b8dcb808",
+			expected:  "example.com/bar@sha256:b05f4d42b3026e0f80cf6d5f355d6218f739bc5877b2352cd7358da0b8dcb808",
 		},
 		{
-			spec:     &ImageSpec{"myspecrepo.com/myimage", "myrepo.com/foo", "1.0", "latest", "abcd1234"},
-			expected: "myspecrepo.com/myimage",
+			name:      "use base image reference including an invalid sha",
+			baseImage: "example.com/bar@sha256:b05f4",
+			err:       true,
 		},
-	}
-
-	for i, c := range cases {
-		result, _ := BuildImagePath(c.spec.SpecImage, c.spec.Image, c.spec.Version, c.spec.Tag, c.spec.SHA)
-		if c.expected != result {
-			t.Errorf("expected test case %d to be %q but got %q", i, c.expected, result)
-		}
+		{
+			name:      "use base image with version",
+			baseImage: "example.com/bar",
+			version:   "v0.0.1",
+			expected:  "example.com/bar:v0.0.1",
+		},
+		{
+			name:      "use image with tag",
+			baseImage: "example.com/bar",
+			version:   "v1.0.0",
+			tag:       "latest",
+			expected:  "example.com/bar:latest",
+		},
+		{
+			name:      "use base image with sha",
+			baseImage: "example.com/bar",
+			version:   "v1.0.0",
+			tag:       "latest",
+			sha:       "abcd1234",
+			expected:  "example.com/bar@sha256:abcd1234",
+		},
+		{
+			name:      "use valid image reference",
+			image:     "example.com/foo",
+			baseImage: "example.com/bar",
+			version:   "v1.0.0",
+			tag:       "latest",
+			sha:       "abcd1234",
+			expected:  "example.com/foo",
+		},
+		{
+			name:      "use image reference even if invalid",
+			image:     "example.com/foo:sha256:abcd1234",
+			baseImage: "example.com/bar",
+			version:   "v1.0.0",
+			tag:       "latest",
+			sha:       "abcd1234",
+			expected:  "example.com/foo:sha256:abcd1234",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := BuildImagePath(tc.image, tc.baseImage, tc.version, tc.tag, tc.sha)
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, result)
+		})
 	}
 }
