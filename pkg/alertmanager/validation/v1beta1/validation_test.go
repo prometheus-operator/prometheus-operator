@@ -648,7 +648,7 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
 								{
-									ClientURL: new(monitoringv1beta1.URL("http://%><invalid.com")),
+									ClientURL: new("http://%><invalid.com"),
 								},
 							},
 						},
