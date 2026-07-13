@@ -4761,13 +4761,13 @@ func TestGenerateConfigJiraReceiver(t *testing.T) {
 		expectedError   bool
 	}
 
-	version26, err := semver.ParseTolerant("v0.26.0")
+	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
 	testCases := []testCase{
 		{
 			name:      "CR with Jira Receiver",
-			amVersion: &version26,
+			amVersion: &version28,
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
