@@ -9,22 +9,23 @@ receivers:
 - name: "null"
 - name: mynamespace/myamc/test
   jira_configs:
-  - api_url: https://test.com
+  - send_resolved: true
+    api_url: https://test.com
     project: projectA
-    send_resolved: true
     summary: summary
     description: description
-    priority: priority
     labels:
     - aa
     - bb
+    priority: priority
     issue_type: bug
-    resolve_transition: ResolveTransition
     reopen_transition: ReopenTransition
+    resolve_transition: ResolveTransition
     wont_fix_resolution: WontFixResolution
     reopen_duration: 5s
-  msteams_configs:
-  - webhook_url: https://webhook.office.com/webhookb2/id/IncomingWebhook/id
-    title: test title
-    text: test text
+    fields:
+      customField1: '{"aa": "recv2", "bb": 11}'
+      customField2: ""
+      customField3: '[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa",
+        "bb", 11] ]'
 templates: []
