@@ -616,7 +616,7 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name: "Test validate on PagerDuty config - URL validation failed",
+			name: "validate pagerduty config - url validation failed",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -637,7 +637,7 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test validate on PagerDuty config - client URL validation failed",
+			name: "validate pagerduty config - client url validation failed",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -670,7 +670,7 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 				if tc.expectErr {
 					return
 				}
-				t.Errorf("got error but expected none -%s", err.Error())
+				t.Errorf("got error but expected none - %s", err.Error())
 			}
 		})
 	}
