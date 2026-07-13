@@ -4764,9 +4764,6 @@ func TestGenerateConfigJiraReceiver(t *testing.T) {
 	version26, err := semver.ParseTolerant("v0.26.0")
 	require.NoError(t, err)
 
-	version27, err := semver.ParseTolerant("v0.27.0")
-	require.NoError(t, err)
-
 	testCases := []testCase{
 		{
 			name:      "CR with Jira Receiver",
