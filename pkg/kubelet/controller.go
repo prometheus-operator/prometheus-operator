@@ -485,12 +485,6 @@ func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress)
 func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 	c.logger.Debug("Sync service")
 
-	// PreferDualStack requests both IPv4 and IPv6 ClusterIPs on dual-stack
-	// clusters so that Prometheus SD can match the primary IP family when
-	// selecting which EndpointSlice to scrape. On single-stack clusters it
-	// degrades gracefully to the single available family.
-	ipFamilyPolicy := corev1.IPFamilyPolicyPreferDualStack
-
 	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        c.kubeletObjectName,
@@ -502,10 +496,9 @@ func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 			}),
 		},
 		Spec: corev1.ServiceSpec{
-			Type:           corev1.ServiceTypeClusterIP,
-			ClusterIP:      corev1.ClusterIPNone,
-			IPFamilyPolicy: &ipFamilyPolicy,
-			Ports:          c.servicePorts(),
+			Type:      corev1.ServiceTypeClusterIP,
+			ClusterIP: corev1.ClusterIPNone,
+			Ports:     c.servicePorts(),
 		},
 	}
 
