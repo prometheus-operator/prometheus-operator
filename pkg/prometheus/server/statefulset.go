@@ -37,6 +37,19 @@ const (
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
+
+	// Minimum Prometheus and Thanos versions supporting coordinated (delayed)
+	// compaction, which lets Prometheus keep local compaction enabled while the
+	// Thanos sidecar uploads blocks to object storage.
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	minVersionPrometheusDelayedCompaction = "3.9.0"
+	minVersionThanosDelayedCompaction     = "0.41.0"
+
+	// thanosShipperMetaFileName is the name of the meta file the Thanos sidecar
+	// shipper writes in the TSDB directory. Prometheus reads it through
+	// --storage.tsdb.delay-compact-file.path to only compact blocks that have
+	// already been uploaded.
+	thanosShipperMetaFileName = "thanos.shipper.json"
 )
 
 func makeStatefulSet(
@@ -217,7 +230,12 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []corev1.Container
 
-	thanosContainer, thanosVolumes, err := createThanosContainer(p, c)
+	compactionMode, err := compactionModeFor(p, cg.Version())
+	if err != nil {
+		return nil, err
+	}
+
+	thanosContainer, thanosVolumes, err := createThanosContainer(p, c, compactionMode)
 	if err != nil {
 		return nil, err
 	}
@@ -227,13 +245,26 @@ func makeStatefulSetSpec(
 		volumes = append(volumes, thanosVolumes...)
 	}
 
-	if compactionDisabled(p) {
+	switch compactionMode {
+	case compactionModeDisabled:
+		// Disable local compaction so the Thanos sidecar can safely upload
+		// uncompacted blocks to object storage.
 		thanosBlockDuration := "2h"
 		if p.Spec.Thanos != nil {
 			thanosBlockDuration = operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), thanosBlockDuration)
 		}
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
+
+	case compactionModeDelayed:
+		// Keep local compaction enabled and let Prometheus coordinate with the
+		// Thanos sidecar through the shipper meta file: Prometheus only compacts
+		// level-1 blocks that have already been uploaded.
+		// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+		promArgs = append(promArgs, monitoringv1.Argument{
+			Name:  "storage.tsdb.delay-compact-file.path",
+			Value: filepath.Join(prompkg.StorageDir, thanosShipperMetaFileName),
+		})
 	}
 
 	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/6829
@@ -241,8 +272,12 @@ func makeStatefulSetSpec(
 	//   1. Prometheus >= v2.55.0
 	//   2. Thanos sidecar configured for uploading blocks to object storage
 	//   3. out-of-order window is > 0
+	// This is required in both the disabled and delayed compaction modes:
+	// --storage.tsdb.delay-compact-file.path only delays level-1 compaction, so
+	// overlapping out-of-order blocks could still be vertically compacted before
+	// the sidecar uploads them.
 	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
-		compactionDisabled(p) &&
+		compactionMode != compactionModeDefault &&
 		cg.WithMinimumVersion("2.55.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.allow-overlapping-compaction"})
 	}
@@ -502,7 +537,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, vo
 	return volumes, volumeMounts
 }
 
-func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev1.Container, []corev1.Volume, error) {
+func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compaction compactionMode) (*corev1.Container, []corev1.Volume, error) {
 	if p.Spec.Thanos == nil {
 		return nil, nil, nil
 	}
@@ -626,6 +661,19 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 				SubPath:   prompkg.SubPathForStorage(cpf.Storage),
 			},
 		)
+
+		// When compaction stays enabled on Prometheus, coordinate uploads with
+		// it through the shipper meta file: pin the meta file name that
+		// Prometheus reads via --storage.tsdb.delay-compact-file.path and allow
+		// the shipper to upload blocks even though min/max block durations
+		// differ (compaction is enabled).
+		// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+		if compaction == compactionModeDelayed {
+			thanosArgs = append(thanosArgs,
+				monitoringv1.Argument{Name: "shipper.meta-file-name", Value: thanosShipperMetaFileName},
+				monitoringv1.Argument{Name: "shipper.ignore-unequal-block-size"},
+			)
+		}
 	}
 
 	if thanos.TracingConfig != nil || len(thanos.TracingConfigFile) > 0 {
@@ -724,12 +772,57 @@ func queryLogFileVolume(queryLogFile string) (corev1.Volume, bool) {
 	}, true
 }
 
-func compactionDisabled(p *monitoringv1.Prometheus) bool {
-	// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/
-	// we have to turn off compaction of Prometheus if export to object
-	// storage is configured to avoid races during uploads.
-	return p.Spec.DisableCompaction ||
-		(p.Spec.Thanos != nil &&
-			(p.Spec.Thanos.ObjectStorageConfig != nil ||
-				p.Spec.Thanos.ObjectStorageConfigFile != nil))
+// compactionMode describes how the operator configures local compaction for a
+// Prometheus instance when the Thanos sidecar uploads blocks to object storage.
+type compactionMode int
+
+const (
+	// compactionModeDefault lets Prometheus manage local compaction as usual.
+	// Used when blocks are not uploaded to object storage.
+	compactionModeDefault compactionMode = iota
+
+	// compactionModeDisabled turns off local compaction (min-block-duration ==
+	// max-block-duration) so the Thanos sidecar can safely upload uncompacted
+	// blocks to object storage, as recommended by
+	// https://thanos.io/components/sidecar.md/.
+	compactionModeDisabled
+
+	// compactionModeDelayed keeps local compaction enabled and coordinates
+	// uploads with the Thanos sidecar through the shipper meta file, so that
+	// Prometheus only compacts blocks that have already been uploaded.
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	compactionModeDelayed
+)
+
+// compactionModeFor returns how local compaction must be configured given the
+// Thanos sidecar object-storage setup and the Prometheus and Thanos versions.
+//
+// Delayed compaction requires Prometheus >= v3.9.0
+// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.41.0
+// (--shipper.meta-file-name and --shipper.ignore-unequal-block-size); otherwise
+// compaction is disabled while uploading to object storage.
+func compactionModeFor(p *monitoringv1.Prometheus, promVersion semver.Version) (compactionMode, error) {
+	// An explicit request to disable compaction always wins.
+	if p.Spec.DisableCompaction {
+		return compactionModeDisabled, nil
+	}
+
+	// Compaction only needs special handling when the sidecar uploads blocks to
+	// object storage.
+	if p.Spec.Thanos == nil ||
+		(p.Spec.Thanos.ObjectStorageConfig == nil && p.Spec.Thanos.ObjectStorageConfigFile == nil) {
+		return compactionModeDefault, nil
+	}
+
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(p.Spec.Thanos.Version, operator.DefaultThanosVersion))
+	if err != nil {
+		return compactionModeDefault, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
+
+	if promVersion.GTE(semver.MustParse(minVersionPrometheusDelayedCompaction)) &&
+		thanosVersion.GTE(semver.MustParse(minVersionThanosDelayedCompaction)) {
+		return compactionModeDelayed, nil
+	}
+
+	return compactionModeDisabled, nil
 }

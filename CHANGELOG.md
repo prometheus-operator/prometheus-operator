@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* [CHANGE] Keep local Prometheus compaction enabled when the Thanos sidecar uploads to object storage, for Prometheus >= v3.9.0 and Thanos >= v0.41.0. The operator now coordinates uploads through the shipper meta file (`--storage.tsdb.delay-compact-file.path`, `--shipper.meta-file-name`, `--shipper.ignore-unequal-block-size`) instead of disabling compaction. Set `spec.disableCompaction: true` to keep the previous behavior. #8266
 * [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
 
 ## 0.92.1 / 2026-06-30
