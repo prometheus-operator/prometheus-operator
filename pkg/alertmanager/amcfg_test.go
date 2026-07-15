@@ -2295,9 +2295,6 @@ func TestGenerateConfig(t *testing.T) {
 	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
-	version32, err := semver.ParseTolerant("v0.32.0")
-	require.NoError(t, err)
-
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
 	require.NoError(t, err)
 
@@ -2955,79 +2952,6 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Pagerduty_Receiver.golden",
-		},
-		{
-			name: "CR with Webhook Receiver and custom http config (oauth2)",
-			kclient: fake.NewClientset(
-				&corev1.ConfigMap{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "webhook-client-id",
-						Namespace: "mynamespace",
-					},
-					Data: map[string]string{
-						"test": "clientID",
-					},
-				},
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "webhook-client-secret",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"test": []byte("clientSecret"),
-					},
-				},
-			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-								URL: new("http://test.url"),
-								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									OAuth2: &monitoringv1.OAuth2{
-										ClientID: monitoringv1.SecretOrConfigMap{
-											ConfigMap: &corev1.ConfigMapKeySelector{
-												LocalObjectReference: corev1.LocalObjectReference{
-													Name: "webhook-client-id",
-												},
-												Key: "test",
-											},
-										},
-										ClientSecret: corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "webhook-client-secret",
-											},
-											Key: "test",
-										},
-										TokenURL: "https://test.com",
-										Scopes:   []string{"any"},
-										EndpointParams: map[string]string{
-											"some": "value",
-										},
-									},
-									FollowRedirects: new(true),
-								},
-							}},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_Webhook_Receiver_and_custom_http_config_oauth2.golden",
 		},
 		{
 			name: "CR with Opsgenie Receiver",
@@ -4318,150 +4242,6 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_EmailConfig_with_Threading.golden",
 		},
-		{
-			name:      "CR with WebhookConfig with Timeout Setup",
-			amVersion: &version28,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
-									{
-										URL:     new("https://example.com/"),
-										Timeout: ptr.To(monitoringv1.Duration("5s")),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_WebhookConfig_with_Timeout_Setup.golden",
-		},
-		{
-			name:      "CR with WebhookConfig with Timeout Setup Older Version",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
-									{
-										URL:     new("https://example.com/"),
-										Timeout: ptr.To(monitoringv1.Duration("5s")),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_WebhookConfig_with_Timeout_Setup_Older_Version.golden",
-		},
-		{
-			name:      "CR with WebhookConfig with Payload",
-			amVersion: &version32,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
-									{
-										URL:     new("https://example.com/"),
-										Payload: new("{\"foo\": \"bar\"}"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_WebhookConfig_with_Payload.golden",
-		},
-		{
-			name:      "CR with WebhookConfig with Payload Unsupported Version",
-			amVersion: &version31,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
-									{
-										URL:     new("https://example.com/"),
-										Payload: new("{\"foo\": \"bar\"}"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_WebhookConfig_with_Payload_Unsupported_Version.golden",
-		},
 	}
 
 	logger := newNopLogger(t)
@@ -4675,6 +4455,289 @@ func TestGenerateConfigMSTeamsReceiver(t *testing.T) {
 				},
 			},
 			golden: "CR_with_MSTeams_Receiver_Partial_Conf.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+func TestGenerateConfigWebhookReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version26, err := semver.ParseTolerant("v0.26.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	version32, err := semver.ParseTolerant("v0.32.0")
+	require.NoError(t, err)
+
+	testCases := []testCase{
+
+		{
+			name: "CR with Webhook Receiver and custom http config (oauth2)",
+			kclient: fake.NewClientset(
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-id",
+						Namespace: "mynamespace",
+					},
+					Data: map[string]string{
+						"test": "clientID",
+					},
+				},
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "webhook-client-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"test": []byte("clientSecret"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+								URL: new("http://test.url"),
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									OAuth2: &monitoringv1.OAuth2{
+										ClientID: monitoringv1.SecretOrConfigMap{
+											ConfigMap: &corev1.ConfigMapKeySelector{
+												LocalObjectReference: corev1.LocalObjectReference{
+													Name: "webhook-client-id",
+												},
+												Key: "test",
+											},
+										},
+										ClientSecret: corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "webhook-client-secret",
+											},
+											Key: "test",
+										},
+										TokenURL: "https://test.com",
+										Scopes:   []string{"any"},
+										EndpointParams: map[string]string{
+											"some": "value",
+										},
+									},
+									FollowRedirects: new(true),
+								},
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Webhook_Receiver_and_custom_http_config_oauth2.golden",
+		},
+
+		{
+			name:      "CR with Webhook Receiver and Timeout Setup",
+			amVersion: &version28,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Timeout: ptr.To(monitoringv1.Duration("5s")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Webhook_Receiver_and_Timeout_Setup.golden",
+		},
+		{
+			name:      "CR with Webhook Receiver and Timeout Setup Older Version",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Timeout: ptr.To(monitoringv1.Duration("5s")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Webhook_Receiver_and_Timeout_Setup_Older_Version.golden",
+		},
+		{
+			name:      "CR with Webhook Receiver and Payload",
+			amVersion: &version32,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Payload: new("{\"foo\": \"bar\"}"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Webhook_Receiver_and_Payload.golden",
+		},
+		{
+			name:      "CR with Webhook Receiver and Payload Unsupported Version",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+									{
+										URL:     new("https://example.com/"),
+										Payload: new("{\"foo\": \"bar\"}"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Webhook_Receiver_and_Payload_Unsupported_Version.golden",
 		},
 	}
 
