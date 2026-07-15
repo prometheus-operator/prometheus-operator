@@ -7828,6 +7828,7 @@ spec:
                 - message: topology can only be defined when mode is set to 'Topology'
                   rule: '!has(self.topology) || (has(self.mode) && self.mode == ''Topology'')'
               shards:
+                default: 1
                 description: |-
                   shards defines the number of shards to distribute the scraped targets onto.
 
@@ -7855,6 +7856,8 @@ spec:
                   You can also disable sharding on a specific target by setting the
                   `__tmp_disable_sharding` label with relabeling configuration. When
                   the label value isn't empty, all Prometheus shards will scrape the target.
+
+                  Default: 1
                 format: int32
                 type: integer
               storage:
