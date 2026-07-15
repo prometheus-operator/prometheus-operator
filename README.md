@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/checks.yaml/badge.svg)](https://github.com/prometheus-operator/prometheus-operator/actions)
 [![Go Reference](https://pkg.go.dev/badge/github.com/prometheus-operator/prometheus-operator.svg)](https://pkg.go.dev/github.com/prometheus-operator/prometheus-operator)
-[![Latest Release](https://img.shields.io/github/v/release/prometheus-operator/prometheus-operator?include_prereleases)](https://github.com/prometheus-operator/prometheus-operator/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/prometheus-operator/prometheus-operator?include_prereleases)](https://quay.io/organization/prometheus-operator)
 [![Slack](https://img.shields.io/badge/join%20slack-%23prometheus--operator-brightgreen.svg)](https://kubernetes.slack.com)
 
 ## Overview
