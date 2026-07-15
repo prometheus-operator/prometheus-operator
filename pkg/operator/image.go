@@ -21,39 +21,46 @@ import (
 	ref "github.com/distribution/reference"
 )
 
-// BuildImagePath builds a container image path based on
-// the given parameters.
-// Return specImage if not empty.
+// BuildImagePath builds a container image's reference based on the input
+// parameters.
+// Return specImage if the value isn't empty.
 // If image contains a tag or digest then image will be returned.
 // Otherwise, return image suffixed by either SHA, tag or version(in that order).
 // Inspired by kubernetes code handling of image building.
 func BuildImagePath(specImage, baseImage, version, tag, sha string) (string, error) {
 	if strings.TrimSpace(specImage) != "" {
+		// Return as-is and don't validate anything.
 		return specImage, nil
 	}
+
 	named, err := ref.ParseNormalizedNamed(baseImage)
 	if err != nil {
 		return "", fmt.Errorf("couldn't parse image reference %q: %v", baseImage, err)
 	}
+
 	_, isTagged := named.(ref.Tagged)
 	_, isDigested := named.(ref.Digested)
-	if isTagged || isDigested {
+	switch {
+	case isTagged || isDigested:
+		// Return as-is if the image reference is already fully defined.
 		return baseImage, nil
-	}
 
-	if sha != "" {
+	case sha != "":
+		// Prefer SHA over tag.
 		return fmt.Sprintf("%s@sha256:%s", baseImage, sha), nil
-	} else if tag != "" {
+
+	case tag != "":
 		imageTag, err := ref.WithTag(named, tag)
 		if err != nil {
 			return "", err
 		}
 		return imageTag.String(), nil
-	}
-	if version == "" {
+
+	case version == "":
 		return "", fmt.Errorf("couldn't generate an image reference since version is empty")
 	}
-	return baseImage + ":" + version, nil
+
+	return fmt.Sprintf("%s:%s", baseImage, version), nil
 }
 
 // BuildImagePathForAgent builds a container image path based on

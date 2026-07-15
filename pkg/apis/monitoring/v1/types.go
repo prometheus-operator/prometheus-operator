@@ -852,8 +852,9 @@ type NativeHistogramConfig struct {
 	// buckets will be merged to stay within the limit.
 	// It requires Prometheus >= v2.45.0.
 	//
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
-	NativeHistogramBucketLimit *uint64 `json:"nativeHistogramBucketLimit,omitempty"`
+	NativeHistogramBucketLimit *int64 `json:"nativeHistogramBucketLimit,omitempty"`
 
 	// nativeHistogramMinBucketFactor defines if the growth factor of one bucket to the next is smaller than this,
 	// buckets will be merged to increase the factor sufficiently.

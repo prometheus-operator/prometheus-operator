@@ -50,9 +50,9 @@ type ProbeSpecApplyConfiguration struct {
 	// authorization section for this endpoint
 	Authorization *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
 	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
@@ -66,19 +66,19 @@ type ProbeSpecApplyConfiguration struct {
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelValueLengthLimit                   *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// scrapeClass defines the scrape class to apply.
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
 	// params defines the list of HTTP query parameters for the scrape.
@@ -166,7 +166,7 @@ func (b *ProbeSpecApplyConfiguration) WithAuthorization(value *SafeAuthorization
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -174,7 +174,7 @@ func (b *ProbeSpecApplyConfiguration) WithSampleLimit(value uint64) *ProbeSpecAp
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithTargetLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -200,7 +200,7 @@ func (b *ProbeSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitorin
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -208,7 +208,7 @@ func (b *ProbeSpecApplyConfiguration) WithLabelLimit(value uint64) *ProbeSpecApp
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -216,7 +216,7 @@ func (b *ProbeSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *Pr
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -240,7 +240,7 @@ func (b *ProbeSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *P
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ProbeSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
@@ -264,7 +264,7 @@ func (b *ProbeSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(value b
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ProbeSpecApplyConfiguration {
+func (b *ProbeSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ProbeSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }
