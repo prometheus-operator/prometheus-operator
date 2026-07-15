@@ -530,6 +530,50 @@ func TestListenLocal(t *testing.T) {
 	require.Empty(t, sset.Spec.Template.Spec.Containers[0].Ports, "Prometheus container should have 0 ports defined")
 }
 
+func TestListenLocalPrePromtoolVersion(t *testing.T) {
+	// promtool check healthy|ready was added in Prometheus 2.44.0; older
+	// versions keep the shell-based curl/wget ExecAction.
+	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				ListenLocal: true,
+				Version:     "v2.43.0",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
+		return corev1.ProbeHandler{
+			Exec: &corev1.ExecAction{
+				Command: []string{
+					`sh`,
+					`-c`,
+					fmt.Sprintf(`if [ -x "$(command -v curl)" ]; then exec curl --fail %[1]s; elif [ -x "$(command -v wget)" ]; then exec wget -q -O /dev/null %[1]s; else exit 1; fi`, fmt.Sprintf("http://localhost:9090%s", probePath)),
+				},
+			},
+		}
+	}
+
+	actualStartupProbe := sset.Spec.Template.Spec.Containers[0].StartupProbe
+	expectedStartupProbe := &corev1.Probe{
+		ProbeHandler:     expectedProbeHandler("/-/ready"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    15,
+		FailureThreshold: 60,
+	}
+	require.Equal(t, expectedStartupProbe, actualStartupProbe)
+
+	actualLivenessProbe := sset.Spec.Template.Spec.Containers[0].LivenessProbe
+	expectedLivenessProbe := &corev1.Probe{
+		ProbeHandler:     expectedProbeHandler("/-/healthy"),
+		TimeoutSeconds:   3,
+		PeriodSeconds:    5,
+		FailureThreshold: 6,
+	}
+	require.Equal(t, expectedLivenessProbe, actualLivenessProbe)
+}
+
 func TestListenTLS(t *testing.T) {
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
