@@ -994,9 +994,12 @@ func TestThanosNoObjectStorage(t *testing.T) {
 func TestThanosObjectStorage(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 
+	// Use Thanos < v0.42.0 where compaction is disabled when object storage is configured.
+	thanosVersion := "v0.41.0"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
+				Version: &thanosVersion,
 				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
 				},
@@ -1054,9 +1057,12 @@ func TestThanosObjectStorage(t *testing.T) {
 
 func TestThanosObjectStorageFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
+	// Use Thanos < v0.42.0 where compaction is disabled when object storage is configured.
+	thanosVersion := "v0.41.0"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
+				Version:                 &thanosVersion,
 				ObjectStorageConfigFile: &testPath,
 				BlockDuration:           "2h",
 			},
@@ -1120,9 +1126,12 @@ func TestThanosObjectStorageFile(t *testing.T) {
 func TestThanosBlockDuration(t *testing.T) {
 	testKey := "thanos-config-secret-test"
 
+	// Use Thanos < v0.42.0 where compaction is disabled when object storage is configured.
+	thanosVersion := "v0.41.0"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
+				Version:       &thanosVersion,
 				BlockDuration: "1h",
 				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
@@ -1139,6 +1148,74 @@ func TestThanosBlockDuration(t *testing.T) {
 		}
 	}
 	require.True(t, found, "Thanos BlockDuration arg change not found")
+}
+
+// TestCompactionDisabledThanosVersion verifies that compaction is only
+// disabled when object storage is configured for Thanos < v0.42.0.
+// Starting with Thanos v0.42.0, TSDB delays compaction until blocks have been
+// uploaded by the shipper, so disabling compaction externally is no longer needed.
+func TestCompactionDisabledThanosVersion(t *testing.T) {
+	testKey := "thanos-config-secret-test"
+
+	for _, tc := range []struct {
+		name              string
+		version           string
+		objectStorage     bool
+		disableCompaction bool
+		expectDisabled    bool
+	}{
+		{
+			name:           "Thanos < v0.42.0 with object storage disables compaction",
+			version:        "v0.41.0",
+			objectStorage:  true,
+			expectDisabled: true,
+		},
+		{
+			name:           "Thanos >= v0.42.0 with object storage does not disable compaction",
+			version:        "v0.42.0",
+			objectStorage:  true,
+			expectDisabled: false,
+		},
+		{
+			name:           "Thanos >= v0.42.0 without object storage does not disable compaction",
+			version:        "v0.42.0",
+			objectStorage:  false,
+			expectDisabled: false,
+		},
+		{
+			name:              "Explicit DisableCompaction always disables compaction regardless of version",
+			version:           "v0.42.0",
+			disableCompaction: true,
+			expectDisabled:    true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					DisableCompaction: tc.disableCompaction,
+					Thanos:            &monitoringv1.ThanosSpec{Version: &tc.version},
+				},
+			}
+			if tc.objectStorage {
+				p.Spec.Thanos.ObjectStorageConfig = &corev1.SecretKeySelector{Key: testKey}
+			}
+
+			sset, err := makeStatefulSetFromPrometheus(p)
+			require.NoError(t, err)
+
+			const arg = "--storage.tsdb.max-block-duration="
+			var found bool
+			for _, a := range sset.Spec.Template.Spec.Containers[0].Args {
+				if strings.HasPrefix(a, arg) {
+					found = true
+					break
+				}
+			}
+			require.Equal(t, tc.expectDisabled, found,
+				"expected compaction disabled=%v but got disabled=%v for version=%s",
+				tc.expectDisabled, found, tc.version)
+		})
+	}
 }
 
 func TestThanosWithNamedPVC(t *testing.T) {
@@ -1534,9 +1611,11 @@ func TestTSDBAllowOverlappingBlocks(t *testing.T) {
 
 func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 	expectedArg := "--no-storage.tsdb.allow-overlapping-compaction"
+	thanosVersion := "v0.41.0" // Thanos < v0.42.0 where object storage disables compaction.
 	tests := []struct {
 		name                    string
 		version                 string
+		thanosVersion           *string
 		outOfOrderTimeWindow    monitoringv1.Duration
 		objectStorageConfigFile *string
 		shouldContain           bool
@@ -1544,16 +1623,19 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 		{
 			name:          "Prometheus version less than or equal to v2.55.0",
 			version:       "v2.54.0",
+			thanosVersion: &thanosVersion,
 			shouldContain: false,
 		},
 		{
 			name:          "outOfOrderTimeWindow equal to 0s",
 			version:       "v2.55.0",
+			thanosVersion: &thanosVersion,
 			shouldContain: false,
 		},
 		{
 			name:                    "Thanos is not object storage",
 			version:                 "v2.55.0",
+			thanosVersion:           &thanosVersion,
 			outOfOrderTimeWindow:    "1s",
 			objectStorageConfigFile: nil,
 			shouldContain:           false,
@@ -1561,6 +1643,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 		{
 			name:                    "Verify AllowOverlappingCompaction",
 			version:                 "v2.55.0",
+			thanosVersion:           &thanosVersion,
 			outOfOrderTimeWindow:    "1s",
 			objectStorageConfigFile: new("/etc/thanos.cfg"),
 			shouldContain:           true,
@@ -1578,6 +1661,7 @@ func TestTSDBAllowOverlappingCompaction(t *testing.T) {
 						},
 					},
 					Thanos: &monitoringv1.ThanosSpec{
+						Version:                 test.thanosVersion,
 						ListenLocal:             true,
 						ObjectStorageConfigFile: test.objectStorageConfigFile,
 					},

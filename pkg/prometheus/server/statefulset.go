@@ -227,7 +227,12 @@ func makeStatefulSetSpec(
 		volumes = append(volumes, thanosVolumes...)
 	}
 
-	if compactionDisabled(p) {
+	var thanosVersion semver.Version
+	if p.Spec.Thanos != nil {
+		thanosVersion, _ = semver.ParseTolerant(ptr.Deref(p.Spec.Thanos.Version, operator.DefaultThanosVersion))
+	}
+
+	if compactionDisabled(p, thanosVersion) {
 		thanosBlockDuration := "2h"
 		if p.Spec.Thanos != nil {
 			thanosBlockDuration = operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), thanosBlockDuration)
@@ -242,7 +247,7 @@ func makeStatefulSetSpec(
 	//   2. Thanos sidecar configured for uploading blocks to object storage
 	//   3. out-of-order window is > 0
 	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
-		compactionDisabled(p) &&
+		compactionDisabled(p, thanosVersion) &&
 		cg.WithMinimumVersion("2.55.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.allow-overlapping-compaction"})
 	}
@@ -724,12 +729,21 @@ func queryLogFileVolume(queryLogFile string) (corev1.Volume, bool) {
 	}, true
 }
 
-func compactionDisabled(p *monitoringv1.Prometheus) bool {
+func compactionDisabled(p *monitoringv1.Prometheus, thanosVersion semver.Version) bool {
 	// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/
 	// we have to turn off compaction of Prometheus if export to object
 	// storage is configured to avoid races during uploads.
-	return p.Spec.DisableCompaction ||
-		(p.Spec.Thanos != nil &&
-			(p.Spec.Thanos.ObjectStorageConfig != nil ||
-				p.Spec.Thanos.ObjectStorageConfigFile != nil))
+	//
+	// Thanos >= v0.42.0 handles compaction/upload ordering internally.
+	if p.Spec.DisableCompaction {
+		return true
+	}
+
+	if p.Spec.Thanos != nil &&
+		(p.Spec.Thanos.ObjectStorageConfig != nil ||
+			p.Spec.Thanos.ObjectStorageConfigFile != nil) {
+		return thanosVersion.LT(semver.MustParse("0.42.0"))
+	}
+
+	return false
 }
