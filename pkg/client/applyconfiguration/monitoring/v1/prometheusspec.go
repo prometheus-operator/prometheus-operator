@@ -47,8 +47,15 @@ type PrometheusSpecApplyConfiguration struct {
 	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
 	ShardRetentionPolicy *ShardRetentionPolicyApplyConfiguration `json:"shardRetentionPolicy,omitempty"`
 	// disableCompaction when true, the Prometheus compaction is disabled.
-	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
-	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
+	//
+	// When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
+	// default handling depends on the Prometheus and Thanos sidecar versions:
+	// - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+	// conditions during block uploads (as the Thanos documentation recommends).
+	// - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+	// with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
+	// compacted after they have been uploaded.
+	// Setting this field to true always disables local compaction regardless of the versions.
 	DisableCompaction *bool `json:"disableCompaction,omitempty"`
 	// rules defines the configuration of the Prometheus rules' engine.
 	Rules *RulesApplyConfiguration `json:"rules,omitempty"`

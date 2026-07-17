@@ -3854,9 +3854,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
@@ -16982,9 +16988,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
