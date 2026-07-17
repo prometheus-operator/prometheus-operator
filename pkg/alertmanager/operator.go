@@ -1050,6 +1050,22 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		return nil, err
 	}
 
+	var globalAmConfig *monitoringv1alpha1.AlertmanagerConfig
+	if am.Spec.AlertmanagerConfiguration != nil {
+		globalAmConfig, err = c.mclient.MonitoringV1alpha1().AlertmanagerConfigs(am.Namespace).Get(ctx, am.Spec.AlertmanagerConfiguration.Name, metav1.GetOptions{})
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				return nil, fmt.Errorf("failed to get global AlertmanagerConfig: %w", err)
+			}
+			c.logger.Warn(
+				"global AlertmanagerConfig not found",
+				"alertmanagerconfig", am.Spec.AlertmanagerConfiguration.Name,
+				"namespace", am.Namespace,
+				"alertmanager", am.Name,
+			)
+		}
+	}
+
 	for _, ns := range namespaces {
 		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
 			k, ok := c.accessor.MetaNamespaceKey(obj)
@@ -1075,7 +1091,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
+		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store, globalAmConfig); err != nil {
 			rejected++
 			c.logger.Warn(
 				"skipping alertmanagerconfig",
@@ -1107,9 +1123,9 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
-func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder, globalAmConfig *monitoringv1alpha1.AlertmanagerConfig) error {
 	// Perform semantic validation irrespective of the Alertmanager version.
-	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
+	if err := validationv1alpha1.ValidateAlertmanagerConfigWithGlobal(amc, globalAmConfig); err != nil {
 		return err
 	}
 
