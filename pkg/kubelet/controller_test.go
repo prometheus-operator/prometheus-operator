@@ -620,11 +620,11 @@ func newLogger() *slog.Logger {
 
 func TestPrimaryAddressType(t *testing.T) {
 	for _, tc := range []struct {
-		name             string
-		priority         string
-		addrMap          map[corev1.NodeAddressType][]string
-		expectedType     corev1.NodeAddressType
-		expectError      bool
+		name         string
+		priority     string
+		addrMap      map[corev1.NodeAddressType][]string
+		expectedType corev1.NodeAddressType
+		expectError  bool
 	}{
 		{
 			name:     "internal priority with InternalIP available",
@@ -685,7 +685,6 @@ func TestPrimaryAddressType(t *testing.T) {
 		})
 	}
 }
-
 
 func TestHTTPMetricsPorts(t *testing.T) {
 	for _, tc := range []struct {
