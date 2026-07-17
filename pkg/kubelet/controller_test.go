@@ -618,6 +618,75 @@ func newLogger() *slog.Logger {
 	return l
 }
 
+func TestPrimaryAddressType(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		priority         string
+		addrMap          map[corev1.NodeAddressType][]string
+		expectedType     corev1.NodeAddressType
+		expectError      bool
+	}{
+		{
+			name:     "internal priority with InternalIP available",
+			priority: "internal",
+			addrMap: map[corev1.NodeAddressType][]string{
+				corev1.NodeInternalIP: {"10.0.0.1", "fd00::1"},
+				corev1.NodeExternalIP: {"203.0.113.1"},
+			},
+			expectedType: corev1.NodeInternalIP,
+		},
+		{
+			name:     "internal priority falls back to ExternalIP",
+			priority: "internal",
+			addrMap: map[corev1.NodeAddressType][]string{
+				corev1.NodeExternalIP: {"203.0.113.1"},
+			},
+			expectedType: corev1.NodeExternalIP,
+		},
+		{
+			name:     "external priority with ExternalIP available",
+			priority: "external",
+			addrMap: map[corev1.NodeAddressType][]string{
+				corev1.NodeInternalIP: {"10.0.0.1"},
+				corev1.NodeExternalIP: {"203.0.113.1", "2001:db8::1"},
+			},
+			expectedType: corev1.NodeExternalIP,
+		},
+		{
+			name:     "external priority falls back to InternalIP",
+			priority: "external",
+			addrMap: map[corev1.NodeAddressType][]string{
+				corev1.NodeInternalIP: {"10.0.0.1"},
+			},
+			expectedType: corev1.NodeInternalIP,
+		},
+		{
+			name:        "internal priority with no addresses returns error",
+			priority:    "internal",
+			addrMap:     map[corev1.NodeAddressType][]string{},
+			expectError: true,
+		},
+		{
+			name:        "external priority with no addresses returns error",
+			priority:    "external",
+			addrMap:     map[corev1.NodeAddressType][]string{},
+			expectError: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Controller{nodeAddressPriority: tc.priority}
+			addrType, err := c.primaryAddressType(tc.addrMap)
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedType, addrType)
+		})
+	}
+}
+
+
 func TestHTTPMetricsPorts(t *testing.T) {
 	for _, tc := range []struct {
 		name                  string
