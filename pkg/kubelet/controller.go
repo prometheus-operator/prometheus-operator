@@ -240,12 +240,10 @@ func (c *Controller) Run(ctx context.Context) error {
 	}
 }
 
-// nodeAddress returns the provided node's address, based on the priority:
-// 1. NodeInternalIP
-// 2. NodeExternalIP
+// nodeAddressesByType returns all addresses of the node grouped by type.
 //
 // Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func (c *Controller) nodeAddress(node corev1.Node) (string, map[corev1.NodeAddressType][]string, error) {
+func (c *Controller) nodeAddressesByType(node corev1.Node) (map[corev1.NodeAddressType][]string, error) {
 	m := map[corev1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
@@ -253,22 +251,22 @@ func (c *Controller) nodeAddress(node corev1.Node) (string, map[corev1.NodeAddre
 
 	switch c.nodeAddressPriority {
 	case "internal":
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
+		if _, ok := m[corev1.NodeInternalIP]; ok {
+			return m, nil
 		}
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
+		if _, ok := m[corev1.NodeExternalIP]; ok {
+			return m, nil
 		}
 	case "external":
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
+		if _, ok := m[corev1.NodeExternalIP]; ok {
+			return m, nil
 		}
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
+		if _, ok := m[corev1.NodeInternalIP]; ok {
+			return m, nil
 		}
 	}
 
-	return "", m, fmt.Errorf("host address unknown")
+	return m, fmt.Errorf("host address unknown")
 }
 
 // nodeReadyConditionKnown checks the node for a known Ready condition. If the
@@ -332,7 +330,7 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 	)
 
 	for _, n := range nodes {
-		_, addrMap, err := c.nodeAddress(n)
+		addrMap, err := c.nodeAddressesByType(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
