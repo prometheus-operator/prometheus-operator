@@ -4722,6 +4722,28 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_AzureADScope_v3.9.0.golden",
 		},
+		{
+			// Using message version v1 honors the metadata config.
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion1_0),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send: true,
+				},
+			},
+			golden: "RemoteWriteConfig_MessageVersion1_with_metadata.golden",
+		},
+		{
+			// Using message version v2 automatically disables metadata sending.
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send: true,
+				},
+			},
+			golden: "RemoteWriteConfig_MessageVersion2_with_metadata.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
