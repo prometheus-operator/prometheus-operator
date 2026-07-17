@@ -618,70 +618,73 @@ func newLogger() *slog.Logger {
 	return l
 }
 
-func TestPrimaryAddressType(t *testing.T) {
+func TestNodeAddresses(t *testing.T) {
 	for _, tc := range []struct {
-		name         string
-		priority     string
-		addrMap      map[corev1.NodeAddressType][]string
-		expectedType corev1.NodeAddressType
-		expectError  bool
+		name              string
+		priority          string
+		nodeAddresses     []corev1.NodeAddress
+		expectedAddresses []string
+		expectError       bool
 	}{
 		{
 			name:     "internal priority with InternalIP available",
 			priority: "internal",
-			addrMap: map[corev1.NodeAddressType][]string{
-				corev1.NodeInternalIP: {"10.0.0.1", "fd00::1"},
-				corev1.NodeExternalIP: {"203.0.113.1"},
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
+				{Type: corev1.NodeInternalIP, Address: "fd00::1"},
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
 			},
-			expectedType: corev1.NodeInternalIP,
+			expectedAddresses: []string{"10.0.0.1", "fd00::1"},
 		},
 		{
 			name:     "internal priority falls back to ExternalIP",
 			priority: "internal",
-			addrMap: map[corev1.NodeAddressType][]string{
-				corev1.NodeExternalIP: {"203.0.113.1"},
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
 			},
-			expectedType: corev1.NodeExternalIP,
+			expectedAddresses: []string{"203.0.113.1"},
 		},
 		{
 			name:     "external priority with ExternalIP available",
 			priority: "external",
-			addrMap: map[corev1.NodeAddressType][]string{
-				corev1.NodeInternalIP: {"10.0.0.1"},
-				corev1.NodeExternalIP: {"203.0.113.1", "2001:db8::1"},
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
+				{Type: corev1.NodeExternalIP, Address: "2001:db8::1"},
 			},
-			expectedType: corev1.NodeExternalIP,
+			expectedAddresses: []string{"203.0.113.1", "2001:db8::1"},
 		},
 		{
 			name:     "external priority falls back to InternalIP",
 			priority: "external",
-			addrMap: map[corev1.NodeAddressType][]string{
-				corev1.NodeInternalIP: {"10.0.0.1"},
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
 			},
-			expectedType: corev1.NodeInternalIP,
+			expectedAddresses: []string{"10.0.0.1"},
 		},
 		{
-			name:        "internal priority with no addresses returns error",
-			priority:    "internal",
-			addrMap:     map[corev1.NodeAddressType][]string{},
-			expectError: true,
+			name:          "internal priority with no addresses returns error",
+			priority:      "internal",
+			nodeAddresses: []corev1.NodeAddress{},
+			expectError:   true,
 		},
 		{
-			name:        "external priority with no addresses returns error",
-			priority:    "external",
-			addrMap:     map[corev1.NodeAddressType][]string{},
-			expectError: true,
+			name:          "external priority with no addresses returns error",
+			priority:      "external",
+			nodeAddresses: []corev1.NodeAddress{},
+			expectError:   true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c := &Controller{nodeAddressPriority: tc.priority}
-			addrType, err := c.primaryAddressType(tc.addrMap)
+			node := corev1.Node{Status: corev1.NodeStatus{Addresses: tc.nodeAddresses}}
+			addrs, err := c.nodeAddresses(node)
 			if tc.expectError {
 				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedType, addrType)
+			require.Equal(t, tc.expectedAddresses, addrs)
 		})
 	}
 }

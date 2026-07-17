@@ -240,37 +240,32 @@ func (c *Controller) Run(ctx context.Context) error {
 	}
 }
 
-// nodeAddressesByType returns all addresses of the node grouped by type.
-func (c *Controller) nodeAddressesByType(node corev1.Node) map[corev1.NodeAddressType][]string {
+// nodeAddresses returns all addresses of the node for the configured priority.
+// It mirrors the priority/fallback logic from
+// github.com/prometheus/prometheus/discovery/kubernetes/node.go.
+func (c *Controller) nodeAddresses(node corev1.Node) ([]string, error) {
 	m := map[corev1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
-	return m
-}
 
-// primaryAddressType returns the NodeAddressType to use for a node given the
-// configured priority and which address types are actually present. It mirrors
-// the priority/fallback logic from
-// github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func (c *Controller) primaryAddressType(addrMap map[corev1.NodeAddressType][]string) (corev1.NodeAddressType, error) {
 	switch c.nodeAddressPriority {
 	case "external":
-		if len(addrMap[corev1.NodeExternalIP]) > 0 {
-			return corev1.NodeExternalIP, nil
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
-		if len(addrMap[corev1.NodeInternalIP]) > 0 {
-			return corev1.NodeInternalIP, nil
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
 		}
 	default: // "internal"
-		if len(addrMap[corev1.NodeInternalIP]) > 0 {
-			return corev1.NodeInternalIP, nil
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
 		}
-		if len(addrMap[corev1.NodeExternalIP]) > 0 {
-			return corev1.NodeExternalIP, nil
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
 	}
-	return "", fmt.Errorf("host address unknown")
+	return nil, fmt.Errorf("host address unknown")
 }
 
 // nodeReadyConditionKnown checks the node for a known Ready condition. If the
@@ -334,14 +329,13 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 	)
 
 	for _, n := range nodes {
-		addrMap := c.nodeAddressesByType(n)
-		addrType, err := c.primaryAddressType(addrMap)
+		nodeIPs, err := c.nodeAddresses(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
 		}
 
-		for _, address := range addrMap[addrType] {
+		for _, address := range nodeIPs {
 			ip := net.ParseIP(address)
 			if ip == nil {
 				errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s)", address, n.Name, c.nodeAddressPriority))
