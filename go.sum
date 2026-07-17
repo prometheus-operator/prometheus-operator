@@ -412,8 +412,8 @@ github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXl
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
-github.com/thanos-io/thanos v0.42.0 h1:9d+cAEq/lCuhQY6VK3FzxFmXhE/1Qy0Gv45xSYn1EAM=
-github.com/thanos-io/thanos v0.42.0/go.mod h1:9BZsUdHl3x8L/zTrc9+kCEupUHglPi6ldBZvHLj1q6o=
+github.com/thanos-io/thanos v0.42.2 h1:9NdHvICXFu9IjFeJPGCVsD8jZRxn0/KrCFz0lefY8BY=
+github.com/thanos-io/thanos v0.42.2/go.mod h1:9BZsUdHl3x8L/zTrc9+kCEupUHglPi6ldBZvHLj1q6o=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
 github.com/twmb/franz-go v1.21.2 h1:WrvV/spF48JzcRylqDQy02Vm6V6W4lhtD9Y4BOYNMu4=
 github.com/twmb/franz-go v1.21.2/go.mod h1:rfoMTnVk7107fhTGxfEKIHP/e7tPe6oyij/ywzO0czk=
