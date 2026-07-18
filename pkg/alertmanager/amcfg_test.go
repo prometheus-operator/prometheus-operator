@@ -2286,13 +2286,7 @@ func TestGenerateConfig(t *testing.T) {
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
 
-	version26, err := semver.ParseTolerant("v0.26.0")
-	require.NoError(t, err)
-
 	version28, err := semver.ParseTolerant("v0.28.0")
-	require.NoError(t, err)
-
-	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
