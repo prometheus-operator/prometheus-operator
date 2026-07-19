@@ -1,3 +1,11 @@
+## UNRELEASED
+
+* [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
+
+## 0.92.1 / 2026-06-30
+
+* [BUGFIX] Fix "namespace not found" errors when the operator watches monitoring and workload resources in different resources. #8658
+
 ## 0.92.0 / 2026-06-18
 
 > **Note:** The `PrometheusTopologySharding` and `PrometheusShardRetentionPolicy` feature gates have been promoted to **Beta** in this release and are now enabled by default. See the [sharding documentation](https://prometheus-operator.dev/docs/platform/sharding/) for details.

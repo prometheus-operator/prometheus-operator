@@ -619,10 +619,12 @@ type AlertmanagerWebSpec struct {
 	WebConfigFileFields `json:",inline"`
 	// getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the
 	// Alertmanager's `--web.get-concurrency` flag.
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`
 	// timeout for HTTP requests. This corresponds to the Alertmanager's
 	// `--web.timeout` flag.
+	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
 }

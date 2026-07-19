@@ -62,7 +62,7 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
 	// sampleLimit defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
 	// protocols supported by Prometheus in order of preference (from most to least preferred).
 	//
@@ -76,25 +76,25 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
-	LabelValueLengthLimit                   *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:",inline"`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// attachMetadata defines additional metadata which is added to the
 	// discovered targets.
 	//
@@ -189,7 +189,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithNamespaceSelector(value *Name
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -215,7 +215,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value 
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -223,7 +223,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *Se
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -231,7 +231,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *Ser
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -239,7 +239,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value ui
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -263,7 +263,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
@@ -287,7 +287,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithConvertClassicHistogramsToNHC
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }
