@@ -290,6 +290,9 @@ type CommonPrometheusFields struct {
 	// You can also disable sharding on a specific target by setting the
 	// `__tmp_disable_sharding` label with relabeling configuration. When
 	// the label value isn't empty, all Prometheus shards will scrape the target.
+	//
+	// Default: 1
+	// +kubebuilder:default=1
 	// +optional
 	Shards *int32 `json:"shards,omitempty"`
 
