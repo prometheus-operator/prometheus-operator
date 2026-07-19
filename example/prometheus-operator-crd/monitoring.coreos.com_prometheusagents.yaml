@@ -3131,6 +3131,7 @@ spec:
                   * Scrape objects with a keepDroppedTargets value less than or equal to enforcedKeepDroppedTargets keep their specific value.
                   * Scrape objects with a keepDroppedTargets value greater than enforcedKeepDroppedTargets are set to enforcedKeepDroppedTargets.
                 format: int64
+                minimum: 0
                 type: integer
               enforcedLabelLimit:
                 description: |-
@@ -3147,6 +3148,7 @@ spec:
                   * Scrape objects with a labelLimit value less than or equal to enforcedLabelLimit keep their specific value.
                   * Scrape objects with a labelLimit value greater than enforcedLabelLimit are set to enforcedLabelLimit.
                 format: int64
+                minimum: 0
                 type: integer
               enforcedLabelNameLengthLimit:
                 description: |-
@@ -3163,6 +3165,7 @@ spec:
                   * Scrape objects with a labelNameLengthLimit value less than or equal to enforcedLabelNameLengthLimit keep their specific value.
                   * Scrape objects with a labelNameLengthLimit value greater than enforcedLabelNameLengthLimit are set to enforcedLabelNameLengthLimit.
                 format: int64
+                minimum: 0
                 type: integer
               enforcedLabelValueLengthLimit:
                 description: |-
@@ -3179,6 +3182,7 @@ spec:
                   * Scrape objects with a labelValueLengthLimit value less than or equal to enforcedLabelValueLengthLimit keep their specific value.
                   * Scrape objects with a labelValueLengthLimit value greater than enforcedLabelValueLengthLimit are set to enforcedLabelValueLengthLimit.
                 format: int64
+                minimum: 0
                 type: integer
               enforcedNamespaceLabel:
                 description: |-
@@ -3212,6 +3216,7 @@ spec:
                   * Scrape objects with a sampleLimit value less than or equal to enforcedSampleLimit keep their specific value.
                   * Scrape objects with a sampleLimit value greater than enforcedSampleLimit are set to enforcedSampleLimit.
                 format: int64
+                minimum: 0
                 type: integer
               enforcedTargetLimit:
                 description: |-
@@ -3229,6 +3234,7 @@ spec:
                   * Scrape objects with a targetLimit value less than or equal to enforcedTargetLimit keep their specific value.
                   * Scrape objects with a targetLimit value greater than enforcedTargetLimit are set to enforcedTargetLimit.
                 format: int64
+                minimum: 0
                 type: integer
               excludedFromEnforcement:
                 description: |-
@@ -4929,6 +4935,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedKeepDroppedTargets.
                 format: int64
+                minimum: 0
                 type: integer
               labelLimit:
                 description: |-
@@ -4938,6 +4945,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelLimit.
                 format: int64
+                minimum: 0
                 type: integer
               labelNameLengthLimit:
                 description: |-
@@ -4947,6 +4955,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelNameLengthLimit.
                 format: int64
+                minimum: 0
                 type: integer
               labelValueLengthLimit:
                 description: |-
@@ -4956,6 +4965,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedLabelValueLengthLimit.
                 format: int64
+                minimum: 0
                 type: integer
               listenLocal:
                 description: |-
@@ -6566,6 +6576,7 @@ spec:
 
                               Only applicable when the action is `HashMod`.
                             format: int64
+                            minimum: 0
                             type: integer
                           regex:
                             description: regex defines the regular expression against
@@ -6729,6 +6740,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedSampleLimit.
                 format: int64
+                minimum: 0
                 type: integer
               schedulerName:
                 description: schedulerName defines the scheduler to use for Pod scheduling.
@@ -6881,6 +6893,7 @@ spec:
 
                               Only applicable when the action is `HashMod`.
                             format: int64
+                            minimum: 0
                             type: integer
                           regex:
                             description: regex defines the regular expression against
@@ -6980,6 +6993,7 @@ spec:
 
                               Only applicable when the action is `HashMod`.
                             format: int64
+                            minimum: 0
                             type: integer
                           regex:
                             description: regex defines the regular expression against
@@ -7814,6 +7828,7 @@ spec:
                 - message: topology can only be defined when mode is set to 'Topology'
                   rule: '!has(self.topology) || (has(self.mode) && self.mode == ''Topology'')'
               shards:
+                default: 1
                 description: |-
                   shards defines the number of shards to distribute the scraped targets onto.
 
@@ -7841,6 +7856,8 @@ spec:
                   You can also disable sharding on a specific target by setting the
                   `__tmp_disable_sharding` label with relabeling configuration. When
                   the label value isn't empty, all Prometheus shards will scrape the target.
+
+                  Default: 1
                 format: int32
                 type: integer
               storage:
@@ -8560,6 +8577,7 @@ spec:
                   Note that the global limit only applies to scrape objects that don't specify an explicit limit value.
                   If you want to enforce a maximum limit for all scrape objects, refer to enforcedTargetLimit.
                 format: int64
+                minimum: 0
                 type: integer
               terminationGracePeriodSeconds:
                 description: |-

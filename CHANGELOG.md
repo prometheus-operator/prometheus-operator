@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
+
 ## 0.92.1 / 2026-06-30
 
 * [BUGFIX] Fix "namespace not found" errors when the operator watches monitoring and workload resources in different resources. #8658

@@ -7340,6 +7340,7 @@ spec:
 
                   It requires Prometheus >= v2.47.0.
                 format: int64
+                minimum: 0
                 type: integer
               kubernetesSDConfigs:
                 description: kubernetesSDConfigs defines a list of Kubernetes service
@@ -8788,18 +8789,21 @@ spec:
                   labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               labelNameLengthLimit:
                 description: |-
                   labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               labelValueLengthLimit:
                 description: |-
                   labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               lightSailSDConfigs:
                 description: lightSailSDConfigs defines a list of Lightsail service
@@ -10216,6 +10220,7 @@ spec:
 
                         Only applicable when the action is `HashMod`.
                       format: int64
+                      minimum: 0
                       type: integer
                     regex:
                       description: regex defines the regular expression against which
@@ -10287,6 +10292,7 @@ spec:
                   buckets will be merged to stay within the limit.
                   It requires Prometheus >= v2.45.0.
                 format: int64
+                minimum: 0
                 type: integer
               nativeHistogramMinBucketFactor:
                 anyOf:
@@ -12556,6 +12562,7 @@ spec:
 
                         Only applicable when the action is `HashMod`.
                       format: int64
+                      minimum: 0
                       type: integer
                     regex:
                       description: regex defines the regular expression against which
@@ -12600,6 +12607,7 @@ spec:
                 description: sampleLimit defines per-scrape limit on number of scraped
                   samples that will be accepted.
                 format: int64
+                minimum: 0
                 type: integer
               scalewaySDConfigs:
                 description: scalewaySDConfigs defines a list of Scaleway instances
@@ -13020,6 +13028,7 @@ spec:
                 description: targetLimit defines a limit on the number of scraped
                   targets that will be accepted.
                 format: int64
+                minimum: 0
                 type: integer
               tlsConfig:
                 description: tlsConfig defines the TLS configuration to use on every

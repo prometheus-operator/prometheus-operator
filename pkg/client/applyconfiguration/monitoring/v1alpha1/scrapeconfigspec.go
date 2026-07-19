@@ -138,18 +138,18 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// tlsConfig defines the TLS configuration to use on every scrape request
 	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
 	// response body that will be accepted by Prometheus. Targets responding with
 	// a body larger than this many bytes will cause the scrape to fail.
@@ -161,7 +161,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
 	MetricRelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
@@ -656,7 +656,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithTLSConfig(value *v1.SafeTLSConf
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithSampleLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithSampleLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -664,7 +664,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithSampleLimit(value uint64) *Scra
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithTargetLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithTargetLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -672,7 +672,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithTargetLimit(value uint64) *Scra
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithLabelLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -680,7 +680,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelLimit(value uint64) *Scrap
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -688,7 +688,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithLabelNameLengthLimit(value uint
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -720,7 +720,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeClassicHistograms(value b
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
@@ -744,7 +744,7 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithConvertClassicHistogramsToNHCB(
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ScrapeConfigSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ScrapeConfigSpecApplyConfiguration {
+func (b *ScrapeConfigSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ScrapeConfigSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }

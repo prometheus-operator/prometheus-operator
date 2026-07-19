@@ -6835,6 +6835,7 @@
                   "keepDroppedTargets": {
                     "description": "keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling\nthat will be kept in memory. 0 means no limit.\n\nIt requires Prometheus >= v2.47.0.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "kubernetesSDConfigs": {
@@ -8186,16 +8187,19 @@
                   "labelLimit": {
                     "description": "labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "labelNameLengthLimit": {
                     "description": "labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "labelValueLengthLimit": {
                     "description": "labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.\nOnly valid in Prometheus versions 2.27.0 and newer.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "lightSailSDConfigs": {
@@ -9514,6 +9518,7 @@
                         "modulus": {
                           "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "regex": {
@@ -9572,6 +9577,7 @@
                   "nativeHistogramBucketLimit": {
                     "description": "nativeHistogramBucketLimit defines ff there are more than this many buckets in a native histogram,\nbuckets will be merged to stay within the limit.\nIt requires Prometheus >= v2.45.0.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "nativeHistogramMinBucketFactor": {
@@ -11680,6 +11686,7 @@
                         "modulus": {
                           "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
                           "format": "int64",
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "regex": {
@@ -11715,6 +11722,7 @@
                   "sampleLimit": {
                     "description": "sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "scalewaySDConfigs": {
@@ -12109,6 +12117,7 @@
                   "targetLimit": {
                     "description": "targetLimit defines a limit on the number of scraped targets that will be accepted.",
                     "format": "int64",
+                    "minimum": 0,
                     "type": "integer"
                   },
                   "tlsConfig": {

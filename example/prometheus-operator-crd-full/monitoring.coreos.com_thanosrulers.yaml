@@ -5926,6 +5926,7 @@ spec:
 
                               Only applicable when the action is `HashMod`.
                             format: int64
+                            minimum: 0
                             type: integer
                           regex:
                             description: regex defines the regular expression against
