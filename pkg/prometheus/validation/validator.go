@@ -141,8 +141,8 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
 		if (rc.Regex != "" && rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
-			(rc.Modulus != uint64(0) &&
-				rc.Modulus != relabel.DefaultRelabelConfig.Modulus) ||
+			(rc.Modulus != 0 &&
+				rc.Modulus != int64(relabel.DefaultRelabelConfig.Modulus)) ||
 			(rc.Separator != nil &&
 				*rc.Separator != relabel.DefaultRelabelConfig.Separator) ||
 			(rc.Replacement != nil && *rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
@@ -154,8 +154,8 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 		if len(rc.SourceLabels) != 0 ||
 			(rc.TargetLabel != "" &&
 				rc.TargetLabel != relabel.DefaultRelabelConfig.TargetLabel) ||
-			(rc.Modulus != uint64(0) &&
-				rc.Modulus != relabel.DefaultRelabelConfig.Modulus) ||
+			(rc.Modulus != 0 &&
+				rc.Modulus != int64(relabel.DefaultRelabelConfig.Modulus)) ||
 			(rc.Separator != nil &&
 				*rc.Separator != relabel.DefaultRelabelConfig.Separator) ||
 			(rc.Replacement != nil &&

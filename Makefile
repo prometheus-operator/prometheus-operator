@@ -193,7 +193,7 @@ k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen ## Generate code containing DeepCopy
 
 .PHONY: image-builder-version
 image-builder-version: .github/env ## Update Go builder version in Dockerfiles.
-	@echo $(GO_VERSION)
+	@echo ">> Updating Dockerfiles to use Go builder version $(GO_VERSION)"
 	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		Dockerfile && rm Dockerfile.bak
 	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
@@ -224,7 +224,7 @@ update-go-deps: ## Update Go dependencies.
 	done
 	(cd pkg/client && go get -u ./...)
 	(cd pkg/apis/monitoring && go get -u ./...)
-	@echo "Don't forget to run 'make tidy'"
+	@echo ">> Don't forget to run 'make tidy'"
 
 ##############
 ##@ Generating
@@ -260,8 +260,7 @@ generate-tls-certs: ## Generate TLS certificates for testing.
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
-generate-docs: ## Generate operator documentation.
-	find Documentation -type f
+generate-docs: $(shell find Documentation -type f) ## Generate operator documentation.
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f) ## Generate bundle.yaml.
 	scripts/generate-bundle.sh
@@ -306,7 +305,7 @@ Documentation/platform/operator.md: operator ## Format operator documentation.
 Documentation/getting-started/compatibility.md: pkg/operator/defaults.go ## Format compatibility documentation.
 	$(MDOX_BINARY) fmt $@
 
-Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) ## Generate API reference documentation.
+Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) $(API_DOC_GEN_BINARY) ## Generate API reference documentation.
 	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/api.md"
 
 ##############
@@ -462,11 +461,11 @@ $(TOOLS_BIN_DIR): ## Create tools binary directory.
 	mkdir -p $(TOOLS_BIN_DIR)
 
 $(TOOLING): $(TOOLS_BIN_DIR) ## Install required tools and binaries.
-	@echo Installing tools from scripts/tools.go
+	@echo ">> Installing tools from scripts/tools.go"
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
 	@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
-	@echo Downloading shellcheck
+	@echo ">> Downloading shellcheck"
 	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).$(SHELLCHECK_ARCH).tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
 # generate k8s generator variable and target,
