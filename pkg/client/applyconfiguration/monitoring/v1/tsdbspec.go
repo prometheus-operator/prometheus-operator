@@ -52,6 +52,9 @@ type TSDBSpecApplyConfiguration struct {
 	// chunkEncoding configures per-chunk-type encoding overrides.
 	//
 	// It requires Prometheus >= v3.13.0.
+	//
+	// Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
 	ChunkEncoding *ChunkEncodingSpecApplyConfiguration `json:"chunkEncoding,omitempty"`
 }
 

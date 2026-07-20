@@ -1715,21 +1715,21 @@ func TestAutoEnableXOR2EncodingFeature(t *testing.T) {
 		{
 			name: "chunk encoding xor",
 			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
-				Floats: new("xor"),
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
 			},
 			expectedFlag: false,
 		},
 		{
 			name: "chunk encoding xor2 auto-enables feature",
 			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
-				Floats: new("xor2"),
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
 			},
 			expectedFlag: true,
 		},
 		{
 			name: "chunk encoding xor2 with user feature flag - no duplicate",
 			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
-				Floats: new("xor2"),
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
 			},
 			enableFeatures: []monitoringv1.EnableFeature{"xor2-encoding"},
 			expectedFlag:   true,

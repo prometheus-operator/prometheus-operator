@@ -9050,17 +9050,24 @@ spec:
                       chunkEncoding configures per-chunk-type encoding overrides.
 
                       It requires Prometheus >= v3.13.0.
+
+                      Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+                      (XOR chunks do not store start timestamps).
                     properties:
                       floats:
                         description: |-
                           floats selects the encoding used for float chunks.
-                          Valid values are "xor" and "xor2".
-                          "xor2" requires the `xor2-encoding` feature flag (auto-enabled by the operator).
+                          Valid values are "Xor" and "Xor2".
+
+                          Notice:
+                           * Setting "Xor" is incompatible with --enable-feature=st-storage
+                          (XOR chunks do not store start timestamps).
+                           * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
 
                           It requires Prometheus >= v3.13.0.
                         enum:
-                        - xor
-                        - xor2
+                        - Xor
+                        - Xor2
                         type: string
                     type: object
                   outOfOrderTimeWindow:

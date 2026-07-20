@@ -2500,6 +2500,9 @@ type TSDBSpec struct {
 	// chunkEncoding configures per-chunk-type encoding overrides.
 	//
 	// It requires Prometheus >= v3.13.0.
+	//
+	// Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
 	// +optional
 	ChunkEncoding *ChunkEncodingSpec `json:"chunkEncoding,omitempty"`
 }
@@ -2517,16 +2520,27 @@ func (ts *TSDBSpec) Validate() error {
 	return nil
 }
 
+// +kubebuilder:validation:Enum=Xor;Xor2
+type ChunkEncodingFloats string
+
+const (
+	ChunkEncodingFloatsXor  ChunkEncodingFloats = "Xor"
+	ChunkEncodingFloatsXor2 ChunkEncodingFloats = "Xor2"
+)
+
 // ChunkEncodingSpec configures per-chunk-type encoding overrides.
 type ChunkEncodingSpec struct {
 	// floats selects the encoding used for float chunks.
-	// Valid values are "xor" and "xor2".
-	// "xor2" requires the `xor2-encoding` feature flag (auto-enabled by the operator).
+	// Valid values are "Xor" and "Xor2".
+	//
+	// Notice:
+	//  * Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	//  * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
 	//
 	// It requires Prometheus >= v3.13.0.
 	// +optional
-	// +kubebuilder:validation:Enum=xor;xor2
-	Floats *string `json:"floats,omitempty"`
+	Floats *ChunkEncodingFloats `json:"floats,omitempty"`
 }
 
 type Exemplars struct {

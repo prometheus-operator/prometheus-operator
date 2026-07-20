@@ -16,17 +16,25 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // ChunkEncodingSpecApplyConfiguration represents a declarative configuration of the ChunkEncodingSpec type for use
 // with apply.
 //
 // ChunkEncodingSpec configures per-chunk-type encoding overrides.
 type ChunkEncodingSpecApplyConfiguration struct {
 	// floats selects the encoding used for float chunks.
-	// Valid values are "xor" and "xor2".
-	// "xor2" requires the `xor2-encoding` feature flag (auto-enabled by the operator).
+	// Valid values are "Xor" and "Xor2".
+	//
+	// Notice:
+	// * Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	// * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
 	//
 	// It requires Prometheus >= v3.13.0.
-	Floats *string `json:"floats,omitempty"`
+	Floats *monitoringv1.ChunkEncodingFloats `json:"floats,omitempty"`
 }
 
 // ChunkEncodingSpecApplyConfiguration constructs a declarative configuration of the ChunkEncodingSpec type for use with
@@ -38,7 +46,7 @@ func ChunkEncodingSpec() *ChunkEncodingSpecApplyConfiguration {
 // WithFloats sets the Floats field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Floats field is set to the value of the last call.
-func (b *ChunkEncodingSpecApplyConfiguration) WithFloats(value string) *ChunkEncodingSpecApplyConfiguration {
+func (b *ChunkEncodingSpecApplyConfiguration) WithFloats(value monitoringv1.ChunkEncodingFloats) *ChunkEncodingSpecApplyConfiguration {
 	b.Floats = &value
 	return b
 }

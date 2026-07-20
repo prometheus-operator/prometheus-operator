@@ -804,7 +804,7 @@ func (in *ChunkEncodingSpec) DeepCopyInto(out *ChunkEncodingSpec) {
 	*out = *in
 	if in.Floats != nil {
 		in, out := &in.Floats, &out.Floats
-		*out = new(string)
+		*out = new(ChunkEncodingFloats)
 		**out = **in
 	}
 }

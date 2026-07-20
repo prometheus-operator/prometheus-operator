@@ -9483,13 +9483,13 @@
                     "description": "tsdb defines the runtime reloadable configuration of the timeseries database(TSDB).\nIt requires Prometheus >= v2.39.0 or PrometheusAgent >= v2.54.0.",
                     "properties": {
                       "chunkEncoding": {
-                        "description": "chunkEncoding configures per-chunk-type encoding overrides.\n\nIt requires Prometheus >= v3.13.0.",
+                        "description": "chunkEncoding configures per-chunk-type encoding overrides.\n\nIt requires Prometheus >= v3.13.0.\n\nNotice: Setting \"Xor\" is incompatible with --enable-feature=st-storage\n(XOR chunks do not store start timestamps).",
                         "properties": {
                           "floats": {
-                            "description": "floats selects the encoding used for float chunks.\nValid values are \"xor\" and \"xor2\".\n\"xor2\" requires the `xor2-encoding` feature flag (auto-enabled by the operator).\n\nIt requires Prometheus >= v3.13.0.",
+                            "description": "floats selects the encoding used for float chunks.\nValid values are \"Xor\" and \"Xor2\".\n\nNotice:\n * Setting \"Xor\" is incompatible with --enable-feature=st-storage\n(XOR chunks do not store start timestamps).\n * Setting \"Xor2\" automatically adds the `xor2-encoding` feature flag.\n\nIt requires Prometheus >= v3.13.0.",
                             "enum": [
-                              "xor",
-                              "xor2"
+                              "Xor",
+                              "Xor2"
                             ],
                             "type": "string"
                           }
