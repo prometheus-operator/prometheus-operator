@@ -31,6 +31,12 @@ const (
 	// DeprecatedFieldsInUseReason is used in status conditions to indicate that
 	// the resource uses deprecated fields.
 	DeprecatedFieldsInUseReason = "DeprecatedFieldsInUse"
+
+	// UnbalancedTopologyShardingReason is used in status conditions to indicate
+	// that topology sharding is configured with a number of shards that isn't a
+	// multiple of the number of topology zones. In that case, some targets are
+	// scraped by more than one shard, which results in duplicated samples.
+	UnbalancedTopologyShardingReason = "UnbalancedTopologySharding"
 )
 
 // StatusGetter represents a workload resource implementing the interface
