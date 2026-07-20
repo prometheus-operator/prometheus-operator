@@ -30903,6 +30903,175 @@ MattermostPriorityConfig
 </tr>
 <tr>
 <td>
+<code>fallback</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fallback defines a required plain-text summary of the attachment.
+This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>color</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>color defines a hex color code that will be used as
+the left border color for the attachment.
+If not specified, it will default to match the channel sidebar header background color.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pretext</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorName defines an optional name used to identify the author.
+It will be included in a small section at the top of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorLink</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorLink defines optional URL used to hyperlink the author_name.
+If no author_name is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorIcon</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author&rsquo;s name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>title defines an optional title displayed below the author information in the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>titleLink</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>titleLink defines an optional URL used to hyperlink the title.
+If no title is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.MattermostField">
+[]MattermostField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thumbURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>thumbURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+on the right side of an attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footer defines an optional line of text that will be displayed at the bottom of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footerIcon</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+that is displayed as a 16x16 pixel thumbnail before the footer text.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>imageURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -30920,7 +31089,7 @@ HTTPConfig
 <h3 id="monitoring.coreos.com/v1alpha1.MattermostField">MattermostField
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
 <p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
@@ -39998,6 +40167,175 @@ MattermostPriorityConfig
 </tr>
 <tr>
 <td>
+<code>fallback</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fallback defines a required plain-text summary of the attachment.
+This is used in notifications, and in clients that don’t support formatted text (e.g. IRC).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>color</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>color defines a hex color code that will be used as
+the left border color for the attachment.
+If not specified, it will default to match the channel sidebar header background color.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>pretext</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>pretext defines an optional line of text that will be shown above the attachment. Supports @mentions.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorName defines an optional name used to identify the author.
+It will be included in a small section at the top of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorLink</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorLink defines optional URL used to hyperlink the author_name.
+If no author_name is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>authorIcon</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>authorIcon defines an optional URL used to display a 16x16 pixel icon beside the author&rsquo;s name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>title</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>title defines an optional title displayed below the author information in the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>titleLink</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>titleLink defines an optional URL used to hyperlink the title.
+If no title is specified, this field does nothing.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fields</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.MattermostField">
+[]MattermostField
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>fields defines a list of fields that are sent with each notification
+to be displayed in a table format inside the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thumbURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>thumbURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed as a 75x75 pixel thumbnail
+on the right side of an attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footer defines an optional line of text that will be displayed at the bottom of the attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>footerIcon</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>footerIcon defines an optional URL to an image file (GIF, JPEG, PNG, BMP, or SVG)
+that is displayed as a 16x16 pixel thumbnail before the footer text.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageURL</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>imageURL defines an optional URL to an image file
+(GIF, JPEG, PNG, BMP, or SVG) that is displayed inside a message attachment.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
@@ -40015,7 +40353,7 @@ HTTPConfig
 <h3 id="monitoring.coreos.com/v1beta1.MattermostField">MattermostField
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.MattermostAttachmentConfig">MattermostAttachmentConfig</a>, <a href="#monitoring.coreos.com/v1beta1.MattermostConfig">MattermostConfig</a>)
 </p>
 <div>
 <p>MattermostField configures information to be displayed in a table format inside the attachment.</p>
