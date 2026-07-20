@@ -25904,7 +25904,7 @@ More info:
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.AWSSDConfig">AWSSDConfig</a>)
 </p>
 <div>
-<p>Service of the targets to retrieve. Must be <code>EC2</code>, <code>Lightsail</code> or <code>ECS</code>.</p>
+<p>Service of the targets to retrieve. Must be <code>EC2</code>, <code>Lightsail</code>, <code>ECS</code>, <code>MSK</code>, <code>ElastiCache</code> or <code>RDS</code>.</p>
 </div>
 <table>
 <thead>
@@ -25917,7 +25917,13 @@ More info:
 <td></td>
 </tr><tr><td><p>&#34;ECS&#34;</p></td>
 <td></td>
+</tr><tr><td><p>&#34;ElastiCache&#34;</p></td>
+<td></td>
 </tr><tr><td><p>&#34;Lightsail&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;MSK&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RDS&#34;</p></td>
 <td></td>
 </tr></tbody>
 </table>
@@ -25950,7 +25956,9 @@ AWSRole
 </td>
 <td>
 <p>role defines the AWS service to collect metrics from.
-Support only <code>EC2</code>, <code>Lightsail</code> or <code>ECS</code>.</p>
+Support only <code>EC2</code>, <code>Lightsail</code>, <code>ECS</code>, <code>MSK</code>, <code>ElastiCache</code> or <code>RDS</code>.
+MSK requires Prometheus &gt;= 3.10.0.
+ElastiCache and RDS require Prometheus &gt;= 3.11.0.</p>
 </td>
 </tr>
 <tr>
@@ -25963,6 +25971,18 @@ string
 <td>
 <em>(Optional)</em>
 <p>region defines the AWS region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>endpoint defines the custom endpoint to be used.</p>
 </td>
 </tr>
 <tr>
@@ -26045,9 +26065,14 @@ Filters
 <td>
 <em>(Optional)</em>
 <p>filters can be used optionally to filter the instance list by other criteria.
+RDS filters require Prometheus &gt;= 3.13.0.
 Available filter criteria can be found here:
-<a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
-Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a></p>
+EC2:
+- <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html</a>
+- Filter API documentation: <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html</a>
+RDS:
+- <a href="https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html">https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html</a>
+- Filter API documentation: <a href="https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Filter.html">https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Filter.html</a></p>
 </td>
 </tr>
 <tr>
@@ -26165,9 +26190,23 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>clusters define the list of ECS cluster ARNs to discover.
+<p>clusters define the list of ECS, ElastiCache, MSK, or RDS cluster ARNs to discover
+(for ECS, ElastiCache, MSK, and RDS roles only).
 If empty, all clusters in the region are discovered.
 This can significantly improve performance when you only need to monitor specific clusters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>externalID</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>externalID defines the External ID that can go along with roleARN.
+It requires Prometheus &gt;= 3.12.0.</p>
 </td>
 </tr>
 </tbody>
