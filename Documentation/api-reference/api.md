@@ -26797,6 +26797,27 @@ int
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DigitalOceanRole">DigitalOceanRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig</a>)
+</p>
+<div>
+<p>Service of the targets to retrieve. Must be <code>Droplets</code> or <code>Databases</code>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Databases&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Droplets&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DigitalOceanSDConfig">DigitalOceanSDConfig
 </h3>
 <p>
@@ -26815,6 +26836,21 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>role</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.DigitalOceanRole">
+DigitalOceanRole
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>role defines the DigitalOcean role to use for service discovery.
+Must be one of: Droplets or Databases. Default: Droplets</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>authorization</code><br/>
