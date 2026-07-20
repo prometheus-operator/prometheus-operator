@@ -1,6 +1,7 @@
 ## UNRELEASED
 
 * [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
+* [ENHANCEMENT] Use pod's name as the peer name for Alertmanager >= v0.30.0. #8705
 
 ## 0.92.1 / 2026-06-30
 
