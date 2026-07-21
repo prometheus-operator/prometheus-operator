@@ -77,6 +77,20 @@ func sanitizeLabelName(name string) string {
 	return invalidLabelCharRE.ReplaceAllString(name, "_")
 }
 
+// renderTemplateString renders the string using the Go template engine with
+// the resource's metadata.
+// If the rendering fails, the original value is returned and a warning log is
+// printed in case of failure.
+func (cg *ConfigGenerator) renderTemplateString(template *monitoringv1.TemplateString, obj metav1.Object) string {
+	s, err := template.Render(obj)
+	if err != nil {
+		cg.logger.Warn("failed to render template, using the original value", "template", template, "err", err)
+		return string(ptr.Deref(template, ""))
+	}
+
+	return s
+}
+
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
@@ -591,9 +605,10 @@ func mergeSafeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.SafeTLSConfig, sc
 
 func mergeTLSConfigWithScrapeClass(tlsConfig *monitoringv1.TLSConfig, scrapeClass monitoringv1.ScrapeClass) *monitoringv1.TLSConfig {
 	if tlsConfig == nil {
-		return scrapeClass.TLSConfig
+		return scrapeClass.TLSConfig.DeepCopy()
 	}
 
+	tlsConfig = tlsConfig.DeepCopy()
 	if scrapeClass.TLSConfig == nil {
 		return tlsConfig
 	}
@@ -930,7 +945,7 @@ func (cg *ConfigGenerator) addHTTPConfigToYAML(
 	store assets.StoreGetter,
 	httpConfig *monitoringv1.HTTPConfig,
 	scrapeClass monitoringv1.ScrapeClass,
-
+	obj metav1.Object,
 ) yaml.MapSlice {
 	if httpConfig == nil {
 		return cfg
@@ -944,7 +959,12 @@ func (cg *ConfigGenerator) addHTTPConfigToYAML(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *httpConfig.EnableHTTP2)
 	}
 
-	return cg.addTLStoYaml(cfg, store, mergeSafeTLSConfigWithScrapeClass(httpConfig.TLSConfig, scrapeClass))
+	tlsConfig := mergeSafeTLSConfigWithScrapeClass(httpConfig.TLSConfig, scrapeClass)
+	if tlsConfig != nil {
+		tlsConfig.ServerName = new(monitoringv1.TemplateString(cg.renderTemplateString(tlsConfig.ServerName, obj)))
+	}
+
+	return cg.addTLStoYaml(cfg, store, tlsConfig)
 }
 
 func (cg *ConfigGenerator) addTLStoYaml(
@@ -1467,7 +1487,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 		cfg = append(cfg, yaml.MapItem{Key: "scheme", Value: ep.Scheme.String()})
 	}
 
-	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass, m)
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
@@ -1746,7 +1766,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
 
-	cfg = cg.addHTTPConfigToYAML(cfg, s, &m.Spec.HTTPConfig, scrapeClass)
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &m.Spec.HTTPConfig, scrapeClass, m)
 
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
@@ -1987,7 +2007,11 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, ep.OAuth2)
 
-	cfg = cg.addTLStoYaml(cfg, s, mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass))
+	epTLSConfig := mergeTLSConfigWithScrapeClass(ep.TLSConfig, scrapeClass)
+	if epTLSConfig != nil {
+		epTLSConfig.ServerName = new(monitoringv1.TemplateString(cg.renderTemplateString(epTLSConfig.ServerName, m)))
+	}
+	cfg = cg.addTLStoYaml(cfg, s, epTLSConfig)
 
 	if ep.BearerTokenFile != "" { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		cg.logger.Debug("'bearerTokenFile' is deprecated, use 'authorization' instead.")
@@ -3473,7 +3497,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 	cfg = cg.addOAuth2ToYaml(cfg, s, sc.Spec.OAuth2)
 
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(sc.Spec.TLSConfig, scrapeClass))
+	scTLSConfig := mergeSafeTLSConfigWithScrapeClass(sc.Spec.TLSConfig, scrapeClass)
+	if scTLSConfig != nil {
+		scTLSConfig.ServerName = new(monitoringv1.TemplateString(cg.renderTemplateString(scTLSConfig.ServerName, sc)))
+	}
+	cfg = cg.addTLStoYaml(cfg, s, scTLSConfig)
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, sc.Spec.SampleLimit, cpf.EnforcedSampleLimit)
 	cfg = cg.AddLimitsToYAML(cfg, targetLimitKey, sc.Spec.TargetLimit, cpf.EnforcedTargetLimit)
