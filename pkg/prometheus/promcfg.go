@@ -1384,7 +1384,14 @@ func (cg *ConfigGenerator) buildProbeHandler(probePath string) corev1.ProbeHandl
 			Host:   "localhost:9090",
 			Path:   probePath,
 		}
-		handler.Exec = operator.ExecAction(probeURL.String())
+		// promtool check healthy|ready exists since Prometheus 2.44.0 and is
+		// available in distroless images that lack curl/wget. Older versions and
+		// the config-reloader keep the shell-based ExecAction.
+		if cg.WithMinimumVersion("2.44.0").IsCompatible() {
+			handler.Exec = operator.PromtoolExecAction(probeURL.String())
+		} else {
+			handler.Exec = operator.ExecAction(probeURL.String())
+		}
 
 		return handler
 	}
