@@ -993,7 +993,7 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
+	if err := c.createOrUpdateWebConfigSecret(ctx, p, assetStore); err != nil {
 		return closure, fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
@@ -1647,10 +1647,14 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus, assetStore *assets.StoreBuilder) error {
 	var fields monitoringv1.WebConfigFileFields
 	if p.Spec.Web != nil {
 		fields = p.Spec.Web.WebConfigFileFields
+	}
+
+	if err := webconfig.ValidateTLSAssets(ctx, p.Namespace, assetStore, fields.TLSConfig); err != nil {
+		return fmt.Errorf("invalid web TLS configuration: %w", err)
 	}
 
 	webConfig, err := webconfig.New(
