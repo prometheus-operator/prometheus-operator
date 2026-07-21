@@ -339,6 +339,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-timeout", Value: string(a.Spec.ClusterPeerTimeout)})
 	}
 
+	if version.GTE(semver.MustParse("0.30.0")) {
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: fmt.Sprintf("$(%s)", operator.PodNameEnvVar)})
+	}
+
 	// If multiple Alertmanager clusters are deployed on the same cluster, it can happen
 	// that because pod IP addresses are recycled, an Alertmanager instance from cluster B
 	// connects with cluster A.
@@ -698,37 +702,48 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, err
 	}
 
-	defaultContainers := []corev1.Container{
-		{
-			Args:            containerArgs,
-			Name:            "alertmanager",
-			Image:           amImagePath,
-			ImagePullPolicy: a.Spec.ImagePullPolicy,
-			Ports:           ports,
-			VolumeMounts:    amVolumeMounts,
-			LivenessProbe:   livenessProbe,
-			ReadinessProbe:  readinessProbe,
-			Resources:       a.Spec.Resources,
-			SecurityContext: &corev1.SecurityContext{
-				AllowPrivilegeEscalation: new(false),
-				ReadOnlyRootFilesystem:   new(true),
-				Capabilities: &corev1.Capabilities{
-					Drop: []corev1.Capability{"ALL"},
-				},
+	alertmanagerContainer := corev1.Container{
+		Args:            containerArgs,
+		Name:            "alertmanager",
+		Image:           amImagePath,
+		ImagePullPolicy: a.Spec.ImagePullPolicy,
+		Ports:           ports,
+		VolumeMounts:    amVolumeMounts,
+		LivenessProbe:   livenessProbe,
+		ReadinessProbe:  readinessProbe,
+		Resources:       a.Spec.Resources,
+		SecurityContext: &corev1.SecurityContext{
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
 			},
-			Env: []corev1.EnvVar{
-				{
-					// Necessary for '--cluster.listen-address' flag
-					Name: "POD_IP",
-					ValueFrom: &corev1.EnvVarSource{
-						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
+		},
+		Env: []corev1.EnvVar{
+			{
+				// Necessary for '--cluster.listen-address' flag
+				Name: "POD_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
 					},
 				},
 			},
-			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		},
+		TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+	}
+
+	if version.GTE(semver.MustParse("0.30.0")) {
+		alertmanagerContainer.Env = append(alertmanagerContainer.Env, corev1.EnvVar{
+			Name: operator.PodNameEnvVar,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
+			},
+		})
+	}
+
+	defaultContainers := []corev1.Container{
+		alertmanagerContainer,
 		operator.CreateConfigReloader(
 			"config-reloader",
 			operator.ReloaderConfig(config.ReloaderConfig),
