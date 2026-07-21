@@ -624,7 +624,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
-	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
+	if err := c.createOrUpdateWebConfigSecret(ctx, am, assetStore); err != nil {
 		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
@@ -1840,10 +1840,14 @@ func (c *Operator) newTLSAssetSecret(am *monitoringv1.Alertmanager) *corev1.Secr
 	return s
 }
 
-func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager, assetStore *assets.StoreBuilder) error {
 	var fields monitoringv1.WebConfigFileFields
 	if a.Spec.Web != nil {
 		fields = a.Spec.Web.WebConfigFileFields
+	}
+
+	if err := webconfig.ValidateTLSAssets(ctx, a.Namespace, assetStore, fields.TLSConfig); err != nil {
+		return fmt.Errorf("invalid web TLS configuration: %w", err)
 	}
 
 	webConfig, err := webconfig.New(
