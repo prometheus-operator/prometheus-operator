@@ -66,6 +66,11 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.4.1
 * v3.4.2
 * v3.5.0
+* v3.5.1
+* v3.5.2
+* v3.5.3
+* v3.5.4
+* v3.5.5
 * v3.6.0
 * v3.7.0
 * v3.7.1
