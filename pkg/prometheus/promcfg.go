@@ -1263,9 +1263,13 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
-	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
-	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
-	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// metadata-wal-records is in the process of being deprecated as part of
+	// remote write v2 stabilization: it causes some increase in resource usage
+	// overall. The feature used to be automatically enabled in older Prometheus
+	// versions but it isn't anymore since v3.4.0.
+	// For more context, see:
+	// https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// https://github.com/prometheus/prometheus/issues/16944.
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
 			cg = cg.WithMinimumVersion("2.54.0")
@@ -3049,7 +3053,13 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 		}
 
 		if spec.MetadataConfig != nil {
-			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			var metadataConfig yaml.MapSlice
+			if ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
+				// Prometheus automatically turns off metadata sending when remote-write v2 is used.
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: false})
+			} else {
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			}
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}

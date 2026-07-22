@@ -2433,6 +2433,8 @@ type RulesAlert struct {
 type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
 	//
+	// The setting is ignored when Remote Write message's version 2.0 is used.
+	//
 	// +optional
 	Send bool `json:"send,omitempty"` // nolint:kubeapilinter
 
