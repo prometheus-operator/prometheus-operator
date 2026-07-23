@@ -6035,12 +6035,13 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 
 func TestTSDBConfig(t *testing.T) {
 	for _, tc := range []struct {
-		name      string
-		p         *monitoringv1.Prometheus
-		version   string
-		tsdb      *monitoringv1.TSDBSpec
-		golden    string
-		expectErr bool
+		name           string
+		p              *monitoringv1.Prometheus
+		version        string
+		tsdb           *monitoringv1.TSDBSpec
+		enableFeatures []monitoringv1.EnableFeature
+		golden         string
+		expectErr      bool
 	}{
 		{
 			name:   "no TSDB config",
@@ -6092,6 +6093,58 @@ func TestTSDBConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor < v3.13.0",
+			version: "v3.12.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor_less_than_v3.13.0.golden",
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor_greater_than_or_equal_to_v3.13.0.golden",
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor2 >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+				},
+			},
+			golden: "TSDB_ChunkEncoding_floats_xor2_greater_than_or_equal_to_v3.13.0.golden",
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor with st-storage feature - incompatible",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+				},
+			},
+			enableFeatures: []monitoringv1.EnableFeature{"st-storage"},
+			expectErr:      true,
+		},
+		{
+			name:    "TSDB ChunkEncoding floats=xor2 with st-storage feature - compatible",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+				},
+			},
+			enableFeatures: []monitoringv1.EnableFeature{"st-storage"},
+			golden:         "TSDB_ChunkEncoding_floats_xor2_with_st_storage.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -6101,11 +6154,16 @@ func TestTSDBConfig(t *testing.T) {
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
 			}
+			if len(tc.enableFeatures) > 0 {
+				p.Spec.CommonPrometheusFields.EnableFeatures = tc.enableFeatures
+			}
 
-			err := p.Spec.TSDB.Validate()
-			if tc.expectErr {
-				require.Error(t, err)
-				return
+			if err := p.Spec.TSDB.Validate(); err != nil {
+				if tc.expectErr {
+					require.Error(t, err)
+					return
+				}
+				t.Fatalf("unexpected TSDB.Validate() error: %v", err)
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6121,6 +6179,10 @@ func TestTSDBConfig(t *testing.T) {
 				nil,
 				nil,
 			)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
@@ -6194,12 +6256,13 @@ func TestRetentionConfigFile(t *testing.T) {
 
 func TestTSDBConfigPrometheusAgent(t *testing.T) {
 	for _, tc := range []struct {
-		name      string
-		p         *monitoringv1.Prometheus
-		version   string
-		tsdb      *monitoringv1.TSDBSpec
-		golden    string
-		expectErr bool
+		name           string
+		p              *monitoringv1.Prometheus
+		version        string
+		tsdb           *monitoringv1.TSDBSpec
+		enableFeatures []monitoringv1.EnableFeature
+		golden         string
+		expectErr      bool
 	}{
 		{
 			name:   "PrometheusAgent no TSDB config",
@@ -6252,6 +6315,27 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:    "PrometheusAgent TSDB ChunkEncoding floats=xor >= v3.13.0",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+				},
+			},
+			golden: "PrometheusAgent_TSDB_ChunkEncoding_floats_xor_greater_than_or_equal_to_v3.13.0.golden",
+		},
+		{
+			name:    "PrometheusAgent TSDB ChunkEncoding floats=xor with st-storage feature - incompatible",
+			version: "v3.13.0",
+			tsdb: &monitoringv1.TSDBSpec{
+				ChunkEncoding: &monitoringv1.ChunkEncodingSpec{
+					Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+				},
+			},
+			enableFeatures: []monitoringv1.EnableFeature{"st-storage"},
+			expectErr:      true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -6261,11 +6345,16 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 			if tc.tsdb != nil {
 				p.Spec.TSDB = tc.tsdb
 			}
+			if len(tc.enableFeatures) > 0 {
+				p.Spec.CommonPrometheusFields.EnableFeatures = tc.enableFeatures
+			}
 
-			err := p.Spec.TSDB.Validate()
-			if tc.expectErr {
-				require.Error(t, err)
-				return
+			if err := p.Spec.TSDB.Validate(); err != nil {
+				if tc.expectErr {
+					require.Error(t, err)
+					return
+				}
+				t.Fatalf("unexpected TSDB.Validate() error: %v", err)
 			}
 
 			cg := mustNewConfigGenerator(t, p)
@@ -6277,6 +6366,10 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 				&assets.StoreBuilder{},
 				nil,
 			)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})

@@ -8296,6 +8296,64 @@ authentication.</p>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: <code>512MB</code>.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingFloats">ChunkEncodingFloats
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Xor&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Xor2&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>)
+</p>
+<div>
+<p>ChunkEncodingSpec configures per-chunk-type encoding overrides.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>floats</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingFloats">
+ChunkEncodingFloats
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floats selects the encoding used for float chunks.
+Valid values are &ldquo;Xor&rdquo; and &ldquo;Xor2&rdquo;.</p>
+<p>Notice:
+* Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).
+* Setting &ldquo;Xor2&rdquo; automatically adds the <code>xor2-encoding</code> feature flag.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig
 </h3>
 <p>
@@ -20576,6 +20634,23 @@ It may not trigger the stale series compaction if the usual head compaction
 is about to happen soon.</p>
 <p>If set to 0, stale series compaction is disabled.</p>
 <p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>chunkEncoding</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">
+ChunkEncodingSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>chunkEncoding configures per-chunk-type encoding overrides.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+<p>Notice: Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).</p>
 </td>
 </tr>
 </tbody>

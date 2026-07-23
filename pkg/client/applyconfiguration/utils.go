@@ -74,6 +74,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AzureWorkloadIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("BasicAuth"):
 		return &monitoringv1.BasicAuthApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ChunkEncodingSpec"):
+		return &monitoringv1.ChunkEncodingSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ClusterTLSConfig"):
 		return &monitoringv1.ClusterTLSConfigApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("CommonPrometheusFields"):

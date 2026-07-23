@@ -1700,6 +1700,60 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 	require.True(t, found, "Prometheus enabled features are not correctly set.")
 }
 
+func TestAutoEnableXOR2EncodingFeature(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		chunkEncoding  *monitoringv1.ChunkEncodingSpec
+		enableFeatures []monitoringv1.EnableFeature
+		expectedFlag   bool
+	}{
+		{
+			name:          "no chunk encoding",
+			chunkEncoding: nil,
+			expectedFlag:  false,
+		},
+		{
+			name: "chunk encoding xor",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+			},
+			expectedFlag: false,
+		},
+		{
+			name: "chunk encoding xor2 auto-enables feature",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+			},
+			expectedFlag: true,
+		},
+		{
+			name: "chunk encoding xor2 with user feature flag - no duplicate",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+			},
+			enableFeatures: []monitoringv1.EnableFeature{"xor2-encoding"},
+			expectedFlag:   true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        "v3.13.0",
+						TSDB:           &monitoringv1.TSDBSpec{ChunkEncoding: tc.chunkEncoding},
+						EnableFeatures: tc.enableFeatures,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := sset.Spec.Template.Spec.Containers[0].Args
+			found := slices.Contains(promArgs, "--enable-feature=xor2-encoding")
+			require.Equal(t, tc.expectedFlag, found, "xor2-encoding feature flag mismatch. Args: %v", promArgs)
+		})
+	}
+}
+
 func TestWebPageTitle(t *testing.T) {
 	pageTitle := "my-page-title"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
