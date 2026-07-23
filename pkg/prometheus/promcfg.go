@@ -4854,7 +4854,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			case monitoringv1alpha1.OVHServiceDedicatedServer:
 				configs[i] = append(configs[i], yaml.MapItem{Key: "service", Value: "dedicated_server"})
 			default:
-				cg.logger.Warn(fmt.Sprintf("ignoring service not supported by Prometheus: %s", string(config.Service)))
+				cg.logger.Warn("ignoring service not supported by Prometheus", "service", config.Service)
 			}
 
 			if config.Endpoint != nil {
