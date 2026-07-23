@@ -2475,7 +2475,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									Key: "key1",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
 								},
@@ -2503,7 +2503,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 									Key: "key1",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "wrong",
 								},
@@ -4874,7 +4874,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},
@@ -4901,7 +4901,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},
@@ -4917,7 +4917,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 					ClientID: monitoringv1.SecretOrConfigMap{
 						Secret: &secretKey,
 					},
-					ClientSecret: secretKey,
+					ClientSecret: &secretKey,
 					TokenURL:     "http://example.com",
 				}
 			},
