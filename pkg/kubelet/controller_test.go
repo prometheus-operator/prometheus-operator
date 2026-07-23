@@ -243,6 +243,39 @@ func TestGetNodeAddresses(t *testing.T) {
 			expectedAddresses: []string{"10.0.0.1", "10.0.0.3"},
 			expectedErrors:    0,
 		},
+		{
+			// Dual-stack nodes report both IPv4 and IPv6 as InternalIP.
+			// Both addresses should be emitted so prometheus-operator can create
+			// separate IPv4 and IPv6 EndpointSlices for the kubelet Service.
+			name: "dual-stack node emits both addresses",
+			nodes: []corev1.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node-0",
+					},
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
+							{
+								Address: "10.0.0.1",
+								Type:    corev1.NodeInternalIP,
+							},
+							{
+								Address: "fd00::1",
+								Type:    corev1.NodeInternalIP,
+							},
+						},
+						Conditions: []corev1.NodeCondition{
+							{
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			expectedAddresses: []string{"10.0.0.1", "fd00::1"},
+			expectedErrors:    0,
+		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			controller := Controller{
@@ -583,6 +616,77 @@ func newLogger() *slog.Logger {
 	}
 
 	return l
+}
+
+func TestNodeAddresses(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		priority          string
+		nodeAddresses     []corev1.NodeAddress
+		expectedAddresses []string
+		expectError       bool
+	}{
+		{
+			name:     "internal priority with InternalIP available",
+			priority: "internal",
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
+				{Type: corev1.NodeInternalIP, Address: "fd00::1"},
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
+			},
+			expectedAddresses: []string{"10.0.0.1", "fd00::1"},
+		},
+		{
+			name:     "internal priority falls back to ExternalIP",
+			priority: "internal",
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
+			},
+			expectedAddresses: []string{"203.0.113.1"},
+		},
+		{
+			name:     "external priority with ExternalIP available",
+			priority: "external",
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
+				{Type: corev1.NodeExternalIP, Address: "203.0.113.1"},
+				{Type: corev1.NodeExternalIP, Address: "2001:db8::1"},
+			},
+			expectedAddresses: []string{"203.0.113.1", "2001:db8::1"},
+		},
+		{
+			name:     "external priority falls back to InternalIP",
+			priority: "external",
+			nodeAddresses: []corev1.NodeAddress{
+				{Type: corev1.NodeInternalIP, Address: "10.0.0.1"},
+			},
+			expectedAddresses: []string{"10.0.0.1"},
+		},
+		{
+			name:          "internal priority with no addresses returns error",
+			priority:      "internal",
+			nodeAddresses: []corev1.NodeAddress{},
+			expectError:   true,
+		},
+		{
+			name:          "external priority with no addresses returns error",
+			priority:      "external",
+			nodeAddresses: []corev1.NodeAddress{},
+			expectError:   true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Controller{nodeAddressPriority: tc.priority}
+			node := corev1.Node{Status: corev1.NodeStatus{Addresses: tc.nodeAddresses}}
+			addrs, err := c.nodeAddresses(node)
+			if tc.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedAddresses, addrs)
+		})
+	}
 }
 
 func TestHTTPMetricsPorts(t *testing.T) {
