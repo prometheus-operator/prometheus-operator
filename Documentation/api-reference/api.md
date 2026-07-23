@@ -11294,6 +11294,55 @@ proxies during CONNECT requests.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.Entries">Entries
+(<code>[]github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1.Entry</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>)
+</p>
+<div>
+</div>
+<h3 id="monitoring.coreos.com/v1.Entry">Entry
+</h3>
+<div>
+<p>Entry represents a key-value pair and is used as a general-purpose
+replacement for <code>map[string]string</code> in the API. Kubernetes API
+conventions discourage the use of map types in certain contexts
+(e.g. list-type fields), so this struct provides an equivalent
+representation as a list of entries.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>key</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>key defines the map key.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>value</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>value defines the map value.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.Exemplars">Exemplars
 </h3>
 <p>
@@ -13119,6 +13168,24 @@ OAuth2 client&rsquo;s ID.</p>
 </tr>
 <tr>
 <td>
+<code>grantType</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.OAuth2GrantType">
+OAuth2GrantType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>grantType defines the OAuth2 grant type to use. It can be one of
+&ldquo;ClientCredentials&rdquo; or &ldquo;JWTBearer&rdquo;.
+If empty, defaults to &ldquo;ClientCredentials&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0. For Alertmanager, the JWTBearer
+grant type requires Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clientSecret</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
@@ -13127,8 +13194,104 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>clientSecret defines a key of a Secret containing the OAuth2
-client&rsquo;s secret.</p>
+client&rsquo;s secret.
+Only used when grantType is set to &ldquo;ClientCredentials&rdquo; or empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientCertificateKey</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clientCertificateKey defines a key of a Secret containing the RSA
+private key used to sign JWT tokens.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientCertificateKeyId</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clientCertificateKeyId defines the JWT key identifier to include
+in the JWT token header.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>signatureAlgorithm</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.SignatureAlgorithm">
+SignatureAlgorithm
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+Valid values are RS256, RS384, RS512. Defaults to RS256.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>issuer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>issuer defines the issuer claim for JWT tokens.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>audience</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>audience defines the intended audience of the JWT token request.
+If empty, the value of TokenURL is used as the intended audience.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>claims</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.Entries">
+Entries
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>claims defines a map of additional claims to include in the JWT token.
+Only used when grantType is set to &ldquo;JWTBearer&rdquo;.</p>
+<p>It requires Prometheus &gt;= v3.9.0 and Alertmanager &gt;= v0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -13240,6 +13403,27 @@ proxies during CONNECT requests.</p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.OAuth2GrantType">OAuth2GrantType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>)
+</p>
+<div>
+<p>OAuth2GrantType defines the OAuth2 grant type.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;ClientCredentials&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;JWTBearer&#34;</p></td>
+<td></td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.OTLPConfig">OTLPConfig
 </h3>
@@ -20014,6 +20198,29 @@ Targets are distributed across shards based on a hash of the target address.</p>
 Each shard is assigned to a specific topology zone and only scrapes targets in that zone.</p>
 <p>(Beta) Using this mode requires the <code>PrometheusTopologySharding</code> feature gate (enabled by default).</p>
 </td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.SignatureAlgorithm">SignatureAlgorithm
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.OAuth2">OAuth2</a>)
+</p>
+<div>
+<p>SignatureAlgorithm defines the RSA algorithm used to sign JWT tokens.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;RS256&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RS384&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;RS512&#34;</p></td>
+<td></td>
 </tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Sigv4">Sigv4

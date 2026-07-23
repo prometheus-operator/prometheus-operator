@@ -486,7 +486,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "SafeTLSConfig nil",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				TLSConfig:    nil,
 			},
@@ -496,7 +496,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "SafeTLSConfig not nil",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "http://tokenurl.org",
 				TLSConfig: &SafeTLSConfig{
 					MinVersion: func(v TLSVersion) *TLSVersion { return &v }(TLSVersion10),
@@ -509,7 +509,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "valid ProxyConfig with proxyUrl",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
 				ProxyConfig: ProxyConfig{
 					ProxyURL: new("http://proxy.example.com:8080"),
@@ -521,7 +521,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "valid ProxyConfig with proxyFromEnvironment",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
 				ProxyConfig: ProxyConfig{
 					ProxyFromEnvironment: new(true),
@@ -533,7 +533,7 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "invalid ProxyConfig with proxyFromEnvironment and proxyUrl",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
 				ProxyConfig: ProxyConfig{
 					ProxyFromEnvironment: new(true),
@@ -546,13 +546,132 @@ func TestValidateOAuth2(t *testing.T) {
 			name: "invalid ProxyConfig with noProxy but no proxyUrl",
 			config: &OAuth2{
 				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
-				ClientSecret: v1.SecretKeySelector{},
+				ClientSecret: &v1.SecretKeySelector{},
 				TokenURL:     "http://tokenurl.org",
 				ProxyConfig: ProxyConfig{
 					NoProxy: new("localhost"),
 				},
 			},
 			err: true,
+		},
+		{
+			name:   "OAuth2 nil",
+			config: nil,
+			err:    false,
+		},
+		{
+			name: "missing clientID",
+			config: &OAuth2{
+				TokenURL: "http://tokenurl.org",
+			},
+			err: true,
+		},
+		{
+			name: "default grantType with clientSecret",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "http://tokenurl.org",
+			},
+			err: false,
+		},
+		{
+			name: "default grantType missing clientSecret",
+			config: &OAuth2{
+				ClientID: SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL: "http://tokenurl.org",
+			},
+			err: true,
+		},
+		{
+			name: "client_credentials with clientSecret",
+			config: &OAuth2{
+				ClientID:     SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret: &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:     "http://tokenurl.org",
+				GrantType:    new(GrantTypeClientCredentials),
+			},
+			err: false,
+		},
+		{
+			name: "client_credentials missing clientSecret",
+			config: &OAuth2{
+				ClientID:  SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:  "http://tokenurl.org",
+				GrantType: new(GrantTypeClientCredentials),
+			},
+			err: true,
+		},
+		{
+			name: "client_credentials with jwt fields passes go validation (CEL enforces at API level)",
+			config: &OAuth2{
+				ClientID:               SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				ClientSecret:           &v1.SecretKeySelector{LocalObjectReference: v1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+				TokenURL:               "http://tokenurl.org",
+				GrantType:              new(GrantTypeClientCredentials),
+				ClientCertificateKeyID: "my-key-id",
+				SignatureAlgorithm:     new(SignatureAlgorithmRS256),
+				Issuer:                 "my-issuer",
+				Audience:               "my-audience",
+				Claims:                 []Entry{{Key: "sub", Value: "user"}},
+			},
+			err: false,
+		},
+		{
+			name: "jwt-bearer with clientCertificateKey",
+			config: &OAuth2{
+				ClientID:             SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:             "http://tokenurl.org",
+				GrantType:            new(GrantTypeJWTBearer),
+				ClientCertificateKey: &v1.SecretKeySelector{},
+			},
+			err: false,
+		},
+		{
+			name: "jwt-bearer missing clientCertificateKey",
+			config: &OAuth2{
+				ClientID:  SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:  "http://tokenurl.org",
+				GrantType: new(GrantTypeJWTBearer),
+			},
+			err: true,
+		},
+		{
+			name: "jwt-bearer with all fields",
+			config: &OAuth2{
+				ClientID:               SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:               "http://tokenurl.org",
+				GrantType:              new(GrantTypeJWTBearer),
+				ClientCertificateKey:   &v1.SecretKeySelector{},
+				ClientCertificateKeyID: "my-key-id",
+				SignatureAlgorithm:     new(SignatureAlgorithmRS256),
+				Issuer:                 "my-issuer",
+				Audience:               "my-audience",
+				Claims:                 []Entry{{Key: "sub", Value: "user"}},
+			},
+			err: false,
+		},
+		{
+			name: "jwt-bearer with RS384",
+			config: &OAuth2{
+				ClientID:             SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:             "http://tokenurl.org",
+				GrantType:            new(GrantTypeJWTBearer),
+				ClientCertificateKey: &v1.SecretKeySelector{},
+				SignatureAlgorithm:   new(SignatureAlgorithmRS384),
+			},
+			err: false,
+		},
+		{
+			name: "jwt-bearer with RS512",
+			config: &OAuth2{
+				ClientID:             SecretOrConfigMap{Secret: &v1.SecretKeySelector{}},
+				TokenURL:             "http://tokenurl.org",
+				GrantType:            new(GrantTypeJWTBearer),
+				ClientCertificateKey: &v1.SecretKeySelector{},
+				SignatureAlgorithm:   new(SignatureAlgorithmRS512),
+			},
+			err: false,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
