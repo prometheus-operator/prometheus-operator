@@ -223,6 +223,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			ReloaderConfig:                 c.ReloaderConfig,
 			PrometheusDefaultBaseImage:     c.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:         c.ThanosDefaultBaseImage,
+			PrometheusDefaultVersion:       c.PrometheusDefaultVersion,
+			ThanosDefaultVersion:           c.ThanosDefaultVersion,
 			Annotations:                    c.Annotations,
 			Labels:                         c.Labels,
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
@@ -965,7 +967,9 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		return closure, err
 	}
 
-	opts := []prompkg.ConfigGeneratorOption{}
+	opts := []prompkg.ConfigGeneratorOption{
+		prompkg.WithDefaultPrometheusVersion(c.config.PrometheusDefaultVersion),
+	}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
@@ -1509,7 +1513,7 @@ func createSSetInputHash(p monitoringv1.Prometheus, c prompkg.Config, ruleConfig
 
 // getSeletedConfigResources returns all the configuration resources (PodMonitor, ServiceMonitor, Probes and ScrapeConfigs) selected by the Prometheus.
 func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, store *assets.StoreBuilder) (*selectedConfigResources, error) {
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p), c.config.PrometheusDefaultVersion)
 
 	if err != nil {
 		return nil, err
@@ -1592,7 +1596,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		ams := p.Spec.Alerting.Alertmanagers
 
 		for i, am := range ams {
-			if err := validateAlertmanagerEndpoints(p, am); err != nil {
+			if err := c.validateAlertmanagerEndpoints(p, am); err != nil {
 				return fmt.Errorf("alertmanager %d: %w", i, err)
 			}
 		}
@@ -1703,7 +1707,7 @@ func makeSelectorLabels(name string) map[string]string {
 	}
 }
 
-func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.AlertmanagerEndpoints) error {
+func (c *Operator) validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.AlertmanagerEndpoints) error {
 	var nonNilFields []string
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1726,7 +1730,7 @@ func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.A
 		return fmt.Errorf("%s can't be set at the same time, at most one of them must be defined", strings.Join(nonNilFields, " and "))
 	}
 
-	lcv, err := validation.NewLabelConfigValidator(p)
+	lcv, err := validation.NewLabelConfigValidator(p, c.config.PrometheusDefaultVersion)
 	if err != nil {
 		return err
 	}

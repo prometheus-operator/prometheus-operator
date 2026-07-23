@@ -54,7 +54,7 @@ func (o *Operator) selectPrometheusRules(t *monitoringv1.ThanosRuler, logger *sl
 
 	var (
 		nsLabeler     = namespacelabeler.New(t.Spec.EnforcedNamespaceLabel, excludedFromEnforcement, false)
-		thanosVersion = operator.StringValOrDefault(ptr.Deref(t.Spec.Version, ""), operator.DefaultThanosVersion)
+		thanosVersion = operator.StringValOrDefault(ptr.Deref(t.Spec.Version, ""), o.config.ThanosDefaultVersion)
 	)
 
 	promRuleSelector, err := operator.NewPrometheusRuleSelector(

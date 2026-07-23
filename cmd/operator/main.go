@@ -167,6 +167,11 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.StringVar(&cfg.AlertmanagerDefaultBaseImage, "alertmanager-default-base-image", operator.DefaultAlertmanagerBaseImage, "Alertmanager default base image (path without tag/version)")
 	fs.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	fs.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
+
+	fs.StringVar(&cfg.AlertmanagerDefaultVersion, "alertmanager-default-version", operator.DefaultAlertmanagerVersion, "Alertmanager default version when the default base image is used")
+	fs.StringVar(&cfg.PrometheusDefaultVersion, "prometheus-default-version", operator.DefaultPrometheusVersion, "Prometheus default version when the default base image is used")
+	fs.StringVar(&cfg.ThanosDefaultVersion, "thanos-default-version", operator.DefaultThanosVersion, "Thanos default version when the default base image is used")
+
 	fs.StringVar(&cfg.ControllerID, "controller-id", "", "Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an `operator.prometheus.io/controller-id` annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.")
 	fs.Var(&cfg.RepairPolicy, "repair-policy-for-statefulsets", "Policy to use when a StatefulSet rollout is stuck. Possible values: 'none' (default), 'evict' or 'delete'.")
 

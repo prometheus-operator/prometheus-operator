@@ -176,6 +176,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			ReloaderConfig:                 c.ReloaderConfig,
 			PrometheusDefaultBaseImage:     c.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:         c.ThanosDefaultBaseImage,
+			PrometheusDefaultVersion:       c.PrometheusDefaultVersion,
+			ThanosDefaultVersion:           c.ThanosDefaultVersion,
 			Annotations:                    c.Annotations,
 			Labels:                         c.Labels,
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
@@ -683,7 +685,9 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	// Generate the configuration data.
 	var (
 		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
-		opts       = []prompkg.ConfigGeneratorOption{}
+		opts       = []prompkg.ConfigGeneratorOption{
+			prompkg.WithDefaultPrometheusVersion(c.config.PrometheusDefaultVersion),
+		}
 	)
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
@@ -926,7 +930,7 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 }
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
-	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
+	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p), c.config.PrometheusDefaultVersion)
 	if err != nil {
 		return err
 	}

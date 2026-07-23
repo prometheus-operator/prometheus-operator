@@ -6166,6 +6166,13 @@ func TestRetentionConfigFile(t *testing.T) {
 			retentionSize: "512MB",
 			golden:        "RetentionConfigFile_v3.10.0.golden",
 		},
+		{
+			name:          "retention is not in the configuration file for Prometheus v3.5.4",
+			version:       "v3.5.4",
+			retention:     "2d",
+			retentionSize: "512MB",
+			golden:        "RetentionConfigFile_v3.10.0.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
@@ -11347,6 +11354,22 @@ func TestPodMonitorPortNumber(t *testing.T) {
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
 	}
+}
+
+func TestNewConfigGeneratorWithDefaultVersion(t *testing.T) {
+	p := defaultPrometheus()
+	p.Spec.Version = "" // Clear version to test default
+
+	t.Run("use hardcoded default when no option provided", func(t *testing.T) {
+		cg := mustNewConfigGenerator(t, p)
+		require.Equal(t, operator.DefaultPrometheusVersion, "v"+cg.version.String())
+	})
+
+	t.Run("use configured default version from option", func(t *testing.T) {
+		customDefault := "v3.5.4"
+		cg := mustNewConfigGenerator(t, p, WithDefaultPrometheusVersion(customDefault))
+		require.Equal(t, customDefault, "v"+cg.version.String())
+	})
 }
 
 func TestNewConfigGeneratorWithMultipleDefaultScrapeClass(t *testing.T) {
