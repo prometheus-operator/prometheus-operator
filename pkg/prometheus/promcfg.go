@@ -1028,7 +1028,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	cfg = cg.appendRuntime(cfg)
 
 	// Rule Files config
-	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, p.Spec.RuleSelector)
+	cfg = cg.appendRuleFiles(cfg, ruleConfigMapNames, p.Spec.RuleSelector.AsLabelSelector())
 
 	// Scrape config
 	var (

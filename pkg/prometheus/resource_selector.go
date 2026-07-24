@@ -100,21 +100,21 @@ func selectObjects[T operator.ConfigurationResource](
 	logger *slog.Logger,
 	rs *ResourceSelector,
 	kind string,
-	selector *metav1.LabelSelector,
-	nsSelector *metav1.LabelSelector,
+	selector *monitoringv1.ValidatedLabelSelector,
+	nsSelector *monitoringv1.ValidatedLabelSelector,
 	listFn ListAllByNamespaceFn,
 	checkFn func(context.Context, T) error,
 ) (operator.TypedResourcesSelection[T], error) {
 	// Selectors (<namespace>/<name>) might overlap. Deduplicate them along the keyFunc.
 	objects := make(map[string]runtime.Object)
 
-	namespaces, err := operator.SelectNamespacesFromCache(rs.p.GetObjectMeta(), nsSelector, rs.namespaceInformers)
+	namespaces, err := operator.SelectNamespacesFromCache(rs.p.GetObjectMeta(), nsSelector.AsLabelSelector(), rs.namespaceInformers)
 	if err != nil {
 		return nil, err
 	}
 	logger.Debug("selecting objects", "namespaces", strings.Join(namespaces, ","))
 
-	labelSelector, err := metav1.LabelSelectorAsSelector(selector)
+	labelSelector, err := selector.AsSelector()
 	if err != nil {
 		return nil, err
 	}

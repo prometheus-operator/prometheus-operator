@@ -6068,6 +6068,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               podMonitorSelector:
                 description: |-
                   podMonitorSelector defines the podMonitors to be selected for target discovery. An empty label selector
@@ -6125,6 +6135,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               podTargetLabels:
                 description: |-
                   podTargetLabels are appended to the `spec.podTargetLabels` field of all
@@ -6190,6 +6210,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               probeSelector:
                 description: |-
                   probeSelector defines the probes to be selected for target discovery. An empty label selector
@@ -6247,6 +6277,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               prometheusExternalLabelName:
                 description: |-
                   prometheusExternalLabelName defines the name of Prometheus external label used to denote the Prometheus instance
@@ -8388,6 +8428,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               ruleQueryOffset:
                 description: |-
                   ruleQueryOffset defines the offset the rule evaluation timestamp of this particular group by the specified duration into the past.
@@ -8443,6 +8493,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               rules:
                 description: rules defines the configuration of the Prometheus rules'
                   engine.
@@ -9036,6 +9096,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               scrapeConfigSelector:
                 description: |-
                   scrapeConfigSelector defines the scrapeConfigs to be selected for target discovery. An empty label
@@ -9096,6 +9166,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               scrapeFailureLogFile:
                 description: |-
                   scrapeFailureLogFile defines the file to which scrape failures are logged.
@@ -9464,6 +9544,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               serviceMonitorSelector:
                 description: |-
                   serviceMonitorSelector defines the serviceMonitors to be selected for target discovery. An empty label
@@ -9521,6 +9611,16 @@ spec:
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
+                x-kubernetes-validations:
+                - message: 'label keys must follow Kubernetes label syntax: optional
+                    prefix (<=253 chars) and name segment (<=63 chars)'
+                  rule: (!has(self.matchLabels) || self.matchLabels.all(key, key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                    && (!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.key.matches('^([^/]{0,253}/)?[^/]{1,63}$')))
+                - message: 'matchExpressions operator must be one of: In, NotIn, Exists,
+                    DoesNotExist'
+                  rule: '!has(self.matchExpressions) || self.matchExpressions.all(expr,
+                    expr.operator in [''In'', ''NotIn'', ''Exists'', ''DoesNotExist''])'
               serviceName:
                 description: |-
                   serviceName defines the name of the service name used by the underlying StatefulSet(s) as the governing service.
