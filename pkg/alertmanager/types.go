@@ -27,13 +27,14 @@ import (
 // marshalling. See the following issue for details:
 // https://github.com/prometheus/alertmanager/issues/1985
 type alertmanagerConfig struct {
-	Global            *globalConfig   `yaml:"global,omitempty"`
-	Route             *route          `yaml:"route,omitempty"`
-	InhibitRules      []*inhibitRule  `yaml:"inhibit_rules,omitempty"`
-	Receivers         []*receiver     `yaml:"receivers,omitempty"`
-	MuteTimeIntervals []*timeInterval `yaml:"mute_time_intervals,omitempty"`
-	TimeIntervals     []*timeInterval `yaml:"time_intervals,omitempty"`
-	Templates         []string        `yaml:"templates"`
+	Global            *globalConfig        `yaml:"global,omitempty"`
+	Route             *route               `yaml:"route,omitempty"`
+	InhibitRules      []*inhibitRule       `yaml:"inhibit_rules,omitempty"`
+	Receivers         []*receiver          `yaml:"receivers,omitempty"`
+	MuteTimeIntervals []*timeInterval      `yaml:"mute_time_intervals,omitempty"`
+	TimeIntervals     []*timeInterval      `yaml:"time_intervals,omitempty"`
+	EventRecorder     *eventRecorderConfig `yaml:"event_recorder,omitempty"`
+	Templates         []string             `yaml:"templates"`
 }
 
 type globalConfig struct {
@@ -110,6 +111,41 @@ type inhibitRule struct {
 	SourceMatchRE  map[string]string `yaml:"source_match_re,omitempty"`
 	SourceMatchers []string          `yaml:"source_matchers,omitempty"`
 	Equal          []string          `yaml:"equal,omitempty"`
+}
+
+// eventRecorderConfig mirrors alertmanager's top-level `event_recorder`
+// auditing configuration. The upstream types embed secret-bearing fields
+// (e.g. webhook URLs and HTTP credentials) that obfuscate their values when
+// marshalled, so - like the rest of this file - we keep a local copy that
+// round-trips the values verbatim.
+type eventRecorderConfig struct {
+	FileOutputs    []*fileOutputConfig    `yaml:"file_outputs,omitempty"`
+	WebhookOutputs []*webhookOutputConfig `yaml:"webhook_outputs,omitempty"`
+	KafkaOutputs   []*kafkaOutputConfig   `yaml:"kafka_outputs,omitempty"`
+}
+
+type fileOutputConfig struct {
+	Path string `yaml:"path"`
+}
+
+type webhookOutputConfig struct {
+	URL          string            `yaml:"url"`
+	HTTPConfig   *httpClientConfig `yaml:"http_config,omitempty"`
+	Timeout      *model.Duration   `yaml:"timeout,omitempty"`
+	Workers      int               `yaml:"workers,omitempty"`
+	MaxRetries   int               `yaml:"max_retries,omitempty"`
+	RetryBackoff *model.Duration   `yaml:"retry_backoff,omitempty"`
+}
+
+type kafkaOutputConfig struct {
+	Brokers     []string   `yaml:"brokers"`
+	Topic       string     `yaml:"topic"`
+	ClientID    string     `yaml:"client_id,omitempty"`
+	Format      string     `yaml:"format,omitempty"`
+	Acks        string     `yaml:"acks,omitempty"`
+	Compression string     `yaml:"compression,omitempty"`
+	BufferSize  int        `yaml:"buffer_size,omitempty"`
+	TLSConfig   *tlsConfig `yaml:"tls_config,omitempty"`
 }
 
 type receiver struct {

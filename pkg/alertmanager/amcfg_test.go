@@ -8513,6 +8513,51 @@ func TestLoadConfig(t *testing.T) {
 			},
 			golden: "Discord_url_field.golden",
 		},
+		{
+			name: "event_recorder field",
+			expected: &alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{
+					{
+						Name: "null",
+					},
+				},
+				EventRecorder: &eventRecorderConfig{
+					FileOutputs: []*fileOutputConfig{
+						{
+							Path: "/var/log/alertmanager/events.jsonl",
+						},
+					},
+					WebhookOutputs: []*webhookOutputConfig{
+						{
+							URL: "http://example.com/events",
+							HTTPConfig: &httpClientConfig{
+								BasicAuth: &basicAuth{
+									Username: "user",
+									Password: "secret-pass",
+								},
+							},
+							Timeout:      ptr.To(model.Duration(10 * time.Second)),
+							Workers:      4,
+							MaxRetries:   3,
+							RetryBackoff: ptr.To(model.Duration(500 * time.Millisecond)),
+						},
+					},
+					KafkaOutputs: []*kafkaOutputConfig{
+						{
+							Brokers:     []string{"kafka:9092"},
+							Topic:       "alertmanager-events",
+							Acks:        "all",
+							Compression: "gzip",
+						},
+					},
+				},
+				Templates: []string{},
+			},
+			golden: "event_recorder_field.golden",
+		},
 	}
 
 	for _, tc := range testCase {
@@ -8522,6 +8567,27 @@ func TestLoadConfig(t *testing.T) {
 			require.Equal(t, tc.expected, ac)
 		})
 	}
+}
+
+// TestEventRecorderConfig ensures that a user-provided Alertmanager
+// configuration containing the top-level `event_recorder` field (an
+// Alertmanager auditing feature) is accepted by the operator and that the
+// section, including any secrets provided inline, is preserved verbatim when
+// the configuration is marshalled back out.
+func TestEventRecorderConfig(t *testing.T) {
+	ac, err := alertmanagerConfigFromBytes(golden.Get(t, "event_recorder_field.golden"))
+	require.NoError(t, err)
+
+	out := ac.String()
+	require.Contains(t, out, "event_recorder:")
+	require.Contains(t, out, "alertmanager-events")
+	// Secrets must round-trip verbatim, not be replaced with the "<secret>"
+	// placeholder that Alertmanager's own config types emit.
+	require.Contains(t, out, "secret-pass")
+
+	// The regenerated configuration must still be valid Alertmanager config.
+	_, err = config.Load(out)
+	require.NoError(t, err)
 }
 
 func TestConvertHTTPConfig(t *testing.T) {
