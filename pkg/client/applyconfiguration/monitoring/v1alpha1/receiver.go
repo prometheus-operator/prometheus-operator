@@ -50,6 +50,9 @@ type ReceiverApplyConfiguration struct {
 	// msteamsConfigs defines the list of MSTeams configurations.
 	// It requires Alertmanager >= 0.26.0.
 	MSTeamsConfigs []MSTeamsConfigApplyConfiguration `json:"msteamsConfigs,omitempty"`
+	// jiraConfigs defines the list of Jira configurations.
+	// It requires Alertmanager >= 0.28.0.
+	JiraConfigs []JiraConfigApplyConfiguration `json:"jiraConfigs,omitempty"`
 	// msteamsv2Configs defines the list of MSTeamsV2 configurations.
 	// It requires Alertmanager >= 0.28.0.
 	MSTeamsV2Configs []MSTeamsV2ConfigApplyConfiguration `json:"msteamsv2Configs,omitempty"`
@@ -237,6 +240,19 @@ func (b *ReceiverApplyConfiguration) WithMSTeamsConfigs(values ...*MSTeamsConfig
 			panic("nil value passed to WithMSTeamsConfigs")
 		}
 		b.MSTeamsConfigs = append(b.MSTeamsConfigs, *values[i])
+	}
+	return b
+}
+
+// WithJiraConfigs adds the given value to the JiraConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the JiraConfigs field.
+func (b *ReceiverApplyConfiguration) WithJiraConfigs(values ...*JiraConfigApplyConfiguration) *ReceiverApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithJiraConfigs")
+		}
+		b.JiraConfigs = append(b.JiraConfigs, *values[i])
 	}
 	return b
 }
