@@ -1212,6 +1212,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 			return err
 		}
 
+		err = checkIncidentioConfigs(ctx, receiver.IncidentioConfigs, amc.GetNamespace(), store, amVersion)
+		if err != nil {
+			return err
+		}
+
 		err = checkWechatConfigs(ctx, receiver.WeChatConfigs, amc.GetNamespace(), store, amVersion)
 		if err != nil {
 			return err
@@ -1481,6 +1486,59 @@ func checkWebhookConfigs(
 
 		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
 			return fmt.Errorf(`payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func checkIncidentioConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.IncidentioConfig,
+	namespace string,
+	store *assets.StoreBuilder,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.29.0")) {
+		return fmt.Errorf(`incidentioConfigs' is available in Alertmanager >= 0.29.0 only - current %s`, amVersion)
+	}
+
+	for _, config := range configs {
+		if config.URL == nil && config.URLSecret == nil {
+			return errors.New("one of 'url' or 'urlSecret' must be specified")
+		}
+
+		if err := validation.ValidateTemplateURLPtr(config.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+
+		if config.URLSecret != nil {
+			url, err := store.GetSecretKey(ctx, namespace, *config.URLSecret)
+			if err != nil {
+				return err
+			}
+
+			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+				return fmt.Errorf("failed to validate url secret: %w", err)
+			}
+		}
+
+		if config.AlertSourceToken != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.AlertSourceToken); err != nil {
+				return err
+			}
+		}
+
+		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
+			return err
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
