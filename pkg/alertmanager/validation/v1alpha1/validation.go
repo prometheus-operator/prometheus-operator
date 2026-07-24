@@ -117,6 +117,11 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
 			return receiverValidationFailedFormat(err)
 		}
+
+		if err := validateMattermostConfigs(receiver.MattermostConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'mattermostConfig' - receiver %s: %w", receiver.Name, err)
+		}
+
 	}
 
 	return receiverNames, nil
@@ -556,6 +561,47 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 	for i, conf := range configs {
 		if err := v(conf); err != nil {
 			return fmt.Errorf("'msteamsv2Configs'[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
+	for i, config := range configs {
+
+		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
+			return fmt.Errorf("[%d]: iconURL: %w", i, err)
+		}
+
+		for j, att := range config.Attachments {
+			if err := validation.ValidateTemplateURLPtr(att.AuthorIcon); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorIcon: %w", i, j, err)
+			}
+
+			if err := validation.ValidateTemplateURLPtr(att.AuthorLink); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: authorLink: %w", i, j, err)
+			}
+
+			if err := validation.ValidateTemplateURLPtr(att.TitleLink); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: titleLink: %w", i, j, err)
+			}
+
+			if err := validation.ValidateTemplateURLPtr(att.ThumbURL); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: thumbURL: %w", i, j, err)
+			}
+
+			if err := validation.ValidateTemplateURLPtr(att.FooterIcon); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: footerIcon: %w", i, j, err)
+			}
+
+			if err := validation.ValidateTemplateURLPtr(att.ImageURL); err != nil {
+				return fmt.Errorf("[%d]: invalid attachments [%d]: imageURL: %w", i, j, err)
+			}
+		}
+
+		if err := config.HTTPConfig.Validate(); err != nil {
+			return err
 		}
 	}
 

@@ -1684,6 +1684,124 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			version: &version29,
 			ok:      false,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mattermost-config-bare-minimum-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+							{
+								WebhookURL: &corev1.SecretKeySelector{
+									Key: "key1",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version29,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mattermost-config-bare-minimum",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+							{
+								WebhookURL: &corev1.SecretKeySelector{
+									Key: "key1",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version30,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mattermost-config-top-level-attachment",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+							{
+								WebhookURL: &corev1.SecretKeySelector{
+									Key: "key1",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+								Fallback: new("abc"),
+								Pretext:  new("abc"),
+								Title:    new("abc"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version32,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "mattermost-config-top-level-attachment-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
+							{
+								WebhookURL: &corev1.SecretKeySelector{
+									Key: "key1",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+								},
+								Fallback: new("abc"),
+								Pretext:  new("abc"),
+								Title:    new("abc"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version31,
+			ok:      false,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
