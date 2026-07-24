@@ -2130,6 +2130,14 @@ spec:
                         If not set, Prometheus uses its default value.
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
+                    role:
+                      description: |-
+                        role defines the DigitalOcean role to use for service discovery.
+                        Must be one of: Droplets or Databases. Default: Droplets
+                      enum:
+                      - Droplets
+                      - Databases
+                      type: string
                     tlsConfig:
                       description: tlsConfig defines the TLS configuration to connect
                         to the DigitalOcean API.
