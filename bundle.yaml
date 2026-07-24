@@ -16965,7 +16965,7 @@ spec:
         - --logtostderr=true
         - --config-reloader-image=jimmidyson/configmap-reload:v0.4.0
         - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.41.1
-        image: quay.io/coreos/prometheus-operator:v0.41.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.41.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
