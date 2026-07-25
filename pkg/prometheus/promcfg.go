@@ -301,7 +301,7 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                      cg.logger.With("minimum_version", version),
+			logger:                      cg.logger.With("minimumVersion", version),
 			version:                     cg.version,
 			notCompatible:               true,
 			prom:                        cg.prom,
@@ -331,7 +331,7 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 	if cg.version.GTE(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                      cg.logger.With("maximum_version", version),
+			logger:                      cg.logger.With("maximumVersion", version),
 			version:                     cg.version,
 			notCompatible:               true,
 			prom:                        cg.prom,
@@ -3121,7 +3121,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
 		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
-			cg.logger.Warn(fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)
+			cg.logger.Warn(fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforcedLimit", *enforcedLimit)
 			return cg.AppendMapItem(slice, limitKey, *enforcedLimit)
 		}
 		return cg.AppendMapItem(slice, limitKey, *limit)

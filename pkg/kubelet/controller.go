@@ -219,7 +219,7 @@ func New(
 		),
 	)
 
-	c.logger = logger.With("kubelet_object", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
+	c.logger = logger.With("kubeletObject", fmt.Sprintf("%s/%s", c.kubeletObjectNamespace, c.kubeletObjectName))
 
 	return c, nil
 }
@@ -396,7 +396,7 @@ func (c *Controller) sync(ctx context.Context) {
 	slices.SortStableFunc(nodes, func(a, b corev1.Node) int {
 		return strings.Compare(a.Name, b.Name)
 	})
-	c.logger.Debug("Nodes retrieved from the Kubernetes API", "num_nodes", len(nodes))
+	c.logger.Debug("Nodes retrieved from the Kubernetes API", "numNodes", len(nodes))
 
 	addresses, errs := c.getNodeAddresses(nodes)
 	if len(errs) > 0 {
@@ -405,7 +405,7 @@ func (c *Controller) sync(ctx context.Context) {
 		}
 		c.nodeAddressLookupErrors.Add(float64(len(errs)))
 	}
-	c.logger.Debug("Nodes converted to endpoint addresses", "num_addresses", len(addresses))
+	c.logger.Debug("Nodes converted to endpoint addresses", "numAddresses", len(addresses))
 
 	svc, err := c.syncService(ctx)
 	if err != nil {
