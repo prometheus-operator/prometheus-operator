@@ -1790,7 +1790,7 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "opsgenie-error-getting-api-key-secret",
+					Name:      "opsgenie-getting-api-key-secret",
 					Namespace: "ns1",
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
@@ -1804,6 +1804,34 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 								APIKey: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{
 										Name: "secret",
+									},
+									Key: "token",
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version23,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-error-getting-api-key-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "invalid",
 									},
 									Key: "token",
 								},
