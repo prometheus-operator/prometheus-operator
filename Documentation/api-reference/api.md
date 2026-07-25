@@ -21929,6 +21929,27 @@ of the Pod IP&rsquo;s address for the HTTP endpoints.</p>
 </tr>
 <tr>
 <td>
+<code>serviceHTTPPort</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceHTTPPort defines the port on which the governing service
+exposes the Thanos sidecar&rsquo;s HTTP endpoints (serving metrics, probes
+and more). The service port targets the container port named <code>http</code>
+(10902) of the <code>thanos-sidecar</code> container.</p>
+<p>If not defined, the governing service doesn&rsquo;t expose the Thanos
+sidecar&rsquo;s HTTP port.</p>
+<p>It only applies when the operator manages the governing service (e.g.
+<code>spec.serviceName</code> isn&rsquo;t defined). Note that the sidecar&rsquo;s HTTP
+endpoints aren&rsquo;t reachable through the service when <code>listenLocal</code> or
+<code>httpListenLocal</code> is true.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tracingConfig</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">

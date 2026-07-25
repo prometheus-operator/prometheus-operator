@@ -1010,22 +1010,7 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		}
 	} else {
 		// Reconcile the default governing service.
-		svc := prompkg.BuildStatefulSetService(
-			governingServiceName,
-			map[string]string{
-				operator.ApplicationNameLabelKey: applicationNameLabelValue,
-			},
-			p,
-			c.config,
-		)
-
-		if p.Spec.Thanos != nil {
-			svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
-				Name:       "grpc",
-				Port:       10901,
-				TargetPort: intstr.FromString("grpc"),
-			})
-		}
+		svc := makeGoverningService(p, c.config)
 
 		if _, err := k8s.CreateOrUpdateService(ctx, c.kclient.CoreV1().Services(p.Namespace), svc); err != nil {
 			return closure, fmt.Errorf("synchronizing default governing service failed: %w", err)
@@ -1701,6 +1686,42 @@ func makeSelectorLabels(name string) map[string]string {
 		prompkg.PrometheusNameLabelName:      name,
 		"prometheus":                         name,
 	}
+}
+
+// makeGoverningService returns the default governing service for the given
+// Prometheus object.
+//
+// When the Thanos sidecar is enabled, the service always exposes the gRPC
+// port and, if `spec.thanos.serviceHTTPPort` is defined, the HTTP port too.
+func makeGoverningService(p *monitoringv1.Prometheus, config prompkg.Config) *corev1.Service {
+	svc := prompkg.BuildStatefulSetService(
+		governingServiceName,
+		map[string]string{
+			operator.ApplicationNameLabelKey: applicationNameLabelValue,
+		},
+		p,
+		config,
+	)
+
+	if p.Spec.Thanos == nil {
+		return svc
+	}
+
+	svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
+		Name:       "grpc",
+		Port:       10901,
+		TargetPort: intstr.FromString("grpc"),
+	})
+
+	if p.Spec.Thanos.ServiceHTTPPort != nil {
+		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
+			Name:       "http",
+			Port:       *p.Spec.Thanos.ServiceHTTPPort,
+			TargetPort: intstr.FromString("http"),
+		})
+	}
+
+	return svc
 }
 
 func validateAlertmanagerEndpoints(p *monitoringv1.Prometheus, am monitoringv1.AlertmanagerEndpoints) error {
