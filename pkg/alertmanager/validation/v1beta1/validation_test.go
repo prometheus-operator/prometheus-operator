@@ -781,7 +781,7 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 	}
 }
 
-func TestValidateAlertmanagerConfigSNSReceiver(t *testing.T) {
+func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
 		in        *monitoringv1beta1.AlertmanagerConfig
