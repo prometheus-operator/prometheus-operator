@@ -198,12 +198,6 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)
 
-	version23, err := semver.ParseTolerant("v0.23.0")
-	require.NoError(t, err)
-
-	version24, err := semver.ParseTolerant("v0.24.0")
-	require.NoError(t, err)
-
 	version25, err := semver.ParseTolerant("v0.25.0")
 	require.NoError(t, err)
 
@@ -1690,6 +1684,53 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			version: &version29,
 			ok:      false,
 		},
+	} {
+		t.Run(tc.amConfig.Name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version23, err := semver.ParseTolerant("v0.23.0")
+	require.NoError(t, err)
+
+	version24, err := semver.ParseTolerant("v0.24.0")
+	require.NoError(t, err)
+
+	c := fake.NewClientset(
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"token": []byte("abc1243"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		version  *semver.Version
+		ok       bool
+	}{
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
@@ -1737,6 +1778,34 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 										ID:   "abcde12345",
 										Type: new("teams"),
 									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version23,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-error-getting-api-key-secret",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "token",
 								},
 							},
 						},
