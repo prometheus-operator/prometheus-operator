@@ -608,3 +608,92 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAlertmanagerConfigSNSReceiver(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+
+		{
+			name: "Test fail to validate SNSConfigs - valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									PhoneNumber: new("+13324653687"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate SNSConfigs - invalid no required field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									ApiURL: new("http://sns.api.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate SNSConfigs - invalid URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									PhoneNumber: new("+13324653687"),
+									ApiURL:      new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
