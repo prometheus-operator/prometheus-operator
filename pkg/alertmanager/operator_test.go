@@ -1748,7 +1748,7 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{
 									{
 										ID:   new("abcde12345"),
-										Type: new("teams"),
+										Type: "teams",
 									},
 								},
 							},
@@ -1776,7 +1776,7 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{
 									{
 										ID:   new("abcde12345"),
-										Type: new("teams"),
+										Type: "teams",
 									},
 								},
 							},
