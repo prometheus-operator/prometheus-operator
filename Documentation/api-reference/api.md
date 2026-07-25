@@ -12846,6 +12846,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>send defines whether metric metadata is sent to the remote storage or not.</p>
+<p>The setting is ignored when Remote Write message&rsquo;s version 2.0 is used.</p>
 </td>
 </tr>
 <tr>

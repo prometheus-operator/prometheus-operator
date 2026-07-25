@@ -671,6 +671,56 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	require.True(t, slices.Contains(amArgs, expectedArg), "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
 }
 
+func TestMakeStatefulSetSpecPeerName(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		version     string
+		expPeerName bool
+	}{
+		{
+			name:    "no peer name before 0.30.0",
+			version: "0.29.0",
+		}, {
+			name:        "peer name after 0.30.0",
+			version:     "0.30.0",
+			expPeerName: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "alertmanager",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas: new(int32(1)),
+					Image:    new(operator.DefaultAlertmanagerImage),
+					Version:  tc.version,
+				},
+			}
+
+			statefulSet, err := makeStatefulSetSpec(nil, &a, Config{}, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			amArgs := statefulSet.Template.Spec.Containers[0].Args
+			expectedArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
+			if tc.expPeerName {
+				require.Contains(t, amArgs, expectedArg)
+				var envVarFound bool
+				for _, envVar := range statefulSet.Template.Spec.Containers[0].Env {
+					if envVar.Name == operator.PodNameEnvVar {
+						envVarFound = true
+						break
+					}
+				}
+				require.True(t, envVarFound)
+			} else {
+				require.NotContains(t, amArgs, expectedArg)
+			}
+		})
+	}
+}
+
 func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
 	replicas := int32(1)
 	customServiceName := "my-custom-alertmanager-svc"
