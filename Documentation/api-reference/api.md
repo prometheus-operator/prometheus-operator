@@ -3854,9 +3854,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
@@ -8296,6 +8302,64 @@ authentication.</p>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: <code>512MB</code>.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingFloats">ChunkEncodingFloats
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Xor&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Xor2&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>)
+</p>
+<div>
+<p>ChunkEncodingSpec configures per-chunk-type encoding overrides.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>floats</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingFloats">
+ChunkEncodingFloats
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floats selects the encoding used for float chunks.
+Valid values are &ldquo;Xor&rdquo; and &ldquo;Xor2&rdquo;.</p>
+<p>Notice:
+* Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).
+* Setting &ldquo;Xor2&rdquo; automatically adds the <code>xor2-encoding</code> feature flag.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig
 </h3>
 <p>
@@ -12895,6 +12959,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>send defines whether metric metadata is sent to the remote storage or not.</p>
+<p>The setting is ignored when Remote Write message&rsquo;s version 2.0 is used.</p>
 </td>
 </tr>
 <tr>
@@ -17166,9 +17231,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
@@ -20782,6 +20853,23 @@ It may not trigger the stale series compaction if the usual head compaction
 is about to happen soon.</p>
 <p>If set to 0, stale series compaction is disabled.</p>
 <p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>chunkEncoding</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">
+ChunkEncodingSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>chunkEncoding configures per-chunk-type encoding overrides.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+<p>Notice: Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).</p>
 </td>
 </tr>
 </tbody>
