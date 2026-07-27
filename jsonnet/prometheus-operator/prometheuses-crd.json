@@ -3238,7 +3238,7 @@
                     "type": "boolean"
                   },
                   "disableCompaction": {
-                    "description": "disableCompaction when true, the Prometheus compaction is disabled.\nWhen `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically\ndisables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).",
+                    "description": "disableCompaction when true, the Prometheus compaction is disabled.\n\nWhen `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's\ndefault handling depends on the Prometheus and Thanos sidecar versions:\n  - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race\n    conditions during block uploads (as the Thanos documentation recommends).\n  - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated\n    with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only\n    compacted after they have been uploaded.\nSetting this field to true always disables local compaction regardless of the versions.",
                     "type": "boolean"
                   },
                   "dnsConfig": {

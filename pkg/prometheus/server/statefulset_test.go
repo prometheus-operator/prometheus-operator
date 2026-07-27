@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strconv"
@@ -996,6 +997,12 @@ func TestThanosObjectStorage(t *testing.T) {
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled (min == max block duration) rather than delegated to the
+			// delayed-compaction coordination path.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
@@ -1056,6 +1063,12 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled (min == max block duration) rather than delegated to the
+			// delayed-compaction coordination path.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfigFile: &testPath,
 				BlockDuration:           "2h",
@@ -1122,6 +1135,12 @@ func TestThanosBlockDuration(t *testing.T) {
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled and the BlockDuration is applied to the min/max block
+			// duration flags.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				BlockDuration: "1h",
 				ObjectStorageConfig: &corev1.SecretKeySelector{
@@ -1139,6 +1158,94 @@ func TestThanosBlockDuration(t *testing.T) {
 		}
 	}
 	require.True(t, found, "Thanos BlockDuration arg change not found")
+}
+
+// containerByName returns the container with the given name from the pod spec.
+func containerByName(t *testing.T, sset *appsv1.StatefulSet, name string) corev1.Container {
+	t.Helper()
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == name {
+			return c
+		}
+	}
+	require.Failf(t, "container not found", "no container named %q in the pod spec", name)
+	return corev1.Container{}
+}
+
+// TestThanosDelayedCompaction verifies that with Prometheus >= v3.9.0 and Thanos
+// >= v0.41.0, the operator keeps local compaction enabled and coordinates block
+// uploads with the sidecar through the shipper meta file instead of disabling
+// compaction. Otherwise (versions too old, or compaction explicitly disabled) it
+// falls back to disabling compaction.
+// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+func TestThanosDelayedCompaction(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		promVersion       string
+		thanosVersion     string
+		disableCompaction bool
+		delayed           bool
+	}{
+		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.41.0", delayed: true},
+		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.41.0"},
+		{name: "thanos too old", promVersion: "3.9.0", thanosVersion: "0.40.0"},
+		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.41.0", disableCompaction: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			thanosVersion := tc.thanosVersion
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
+					},
+					DisableCompaction: tc.disableCompaction,
+					Thanos: &monitoringv1.ThanosSpec{
+						Version: &thanosVersion,
+						ObjectStorageConfig: &corev1.SecretKeySelector{
+							Key: "thanos-config-secret-test",
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := containerByName(t, sset, "prometheus").Args
+			sidecarArgs := containerByName(t, sset, "thanos-sidecar").Args
+			delayArg := "--storage.tsdb.delay-compact-file.path=" + filepath.Join(prompkg.StorageDir, "thanos.shipper.json")
+
+			if tc.delayed {
+				require.Contains(t, promArgs, delayArg)
+				for _, arg := range promArgs {
+					require.False(t, strings.HasPrefix(arg, "--storage.tsdb.max-block-duration="), "compaction should stay enabled: %q", arg)
+					require.False(t, strings.HasPrefix(arg, "--storage.tsdb.min-block-duration="), "compaction should stay enabled: %q", arg)
+				}
+				require.Contains(t, sidecarArgs, "--shipper.meta-file-name=thanos.shipper.json")
+				require.Contains(t, sidecarArgs, "--shipper.ignore-unequal-block-size")
+				return
+			}
+
+			require.Contains(t, promArgs, "--storage.tsdb.max-block-duration=2h")
+			require.NotContains(t, promArgs, delayArg)
+			require.NotContains(t, sidecarArgs, "--shipper.ignore-unequal-block-size")
+		})
+	}
+}
+
+// TestThanosInvalidVersion verifies that an unparsable Thanos version surfaces
+// an error instead of being silently swallowed.
+func TestThanosInvalidVersion(t *testing.T) {
+	invalidVersion := "not-a-version"
+	_, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Version: &invalidVersion,
+				ObjectStorageConfig: &corev1.SecretKeySelector{
+					Key: "thanos-config-secret-test",
+				},
+			},
+		},
+	})
+	require.Error(t, err)
 }
 
 func TestThanosWithNamedPVC(t *testing.T) {
