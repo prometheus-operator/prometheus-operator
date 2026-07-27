@@ -33,6 +33,7 @@ import (
 	"gotest.tools/v3/golden"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
@@ -115,11 +116,53 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 		name            string
 		amVersion       *semver.Version
 		globalConfig    *monitoringv1.AlertmanagerGlobalConfig
+		tracingConfig   *monitoringv1.TracingConfig
 		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
 		amConfig        *monitoringv1alpha1.AlertmanagerConfig
 		wantErr         bool
 		golden          string
 	}{
+		{
+			name:      "valid tracing config",
+			amVersion: &version32,
+			tracingConfig: &monitoringv1.TracingConfig{
+				ClientType:       new("grpc"),
+				Endpoint:         "tempo.monitoring.svc:4317",
+				SamplingFraction: func(v resource.Quantity) *resource.Quantity { return &v }(resource.MustParse("0.5")),
+				Insecure:         new(true),
+				Headers: map[string]string{
+					"X-Scope-OrgID": "tenant-a",
+				},
+				Compression: new("gzip"),
+				Timeout:     ptr.To(monitoringv1.Duration("10s")),
+			},
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "global-config",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name: "null",
+						},
+						{
+							Name: "myreceiver",
+						},
+					},
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "null",
+						Routes: []apiextensionsv1.JSON{
+							{
+								Raw: myrouteJSON,
+							},
+						},
+					},
+				},
+			},
+			matcherStrategy: monitoringv1.AlertmanagerConfigMatcherStrategy{Type: "OnNamespace"},
+			golden:          "valid_tracing_config.golden",
+		},
 		{
 			name:      "valid global config",
 			amVersion: &version28,
@@ -2257,7 +2300,7 @@ Z8Ja2z8jw1xUKxfurno8wsAgFAQLuUZ0sTpwHBtwzFEdIeaAHBbNkkuGq7leIw/u
 			},
 		)
 		t.Run(tt.name, func(t *testing.T) {
-			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.amConfig)
+			err := cb.initializeFromAlertmanagerConfig(context.TODO(), tt.globalConfig, tt.tracingConfig, tt.amConfig)
 			if tt.wantErr {
 				t.Logf("err: %s", err)
 				require.Error(t, err)
