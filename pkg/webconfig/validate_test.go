@@ -150,8 +150,8 @@ func TestValidateTLSAssets(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "missing cert and key definition",
-			tls:  &monitoringv1.WebTLSConfig{},
+			name:    "missing cert and key definition",
+			tls:     &monitoringv1.WebTLSConfig{},
 			wantErr: true,
 		},
 	} {
