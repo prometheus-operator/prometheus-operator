@@ -4,10 +4,10 @@ go 1.26.0
 
 require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.92.1
-	k8s.io/api v0.36.2
-	k8s.io/apiextensions-apiserver v0.36.2
-	k8s.io/apimachinery v0.36.2
-	k8s.io/client-go v0.36.2
+	k8s.io/api v0.36.3
+	k8s.io/apiextensions-apiserver v0.36.3
+	k8s.io/apimachinery v0.36.3
+	k8s.io/client-go v0.36.3
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0
 )
 
