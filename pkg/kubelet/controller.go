@@ -240,35 +240,32 @@ func (c *Controller) Run(ctx context.Context) error {
 	}
 }
 
-// nodeAddress returns the provided node's address, based on the priority:
-// 1. NodeInternalIP
-// 2. NodeExternalIP
-//
-// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func (c *Controller) nodeAddress(node corev1.Node) (string, map[corev1.NodeAddressType][]string, error) {
+// nodeAddresses returns all addresses of the node for the configured priority.
+// It mirrors the priority/fallback logic from
+// github.com/prometheus/prometheus/discovery/kubernetes/node.go.
+func (c *Controller) nodeAddresses(node corev1.Node) ([]string, error) {
 	m := map[corev1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
 	switch c.nodeAddressPriority {
-	case "internal":
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
-		}
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
-		}
 	case "external":
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
+		}
+	default: // "internal"
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
+		}
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
 	}
-
-	return "", m, fmt.Errorf("host address unknown")
+	return nil, fmt.Errorf("host address unknown")
 }
 
 // nodeReadyConditionKnown checks the node for a known Ready condition. If the
@@ -332,35 +329,37 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 	)
 
 	for _, n := range nodes {
-		address, _, err := c.nodeAddress(n)
+		nodeIPs, err := c.nodeAddresses(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
 		}
 
-		ip := net.ParseIP(address)
-		if ip == nil {
-			errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s): %w", address, n.Name, c.nodeAddressPriority, err))
-			continue
-		}
+		for _, address := range nodeIPs {
+			ip := net.ParseIP(address)
+			if ip == nil {
+				errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s)", address, n.Name, c.nodeAddressPriority))
+				continue
+			}
 
-		na := nodeAddress{
-			ipAddress:  address,
-			name:       n.Name,
-			uid:        n.UID,
-			apiVersion: n.APIVersion,
-			ipv4:       ip.To4() != nil,
-			ready:      nodeReadyConditionKnown(n),
-		}
-		addresses = append(addresses, na)
+			na := nodeAddress{
+				ipAddress:  address,
+				name:       n.Name,
+				uid:        n.UID,
+				apiVersion: n.APIVersion,
+				ipv4:       ip.To4() != nil,
+				ready:      nodeReadyConditionKnown(n),
+			}
+			addresses = append(addresses, na)
 
-		if !na.ready {
-			c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
-			readyUnknownNodes[address] = n.Name
-			continue
-		}
+			if !na.ready {
+				c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
+				readyUnknownNodes[address] = n.Name
+				continue
+			}
 
-		readyKnownNodes[address] = n.Name
+			readyKnownNodes[address] = n.Name
+		}
 	}
 
 	// We want to remove any nodes that have an unknown ready state *and* a
