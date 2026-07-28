@@ -470,11 +470,19 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	if !k8s.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
+	deletionInProgress := rr.DeletionInProgress(mCur)
+
+	if !k8s.HasStatusCleanupFinalizer(mCur) && deletionInProgress {
 		return
 	}
 
-	if !rr.hasStateChanged(mOld, mCur) {
+	// The object was just marked for deletion: reconcile it even if its
+	// generation, labels and annotations haven't changed so that the
+	// controller can run its deletion logic (e.g. removing the status
+	// cleanup finalizer).
+	deletionJustStarted := deletionInProgress && mOld.GetDeletionTimestamp() == nil
+
+	if !deletionJustStarted && !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
 
