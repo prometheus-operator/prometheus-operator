@@ -2773,6 +2773,11 @@ func (in *PrometheusRuleSpec) DeepCopy() *PrometheusRuleSpec {
 func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 	*out = *in
 	in.CommonPrometheusFields.DeepCopyInto(&out.CommonPrometheusFields)
+	if in.RetentionPercentage != nil {
+		in, out := &in.RetentionPercentage, &out.RetentionPercentage
+		x := (*in).DeepCopy()
+		*out = &x
+	}
 	if in.ShardRetentionPolicy != nil {
 		in, out := &in.ShardRetentionPolicy, &out.ShardRetentionPolicy
 		*out = new(ShardRetentionPolicy)
