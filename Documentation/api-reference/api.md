@@ -11254,6 +11254,22 @@ string
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders defines the custom HTTP headers sent with every scrape
+request.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>authorization</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeAuthorization">
@@ -12820,6 +12836,50 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.HTTPHeader">HTTPHeader
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.Endpoint">Endpoint</a>, <a href="#monitoring.coreos.com/v1.PodMetricsEndpoint">PodMetricsEndpoint</a>)
+</p>
+<div>
+<p>HTTPHeader defines a custom HTTP header sent by the client with each
+request.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>name defines the name of the HTTP header.</p>
+<p>The name is case-insensitive and it can&rsquo;t be one of the headers managed
+by Prometheus itself (e.g. <code>Authorization</code>, <code>Host</code> or <code>User-Agent</code>).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>values defines the values of the HTTP header.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.HostAlias">HostAlias
 </h3>
 <p>
@@ -13934,6 +13994,22 @@ bool
 Succeeded state) are dropped during the target discovery.</p>
 <p>If unset, the filtering is enabled.</p>
 <p>More info: <a href="https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase">https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders defines the custom HTTP headers sent with every scrape
+request.</p>
+<p>It requires Prometheus &gt;= v2.55.0.</p>
 </td>
 </tr>
 <tr>

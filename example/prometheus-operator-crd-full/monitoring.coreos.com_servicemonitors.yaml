@@ -263,6 +263,39 @@ spec:
                         honorTimestamps defines whether Prometheus preserves the timestamps
                         when exposed by the target.
                       type: boolean
+                    httpHeaders:
+                      description: |-
+                        httpHeaders defines the custom HTTP headers sent with every scrape
+                        request.
+
+                        It requires Prometheus >= v2.55.0.
+                      items:
+                        description: |-
+                          HTTPHeader defines a custom HTTP header sent by the client with each
+                          request.
+                        properties:
+                          name:
+                            description: |-
+                              name defines the name of the HTTP header.
+
+                              The name is case-insensitive and it can't be one of the headers managed
+                              by Prometheus itself (e.g. `Authorization`, `Host` or `User-Agent`).
+                            minLength: 1
+                            type: string
+                          values:
+                            description: values defines the values of the HTTP header.
+                            items:
+                              type: string
+                            minItems: 1
+                            type: array
+                            x-kubernetes-list-type: atomic
+                        required:
+                        - name
+                        type: object
+                      type: array
+                      x-kubernetes-list-map-keys:
+                      - name
+                      x-kubernetes-list-type: map
                     interval:
                       description: |-
                         interval at which Prometheus scrapes the metrics from the target.

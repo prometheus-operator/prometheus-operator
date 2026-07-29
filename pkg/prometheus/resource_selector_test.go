@@ -645,6 +645,47 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
+			scenario: "valid HTTP headers",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name:   "X-Scope-OrgID",
+							Values: []string{"tenant-a"},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "HTTP header reserved by Prometheus",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name:   "authorization",
+							Values: []string{"Bearer foo"},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header without value",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
 			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
@@ -1231,6 +1272,47 @@ func TestSelectPodMonitors(t *testing.T) {
 				})
 			},
 			valid: true,
+		},
+		{
+			scenario: "valid HTTP headers",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name:   "X-Scope-OrgID",
+							Values: []string{"tenant-a"},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "HTTP header reserved by Prometheus",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name:   "authorization",
+							Values: []string{"Bearer foo"},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header without value",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+						},
+					},
+				})
+			},
+			valid: false,
 		},
 		{
 			scenario: "utf-8 metric relabeling config with prom2",
