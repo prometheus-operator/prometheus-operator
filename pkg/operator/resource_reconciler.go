@@ -476,13 +476,13 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	// The object was just marked for deletion: reconcile it even if its
-	// generation, labels and annotations haven't changed so that the
-	// controller can run its deletion logic (e.g. removing the status
-	// cleanup finalizer).
-	deletionJustStarted := deletionInProgress && mOld.GetDeletionTimestamp() == nil
-
-	if !deletionJustStarted && !rr.hasStateChanged(mOld, mCur) {
+	// The object is being deleted and still carries the status cleanup
+	// finalizer: always reconcile it, even if its generation, labels and
+	// annotations haven't changed, so that the controller can run its
+	// deletion logic (e.g. removing the finalizer). We can't rely on
+	// comparing the old and current deletion timestamps here because the
+	// informer may have missed the update event that set it.
+	if !deletionInProgress && !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
 

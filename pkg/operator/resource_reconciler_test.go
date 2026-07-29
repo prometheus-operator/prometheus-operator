@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -71,9 +72,7 @@ func TestOnUpdateDeletionInProgress(t *testing.T) {
 
 	rr.OnUpdate(old, cur)
 
-	if got := rr.reconcileQ.Len(); got != 1 {
-		t.Fatalf("expected 1 item in the reconcile queue, got %d", got)
-	}
+	require.Equal(t, 1, rr.reconcileQ.Len())
 }
 
 // TestOnUpdateNoStateChange ensures that the reconciler doesn't enqueue the
@@ -96,9 +95,33 @@ func TestOnUpdateNoStateChange(t *testing.T) {
 
 	rr.OnUpdate(old, cur)
 
-	if got := rr.reconcileQ.Len(); got != 0 {
-		t.Fatalf("expected 0 items in the reconcile queue, got %d", got)
+	require.Equal(t, 0, rr.reconcileQ.Len())
+}
+
+// TestOnUpdateDeletionInProgressMissedEvent ensures that the reconciler still
+// enqueues the object while its deletion is in progress even when the old
+// object already had the deletion timestamp set, e.g. because the informer
+// missed the update event that originally set it.
+func TestOnUpdateDeletionInProgressMissedEvent(t *testing.T) {
+	rr := newTestResourceReconciler(t)
+
+	now := metav1.Now()
+	old := &metav1.PartialObjectMetadata{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              "prometheus",
+			Namespace:         "default",
+			ResourceVersion:   "1",
+			Finalizers:        []string{k8s.StatusCleanupFinalizerName},
+			DeletionTimestamp: &now,
+		},
 	}
+
+	cur := old.DeepCopy()
+	cur.ResourceVersion = "2"
+
+	rr.OnUpdate(old, cur)
+
+	require.Equal(t, 1, rr.reconcileQ.Len())
 }
 
 // TestOnUpdateDeletionInProgressWithoutFinalizer ensures that the reconciler
@@ -120,7 +143,5 @@ func TestOnUpdateDeletionInProgressWithoutFinalizer(t *testing.T) {
 
 	rr.OnUpdate(old, cur)
 
-	if got := rr.reconcileQ.Len(); got != 0 {
-		t.Fatalf("expected 0 items in the reconcile queue, got %d", got)
-	}
+	require.Equal(t, 0, rr.reconcileQ.Len())
 }
