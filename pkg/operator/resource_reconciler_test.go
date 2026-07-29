@@ -16,7 +16,6 @@ package operator
 
 import (
 	"context"
-	"io"
 	"log/slog"
 	"testing"
 
@@ -40,7 +39,7 @@ func newTestResourceReconciler(t *testing.T) *ResourceReconciler {
 	t.Helper()
 
 	return NewResourceReconciler(
-		slog.New(slog.NewTextHandler(io.Discard, nil)),
+		slog.New(slog.DiscardHandler),
 		noopSyncer{},
 		noopGetter{},
 		NewMetrics(prometheus.NewRegistry()),
