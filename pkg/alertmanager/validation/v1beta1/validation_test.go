@@ -608,3 +608,175 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "validate pagerduty config - url validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://%><invalid.com")),
+									ClientURL: new("http://test.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - client url validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL: new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - missing routing key and service key",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL: new("http://test.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - service key specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "validate pagerduty config - invalid link href",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									PagerDutyLinkConfigs: []monitoringv1beta1.PagerDutyLinkConfig{
+										{
+											Href: new("http://%><invalid.com"),
+											Text: new("this is a string"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - invalid image href",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									PagerDutyImageConfigs: []monitoringv1beta1.PagerDutyImageConfig{
+										{
+											Href: new("http://%><invalid.com"),
+											Src:  new("this is a string"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none - %s", err.Error())
+			}
+		})
+	}
+}

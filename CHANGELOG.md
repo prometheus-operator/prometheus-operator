@@ -1,6 +1,14 @@
-## UNRELEASED
+## 0.93.0 / 2026-07-28
 
+* [CHANGE] Switch from uint to int types in the Go definition of the CRDs and add API validations to reject negative values. #8662 #8666
+* [CHANGE] Keep local Prometheus compaction enabled when the Thanos sidecar uploads to object storage, for Prometheus >= v3.9.0 and Thanos >= v0.41.0. The operator now coordinates uploads through the shipper meta file (`--storage.tsdb.delay-compact-file.path`, `--shipper.meta-file-name`, `--shipper.ignore-unequal-block-size`) instead of disabling compaction. Set `spec.disableCompaction: true` to keep the previous behavior. #8694
+* [CHANGE] Define a default value of 1 for `.spec.shards` for `Prometheus` and `PrometheusAgent` CRDs. #8691
 * [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
+* [CHANGE/BUGFIX] Disable metadata sending when the remote-write configuration uses message version v2.0. #8700
+* [FEATURE] Add `updateMessage` field to the Slack receiver in the `AlertmanagerConfig` CRD. #8506
+* [FEATURE] Add `chunkEncoding` field to `TSDBSpec` for runtime float encoding selection in `Prometheus` and `PrometheusAgent` CRDs. #8675
+* [ENHANCEMENT] Use pod's name as the peer name for Alertmanager >= v0.30.0. #8705
+* [BUGFIX] Create IPv6 EndpointSlice for the `kubelet` Service on dual-stack clusters. #8682
 
 ## 0.92.1 / 2026-06-30
 
