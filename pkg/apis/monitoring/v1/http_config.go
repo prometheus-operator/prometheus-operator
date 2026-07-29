@@ -182,6 +182,35 @@ func (hc *HTTPConfig) Validate() error {
 	return nil
 }
 
+// HTTPHeader defines a custom HTTP header sent by the client with each
+// request.
+type HTTPHeader struct {
+	// name defines the name of the HTTP header.
+	//
+	// The name is case-insensitive and it can't be one of the headers managed
+	// by Prometheus itself (e.g. `Authorization`, `Host` or `User-Agent`).
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name"`
+
+	// values defines the values of the HTTP header.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
+	// +optional
+	Values []string `json:"values,omitempty"`
+}
+
+// Validate semantically validates the given HTTPHeader.
+func (h *HTTPHeader) Validate() error {
+	if len(h.Values) == 0 {
+		return errors.New("values must contain at least one item")
+	}
+
+	return nil
+}
+
 // HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
 // (from secret/configmap references as well as files).
 type HTTPConfigWithTLSFiles struct {
