@@ -343,6 +343,7 @@ type PodMetricsEndpoint struct {
 	//
 	// It requires Prometheus >= v2.55.0.
 	//
+	// +kubebuilder:validation:MinItems=1
 	// +listType=map
 	// +listMapKey=name
 	// +optional

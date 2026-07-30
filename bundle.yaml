@@ -23241,6 +23241,7 @@ spec:
                           values:
                             description: values defines the values of the HTTP header.
                             items:
+                              minLength: 1
                               type: string
                             minItems: 1
                             type: array
@@ -23248,6 +23249,7 @@ spec:
                         required:
                         - name
                         type: object
+                      minItems: 1
                       type: array
                       x-kubernetes-list-map-keys:
                       - name
@@ -65631,6 +65633,7 @@ spec:
                           values:
                             description: values defines the values of the HTTP header.
                             items:
+                              minLength: 1
                               type: string
                             minItems: 1
                             type: array
@@ -65638,6 +65641,7 @@ spec:
                         required:
                         - name
                         type: object
+                      minItems: 1
                       type: array
                       x-kubernetes-list-map-keys:
                       - name

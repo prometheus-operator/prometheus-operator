@@ -197,6 +197,7 @@ type HTTPHeader struct {
 	// values defines the values of the HTTP header.
 	//
 	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=atomic
 	// +optional
 	Values []string `json:"values,omitempty"`
