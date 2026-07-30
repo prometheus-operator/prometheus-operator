@@ -114,6 +114,7 @@ var (
 		// The v3.13 is a long-term support release.
 		"v3.13.0",
 		"v3.13.1",
+		"v3.13.2",
 	}
 )
 
