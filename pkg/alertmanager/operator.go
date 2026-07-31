@@ -454,7 +454,7 @@ func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
 		return
 	}
 	if !exists {
-		c.logger.Error(fmt.Sprintf("get namespace to enqueue Alertmanager instances failed: namespace %q does not exist", nsName))
+		c.logger.Error("get namespace to enqueue Alertmanager instances failed: namespace does not exist", "namespace", nsName)
 		return
 	}
 	ns := nsObject.(*corev1.Namespace)

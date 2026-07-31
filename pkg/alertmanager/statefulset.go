@@ -531,7 +531,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		for _, v := range amCfg.Templates {
 			if v.ConfigMap != nil {
 				if keys.Has(v.ConfigMap.Key) {
-					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.ConfigMap.Key, v.ConfigMap.Name))
+					logger.Debug("skipping due to duplicate key", "key", v.ConfigMap.Key, "configmap", v.ConfigMap.Name)
 					continue
 				}
 				sources = append(sources, corev1.VolumeProjection{
@@ -549,7 +549,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			}
 			if v.Secret != nil {
 				if keys.Has(v.Secret.Key) {
-					logger.Debug(fmt.Sprintf("skipping %q due to duplicate key %q", v.Secret.Key, v.Secret.Name))
+					logger.Debug("skipping due to duplicate key", "key", v.Secret.Key, "secret", v.Secret.Name)
 					continue
 				}
 				sources = append(sources, corev1.VolumeProjection{
