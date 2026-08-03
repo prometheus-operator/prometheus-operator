@@ -1695,7 +1695,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 						Name: "recv1",
 						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
 							{
-								WebhookURLFile: ptr.To("/var/secrets/discord/url"),
+								APIURLFile: new("/var/secrets/discord/url"),
 							},
 						},
 					}},
@@ -1718,7 +1718,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
 									Key:                  "valid-url",
 								},
-								WebhookURLFile: ptr.To("/var/secrets/discord/url"),
+								APIURLFile: new("/var/secrets/discord/url"),
 							},
 						},
 					}},

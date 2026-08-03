@@ -446,8 +446,8 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 		*out = new(corev1.SecretKeySelector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.WebhookURLFile != nil {
-		in, out := &in.WebhookURLFile, &out.WebhookURLFile
+	if in.APIURLFile != nil {
+		in, out := &in.APIURLFile, &out.APIURLFile
 		*out = new(string)
 		**out = **in
 	}

@@ -27098,21 +27098,22 @@ Kubernetes core/v1.SecretKeySelector
 <p>apiURL defines the secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.
-Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>webhookURLFile</code><br/>
+<code>apiURLFile</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>webhookURLFile defines the file to read the Discord webhook URL from.
+<p>apiURLFile defines the file to read the Discord webhook URL from.
 It is mutually exclusive with <code>apiURL</code>.
-Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+Either <code>apiURL</code> or <code>apiURLFile</code> is required.
+It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -38301,21 +38302,22 @@ SecretKeySelector
 <p>apiURL defines the secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
 object and accessible by the Prometheus Operator.
-Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+It is mutually exclusive with <code>apiURLFile</code>.
+Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>webhookURLFile</code><br/>
+<code>apiURLFile</code><br/>
 <em>
 string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>webhookURLFile defines the file to read the Discord webhook URL from.
+<p>apiURLFile defines the file to read the Discord webhook URL from.
 It is mutually exclusive with <code>apiURL</code>.
-Either <code>apiURL</code> or <code>webhookURLFile</code> is required.</p>
+Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
 </td>
 </tr>
 <tr>

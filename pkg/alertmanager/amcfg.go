@@ -959,8 +959,8 @@ func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 		out.WebhookURL = url
 	}
 
-	if in.WebhookURLFile != nil && *in.WebhookURLFile != "" {
-		out.WebhookURLFile = *in.WebhookURLFile
+	if in.APIURLFile != nil && *in.APIURLFile != "" {
+		out.WebhookURLFile = *in.APIURLFile
 	}
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)

@@ -112,7 +112,7 @@
                         description: 'DiscordConfig configures notifications via Discord.\nSee https://prometheus.io/docs/alerting/latest/configuration/#discord_config',
                         properties: {
                           apiURL: {
-                            description: "apiURL defines the secret's key that contains the Discord webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nEither `apiURL` or `webhookURLFile` is required.",
+                            description: "apiURL defines the secret's key that contains the Discord webhook URL.\nThe secret needs to be in the same namespace as the AlertmanagerConfig\nobject and accessible by the Prometheus Operator.\nIt is mutually exclusive with `apiURLFile`.\nEither `apiURL` or `apiURLFile` is required.",
                             properties: {
                               key: {
                                 description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
@@ -130,6 +130,10 @@
                               'name',
                             ],
                             type: 'object',
+                          },
+                          apiURLFile: {
+                            description: 'apiURLFile defines the file to read the Discord webhook URL from.\nIt is mutually exclusive with `apiURL`.\nEither `apiURL` or `apiURLFile` is required.',
+                            type: 'string',
                           },
                           avatarURL: {
                             description: 'avatarURL defines the avatar url of the message sender.',
@@ -794,10 +798,6 @@
                           username: {
                             description: 'username defines the username of the message sender.',
                             minLength: 1,
-                            type: 'string',
-                          },
-                          webhookURLFile: {
-                            description: 'webhookURLFile defines the file to read the Discord webhook URL from.\nIt is mutually exclusive with `apiURL`.\nEither `apiURL` or `webhookURLFile` is required.',
                             type: 'string',
                           },
                         },

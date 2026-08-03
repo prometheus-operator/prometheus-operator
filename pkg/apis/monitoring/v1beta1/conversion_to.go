@@ -159,7 +159,6 @@ func convertKeyValuesTo(in []KeyValue) []v1alpha1.KeyValue {
 	}
 
 	return out
-
 }
 
 func convertSecretKeySelectorTo(in *SecretKeySelector) *v1.SecretKeySelector {
@@ -260,15 +259,15 @@ func convertPagerDutyConfigTo(in PagerDutyConfig) v1alpha1.PagerDutyConfig {
 
 func convertDiscordConfigTo(in DiscordConfig) v1alpha1.DiscordConfig {
 	return v1alpha1.DiscordConfig{
-		APIURL:         convertSecretKeySelectorTo(in.APIURL),
-		WebhookURLFile: in.WebhookURLFile,
-		HTTPConfig:     convertHTTPConfigTo(in.HTTPConfig),
-		Title:          in.Title,
-		Message:        in.Message,
-		SendResolved:   in.SendResolved,
-		Content:        in.Content,
-		Username:       in.Username,
-		AvatarURL:      (*v1alpha1.URL)(in.AvatarURL),
+		APIURL:       convertSecretKeySelectorTo(in.APIURL),
+		APIURLFile:   in.APIURLFile,
+		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		Title:        in.Title,
+		Message:      in.Message,
+		SendResolved: in.SendResolved,
+		Content:      in.Content,
+		Username:     in.Username,
+		AvatarURL:    (*v1alpha1.URL)(in.AvatarURL),
 	}
 }
 
@@ -677,7 +676,6 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 				Equal:       in.Equal,
 			},
 		)
-
 	}
 
 	for _, in := range src.Spec.TimeIntervals {

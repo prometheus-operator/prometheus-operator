@@ -199,14 +199,14 @@ func validateOpsGenieConfigs(configs []monitoringv1alpha1.OpsGenieConfig) error 
 func validateDiscordConfigs(configs []monitoringv1alpha1.DiscordConfig) error {
 	v := func(conf monitoringv1alpha1.DiscordConfig) error {
 		hasAPIURL := conf.APIURL != nil
-		hasWebhookURLFile := conf.WebhookURLFile != nil && len(strings.TrimSpace(*conf.WebhookURLFile)) > 0
+		hasAPIURLFile := conf.APIURLFile != nil && len(strings.TrimSpace(*conf.APIURLFile)) > 0
 
-		if !hasAPIURL && !hasWebhookURLFile {
-			return errors.New("one of 'apiURL' or 'webhookURLFile' must be specified")
+		if !hasAPIURL && !hasAPIURLFile {
+			return errors.New("one of 'apiURL' or 'apiURLFile' must be specified")
 		}
 
-		if hasAPIURL && hasWebhookURLFile {
-			return errors.New("'apiURL' and 'webhookURLFile' are mutually exclusive")
+		if hasAPIURL && hasAPIURLFile {
+			return errors.New("'apiURL' and 'apiURLFile' are mutually exclusive")
 		}
 
 		if err := conf.HTTPConfig.Validate(); err != nil {

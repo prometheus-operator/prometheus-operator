@@ -1362,17 +1362,17 @@ func checkDiscordConfigs(
 		}
 
 		hasAPIURL := config.APIURL != nil
-		hasWebhookURLFile := config.WebhookURLFile != nil && *config.WebhookURLFile != ""
+		hasAPIURLFile := config.APIURLFile != nil && *config.APIURLFile != ""
 
-		if !hasAPIURL && !hasWebhookURLFile {
-			return errors.New("one of 'apiURL' or 'webhookURLFile' must be specified for discordConfig")
+		if !hasAPIURL && !hasAPIURLFile {
+			return errors.New("one of 'apiURL' or 'apiURLFile' must be specified for discordConfig")
 		}
 
-		if hasAPIURL && hasWebhookURLFile {
-			return errors.New("'apiURL' and 'webhookURLFile' are mutually exclusive for discordConfig")
+		if hasAPIURL && hasAPIURLFile {
+			return errors.New("'apiURL' and 'apiURLFile' are mutually exclusive for discordConfig")
 		}
 
-		if hasWebhookURLFile && amVersion.LT(semver.MustParse("0.28.0")) {
+		if hasAPIURLFile && amVersion.LT(semver.MustParse("0.28.0")) {
 			return fmt.Errorf("'webhook_url_file' supported in Alertmanager >= 0.28.0 only - current %s", amVersion)
 		}
 

@@ -331,14 +331,15 @@ type DiscordConfig struct {
 	// apiURL defines the secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// Either `apiURL` or `webhookURLFile` is required.
+	// It is mutually exclusive with `apiURLFile`.
+	// Either `apiURL` or `apiURLFile` is required.
 	// +optional
 	APIURL *SecretKeySelector `json:"apiURL,omitempty"`
-	// webhookURLFile defines the file to read the Discord webhook URL from.
+	// apiURLFile defines the file to read the Discord webhook URL from.
 	// It is mutually exclusive with `apiURL`.
-	// Either `apiURL` or `webhookURLFile` is required.
+	// Either `apiURL` or `apiURLFile` is required.
 	// +optional
-	WebhookURLFile *string `json:"webhookURLFile,omitempty"`
+	APIURLFile *string `json:"apiURLFile,omitempty"`
 	// title defines the template of the message's title.
 	// +optional
 	Title *string `json:"title,omitempty"`
