@@ -253,7 +253,6 @@ spec:
                               apiURL defines the secret's key that contains the Discord webhook URL.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `apiURL` or `apiURLFile` is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -276,13 +275,6 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          apiURLFile:
-                            description: |-
-                              apiURLFile defines the file to read the Discord webhook URL from.
-                              It is mutually exclusive with `apiURL`.
-                              Either `apiURL` or `apiURLFile` is required.
-                              It requires Alertmanager >= 0.28.0.
-                            type: string
                           avatarURL:
                             description: avatarURL defines the avatar url of the message
                               sender.
@@ -1015,6 +1007,8 @@ spec:
                               sender.
                             minLength: 1
                             type: string
+                        required:
+                        - apiURL
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic

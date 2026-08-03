@@ -27094,26 +27094,9 @@ Kubernetes core/v1.SecretKeySelector
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>apiURL defines the secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.
-Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiURLFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiURLFile defines the file to read the Discord webhook URL from.
-It is mutually exclusive with <code>apiURL</code>.
-Either <code>apiURL</code> or <code>apiURLFile</code> is required.
-It requires Alertmanager &gt;= 0.28.0.</p>
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -38292,32 +38275,15 @@ bool
 <td>
 <code>apiURL</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.SecretKeySelector">
-SecretKeySelector
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
 </a>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>apiURL defines the secret&rsquo;s key that contains the Discord webhook URL.
 The secret needs to be in the same namespace as the AlertmanagerConfig
-object and accessible by the Prometheus Operator.
-It is mutually exclusive with <code>apiURLFile</code>.
-Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>apiURLFile</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>apiURLFile defines the file to read the Discord webhook URL from.
-It is mutually exclusive with <code>apiURL</code>.
-Either <code>apiURL</code> or <code>apiURLFile</code> is required.</p>
+object and accessible by the Prometheus Operator.</p>
 </td>
 </tr>
 <tr>
@@ -41166,7 +41132,7 @@ is set; set explicitly when configuring ca_bundle via shared AWS config.</p>
 <h3 id="monitoring.coreos.com/v1beta1.SecretKeySelector">SecretKeySelector
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.DiscordConfig">DiscordConfig</a>, <a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>SecretKeySelector selects a key of a Secret.</p>

@@ -18,6 +18,7 @@ package v1beta1
 
 import (
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
+	v1 "k8s.io/api/core/v1"
 )
 
 // DiscordConfigApplyConfiguration represents a declarative configuration of the DiscordConfig type for use
@@ -31,13 +32,7 @@ type DiscordConfigApplyConfiguration struct {
 	// apiURL defines the secret's key that contains the Discord webhook URL.
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
-	// It is mutually exclusive with `apiURLFile`.
-	// Either `apiURL` or `apiURLFile` is required.
-	APIURL *SecretKeySelectorApplyConfiguration `json:"apiURL,omitempty"`
-	// apiURLFile defines the file to read the Discord webhook URL from.
-	// It is mutually exclusive with `apiURL`.
-	// Either `apiURL` or `apiURLFile` is required.
-	APIURLFile *string `json:"apiURLFile,omitempty"`
+	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
 	// title defines the template of the message's title.
 	Title *string `json:"title,omitempty"`
 	// message defines the template of the message's body.
@@ -69,16 +64,8 @@ func (b *DiscordConfigApplyConfiguration) WithSendResolved(value bool) *DiscordC
 // WithAPIURL sets the APIURL field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the APIURL field is set to the value of the last call.
-func (b *DiscordConfigApplyConfiguration) WithAPIURL(value *SecretKeySelectorApplyConfiguration) *DiscordConfigApplyConfiguration {
-	b.APIURL = value
-	return b
-}
-
-// WithAPIURLFile sets the APIURLFile field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the APIURLFile field is set to the value of the last call.
-func (b *DiscordConfigApplyConfiguration) WithAPIURLFile(value string) *DiscordConfigApplyConfiguration {
-	b.APIURLFile = &value
+func (b *DiscordConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *DiscordConfigApplyConfiguration {
+	b.APIURL = &value
 	return b
 }
 

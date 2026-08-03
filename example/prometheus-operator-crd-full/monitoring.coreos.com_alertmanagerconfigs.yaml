@@ -253,7 +253,6 @@ spec:
                               apiURL defines the secret's key that contains the Discord webhook URL.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              Either `apiURL` or `apiURLFile` is required.
                             properties:
                               key:
                                 description: The key of the secret to select from.  Must
@@ -276,13 +275,6 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
-                          apiURLFile:
-                            description: |-
-                              apiURLFile defines the file to read the Discord webhook URL from.
-                              It is mutually exclusive with `apiURL`.
-                              Either `apiURL` or `apiURLFile` is required.
-                              It requires Alertmanager >= 0.28.0.
-                            type: string
                           avatarURL:
                             description: avatarURL defines the avatar url of the message
                               sender.
@@ -1015,6 +1007,8 @@ spec:
                               sender.
                             minLength: 1
                             type: string
+                        required:
+                        - apiURL
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic
@@ -12517,29 +12511,28 @@ spec:
                               apiURL defines the secret's key that contains the Discord webhook URL.
                               The secret needs to be in the same namespace as the AlertmanagerConfig
                               object and accessible by the Prometheus Operator.
-                              It is mutually exclusive with `apiURLFile`.
-                              Either `apiURL` or `apiURLFile` is required.
                             properties:
                               key:
-                                description: key defines the key of the secret to
-                                  select from.  Must be a valid secret key.
-                                minLength: 1
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
                                 type: string
                               name:
-                                description: name defines the name of the secret in
-                                  the object's namespace to select from.
-                                minLength: 1
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                                 type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
                             required:
                             - key
-                            - name
                             type: object
-                          apiURLFile:
-                            description: |-
-                              apiURLFile defines the file to read the Discord webhook URL from.
-                              It is mutually exclusive with `apiURL`.
-                              Either `apiURL` or `apiURLFile` is required.
-                            type: string
+                            x-kubernetes-map-type: atomic
                           avatarURL:
                             description: avatarURL defines the avatar url of the message
                               sender.
@@ -13265,6 +13258,8 @@ spec:
                               sender.
                             minLength: 1
                             type: string
+                        required:
+                        - apiURL
                         type: object
                       type: array
                     emailConfigs:

@@ -131,16 +131,7 @@ func (in *DiscordConfig) DeepCopyInto(out *DiscordConfig) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.APIURL != nil {
-		in, out := &in.APIURL, &out.APIURL
-		*out = new(SecretKeySelector)
-		**out = **in
-	}
-	if in.APIURLFile != nil {
-		in, out := &in.APIURLFile, &out.APIURLFile
-		*out = new(string)
-		**out = **in
-	}
+	in.APIURL.DeepCopyInto(&out.APIURL)
 	if in.Title != nil {
 		in, out := &in.Title, &out.Title
 		*out = new(string)

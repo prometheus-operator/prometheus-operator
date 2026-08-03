@@ -264,8 +264,7 @@ func convertPagerDutyConfigFrom(in v1alpha1.PagerDutyConfig) PagerDutyConfig {
 
 func convertDiscordConfigFrom(in v1alpha1.DiscordConfig) DiscordConfig {
 	return DiscordConfig{
-		APIURL:       convertSecretKeySelectorFrom(in.APIURL),
-		APIURLFile:   in.APIURLFile,
+		APIURL:       in.APIURL,
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		Title:        in.Title,
 		Message:      in.Message,

@@ -951,17 +951,11 @@ func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 		out.AvatarURL = (string)(*in.AvatarURL)
 	}
 
-	if in.APIURL != nil {
-		url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, *in.APIURL)
-		if err != nil {
-			return nil, err
-		}
-		out.WebhookURL = url
+	url, err := cb.getValidURLFromSecret(ctx, crKey.Namespace, in.APIURL)
+	if err != nil {
+		return nil, err
 	}
-
-	if in.APIURLFile != nil && *in.APIURLFile != "" {
-		out.WebhookURLFile = *in.APIURLFile
-	}
+	out.WebhookURL = url
 
 	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
 	if err != nil {

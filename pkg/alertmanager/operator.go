@@ -1361,29 +1361,12 @@ func checkDiscordConfigs(
 			return err
 		}
 
-		hasAPIURL := config.APIURL != nil
-		hasAPIURLFile := config.APIURLFile != nil && *config.APIURLFile != ""
-
-		if !hasAPIURL && !hasAPIURLFile {
-			return errors.New("one of 'apiURL' or 'apiURLFile' must be specified for discordConfig")
+		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve API URL: %w", err)
 		}
-
-		if hasAPIURL && hasAPIURLFile {
-			return errors.New("'apiURL' and 'apiURLFile' are mutually exclusive for discordConfig")
-		}
-
-		if hasAPIURLFile && amVersion.LT(semver.MustParse("0.28.0")) {
-			return fmt.Errorf("'webhook_url_file' supported in Alertmanager >= 0.28.0 only - current %s", amVersion)
-		}
-
-		if hasAPIURL {
-			url, err := store.GetSecretKey(ctx, namespace, *config.APIURL)
-			if err != nil {
-				return fmt.Errorf("failed to retrieve API URL: %w", err)
-			}
-			if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
-				return fmt.Errorf("failed to validate API URL: %w", err)
-			}
+		if err := validation.ValidateSecretURL(strings.TrimSpace(url)); err != nil {
+			return fmt.Errorf("failed to validate API URL: %w", err)
 		}
 	}
 
