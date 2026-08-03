@@ -7956,6 +7956,22 @@ exposed as <code>__meta_kubernetes_node_*</code> labels and can be copied to tim
 with relabeling configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>namespace when set to true, Prometheus attaches namespace metadata to the discovered
+targets.</p>
+<p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
+permissions on the <code>Namespaces</code> objects.</p>
+<p>It requires Prometheus &gt;= v3.6.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.Authorization">Authorization
@@ -26078,9 +26094,24 @@ bool
 <td>
 <em>(Optional)</em>
 <p>node attaches node metadata to discovered targets.
-When set to true, Prometheus must have the <code>get</code> permission on the
+When set to true, Prometheus must have the <code>list/watch</code> permission on the
 <code>Nodes</code> objects.
 Only valid for Pod, Endpoint and Endpointslice roles.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>namespace attaches namespace metadata to discovered targets.
+When set to true, Prometheus must have permissions to list/watch Namespaces.
+Only valid for pod, endpoints, endpointslice, service, ingress.</p>
+<p>It requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>
@@ -29542,8 +29573,9 @@ AttachMetadata
 <td>
 <em>(Optional)</em>
 <p>attachMetadata defines the metadata to attach to discovered targets.
-It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role and
-Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles.</p>
+It requires Prometheus &gt;= v2.35.0 when using the <code>Pod</code> role,
+Prometheus &gt;= v2.37.0 for <code>Endpoints</code> and <code>Endpointslice</code> roles and
+Prometheus &gt;= v3.6.0 for <code>Service</code> and <code>Ingress</code> roles.</p>
 </td>
 </tr>
 <tr>
