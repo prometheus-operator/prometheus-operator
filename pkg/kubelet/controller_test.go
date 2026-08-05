@@ -16,6 +16,7 @@ package kubelet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -25,6 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -274,6 +276,44 @@ func TestGetNodeAddresses(t *testing.T) {
 				},
 			},
 			expectedAddresses: []string{"10.0.0.1", "fd00::1"},
+			expectedErrors:    0,
+		},
+		{
+			name: "node with several addresses of the same family keeps the first of each",
+			nodes: []corev1.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node-0",
+					},
+					Status: corev1.NodeStatus{
+						Addresses: []corev1.NodeAddress{
+							{
+								Address: "fd00::1",
+								Type:    corev1.NodeInternalIP,
+							},
+							{
+								Address: "fd01::1",
+								Type:    corev1.NodeInternalIP,
+							},
+							{
+								Address: "10.0.0.1",
+								Type:    corev1.NodeInternalIP,
+							},
+							{
+								Address: "10.0.1.1",
+								Type:    corev1.NodeInternalIP,
+							},
+						},
+						Conditions: []corev1.NodeCondition{
+							{
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
+							},
+						},
+					},
+				},
+			},
+			expectedAddresses: []string{"fd00::1", "10.0.0.1"},
 			expectedErrors:    0,
 		},
 	} {
@@ -566,6 +606,307 @@ func TestSync(t *testing.T) {
 
 		_ = listEndpointSlices(t, esclient, 0)
 	})
+}
+
+func TestSyncDualStackNode(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		nodeAddresses     []string
+		ipFamilies        []corev1.IPFamily
+		expectedAddresses []string
+	}{
+		{
+			name:              "IPv4 primary service keeps the IPv4 address",
+			nodeAddresses:     []string{"10.0.0.1", "fd00::1"},
+			ipFamilies:        []corev1.IPFamily{corev1.IPv4Protocol, corev1.IPv6Protocol},
+			expectedAddresses: []string{"10.0.0.1"},
+		},
+		{
+			name:              "IPv6 primary service keeps the IPv6 address",
+			nodeAddresses:     []string{"10.0.0.1", "fd00::1"},
+			ipFamilies:        []corev1.IPFamily{corev1.IPv6Protocol, corev1.IPv4Protocol},
+			expectedAddresses: []string{"fd00::1"},
+		},
+		{
+			name:              "service without IP family keeps one address per node",
+			nodeAddresses:     []string{"10.0.0.1", "fd00::1"},
+			expectedAddresses: []string{"10.0.0.1"},
+		},
+		{
+			name:              "node with several addresses of the same family keeps one",
+			nodeAddresses:     []string{"10.0.0.1", "10.0.1.1", "fd00::1", "fd01::1"},
+			ipFamilies:        []corev1.IPFamily{corev1.IPv6Protocol, corev1.IPv4Protocol},
+			expectedAddresses: []string{"fd00::1"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var (
+				ctx        = context.Background()
+				id         = int32(0)
+				fakeClient = fake.NewClientset()
+			)
+
+			fakeClient.PrependReactor(
+				"create", "*",
+				func(action ktesting.Action) (handled bool, ret runtime.Object, err error) {
+					ret = action.(ktesting.CreateAction).GetObject()
+					meta, ok := ret.(metav1.Object)
+					if !ok {
+						return
+					}
+
+					if meta.GetName() == "" && meta.GetGenerateName() != "" {
+						meta.SetName(names.SimpleNameGenerator.GenerateName(meta.GetGenerateName()))
+						meta.SetUID(types.UID(string('A' + id)))
+						id++
+					}
+
+					return
+				},
+			)
+
+			c, err := New(
+				newLogger(),
+				fakeClient,
+				nil,
+				"kubelet",
+				"test",
+				"",
+				nil,
+				nil,
+				WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"),
+			)
+			require.NoError(t, err)
+
+			_, err = c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Create(
+				ctx,
+				&corev1.Service{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      c.kubeletObjectName,
+						Namespace: c.kubeletObjectNamespace,
+					},
+					Spec: corev1.ServiceSpec{
+						Type:       corev1.ServiceTypeClusterIP,
+						ClusterIP:  corev1.ClusterIPNone,
+						IPFamilies: tc.ipFamilies,
+					},
+				},
+				metav1.CreateOptions{},
+			)
+			require.NoError(t, err)
+
+			nodeAddresses := make([]corev1.NodeAddress, 0, len(tc.nodeAddresses))
+			for _, a := range tc.nodeAddresses {
+				nodeAddresses = append(nodeAddresses, corev1.NodeAddress{
+					Address: a,
+					Type:    corev1.NodeInternalIP,
+				})
+			}
+
+			_, err = c.kclient.CoreV1().Nodes().Create(
+				ctx,
+				&corev1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "node-0",
+						UID:  types.UID("node-0"),
+					},
+					Status: corev1.NodeStatus{
+						Addresses: nodeAddresses,
+						Conditions: []corev1.NodeCondition{
+							{
+								Type:   corev1.NodeReady,
+								Status: corev1.ConditionTrue,
+							},
+						},
+					},
+				},
+				metav1.CreateOptions{},
+			)
+			require.NoError(t, err)
+
+			c.sync(ctx)
+
+			ep, err := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Len(t, ep.Subsets, 1)
+
+			addresses := make([]string, 0, len(ep.Subsets[0].Addresses))
+			for _, a := range ep.Subsets[0].Addresses {
+				addresses = append(addresses, a.IP)
+			}
+			require.Equal(t, tc.expectedAddresses, addresses)
+
+			// The endpointslices keep both families whatever the primary one is.
+			eps := listEndpointSlices(t, c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace), 2)
+
+			byAddressType := map[discoveryv1.AddressType]string{}
+			for _, e := range eps {
+				require.Len(t, e.Endpoints, 1)
+				require.Len(t, e.Endpoints[0].Addresses, 1)
+				byAddressType[e.AddressType] = e.Endpoints[0].Addresses[0]
+			}
+			require.Equal(
+				t,
+				map[discoveryv1.AddressType]string{
+					discoveryv1.AddressTypeIPv4: "10.0.0.1",
+					discoveryv1.AddressTypeIPv6: "fd00::1",
+				},
+				byAddressType,
+			)
+		})
+	}
+}
+
+func TestSyncEndpointsWhenServiceSyncFails(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		fakeClient = fake.NewClientset()
+	)
+
+	fakeClient.PrependReactor(
+		"get", "services",
+		func(_ ktesting.Action) (bool, runtime.Object, error) {
+			return true, nil, apierrors.NewInternalError(errors.New("apiserver is down"))
+		},
+	)
+
+	c, err := New(
+		newLogger(),
+		fakeClient,
+		nil,
+		"kubelet",
+		"test",
+		"",
+		nil,
+		nil,
+		WithEndpoints(), WithNodeAddressPriority("internal"),
+	)
+	require.NoError(t, err)
+
+	_, err = c.kclient.CoreV1().Nodes().Create(
+		ctx,
+		&corev1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "node-0",
+				UID:  types.UID("node-0"),
+			},
+			Status: corev1.NodeStatus{
+				Addresses: []corev1.NodeAddress{
+					{
+						Address: "10.0.0.1",
+						Type:    corev1.NodeInternalIP,
+					},
+					{
+						Address: "fd00::1",
+						Type:    corev1.NodeInternalIP,
+					},
+				},
+				Conditions: []corev1.NodeCondition{
+					{
+						Type:   corev1.NodeReady,
+						Status: corev1.ConditionTrue,
+					},
+				},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	require.NoError(t, err)
+
+	c.sync(ctx)
+
+	ep, err := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Len(t, ep.Subsets, 1)
+
+	addresses := make([]string, 0, len(ep.Subsets[0].Addresses))
+	for _, a := range ep.Subsets[0].Addresses {
+		addresses = append(addresses, a.IP)
+	}
+	require.Equal(t, []string{"10.0.0.1"}, addresses)
+}
+
+func TestSyncEndpointsNodeWithoutPrimaryFamilyAddress(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		fakeClient = fake.NewClientset()
+	)
+
+	c, err := New(
+		newLogger(),
+		fakeClient,
+		nil,
+		"kubelet",
+		"test",
+		"",
+		nil,
+		nil,
+		WithEndpoints(), WithNodeAddressPriority("internal"),
+	)
+	require.NoError(t, err)
+
+	_, err = c.kclient.CoreV1().Services(c.kubeletObjectNamespace).Create(
+		ctx,
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      c.kubeletObjectName,
+				Namespace: c.kubeletObjectNamespace,
+			},
+			Spec: corev1.ServiceSpec{
+				Type:       corev1.ServiceTypeClusterIP,
+				ClusterIP:  corev1.ClusterIPNone,
+				IPFamilies: []corev1.IPFamily{corev1.IPv6Protocol, corev1.IPv4Protocol},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	require.NoError(t, err)
+
+	for _, n := range [][]string{
+		{"node-0", "10.0.0.1", "fd00::1"},
+		{"node-1", "10.0.0.2"},
+	} {
+		nodeAddresses := make([]corev1.NodeAddress, 0, len(n)-1)
+		for _, a := range n[1:] {
+			nodeAddresses = append(nodeAddresses, corev1.NodeAddress{
+				Address: a,
+				Type:    corev1.NodeInternalIP,
+			})
+		}
+
+		_, err = c.kclient.CoreV1().Nodes().Create(
+			ctx,
+			&corev1.Node{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: n[0],
+					UID:  types.UID(n[0]),
+				},
+				Status: corev1.NodeStatus{
+					Addresses: nodeAddresses,
+					Conditions: []corev1.NodeCondition{
+						{
+							Type:   corev1.NodeReady,
+							Status: corev1.ConditionTrue,
+						},
+					},
+				},
+			},
+			metav1.CreateOptions{},
+		)
+		require.NoError(t, err)
+	}
+
+	c.sync(ctx)
+
+	ep, err := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace).Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Len(t, ep.Subsets, 1)
+
+	nodes := make([]string, 0, len(ep.Subsets[0].Addresses))
+	for _, a := range ep.Subsets[0].Addresses {
+		nodes = append(nodes, *a.NodeName)
+	}
+	require.Equal(t, []string{"node-0", "node-1"}, nodes)
 }
 
 func newNode(name, address string) *corev1.Node {
