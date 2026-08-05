@@ -1363,7 +1363,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 		},
 	}
 
-	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, v1.CreateOptions{})
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	// Wait for the AlertmanagerConfig to be accepted by the Alertmanager
