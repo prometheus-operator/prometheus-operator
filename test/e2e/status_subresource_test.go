@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
@@ -1355,7 +1354,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 					Name: "default",
 					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
 						{
-							URL: ptr.To("http://test.url"),
+							URL: new("http://test.url"),
 						},
 					},
 				},
