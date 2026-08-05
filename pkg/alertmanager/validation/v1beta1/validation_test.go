@@ -102,25 +102,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate webhook config - missing required fields",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
-								{},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate wechat config - invalid URL",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -776,6 +757,112 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 					return
 				}
 				t.Errorf("got error but expected none - %s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWebhookAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate webhook config - missing required fields",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate webhook config - url specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URL: new("https://webhook.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate webhook config - url secret specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URLSecret: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate webhook config - invalid url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URL: new("://invalid"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
 			}
 		})
 	}
