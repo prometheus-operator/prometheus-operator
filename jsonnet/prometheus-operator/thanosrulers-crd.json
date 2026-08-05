@@ -4032,7 +4032,14 @@
                       "type": "string"
                     },
                     "description": "nodeSelector defines which Nodes the Pods are scheduled on.",
-                    "type": "object"
+                    "maxProperties": 32,
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "nodeSelector must contain valid Kubernetes labels",
+                        "rule": "self.all(key, key.size() <= 316 && self[key].size() <= 63)"
+                      }
+                    ]
                   },
                   "objectStorageConfig": {
                     "description": "objectStorageConfig defines the configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage\n\nThe operator performs no validation of the configuration.\n\n`objectStorageConfigFile` takes precedence over this field.",

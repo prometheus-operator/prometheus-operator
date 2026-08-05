@@ -4933,7 +4933,14 @@
                       "type": "string"
                     },
                     "description": "nodeSelector defines on which Nodes the Pods are scheduled.",
-                    "type": "object"
+                    "maxProperties": 32,
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "nodeSelector must contain valid Kubernetes labels",
+                        "rule": "self.all(key, key.size() <= 316 && self[key].size() <= 63)"
+                      }
+                    ]
                   },
                   "otlp": {
                     "description": "otlp defines the settings related to the OTLP receiver feature.\nIt requires Prometheus >= v2.55.0.",
