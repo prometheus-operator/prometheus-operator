@@ -34,6 +34,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	typedauthv1 "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/metadata"
@@ -80,6 +82,7 @@ type Config struct {
 // Operator manages the lifecycle of the Alertmanager statefulsets and their
 // configurations.
 type Operator struct {
+	dclient    dynamic.Interface
 	kclient    kubernetes.Interface
 	mdClient   metadata.Interface
 	mclient    monitoringclient.Interface
@@ -100,7 +103,8 @@ type Operator struct {
 	secrInfs    *informers.ForResource
 	ssetInfs    *informers.ForResource
 
-	rr *operator.ResourceReconciler
+	rr              *operator.ResourceReconciler
+	finalizerSyncer *operator.FinalizerSyncer
 
 	metrics         *operator.Metrics
 	reconciliations *operator.ReconciliationTracker
@@ -151,10 +155,16 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating monitoring client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	// All the metrics exposed by the controller get the controller="alertmanager" label.
 	r = prometheus.WrapRegistererWith(prometheus.Labels{"controller": "alertmanager"}, r)
 
 	o := &Operator{
+		dclient:    dclient,
 		kclient:    client,
 		mdClient:   mdClient,
 		mclient:    mclient,
@@ -179,9 +189,15 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                         c.Labels,
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
 		},
+
+		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
+	}
+
+	if o.configResourcesStatusEnabled {
+		o.finalizerSyncer = operator.NewFinalizerSyncer(mdClient, monitoringv1.SchemeGroupVersion.WithResource(monitoringv1.AlertmanagerName))
 	}
 
 	if err := o.bootstrap(ctx, c); err != nil {
@@ -607,14 +623,28 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Check if the Alertmanager instance is marked for deletion.
+	logger := c.logger.With("key", key)
+	logger.Info("sync alertmanager")
+
+	statusCleanup := func() error {
+		return c.configResStatusCleanup(ctx, am)
+	}
+
+	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, am, c.rr.DeletionInProgress(am), statusCleanup)
+	if err != nil {
+		return err
+	}
+
+	if finalizerAdded {
+		// Since the object has been updated, let's trigger another sync.
+		c.rr.EnqueueForReconciliation(am)
+		return nil
+	}
+
 	if c.rr.DeletionInProgress(am) {
 		c.reconciliations.ForgetObject(key)
 		return nil
 	}
-
-	logger := c.logger.With("key", key)
-	logger.Info("sync alertmanager")
 
 	if am.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
@@ -629,7 +659,8 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
-	if err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore); err != nil {
+	amConfigs, err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore)
+	if err != nil {
 		return fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
@@ -701,7 +732,7 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
 			return fmt.Errorf("failed to create statefulset: %w", err)
 		}
-		return nil
+		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
 	}
 
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
@@ -709,6 +740,42 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 	}); err != nil {
 		return err
+	}
+
+	return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+}
+
+// updateConfigResourcesStatus updates the status of the selected configuration
+// resources (AlertmanagerConfigs).
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, am *monitoringv1.Alertmanager, amConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig]) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	for key, configResource := range amConfigs {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update AlertmanagerConfig %s status: %w", key, err)
+		}
+	}
+
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, amConfigs, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Operator) configResStatusCleanup(ctx context.Context, am *monitoringv1.Alertmanager) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	var configResourceSyncer = operator.NewConfigResourceSyncer(am, c.dclient, c.accessor)
+
+	if err := operator.CleanupBindings(ctx, c.alrtCfgInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for alertmanagerConfigs: %w", err)
 	}
 
 	return nil
@@ -891,18 +958,33 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 	return rawAlertmanagerConfig, secret.Data, nil
 }
 
-func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
+func getAlertmanagerVersion(am *monitoringv1.Alertmanager) (semver.Version, error) {
 	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
-		return fmt.Errorf("failed to parse alertmanager version: %w", err)
+		return version, fmt.Errorf("failed to parse alertmanager version: %w", err)
 	}
 
 	if version.LT(semver.MustParse("0.15.0")) || version.Major > 0 {
-		return fmt.Errorf("unsupported Alertmanager version %q", amVersion)
+		return version, fmt.Errorf("unsupported Alertmanager version %q", amVersion)
 	}
 
+	return version, nil
+}
+
+func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespacedLogger := c.logger.With("alertmanager", am.Name, "namespace", am.Namespace)
+
+	version, err := getAlertmanagerVersion(am)
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine alertmanager version: %w", err)
+	}
+
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store, version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
+	}
+
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
@@ -911,20 +993,15 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		amRawConfiguration, additionalData, err := c.loadConfigurationFromSecret(ctx, am)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve configuration from secret: %w", err)
+			return nil, fmt.Errorf("failed to retrieve configuration from secret: %w", err)
 		}
 
 		err = c.createOrUpdateGeneratedConfigSecret(ctx, am, amRawConfiguration, additionalData)
 		if err != nil {
-			return fmt.Errorf("create or update generated config secret failed: %w", err)
+			return nil, fmt.Errorf("create or update generated config secret failed: %w", err)
 		}
 
-		return nil
-	}
-
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, version, store)
-	if err != nil {
-		return fmt.Errorf("failed to select AlertmanagerConfig objects: %w", err)
+		return amConfigs, nil
 	}
 
 	var (
@@ -937,12 +1014,12 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		globalAmConfig, err := c.mclient.MonitoringV1alpha1().AlertmanagerConfigs(am.Namespace).
 			Get(ctx, am.Spec.AlertmanagerConfiguration.Name, metav1.GetOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to get global AlertmanagerConfig: %w", err)
+			return nil, fmt.Errorf("failed to get global AlertmanagerConfig: %w", err)
 		}
 
 		err = cfgBuilder.initializeFromAlertmanagerConfig(ctx, am.Spec.AlertmanagerConfiguration.Global, globalAmConfig)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
+			return nil, fmt.Errorf("failed to initialize from global AlertmanagerConfig: %w", err)
 		}
 
 		for _, v := range am.Spec.AlertmanagerConfiguration.Templates {
@@ -962,30 +1039,30 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 
 		amRawConfiguration, additionalData, err = c.loadConfigurationFromSecret(ctx, am)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve configuration from secret: %w", err)
+			return nil, fmt.Errorf("failed to retrieve configuration from secret: %w", err)
 		}
 
 		err = cfgBuilder.InitializeFromRawConfiguration(amRawConfiguration)
 		if err != nil {
-			return fmt.Errorf("failed to initialize from secret: %w", err)
+			return nil, fmt.Errorf("failed to initialize from secret: %w", err)
 		}
 	}
 
-	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs); err != nil {
-		return fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
+	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs.ValidResources()); err != nil {
+		return nil, fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
 
 	generatedConfig, err := cfgBuilder.MarshalJSON()
 	if err != nil {
-		return fmt.Errorf("failed to marshal configuration: %w", err)
+		return nil, fmt.Errorf("failed to marshal configuration: %w", err)
 	}
 
 	err = c.createOrUpdateGeneratedConfigSecret(ctx, am, generatedConfig, additionalData)
 	if err != nil {
-		return fmt.Errorf("failed to create or update the generated configuration secret: %w", err)
+		return nil, fmt.Errorf("failed to create or update the generated configuration secret: %w", err)
 	}
 
-	return nil
+	return amConfigs, nil
 }
 
 func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *monitoringv1.Alertmanager, conf []byte, additionalData map[string][]byte) error {
@@ -1018,7 +1095,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, amVersion semver.Version, store *assets.StoreBuilder) (map[string]*monitoringv1alpha1.AlertmanagerConfig, error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, amVersion semver.Version) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1051,9 +1128,16 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	}
 
 	for _, ns := range namespaces {
-		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(obj any) {
-			k, ok := c.accessor.MetaNamespaceKey(obj)
+		err := c.alrtCfgInfs.ListAllByNamespace(ns, amConfigSelector, func(o any) {
+			k, ok := c.accessor.MetaNamespaceKey(o)
 			if !ok {
+				return
+			}
+
+			obj := o.(runtime.Object)
+			obj = obj.DeepCopyObject()
+			if err := k8s.AddTypeInformationToObject(obj); err != nil {
+				c.logger.Error("skipping alertmanagerconfig due to missing type information", "alertmanagerconfig", k, "namespace", am.Namespace, "alertmanager", am.Name, "err", err)
 				return
 			}
 
@@ -1070,13 +1154,19 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 		}
 	}
 
-	var rejected int
-	res := make(map[string]*monitoringv1alpha1.AlertmanagerConfig, len(amConfigs))
+	var (
+		rejected int
+		valid    []string
+		res      = make(operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], len(amConfigs))
+	)
 
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
-		if err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store); err != nil {
+		var reason string
+		err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store)
+		if err != nil {
 			rejected++
+			reason = operator.InvalidConfiguration
 			c.logger.Warn(
 				"skipping alertmanagerconfig",
 				"error", err.Error(),
@@ -1085,18 +1175,14 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 				"alertmanager", am.Name,
 			)
 			eventRecorder.Eventf(amc, corev1.EventTypeWarning, operator.InvalidConfigurationEvent, selectingAlertmanagerConfigResourcesAction, "AlertmanagerConfig %s was rejected due to invalid configuration: %v", amc.GetName(), err)
-			continue
+		} else {
+			valid = append(valid, namespaceAndName)
 		}
 
-		res[namespaceAndName] = amc
+		res[namespaceAndName] = operator.NewTypedConfigurationResource(amc, err, reason, amc.GetGeneration())
 	}
 
-	amcKeys := []string{}
-	for k := range res {
-		amcKeys = append(amcKeys, k)
-	}
-	c.logger.Debug("selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(amcKeys, ","), "namespace", am.Namespace, "prometheus", am.Name)
-
+	c.logger.Debug("selected AlertmanagerConfigs", "alertmanagerconfigs", strings.Join(valid, ","), "namespace", am.Namespace, "alertmanager", am.Name)
 	if amKey, ok := c.accessor.MetaNamespaceKey(am); ok {
 		c.metrics.SetSelectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, len(res))
 		c.metrics.SetRejectedResources(amKey, monitoringv1alpha1.AlertmanagerConfigKind, rejected)
