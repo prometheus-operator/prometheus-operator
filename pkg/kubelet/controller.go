@@ -16,6 +16,7 @@ package kubelet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -496,6 +497,10 @@ func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 
 func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpointslice")
+
+	if svc == nil {
+		return errors.New("kubelet service not available")
+	}
 
 	// Get the list of endpointslice objects associated to the service.
 	client := c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace)

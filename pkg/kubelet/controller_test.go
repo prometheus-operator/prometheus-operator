@@ -16,6 +16,7 @@ package kubelet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
@@ -25,6 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -566,6 +568,40 @@ func TestSync(t *testing.T) {
 
 		_ = listEndpointSlices(t, esclient, 0)
 	})
+}
+
+func TestSyncEndpointSliceWhenServiceSyncFails(t *testing.T) {
+	var (
+		ctx        = context.Background()
+		fakeClient = fake.NewClientset()
+	)
+
+	fakeClient.PrependReactor(
+		"get", "services",
+		func(_ ktesting.Action) (bool, runtime.Object, error) {
+			return true, nil, apierrors.NewInternalError(errors.New("apiserver is down"))
+		},
+	)
+
+	c, err := New(
+		newLogger(),
+		fakeClient,
+		nil,
+		"kubelet",
+		"test",
+		"",
+		nil,
+		nil,
+		WithEndpoints(), WithEndpointSlice(), WithMaxEndpointsPerSlice(2), WithNodeAddressPriority("internal"),
+	)
+	require.NoError(t, err)
+
+	_, err = c.kclient.CoreV1().Nodes().Create(ctx, newNode("node-0", "10.0.0.1"), metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	c.sync(ctx)
+
+	_ = listEndpointSlices(t, c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace), 0)
 }
 
 func newNode(name, address string) *corev1.Node {
