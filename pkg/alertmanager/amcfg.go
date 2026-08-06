@@ -650,6 +650,18 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		}
 	}
 
+	var incidentioConfigs []*incidentioConfig
+	if l := len(in.IncidentioConfigs); l > 0 {
+		incidentioConfigs = make([]*incidentioConfig, l)
+		for i := range in.IncidentioConfigs {
+			receiver, err := cb.convertIncidentioConfig(ctx, in.IncidentioConfigs[i], crKey)
+			if err != nil {
+				return nil, fmt.Errorf("IncidentioConfig[%d]: %w", i, err)
+			}
+			incidentioConfigs[i] = receiver
+		}
+	}
+
 	var opsgenieConfigs []*opsgenieConfig
 	if l := len(in.OpsGenieConfigs); l > 0 {
 		opsgenieConfigs = make([]*opsgenieConfig, l)
@@ -789,6 +801,7 @@ func (cb *ConfigBuilder) convertReceiver(ctx context.Context, in *monitoringv1al
 		DiscordConfigs:    discordConfigs,
 		SlackConfigs:      slackConfigs,
 		WebhookConfigs:    webhookConfigs,
+		IncidentioConfigs: incidentioConfigs,
 		WeChatConfigs:     weChatConfigs,
 		EmailConfigs:      emailConfigs,
 		VictorOpsConfigs:  victorOpsConfigs,
@@ -921,6 +934,52 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 
 	if in.Payload != nil {
 		out.Payload = *in.Payload
+	}
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertIncidentioConfig(ctx context.Context, in monitoringv1alpha1.IncidentioConfig, crKey types.NamespacedName) (*incidentioConfig, error) {
+	out := &incidentioConfig{
+		VSendResolved: in.SendResolved,
+	}
+
+	if in.URLSecret != nil {
+		url, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.URLSecret)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get incidentio URL secret: %w", err)
+		}
+		out.URL = url
+	} else if in.URL != nil {
+		out.URL = *in.URL
+	}
+
+	if in.AlertSourceToken != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.AlertSourceToken)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get incidentio alert source token: %w", err)
+		}
+		out.AlertSourceToken = token
+	}
+
+	httpConfig, err := cb.convertHTTPConfig(ctx, in.HTTPConfig, crKey)
+	if err != nil {
+		return nil, err
+	}
+	out.HTTPConfig = httpConfig
+
+	if in.MaxAlerts > 0 {
+		out.MaxAlerts = &in.MaxAlerts
+	}
+
+	if in.Timeout != nil {
+		if *in.Timeout != "" {
+			timeout, err := model.ParseDuration(string(*in.Timeout))
+			if err != nil {
+				return nil, err
+			}
+			out.Timeout = &timeout
+		}
 	}
 
 	return out, nil
