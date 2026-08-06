@@ -144,7 +144,7 @@ func deployInstrumentedApplicationWithTLS(name, ns string) error {
 
 					TLSConfig: &monitoringv1.TLSConfig{
 						SafeTLSConfig: monitoringv1.SafeTLSConfig{
-							ServerName: new("caandserver.com"),
+							ServerName: new(monitoringv1.TemplateString("caandserver.com")),
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
 									LocalObjectReference: corev1.LocalObjectReference{

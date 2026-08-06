@@ -33,7 +33,19 @@ type SafeTLSConfigApplyConfiguration struct {
 	// keySecret defines the Secret containing the client key file for the targets.
 	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
 	// serverName is used to verify the hostname for the targets.
-	ServerName *string `json:"serverName,omitempty"`
+	//
+	// For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+	// field supports Go template syntax, with the following template
+	// variables:
+	// - `.Name`, the name of the resource.
+	// - `.Namespace`, the namespace of the resource.
+	// - `.Labels`, a map of labels of the resource.
+	// - `.Annotations`, a map of annotations of the resource.
+	//
+	// For instance:
+	// - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+	// - `{{ index .Labels "tls-server-name" }}`
+	ServerName *monitoringv1.TemplateString `json:"serverName,omitempty"`
 	// insecureSkipVerify defines how to disable target certificate validation.
 	InsecureSkipVerify *bool `json:"insecureSkipVerify,omitempty"`
 	// minVersion defines the minimum acceptable TLS version.
@@ -79,7 +91,7 @@ func (b *SafeTLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySe
 // WithServerName sets the ServerName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerName field is set to the value of the last call.
-func (b *SafeTLSConfigApplyConfiguration) WithServerName(value string) *SafeTLSConfigApplyConfiguration {
+func (b *SafeTLSConfigApplyConfiguration) WithServerName(value monitoringv1.TemplateString) *SafeTLSConfigApplyConfiguration {
 	b.ServerName = &value
 	return b
 }
