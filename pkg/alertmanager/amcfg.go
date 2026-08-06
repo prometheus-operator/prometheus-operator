@@ -3167,6 +3167,20 @@ func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
 	}
 
+	if dc.WebhookURLFile != "" && lessThanV0_28 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.WebhookURLFile = ""
+	}
+
+	if dc.WebhookURL == "" && dc.WebhookURLFile == "" {
+		return errors.New("no webhook_url or webhook_url_file provided")
+	}
+
+	if dc.WebhookURL != "" && dc.WebhookURLFile != "" {
+		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
+	}
+
 	if dc.Content != "" && lessThanV0_28 {
 		msg := "'content' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
