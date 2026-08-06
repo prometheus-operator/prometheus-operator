@@ -120,6 +120,39 @@ func shardsNumber(
 	return *cpf.Shards
 }
 
+// UnbalancedTopologyShardingMessage returns a warning message and true when the
+// resource uses topology sharding with a number of shards that isn't a multiple
+// of the number of topology zones. In that case, shard indices wrap around and
+// some targets end up being scraped by more than one shard, resulting in
+// duplicated samples. It returns an empty string and false otherwise.
+//
+// Callers are expected to only invoke it when the PrometheusTopologySharding
+// feature gate is enabled.
+func UnbalancedTopologyShardingMessage(p monitoringv1.PrometheusInterface) (string, bool) {
+	ss := p.GetCommonPrometheusFields().ShardingStrategy
+	if ss == nil ||
+		ss.Mode == nil ||
+		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		ss.Topology == nil {
+		return "", false
+	}
+
+	numZones := int32(len(ss.Topology.Values))
+	if numZones == 0 {
+		return "", false
+	}
+
+	shards := shardsNumber(p)
+	if shards%numZones == 0 {
+		return "", false
+	}
+
+	return fmt.Sprintf(
+		"the number of shards (%d) isn't a multiple of the number of topology zones (%d); some targets will be scraped by more than one shard, resulting in duplicated samples",
+		shards, numZones,
+	), true
+}
+
 // ReplicasNumberPtr returns a ptr to the normalized number of replicas.
 func ReplicasNumberPtr(
 	p monitoringv1.PrometheusInterface,

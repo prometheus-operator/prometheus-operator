@@ -938,6 +938,13 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 
 	c.recordDeprecatedFields(key, logger, p)
 
+	if c.topologyShardingEnabled {
+		if msg, ok := prompkg.UnbalancedTopologyShardingMessage(p); ok {
+			logger.Warn(msg)
+			c.reconciliations.SetReasonAndMessage(key, operator.UnbalancedTopologyShardingReason, msg)
+		}
+	}
+
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return closure, err
 	}

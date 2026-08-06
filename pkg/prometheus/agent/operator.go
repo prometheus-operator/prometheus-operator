@@ -680,6 +680,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
+	if c.topologyShardingEnabled {
+		if msg, ok := prompkg.UnbalancedTopologyShardingMessage(p); ok {
+			logger.Warn(msg)
+			c.reconciliations.SetReasonAndMessage(key, operator.UnbalancedTopologyShardingReason, msg)
+		}
+	}
+
 	// Generate the configuration data.
 	var (
 		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
