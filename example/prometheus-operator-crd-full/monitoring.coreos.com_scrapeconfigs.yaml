@@ -826,6 +826,7 @@ spec:
                   - subscriptionID
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               basicAuth:
                 description: basicAuth defines information to use on every scrape
                   request.
@@ -1676,6 +1677,7 @@ spec:
                   - server
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               convertClassicHistogramsToNHCB:
                 description: |-
                   convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.
@@ -2300,6 +2302,7 @@ spec:
                       type: object
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               dnsSDConfigs:
                 description: dnsSDConfigs defines a list of DNS service discovery
                   configurations.
@@ -2317,6 +2320,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: atomic
                     port:
                       description: |-
                         port defines the port to scrape metrics from. If using the public IP address, this must
@@ -2349,6 +2353,7 @@ spec:
                   - names
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               dockerSDConfigs:
                 description: dockerSDConfigs defines a list of Docker service discovery
                   configurations.
@@ -3071,6 +3076,7 @@ spec:
                   - host
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               dockerSwarmSDConfigs:
                 description: dockerSwarmSDConfigs defines a list of Dockerswarm service
                   discovery configurations.
@@ -3795,6 +3801,7 @@ spec:
                   - role
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               ec2SDConfigs:
                 description: ec2SDConfigs defines a list of EC2 service discovery
                   configurations.
@@ -4143,6 +4150,7 @@ spec:
                       type: object
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               enableCompression:
                 description: |-
                   enableCompression when false, Prometheus will request uncompressed response from the scraped target.
@@ -4830,6 +4838,7 @@ spec:
                   - server
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -4873,6 +4882,7 @@ spec:
                   - files
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               gceSDConfigs:
                 description: gceSDConfigs defines a list of GCE service discovery
                   configurations.
@@ -4932,6 +4942,7 @@ spec:
                   - zone
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               hetznerSDConfigs:
                 description: hetznerSDConfigs defines a list of Hetzner service discovery
                   configurations.
@@ -5625,6 +5636,7 @@ spec:
                   - role
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               honorLabels:
                 description: |-
                   honorLabels defines when true the metric's labels when they collide
@@ -6313,6 +6325,7 @@ spec:
                   - url
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               ionosSDConfigs:
                 description: ionosSDConfigs defines a list of IONOS service discovery
                   configurations.
@@ -6939,6 +6952,7 @@ spec:
                   - datacenterID
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               jobName:
                 description: |-
                   jobName defines the value of the `job` label assigned to the scraped metrics by default.
@@ -7713,6 +7727,7 @@ spec:
                   - role
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               kumaSDConfigs:
                 description: kumaSDConfigs defines a list of Kuma service discovery
                   configurations.
@@ -8399,6 +8414,7 @@ spec:
                   - server
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               labelLimit:
                 description: |-
                   labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
@@ -9158,6 +9174,7 @@ spec:
                       type: object
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               linodeSDConfigs:
                 description: linodeSDConfigs defines a list of Linode service discovery
                   configurations.
@@ -9786,6 +9803,7 @@ spec:
                       type: object
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               metricRelabelings:
                 description: metricRelabelings defines the metricRelabelings to apply
                   to samples before ingestion.
@@ -9876,6 +9894,7 @@ spec:
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-type: atomic
               metricsPath:
                 description: metricsPath defines the HTTP path to scrape for metrics.
                   If empty, Prometheus uses the default value (e.g. /metrics).
@@ -10626,6 +10645,7 @@ spec:
                   - server
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               oauth2:
                 description: oauth2 defines the configuration to use on every scrape
                   request.
@@ -11283,6 +11303,7 @@ spec:
                   - role
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               ovhcloudSDConfigs:
                 description: ovhcloudSDConfigs defines a list of OVHcloud service
                   discovery configurations.
@@ -11376,6 +11397,7 @@ spec:
                   - service
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               params:
                 additionalProperties:
                   items:
@@ -12125,6 +12147,7 @@ spec:
                   - url
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               relabelings:
                 description: |-
                   relabelings defines how to rewrite the target's labels before scraping.
@@ -12218,6 +12241,7 @@ spec:
                   type: object
                 minItems: 1
                 type: array
+                x-kubernetes-list-type: atomic
               sampleLimit:
                 description: sampleLimit defines per-scrape limit on number of scraped
                   samples that will be accepted.
@@ -12547,6 +12571,7 @@ spec:
                   - secretKey
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               scheme:
                 description: scheme defines the protocol scheme used for requests.
                 enum:
@@ -12639,6 +12664,7 @@ spec:
                   - targets
                   type: object
                 type: array
+                x-kubernetes-list-type: atomic
               targetLimit:
                 description: targetLimit defines a limit on the number of scraped
                   targets that will be accepted.
