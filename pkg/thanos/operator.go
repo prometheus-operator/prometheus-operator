@@ -966,7 +966,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 			if elem.IsNil() {
 				return
 			}
-			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimum_version", minVersion)
+			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimumVersion", minVersion)
 			elem.Set(reflect.Zero(elem.Type()))
 		}
 	}
@@ -986,7 +986,7 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 
 		// Thanos does not support sigv4.externalId in any version
 		if rw.Sigv4 != nil && rw.Sigv4.ExternalID != "" {
-			o.logger.Warn("ignoring \"sigv4.externalId\" not supported by Thanos", "minimum_version", "none")
+			o.logger.Warn("ignoring \"sigv4.externalId\" not supported by Thanos", "minimumVersion", "none")
 			rw.Sigv4.ExternalID = ""
 		}
 
