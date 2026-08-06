@@ -105,7 +105,12 @@ type PodMetricsEndpointApplyConfiguration struct {
 	// If unset, the filtering is enabled.
 	//
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
-	FilterRunning                         *bool `json:"filterRunning,omitempty"`
+	FilterRunning *bool `json:"filterRunning,omitempty"`
+	// httpHeaders defines the custom HTTP headers sent with every scrape
+	// request.
+	//
+	// It requires Prometheus >= v2.55.0.
+	HTTPHeaders                           []HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`
 	HTTPConfigWithProxyApplyConfiguration `json:",inline"`
 }
 
@@ -240,6 +245,19 @@ func (b *PodMetricsEndpointApplyConfiguration) WithRelabelConfigs(values ...*Rel
 // If called multiple times, the FilterRunning field is set to the value of the last call.
 func (b *PodMetricsEndpointApplyConfiguration) WithFilterRunning(value bool) *PodMetricsEndpointApplyConfiguration {
 	b.FilterRunning = &value
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *PodMetricsEndpointApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *PodMetricsEndpointApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+	}
 	return b
 }
 
