@@ -1651,6 +1651,24 @@ type ThanosSpec struct {
 	// +optional
 	HTTPListenLocal bool `json:"httpListenLocal,omitempty"` // nolint:kubeapilinter
 
+	// serviceHTTPPort defines the port on which the governing service
+	// exposes the Thanos sidecar's HTTP endpoints (serving metrics, probes
+	// and more). The service port targets the container port named `http`
+	// (10902) of the `thanos-sidecar` container.
+	//
+	// If not defined, the governing service doesn't expose the Thanos
+	// sidecar's HTTP port.
+	//
+	// It only applies when the operator manages the governing service (e.g.
+	// `spec.serviceName` isn't defined). Note that the sidecar's HTTP
+	// endpoints aren't reachable through the service when `listenLocal` or
+	// `httpListenLocal` is true.
+	//
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	ServiceHTTPPort *int32 `json:"serviceHTTPPort,omitempty"`
+
 	// tracingConfig defines the tracing configuration for the Thanos sidecar.
 	//
 	// `tracingConfigFile` takes precedence over this field.

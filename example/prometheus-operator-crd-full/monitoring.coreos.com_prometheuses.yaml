@@ -10816,6 +10816,24 @@ spec:
                           More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                     type: object
+                  serviceHTTPPort:
+                    description: |-
+                      serviceHTTPPort defines the port on which the governing service
+                      exposes the Thanos sidecar's HTTP endpoints (serving metrics, probes
+                      and more). The service port targets the container port named `http`
+                      (10902) of the `thanos-sidecar` container.
+
+                      If not defined, the governing service doesn't expose the Thanos
+                      sidecar's HTTP port.
+
+                      It only applies when the operator manages the governing service (e.g.
+                      `spec.serviceName` isn't defined). Note that the sidecar's HTTP
+                      endpoints aren't reachable through the service when `listenLocal` or
+                      `httpListenLocal` is true.
+                    format: int32
+                    maximum: 65535
+                    minimum: 1
+                    type: integer
                   sha:
                     description: 'sha is deprecated: use ''image'' instead.  The image
                       digest can be specified as part of the image name.'

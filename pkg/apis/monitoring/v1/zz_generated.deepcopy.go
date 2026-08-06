@@ -4282,6 +4282,11 @@ func (in *ThanosSpec) DeepCopyInto(out *ThanosSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ServiceHTTPPort != nil {
+		in, out := &in.ServiceHTTPPort, &out.ServiceHTTPPort
+		*out = new(int32)
+		**out = **in
+	}
 	if in.TracingConfig != nil {
 		in, out := &in.TracingConfig, &out.TracingConfig
 		*out = new(corev1.SecretKeySelector)

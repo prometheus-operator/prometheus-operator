@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/fake"
 	clienttesting "k8s.io/client-go/testing"
 
@@ -505,6 +506,105 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedDuration, d)
+		})
+	}
+}
+
+func TestMakeGoverningService(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		thanos *monitoringv1.ThanosSpec
+
+		expectedPorts []corev1.ServicePort
+	}{
+		{
+			name: "without Thanos sidecar",
+			expectedPorts: []corev1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+			},
+		},
+		{
+			name:   "with Thanos sidecar",
+			thanos: &monitoringv1.ThanosSpec{},
+			expectedPorts: []corev1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+				{
+					Name:       "grpc",
+					Port:       10901,
+					TargetPort: intstr.FromString("grpc"),
+				},
+			},
+		},
+		{
+			name: "with Thanos sidecar and HTTP service port",
+			thanos: &monitoringv1.ThanosSpec{
+				ServiceHTTPPort: new(int32(10902)),
+			},
+			expectedPorts: []corev1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+				{
+					Name:       "grpc",
+					Port:       10901,
+					TargetPort: intstr.FromString("grpc"),
+				},
+				{
+					Name:       "http",
+					Port:       10902,
+					TargetPort: intstr.FromString("http"),
+				},
+			},
+		},
+		{
+			name: "with Thanos sidecar and custom HTTP service port",
+			thanos: &monitoringv1.ThanosSpec{
+				ServiceHTTPPort: new(int32(8080)),
+			},
+			expectedPorts: []corev1.ServicePort{
+				{
+					Name:       "web",
+					Port:       9090,
+					TargetPort: intstr.FromString("web"),
+				},
+				{
+					Name:       "grpc",
+					Port:       10901,
+					TargetPort: intstr.FromString("grpc"),
+				},
+				{
+					Name:       "http",
+					Port:       8080,
+					TargetPort: intstr.FromString("http"),
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "test",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					Thanos: tc.thanos,
+				},
+			}
+
+			svc := makeGoverningService(p, prompkg.Config{})
+
+			require.Equal(t, "prometheus-operated", svc.Name)
+			require.Equal(t, tc.expectedPorts, svc.Spec.Ports)
 		})
 	}
 }
