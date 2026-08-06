@@ -15,6 +15,8 @@
 package prometheus
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"maps"
 	"path"
@@ -25,6 +27,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -208,6 +211,28 @@ func makeStatefulSetSpec(
 		if cpf.Web != nil {
 			configReloaderWebConfigFile = confArg.Value
 			configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
+			// mount secret holding basic-auth-password into config-reloader
+			if cpf.Web.BasicAuthUsers != nil {
+				volumes = append(volumes, corev1.Volume{
+					Name: "basic-auth-password",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: cpf.Web.BasicAuthUsers.ServiceAccountPasswordRef.Name,
+							Items: []corev1.KeyToPath{
+								{
+									Key:  cpf.Web.BasicAuthUsers.ServiceAccountPasswordRef.Key,
+									Path: "password",
+								},
+							},
+						},
+					},
+				})
+				configReloaderVolumeMounts = append(configReloaderVolumeMounts, corev1.VolumeMount{
+					Name:      "basic-auth-password",
+					ReadOnly:  true,
+					MountPath: fmt.Sprintf("%s/%s", prompkg.ConfigReloaderSecretsDir, "basic-auth-password"),
+				})
+			}
 		}
 	} else if cpf.Web != nil {
 		webConfigGenerator.Warn("web.config.file")
@@ -825,4 +850,47 @@ func compactionModeFor(p *monitoringv1.Prometheus, promVersion semver.Version) (
 	}
 
 	return compactionModeDisabled, nil
+}
+
+func setStatefulSetProbeForBasicAuth(ctx context.Context, secretClient typedcorev1.SecretInterface, sset *appsv1.StatefulSet, p *monitoringv1.Prometheus, c prompkg.Config) error {
+	// update probe for basic auth
+	pfg := p.GetCommonPrometheusFields()
+
+	if pfg.Web == nil || pfg.Web.BasicAuthUsers == nil {
+		return nil
+	}
+
+	serviceAccountPassword, err := k8s.GetSecretDataByKey(ctx, secretClient, p.Spec.Web.BasicAuthUsers.ServiceAccountPasswordRef.Name, p.Spec.Web.BasicAuthUsers.ServiceAccountPasswordRef.Key)
+	if err != nil {
+		return err
+	}
+
+	basicAuthInfo := fmt.Sprintf("%s:%s", p.Spec.ServiceAccountName, string(serviceAccountPassword))
+
+	basicAuthHeader := corev1.HTTPHeader{
+		Name:  "Authorization",
+		Value: "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuthInfo)),
+	}
+
+	for i, container := range sset.Spec.Template.Spec.Containers {
+		// add basic auth for pod probe
+		if container.Name == "prometheus" || (container.Name == "config-reloader" && c.ReloaderConfig.EnableProbes) {
+			if container.StartupProbe != nil {
+				httpGet := *container.StartupProbe.HTTPGet
+				httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+				sset.Spec.Template.Spec.Containers[i].StartupProbe.HTTPGet = &httpGet
+			}
+			if container.LivenessProbe != nil {
+				httpGet := *container.LivenessProbe.HTTPGet
+				httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+				sset.Spec.Template.Spec.Containers[i].LivenessProbe.HTTPGet = &httpGet
+			}
+			if container.ReadinessProbe != nil {
+				httpGet := *container.ReadinessProbe.HTTPGet
+				httpGet.HTTPHeaders = append(httpGet.HTTPHeaders, basicAuthHeader)
+				sset.Spec.Template.Spec.Containers[i].ReadinessProbe.HTTPGet = &httpGet
+			}
+		}
+	}
+	return nil
 }
