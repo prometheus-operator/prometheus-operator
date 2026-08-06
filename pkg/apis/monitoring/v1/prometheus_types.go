@@ -1222,12 +1222,24 @@ type PrometheusSpec struct {
 
 	// retention defines how long to retain the Prometheus data.
 	//
-	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+	// Default: "24h" if `spec.retention`, `spec.retentionSize` and
+	// `spec.retentionPercentage` are empty.
 	// +optional
 	Retention Duration `json:"retention,omitempty"`
 	// retentionSize defines the maximum number of bytes used by the Prometheus data.
 	// +optional
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
+	// retentionPercentage defines the maximum percentage of the data volume's
+	// capacity used by the Prometheus data.
+	//
+	// The value is a number between 0 and 100. If set to 0, percentage-based
+	// retention is disabled.
+	//
+	// Unlike `spec.retention` and `spec.retentionSize`, Prometheus exposes this
+	// setting in the configuration file only. It requires Prometheus >= v3.11.0
+	// and is ignored by older versions.
+	// +optional
+	RetentionPercentage *resource.Quantity `json:"retentionPercentage,omitempty"`
 
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	//

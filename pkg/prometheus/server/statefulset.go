@@ -433,7 +433,10 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 			retentionTimeFlagValue = prompkg.DefaultRetention
 		}
 	} else {
-		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize))
+		// The command-line flags are only used by Prometheus < v3.11.0 which
+		// doesn't support percentage-based retention, hence it shouldn't
+		// prevent the default time-based retention from being applied.
+		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize, nil))
 	}
 
 	// Starting with Prometheus v3.11.0, retention settings are populated in the configuration file.
