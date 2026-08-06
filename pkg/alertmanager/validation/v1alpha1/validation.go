@@ -31,17 +31,53 @@ import (
 // In particular, it verifies things that can't be modelized with the OpenAPI
 // specification such as routes should refer to an existing receiver.
 func ValidateAlertmanagerConfig(amc *monitoringv1alpha1.AlertmanagerConfig) error {
+	return ValidateAlertmanagerConfigWithGlobal(amc, nil)
+}
+
+// ValidateAlertmanagerConfigWithGlobal checks that the given AlertmanagerConfig
+// is valid. When global is non-nil, mute and active time intervals defined in
+// the global AlertmanagerConfig are considered when validating route references.
+func ValidateAlertmanagerConfigWithGlobal(amc *monitoringv1alpha1.AlertmanagerConfig, global *monitoringv1alpha1.AlertmanagerConfig) error {
 	receivers, err := validateReceivers(amc.Spec.Receivers)
 	if err != nil {
 		return err
 	}
 
-	muteTimeIntervals, err := validateMuteTimeIntervals(amc.Spec.MuteTimeIntervals)
+	muteTimeIntervals, err := mergeMuteTimeIntervalNames(amc.Spec.MuteTimeIntervals, globalMuteTimeIntervals(global))
 	if err != nil {
 		return err
 	}
 
 	return validateRoute(amc.Spec.Route, receivers, muteTimeIntervals, true)
+}
+
+func globalMuteTimeIntervals(global *monitoringv1alpha1.AlertmanagerConfig) []monitoringv1alpha1.MuteTimeInterval {
+	if global == nil {
+		return nil
+	}
+	return global.Spec.MuteTimeIntervals
+}
+
+func mergeMuteTimeIntervalNames(local, global []monitoringv1alpha1.MuteTimeInterval) (map[string]struct{}, error) {
+	muteTimeIntervalNames, err := validateMuteTimeIntervals(local)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(global) == 0 {
+		return muteTimeIntervalNames, nil
+	}
+
+	globalNames, err := validateMuteTimeIntervals(global)
+	if err != nil {
+		return nil, err
+	}
+
+	for name := range globalNames {
+		muteTimeIntervalNames[name] = struct{}{}
+	}
+
+	return muteTimeIntervalNames, nil
 }
 
 func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]struct{}, error) {
