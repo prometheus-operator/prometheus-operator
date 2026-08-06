@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestProbers(t *testing.T) {
@@ -80,5 +81,36 @@ func TestProbers(t *testing.T) {
 			})
 		}
 
+	}
+}
+
+func TestExecActionUsesShellCurlOrWget(t *testing.T) {
+	got := ExecAction("http://localhost:9090/-/healthy")
+	require.Equal(t, []string{"sh", "-c"}, got.Command[:2])
+	require.Contains(t, got.Command[2], "curl --fail http://localhost:9090/-/healthy")
+	require.Contains(t, got.Command[2], "wget -q -O /dev/null http://localhost:9090/-/healthy")
+}
+
+func TestPromtoolExecAction(t *testing.T) {
+	for _, tc := range []struct {
+		url   string
+		check string
+	}{
+		{url: "http://localhost:9090/-/healthy", check: "healthy"},
+		{url: "http://localhost:9090/-/ready", check: "ready"},
+		{url: "http://localhost:9090/prometheus/-/ready", check: "ready"},
+	} {
+		t.Run(tc.check+"-"+tc.url, func(t *testing.T) {
+			got := PromtoolExecAction(tc.url)
+			require.Equal(t, &corev1.ExecAction{
+				Command: []string{
+					"promtool",
+					"check",
+					tc.check,
+					"--url",
+					strings.Split(tc.url, "/-/")[0],
+				},
+			}, got)
+		})
 	}
 }
