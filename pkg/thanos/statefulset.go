@@ -142,7 +142,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		return nil, errors.New(tr.GetName() + ": thanos ruler requires query config or at least one query endpoint to be specified")
 	}
 
-	thanosVersion := operator.StringValOrDefault(ptr.Deref(tr.Spec.Version, ""), operator.DefaultThanosVersion)
+	thanosVersion := operator.StringValOrDefault(ptr.Deref(tr.Spec.Version, ""), config.ThanosDefaultVersion)
 	version, err := semver.ParseTolerant(thanosVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Thanos Ruler version %q: %w", thanosVersion, err)

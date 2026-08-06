@@ -72,6 +72,7 @@ type Config struct {
 	ClusterDomain                  string
 	ReloaderConfig                 operator.ContainerConfig
 	AlertmanagerDefaultBaseImage   string
+	AlertmanagerDefaultVersion     string
 	Annotations                    operator.Map
 	Labels                         operator.Map
 	WatchObjectRefsInAllNamespaces bool
@@ -175,6 +176,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			ClusterDomain:                  c.ClusterDomain,
 			ReloaderConfig:                 c.ReloaderConfig,
 			AlertmanagerDefaultBaseImage:   c.AlertmanagerDefaultBaseImage,
+			AlertmanagerDefaultVersion:     c.AlertmanagerDefaultVersion,
 			Annotations:                    c.Annotations,
 			Labels:                         c.Labels,
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
@@ -892,7 +894,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 }
 
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder) error {
-	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.DefaultAlertmanagerVersion)
+	amVersion := operator.StringValOrDefault(am.Spec.Version, operator.StringValOrDefault(c.config.AlertmanagerDefaultVersion, operator.DefaultAlertmanagerVersion))
 	version, err := semver.ParseTolerant(amVersion)
 	if err != nil {
 		return fmt.Errorf("failed to parse alertmanager version: %w", err)

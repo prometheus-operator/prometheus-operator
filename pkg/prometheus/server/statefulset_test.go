@@ -45,6 +45,8 @@ var defaultTestConfig = prompkg.Config{
 	ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 	PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
 	ThanosDefaultBaseImage:     operator.DefaultThanosBaseImage,
+	PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
+	ThanosDefaultVersion:       operator.DefaultThanosVersion,
 }
 
 func makeStatefulSetFromPrometheus(p monitoringv1.Prometheus) (*appsv1.StatefulSet, error) {
@@ -799,6 +801,8 @@ func TestPrometheusDefaultBaseImageFlag(t *testing.T) {
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
+		PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
+		ThanosDefaultVersion:       operator.DefaultThanosVersion,
 	}
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
@@ -839,6 +843,8 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "nondefaultuseflag/quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "nondefaultuseflag/quay.io/thanos/thanos",
+		PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
+		ThanosDefaultVersion:       operator.DefaultThanosVersion,
 	}
 	labels := map[string]string{
 		"testlabel": "testlabelvalue",
@@ -1455,6 +1461,8 @@ func TestReplicasConfigurationWithSharding(t *testing.T) {
 		ReloaderConfig:             defaultTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: "quay.io/prometheus/prometheus",
 		ThanosDefaultBaseImage:     "quay.io/thanos/thanos:v0.7.0",
+		PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
+		ThanosDefaultVersion:       operator.DefaultThanosVersion,
 	}
 	replicas := int32(2)
 	shards := int32(3)
@@ -1503,6 +1511,8 @@ func TestSidecarResources(t *testing.T) {
 			ReloaderConfig:             reloaderConfig,
 			PrometheusDefaultBaseImage: defaultTestConfig.PrometheusDefaultBaseImage,
 			ThanosDefaultBaseImage:     defaultTestConfig.ThanosDefaultBaseImage,
+			PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
+			ThanosDefaultVersion:       operator.DefaultThanosVersion,
 		}
 		logger := prompkg.NewLogger()
 		p := monitoringv1.Prometheus{

@@ -36,8 +36,11 @@ type LabelConfigValidator struct {
 }
 
 // NewLabelConfigValidator creates a new LabelConfigValidator.
-func NewLabelConfigValidator(p monitoringv1.PrometheusInterface) (*LabelConfigValidator, error) {
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+func NewLabelConfigValidator(p monitoringv1.PrometheusInterface, defaultVersion string) (*LabelConfigValidator, error) {
+	if defaultVersion == "" {
+		defaultVersion = operator.DefaultPrometheusVersion
+	}
+	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, defaultVersion)
 	v, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)

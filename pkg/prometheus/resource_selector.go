@@ -76,8 +76,12 @@ func NewResourceSelector(
 	namespaceInformers cache.SharedIndexInformer,
 	metrics *operator.Metrics,
 	eventRecorder *operator.EventRecorder,
+	defaultVersion string,
 ) (*ResourceSelector, error) {
-	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, operator.DefaultPrometheusVersion)
+	if defaultVersion == "" {
+		defaultVersion = operator.DefaultPrometheusVersion
+	}
+	promVersion := operator.StringValOrDefault(p.GetCommonPrometheusFields().Version, defaultVersion)
 	version, err := semver.ParseTolerant(promVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse Prometheus version: %w", err)

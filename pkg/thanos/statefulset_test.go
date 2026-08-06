@@ -39,9 +39,39 @@ var (
 	defaultTestConfig = Config{
 		ReloaderConfig:         operator.DefaultReloaderTestConfig.ReloaderConfig,
 		ThanosDefaultBaseImage: operator.DefaultThanosBaseImage,
+		ThanosDefaultVersion:   operator.DefaultThanosVersion,
 	}
 	emptyQueryEndpoints = []string{""}
 )
+
+func TestStatefulSetDefaultVersion(t *testing.T) {
+	tr := &monitoringv1.ThanosRuler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: []string{"http://test"},
+		},
+	}
+
+	t.Run("use hardcoded default when no version in config", func(t *testing.T) {
+		config := defaultTestConfig
+		config.ThanosDefaultVersion = operator.DefaultThanosVersion
+		spec, err := makeStatefulSetSpec(tr, config, nil, &operator.ShardedSecret{})
+		require.NoError(t, err)
+		require.Contains(t, spec.Template.Spec.Containers[0].Image, operator.DefaultThanosVersion)
+	})
+
+	t.Run("use configured default version from config", func(t *testing.T) {
+		config := defaultTestConfig
+		customDefault := "v0.25.0"
+		config.ThanosDefaultVersion = customDefault
+		spec, err := makeStatefulSetSpec(tr, config, nil, &operator.ShardedSecret{})
+		require.NoError(t, err)
+		require.Contains(t, spec.Template.Spec.Containers[0].Image, customDefault)
+	})
+}
 
 func TestStatefulSetLabelsAndAnnotations(t *testing.T) {
 	expectedStsLabels := map[string]string{
@@ -94,6 +124,7 @@ func TestStatefulSetLabelsAndAnnotations(t *testing.T) {
 	testConfig := Config{
 		ReloaderConfig:         operator.DefaultReloaderTestConfig.ReloaderConfig,
 		ThanosDefaultBaseImage: operator.DefaultThanosBaseImage,
+		ThanosDefaultVersion:   operator.DefaultThanosVersion,
 		Labels: map[string]string{
 			"operatorlabel": "operator-value",
 		},
@@ -141,6 +172,7 @@ func TestThanosDefaultBaseImageFlag(t *testing.T) {
 	thanosBaseImageConfig := Config{
 		ReloaderConfig:         defaultTestConfig.ReloaderConfig,
 		ThanosDefaultBaseImage: "nondefaultuseflag/quay.io/thanos/thanos",
+		ThanosDefaultVersion:   operator.DefaultThanosVersion,
 	}
 
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
@@ -956,6 +988,7 @@ func TestSidecarResources(t *testing.T) {
 		testConfig := Config{
 			ReloaderConfig:         reloaderConfig,
 			ThanosDefaultBaseImage: operator.DefaultThanosBaseImage,
+			ThanosDefaultVersion:   operator.DefaultThanosVersion,
 		}
 		tr := &monitoringv1.ThanosRuler{
 			Spec: monitoringv1.ThanosRulerSpec{

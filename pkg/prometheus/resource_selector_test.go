@@ -483,6 +483,7 @@ func TestSelectProbes(t *testing.T) {
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				operator.NewFakeRecorder(1, p),
+				"",
 			)
 			require.NoError(t, err)
 
@@ -1174,6 +1175,7 @@ func TestSelectServiceMonitors(t *testing.T) {
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				operator.NewFakeRecorder(1, p),
+				"",
 			)
 			require.NoError(t, err)
 
@@ -1553,6 +1555,7 @@ func TestSelectPodMonitors(t *testing.T) {
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				operator.NewFakeRecorder(1, p),
+				"",
 			)
 			require.NoError(t, err)
 
@@ -4790,6 +4793,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				operator.NewFakeRecorder(1, p),
+				"",
 			)
 			require.NoError(t, err)
 
@@ -4951,6 +4955,7 @@ func TestSelectPodMonitorsWithInvalidAuthentication(t *testing.T) {
 				nil,
 				operator.NewMetrics(prometheus.NewPedanticRegistry()),
 				operator.NewFakeRecorder(1, p),
+				"",
 			)
 			require.NoError(t, err)
 
