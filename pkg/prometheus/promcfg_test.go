@@ -2748,7 +2748,7 @@ func TestEndpointOAuth2(t *testing.T) {
 				Key: "client_id",
 			},
 		},
-		ClientSecret: corev1.SecretKeySelector{
+		ClientSecret: &corev1.SecretKeySelector{
 			LocalObjectReference: corev1.LocalObjectReference{
 				Name: "oauth2",
 			},
@@ -2805,6 +2805,15 @@ func TestEndpointOAuth2(t *testing.T) {
 			},
 			Data: map[string][]byte{
 				"client_secret": []byte("test_client_secret"),
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "jwt-cert",
+				Namespace: "default",
+			},
+			Data: map[string][]byte{
+				"client_certificate_key": []byte("test_rsa_private_key"),
 			},
 		},
 		&corev1.Secret{
@@ -2922,6 +2931,54 @@ func TestEndpointOAuth2(t *testing.T) {
 				},
 			},
 			golden: "probe_monitor_with_oauth2.golden",
+		},
+		{
+			name: "service monitor with jwt-bearer grant type",
+			sMons: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port: "web",
+								HTTPConfigWithProxyAndTLSFiles: monitoringv1.HTTPConfigWithProxyAndTLSFiles{
+									HTTPConfigWithTLSFiles: monitoringv1.HTTPConfigWithTLSFiles{
+										HTTPConfigWithoutTLS: monitoringv1.HTTPConfigWithoutTLS{
+											OAuth2: &monitoringv1.OAuth2{
+												ClientID: monitoringv1.SecretOrConfigMap{
+													ConfigMap: &corev1.ConfigMapKeySelector{
+														LocalObjectReference: corev1.LocalObjectReference{
+															Name: "oauth2",
+														},
+														Key: "client_id",
+													},
+												},
+												TokenURL:               "http://test.url",
+												GrantType:              ptr.To(monitoringv1.GrantTypeJWTBearer),
+												ClientCertificateKey:   &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "jwt-cert"}, Key: "client_certificate_key"},
+												ClientCertificateKeyID: "my-key-id",
+												SignatureAlgorithm:     ptr.To(monitoringv1.SignatureAlgorithmRS256),
+												Issuer:                 "my-issuer",
+												Audience:               "my-audience",
+												Claims:                 []monitoringv1.Entry{{Key: "sub", Value: "user"}, {Key: "role", Value: "admin"}},
+												Scopes:                 []string{"scope1"},
+												EndpointParams:         map[string]string{"param1": "value1"},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "service_monitor_with_oauth2_jwt_bearer.golden",
 		},
 	}
 
@@ -3874,7 +3931,7 @@ func TestRemoteReadConfig(t *testing.T) {
 							Key: "client_id",
 						},
 					},
-					ClientSecret: corev1.SecretKeySelector{
+					ClientSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "oauth2",
 						},
@@ -3900,7 +3957,7 @@ func TestRemoteReadConfig(t *testing.T) {
 							Key: "client_id",
 						},
 					},
-					ClientSecret: corev1.SecretKeySelector{
+					ClientSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "oauth2",
 						},
@@ -4175,7 +4232,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 							Key: "client_id",
 						},
 					},
-					ClientSecret: corev1.SecretKeySelector{
+					ClientSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "oauth2",
 						},
@@ -7365,7 +7422,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							Key: "client_id",
 						},
 					},
-					ClientSecret: corev1.SecretKeySelector{
+					ClientSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "oauth2",
 						},
@@ -7394,7 +7451,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 							Key: "client_id",
 						},
 					},
-					ClientSecret: corev1.SecretKeySelector{
+					ClientSecret: &corev1.SecretKeySelector{
 						LocalObjectReference: corev1.LocalObjectReference{
 							Name: "oauth2",
 						},
@@ -7673,7 +7730,7 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -7983,7 +8040,7 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -8238,7 +8295,7 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -8893,7 +8950,7 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -9261,7 +9318,7 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -9479,7 +9536,7 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -9845,7 +9902,7 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -10111,7 +10168,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -10790,7 +10847,7 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -11621,7 +11678,7 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -11806,7 +11863,7 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -12041,7 +12098,7 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -12270,7 +12327,7 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -12540,7 +12597,7 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
@@ -13009,7 +13066,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 									Key: "client_id",
 								},
 							},
-							ClientSecret: corev1.SecretKeySelector{
+							ClientSecret: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "oauth2",
 								},
