@@ -39,13 +39,10 @@ func writePEMFile(file, typ string, b []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to open %s for writing: %v", file, err)
 	}
+	defer f.Close()
 
 	if err := pem.Encode(f, &pem.Block{Type: typ, Bytes: b}); err != nil {
 		return fmt.Errorf("failed to write data to %s: %v", file, err)
-	}
-
-	if err := f.Close(); err != nil {
-		return fmt.Errorf("error closing %s: %v", file, err)
 	}
 
 	log.Printf("wrote %s\n", file)
