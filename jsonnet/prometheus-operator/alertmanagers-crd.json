@@ -5476,7 +5476,14 @@
                       "type": "string"
                     },
                     "description": "nodeSelector defines which Nodes the Pods are scheduled on.",
-                    "type": "object"
+                    "maxProperties": 32,
+                    "type": "object",
+                    "x-kubernetes-validations": [
+                      {
+                        "message": "nodeSelector must contain valid Kubernetes labels",
+                        "rule": "self.all(key, key.size() <= 316 && self[key].size() <= 63)"
+                      }
+                    ]
                   },
                   "paused": {
                     "description": "paused if set to true all actions on the underlying managed objects are not\ngoing to be performed, except for delete actions.",
