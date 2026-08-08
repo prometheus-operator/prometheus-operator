@@ -68,40 +68,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							SlackConfigs: []monitoringv1beta1.SlackConfig{
-								{
-									Actions: []monitoringv1beta1.SlackAction{
-										{
-											Type: "a",
-											Text: "b",
-											URL:  "www.test.com",
-											Name: new("c"),
-											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
-												Text: "d",
-											},
-										},
-									},
-									Fields: []monitoringv1beta1.SlackField{
-										{},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate wechat config - invalid URL",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -757,6 +723,64 @@ func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
 					return
 				}
 				t.Errorf("got error but expected none - %s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateSlackAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
 			}
 		})
 	}
