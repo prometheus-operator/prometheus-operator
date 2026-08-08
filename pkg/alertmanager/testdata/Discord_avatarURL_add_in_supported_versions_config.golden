@@ -3,5 +3,5 @@ receivers:
   discord_configs:
   - webhook_url: http://example.com
     message: test message
-    avatar_url: content
+    avatar_url: http://example.com/avatar.png
 templates: []
