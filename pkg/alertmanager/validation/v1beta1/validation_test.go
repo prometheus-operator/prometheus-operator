@@ -768,6 +768,139 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "Test fail to validate on slack config - invalid action fields missing type",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "",
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on slack config - invalid action fields missing text",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on slack config - invalid action fields missing url and name",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											URL:  "",
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on slack config - invalid action fields missing text in confirm field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type:         "a",
+											Text:         "b",
+											URL:          "www.test.com",
+											Name:         new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
