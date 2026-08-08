@@ -470,11 +470,19 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	if !k8s.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
+	deletionInProgress := rr.DeletionInProgress(mCur)
+
+	if !k8s.HasStatusCleanupFinalizer(mCur) && deletionInProgress {
 		return
 	}
 
-	if !rr.hasStateChanged(mOld, mCur) {
+	// The object is being deleted and still carries the status cleanup
+	// finalizer: always reconcile it, even if its generation, labels and
+	// annotations haven't changed, so that the controller can run its
+	// deletion logic (e.g. removing the finalizer). We can't rely on
+	// comparing the old and current deletion timestamps here because the
+	// informer may have missed the update event that set it.
+	if !deletionInProgress && !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
 
