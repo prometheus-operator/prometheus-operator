@@ -758,6 +758,40 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 										},
 									},
 									Fields: []monitoringv1beta1.SlackField{
+										{Title: "a", Value: "b"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
 										{},
 									},
 								},
@@ -782,7 +816,6 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 								{
 									Actions: []monitoringv1beta1.SlackAction{
 										{
-											Type: "",
 											Text: "b",
 											URL:  "www.test.com",
 											Name: new("c"),
@@ -792,7 +825,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 										},
 									},
 									Fields: []monitoringv1beta1.SlackField{
-										{},
+										{Title: "a", Value: "b"},
 									},
 								},
 							},
@@ -817,7 +850,6 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 									Actions: []monitoringv1beta1.SlackAction{
 										{
 											Type: "a",
-											Text: "",
 											URL:  "www.test.com",
 											Name: new("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
@@ -826,7 +858,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 										},
 									},
 									Fields: []monitoringv1beta1.SlackField{
-										{},
+										{Title: "a", Value: "b"},
 									},
 								},
 							},
@@ -852,14 +884,13 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 										{
 											Type: "a",
 											Text: "b",
-											URL:  "",
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
 										},
 									},
 									Fields: []monitoringv1beta1.SlackField{
-										{},
+										{Title: "a", Value: "b"},
 									},
 								},
 							},
