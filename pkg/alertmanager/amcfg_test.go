@@ -195,6 +195,39 @@ func TestInitializeFromAlertmanagerConfig(t *testing.T) {
 						{
 							Name: "myreceiver",
 						},
+						{
+							Name: "jira",
+							JiraConfigs: []monitoringv1alpha1.JiraConfig{
+								{
+									Project:           "projectA",
+									SendResolved:      new(true),
+									APIURL:            new(monitoringv1alpha1.URL("https://test.com")),
+									Summary:           new("summary"),
+									Description:       new("description"),
+									Priority:          new("priority"),
+									Labels:            []string{"aa", "bb"},
+									IssueType:         "bug",
+									ResolveTransition: new("ResolveTransition"),
+									ReopenTransition:  new("ReopenTransition"),
+									WontFixResolution: new("WontFixResolution"),
+									ReopenDuration:    new(monitoringv1.Duration("5s")),
+									Fields: []monitoringv1alpha1.JiraField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
+								},
+							},
+						},
 					},
 					Route: &monitoringv1alpha1.Route{
 						Receiver: "null",
@@ -4791,6 +4824,132 @@ func TestGenerateConfigEmailReceiver(t *testing.T) {
 				},
 			},
 			golden: "CR_with_EmailConfig_with_Threading.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestGenerateConfigJiraReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	testCases := []testCase{
+		{
+			name:      "CR with Jira Receiver",
+			amVersion: &version28,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "ms-teams-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://webhook.office.com/webhookb2/id/IncomingWebhook/id"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								JiraConfigs: []monitoringv1alpha1.JiraConfig{
+									{
+										Project:           "projectA",
+										SendResolved:      new(true),
+										APIURL:            new(monitoringv1alpha1.URL("https://test.com")),
+										Summary:           new("summary"),
+										Description:       new("description"),
+										Priority:          new("priority"),
+										Labels:            []string{"aa", "bb"},
+										IssueType:         "bug",
+										ResolveTransition: new("ResolveTransition"),
+										ReopenTransition:  new("ReopenTransition"),
+										WontFixResolution: new("WontFixResolution"),
+										ReopenDuration:    new(monitoringv1.Duration("5s")),
+										Fields: []monitoringv1alpha1.JiraField{
+											{
+												Key:   "customField1",
+												Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+											},
+											{
+												Key:   "customField2",
+												Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+											},
+											{
+												Key:   "customField3",
+												Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Jira_Receiver.golden",
 		},
 	}
 
