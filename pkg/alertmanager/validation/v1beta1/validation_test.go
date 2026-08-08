@@ -735,7 +735,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 		expectErr bool
 	}{
 		{
-			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
+			name: "Test validate on slack config - all fields valid",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -769,7 +769,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
+			name: "Test validate on slack config - valid action fields - invalid fields field",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -803,7 +803,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate on slack config - invalid action fields missing type",
+			name: "Test validate on slack config - invalid action fields missing type",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -836,7 +836,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate on slack config - invalid action fields missing text",
+			name: "Test validate on slack config - invalid action fields missing text",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -869,7 +869,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate on slack config - invalid action fields missing url and name",
+			name: "Test validate on slack config - invalid action fields missing url and name",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -901,7 +901,7 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate on slack config - invalid action fields missing text in confirm field",
+			name: "Test validate on slack config - invalid action fields missing text in confirm field",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
