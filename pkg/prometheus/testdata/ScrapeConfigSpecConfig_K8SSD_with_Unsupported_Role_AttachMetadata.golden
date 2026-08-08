@@ -8,6 +8,9 @@ scrape_configs:
 - job_name: scrapeConfig/default/testscrapeconfig1
   kubernetes_sd_configs:
   - role: service
+    attach_metadata:
+      node: true
+      namespace: false
   relabel_configs:
   - source_labels:
     - job

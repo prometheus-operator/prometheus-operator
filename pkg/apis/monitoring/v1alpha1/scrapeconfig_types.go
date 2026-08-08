@@ -51,12 +51,21 @@ type NamespaceDiscovery struct {
 
 type AttachMetadata struct {
 	// node attaches node metadata to discovered targets.
-	// When set to true, Prometheus must have the `get` permission on the
+	// When set to true, Prometheus must have the `list/watch` permission on the
 	// `Nodes` objects.
 	// Only valid for Pod, Endpoint and Endpointslice roles.
 	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
+
+	// namespace attaches namespace metadata to discovered targets.
+	// When set to true, Prometheus must have permissions to list/watch Namespaces.
+	// Only valid for pod, endpoints, endpointslice, service, ingress.
+	//
+	// It requires Prometheus >= v3.6.0.
+	//
+	// +optional
+	Namespace *bool `json:"namespace,omitempty"` // nolint:kubeapilinter
 }
 
 // Filter name and value pairs to limit the discovery process to a subset of available resources.
@@ -462,6 +471,8 @@ type HTTPSDConfig struct {
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !has(self.attachMetadata.node) || !self.attachMetadata.node || self.role in ['Pod', 'Endpoints', 'EndpointSlice']",message="attachMetadata.node is only valid for Pod, Endpoints, and EndpointSlice roles"
+// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !has(self.attachMetadata.namespace) || !self.attachMetadata.namespace || self.role in ['Pod', 'Endpoints', 'EndpointSlice', 'Service', 'Ingress']",message="attachMetadata.namespace is only valid for Pod, Endpoints, EndpointSlice, Service, and Ingress roles"
 type KubernetesSDConfig struct {
 	// apiServer defines the API server address consisting of a hostname or IP address followed
 	// by an optional port number.
@@ -479,8 +490,9 @@ type KubernetesSDConfig struct {
 	// +optional
 	Namespaces *NamespaceDiscovery `json:"namespaces,omitempty"`
 	// attachMetadata defines the metadata to attach to discovered targets.
-	// It requires Prometheus >= v2.35.0 when using the `Pod` role and
-	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
+	// It requires Prometheus >= v2.35.0 when using the `Pod` role,
+	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and
+	// Prometheus >= v3.6.0 for `Service` and `Ingress` roles.
 	// +optional
 	AttachMetadata *AttachMetadata `json:"attachMetadata,omitempty"`
 	// selectors defines the selector to select objects.
