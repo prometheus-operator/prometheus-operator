@@ -1,3 +1,8 @@
+## 0.93.1 / 2026-08-10
+
+* [BUGFIX] Fix duplicate kubelet targets for nodes reporting several addresses of the same IP family. #8739
+* [BUGFIX] Fix argument list for Thanos containers when custom TLS ciphers or curves are specified. #8749
+
 ## 0.93.0 / 2026-07-28
 
 * [CHANGE] Switch from uint to int types in the Go definition of the CRDs and add API validations to reject negative values. #8662 #8666

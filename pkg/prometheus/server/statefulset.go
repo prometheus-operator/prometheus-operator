@@ -19,7 +19,6 @@ import (
 	"maps"
 	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -598,11 +597,15 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compact
 		}
 
 		if len(tls.CipherSuites) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: strings.Join(tls.CipherSuites, ",")})
+			for _, cs := range tls.CipherSuites {
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: cs})
+			}
 		}
 
 		if len(tls.Curves) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
-			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: strings.Join(tls.Curves, ",")})
+			for _, c := range tls.Curves {
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: c})
+			}
 		}
 	}
 
