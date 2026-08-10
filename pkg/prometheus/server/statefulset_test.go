@@ -2769,8 +2769,13 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 			require.NoError(t, err)
 
 			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
-			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
-			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+			expectedArgs := []string{
+				"--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256",
+				"--grpc-server-tls-ciphers=TLS_AES_256_GCM_SHA384",
+			}
+			for _, expectedArg := range expectedArgs {
+				require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg), "expected %q presence to be %v", expectedArg, tc.shouldHaveArg)
+			}
 		})
 	}
 }
@@ -2817,8 +2822,13 @@ func TestGRPCServerTLSCurves(t *testing.T) {
 			require.NoError(t, err)
 
 			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
-			expectedArg := "--grpc-server-tls-curves=CurveP256,X25519"
-			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+			expectedArgs := []string{
+				"--grpc-server-tls-curves=CurveP256",
+				"--grpc-server-tls-curves=X25519",
+			}
+			for _, expectedArg := range expectedArgs {
+				require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg), "expected %q presence to be %v", expectedArg, tc.shouldHaveArg)
+			}
 		})
 	}
 }
