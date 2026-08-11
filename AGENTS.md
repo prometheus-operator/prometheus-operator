@@ -134,11 +134,12 @@ Every PR description must include:
 - A `release-note` fenced code block with a one-line user-facing summary.
   If there is no user-facing change, leave the block empty.
 
-````text
+```text
 ```release-note
 Add metadataConfig field to the Prometheus CRD for configuring how remote-write sends metadata information.
 ```
-````
+
+```
 
 - Use GitHub closing keywords so linked issues close automatically on merge
   (e.g. `Fixes #8243`).
