@@ -27,6 +27,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	_ "time/tzdata" // Embed timezone information which is required by the Alertmanager controller.
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

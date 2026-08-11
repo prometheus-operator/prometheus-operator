@@ -2286,13 +2286,7 @@ func TestGenerateConfig(t *testing.T) {
 	version24, err := semver.ParseTolerant("v0.24.0")
 	require.NoError(t, err)
 
-	version26, err := semver.ParseTolerant("v0.26.0")
-	require.NoError(t, err)
-
 	version28, err := semver.ParseTolerant("v0.28.0")
-	require.NoError(t, err)
-
-	version31, err := semver.ParseTolerant("v0.31.0")
 	require.NoError(t, err)
 
 	globalSlackAPIURL, err := url.Parse("http://slack.example.com")
@@ -4013,235 +4007,6 @@ func TestGenerateConfig(t *testing.T) {
 			},
 			golden: "CR_with_MSTeamsV2_Receiver_Partial_Conf.golden",
 		},
-		{
-			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										Smarthost: new("example.com:25"),
-										From:      new("admin@example.com"),
-										To:        new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_EmailConfig_Receiver_Conf.golden",
-		},
-		{
-			name:      "CR with EmailConfig Missing SmartHost Field",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										From: new("admin@example.com"),
-										To:   new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name:      "CR with EmailConfig Missing SMTP From Field",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										From: new("admin@example.com"),
-										To:   new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Global: &globalConfig{
-					SMTPSmarthost: config.HostPort{
-						Host: "smtp.example.org",
-						Port: "587",
-					},
-					SMTPFrom: "admin@globaltest.com",
-				},
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										To: new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_EmailConfig_Receiver_Global_Defaults_Conf.golden",
-		},
-		{
-			name:      "CR with EmailConfig with ForceImplicitTLS",
-			amVersion: &version31,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										Smarthost:        new("example.com:25"),
-										From:             new("admin@example.com"),
-										To:               new("customers@example.com"),
-										ForceImplicitTLS: new(true),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_EmailConfig_ForceImplicitTLS.golden",
-		},
-		{
-			name:      "CR with EmailConfig with Threading",
-			amVersion: &version31,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										Smarthost: new("example.com:25"),
-										From:      new("admin@example.com"),
-										To:        new("customers@example.com"),
-										Threading: &monitoringv1alpha1.EmailThreadingConfig{
-											ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "CR_with_EmailConfig_with_Threading.golden",
-		},
 	}
 
 	logger := newNopLogger(t)
@@ -4738,6 +4503,294 @@ func TestGenerateConfigWebhookReceiver(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Webhook_Receiver_and_Payload_Unsupported_Version.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestGenerateConfigEmailReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version26, err := semver.ParseTolerant("v0.26.0")
+	require.NoError(t, err)
+
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	testCases := []testCase{
+		{
+			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost: new("example.com:25"),
+										From:      new("admin@example.com"),
+										To:        new("customers@example.com"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_Receiver_Conf.golden",
+		},
+		{
+			name:      "CR with EmailConfig Missing SmartHost Field",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										From: new("admin@example.com"),
+										To:   new("customers@example.com"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with EmailConfig Missing SMTP From Field",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										From: new("admin@example.com"),
+										To:   new("customers@example.com"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Global: &globalConfig{
+					SMTPSmarthost: config.HostPort{
+						Host: "smtp.example.org",
+						Port: "587",
+					},
+					SMTPFrom: "admin@globaltest.com",
+				},
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										To: new("customers@example.com"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_Receiver_Global_Defaults_Conf.golden",
+		},
+		{
+			name:      "CR with EmailConfig with ForceImplicitTLS",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost:        new("example.com:25"),
+										From:             new("admin@example.com"),
+										To:               new("customers@example.com"),
+										ForceImplicitTLS: new(true),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_ForceImplicitTLS.golden",
+		},
+		{
+			name:      "CR with EmailConfig with Threading",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								EmailConfigs: []monitoringv1alpha1.EmailConfig{
+									{
+										Smarthost: new("example.com:25"),
+										From:      new("admin@example.com"),
+										To:        new("customers@example.com"),
+										Threading: &monitoringv1alpha1.EmailThreadingConfig{
+											ThreadByDate: monitoringv1alpha1.ThreadByDateTypeDaily,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_EmailConfig_with_Threading.golden",
 		},
 	}
 
@@ -5639,7 +5692,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -5656,7 +5709,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -5673,7 +5726,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL:     "www.test.com",
+								WebhookURL:     "http://www.test.com",
 								WebhookURLFile: "/test",
 								Text:           "test text",
 							},
@@ -5735,7 +5788,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 							},
 						},
 					},
@@ -5751,7 +5804,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								AuthorName: "test author",
 							},
 						},
@@ -5768,7 +5821,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								AuthorName: "test author",
 							},
 						},
@@ -5785,7 +5838,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Fields: []mattermostField{
 									{
 										Title: "foo",
@@ -5807,7 +5860,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Fields: []mattermostField{
 									{
 										Title: "foo",
@@ -8027,6 +8080,317 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 								APIURL:      "http://example.com",
 								TokenID:     new("t123456"),
 								TokenIDFile: "/var/kubernetes/secrets/token-id",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeMattermostConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMattermostAllowed := semver.Version{Major: 0, Minor: 30}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "mattermost_configs invalid webhook_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid icon_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment title_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										TitleLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment thumb_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ThumbURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment footer_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										FooterIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment image_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ImageURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs valid urls pass validation",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "https://example.com/icon.png",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "https://example.com/author",
+										AuthorIcon: "https://example.com/author-icon.png",
+										TitleLink:  "https://example.com/title",
+										ThumbURL:   "https://example.com/thumb.png",
+										FooterIcon: "https://example.com/footer-icon.png",
+										ImageURL:   "https://example.com/image.png",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_valid_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs templated urls pass validation",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    `{{ .CommonAnnotations.icon }}`,
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: `{{ .CommonAnnotations.author }}`,
+										AuthorIcon: `{{ .CommonAnnotations.authorIcon }}`,
+										TitleLink:  `{{ .CommonAnnotations.title }}`,
+										ThumbURL:   `{{ .CommonAnnotations.thumb }}`,
+										FooterIcon: `{{ .CommonAnnotations.footerIcon }}`,
+										ImageURL:   `{{ .CommonAnnotations.image }}`,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_templated_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs invalid top-level author_link returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								AuthorLink: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs valid and templated top-level urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								AuthorLink: "https://example.com/author",
+								AuthorIcon: `{{ .CommonAnnotations.authorIcon }}`,
+								TitleLink:  `{{ .CommonAnnotations.title }}`,
+								ThumbURL:   "https://example.com/thumb.png",
+								FooterIcon: `{{ .CommonAnnotations.footerIcon }}`,
+								ImageURL:   "https://example.com/image.png",
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_top_level_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs invalid template in attachment title_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										TitleLink: `{{ .CommonAnnotations.title`,
+									},
+								},
 							},
 						},
 					},

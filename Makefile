@@ -302,7 +302,7 @@ FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-
 Documentation/platform/operator.md: operator ## Format operator documentation.
 	$(MDOX_BINARY) fmt $@
 
-Documentation/getting-started/compatibility.md: pkg/operator/defaults.go ## Format compatibility documentation.
+Documentation/getting-started/compatibility.md: operator ## Format compatibility documentation.
 	$(MDOX_BINARY) fmt $@
 
 Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) $(API_DOC_GEN_BINARY) ## Generate API reference documentation.
