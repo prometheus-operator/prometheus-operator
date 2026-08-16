@@ -607,7 +607,17 @@ func start() int {
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
 		if cfg.Gates.Enabled(operator.StatusForConfigurationResourcesFeature) {
-			// TODO: check permissions when implementing the AlertmanagerConfig status subresource.
+			if !checkStatusSubresourcePermissions(
+				ctx,
+				logger,
+				kclient,
+				[]schema.GroupVersionResource{
+					monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
+				},
+			) {
+				cancel()
+				return 1
+			}
 			alertmanagerControllerOptions = append(alertmanagerControllerOptions, alertmanagercontroller.WithConfigResourceStatus())
 		}
 

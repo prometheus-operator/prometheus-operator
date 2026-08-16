@@ -605,22 +605,31 @@ func (c *Operator) handleNamespaceUpdate(oldo, curo any) {
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	c.reconciliations.ResetStatus(key)
-	err := c.sync(ctx, key)
+
+	closure, err := c.sync(ctx, key)
+	if err != nil {
+		_ = closure(ctx)
+	} else {
+		err = closure(ctx)
+	}
+
 	c.reconciliations.SetStatus(key, err)
 
 	return err
 }
 
-func (c *Operator) sync(ctx context.Context, key string) error {
+func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) error, error) {
+	closure := func(context.Context) error { return nil }
+
 	am, err := operator.GetObjectFromKey[*monitoringv1.Alertmanager](c.alrtInfs, key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if am == nil {
 		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return closure, nil
 	}
 
 	logger := c.logger.With("key", key)
@@ -632,71 +641,76 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	finalizerAdded, err := c.finalizerSyncer.Sync(ctx, am, c.rr.DeletionInProgress(am), statusCleanup)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if finalizerAdded {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(am)
-		return nil
+		return closure, nil
 	}
 
 	if c.rr.DeletionInProgress(am) {
 		c.reconciliations.ForgetObject(key)
-		return nil
+		return closure, nil
 	}
 
 	if am.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
-		return nil
+		return closure, nil
 	}
 
 	c.recordDeprecatedFields(key, logger, am)
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
-		return err
+		return closure, err
 	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
 
 	amConfigs, err := c.provisionAlertmanagerConfiguration(ctx, am, assetStore)
 	if err != nil {
-		return fmt.Errorf("provision alertmanager configuration: %w", err)
+		return closure, fmt.Errorf("provision alertmanager configuration: %w", err)
 	}
+
+	closure = func(ctx context.Context) error {
+		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+	}
+
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsShardedSecret, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, c.newTLSAssetSecret(am))
 	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
+		return closure, fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
 	// TODO(simonpasquier): the operator should take into account changes to
 	// the cluster TLS configuration to trigger a rollout of the pods (this
 	// configuration doesn't support live reload).
 	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
-		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
+		return closure, fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
 
 	svcClient := c.kclient.CoreV1().Services(am.Namespace)
 	if am.Spec.ServiceName != nil {
 		selectorLabels := makeSelectorLabels(am.Name)
 		if err := k8s.EnsureCustomGoverningService(ctx, am.Namespace, *am.Spec.ServiceName, svcClient, selectorLabels); err != nil {
-			return err
+			return closure, err
 		}
 	} else {
 		// Create governing service if it doesn't exist.
 		if _, err = k8s.CreateOrUpdateService(ctx, svcClient, makeStatefulSetService(am, c.config)); err != nil {
-			return fmt.Errorf("synchronizing governing service failed: %w", err)
+			return closure, fmt.Errorf("synchronizing governing service failed: %w", err)
 		}
 	}
 
 	existingStatefulSet, err := c.getStatefulSetFromAlertmanagerKey(key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	shouldCreate := false
@@ -706,23 +720,23 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 	}
 
 	if c.rr.DeletionInProgress(existingStatefulSet) {
-		return nil
+		return closure, nil
 	}
 
 	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsShardedSecret)
 	if err != nil {
-		return fmt.Errorf("failed to generate statefulset: %w", err)
+		return closure, fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 	operator.SanitizeSTS(sset)
 
 	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
 		logger.Debug("new statefulset generation inputs match current, skipping any actions")
-		return nil
+		return closure, nil
 	}
 
 	ssetClient := c.kclient.AppsV1().StatefulSets(am.Namespace)
@@ -730,19 +744,19 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		logger.Debug("no current statefulset found")
 		logger.Debug("creating statefulset")
 		if _, err := k8s.CreateStatefulSetOrPatchLabels(ctx, ssetClient, sset); err != nil {
-			return fmt.Errorf("failed to create statefulset: %w", err)
+			return closure, fmt.Errorf("failed to create statefulset: %w", err)
 		}
-		return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+		return closure, nil
 	}
 
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 		c.metrics.StsDeleteCreateCounter().Inc()
 		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)
 	}); err != nil {
-		return err
+		return closure, err
 	}
 
-	return c.updateConfigResourcesStatus(ctx, am, amConfigs)
+	return closure, nil
 }
 
 // updateConfigResourcesStatus updates the status of the selected configuration
