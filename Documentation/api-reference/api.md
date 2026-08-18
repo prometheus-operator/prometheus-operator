@@ -12853,6 +12853,19 @@ string
 For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
 For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.LabelNameString">LabelNameString
+(<code>string</code> alias)</h3>
+<div>
+<p>LabelNameString represents a valid label name</p>
+</div>
+<h3 id="monitoring.coreos.com/v1.LabelValueTemplate">LabelValueTemplate
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
+</p>
+<div>
+<p>LabelValueTemplate represents a label value that can contain template expressions</p>
+</div>
 <h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
 </h3>
 <p>
@@ -35131,6 +35144,22 @@ route by the Prometheus operator.</p>
 <p>activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.LabelValueTemplate">
+map[LabelNameString]LabelValueTemplate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.SDFile">SDFile
@@ -40959,6 +40988,22 @@ route by the Prometheus operator.</p>
 <td>
 <em>(Optional)</em>
 <p>activeTimeIntervals is a list of TimeInterval names when this route should be active.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.LabelValueTemplate">
+map[LabelNameString]LabelValueTemplate
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
 </td>
 </tr>
 </tbody>
