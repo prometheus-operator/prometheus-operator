@@ -41,8 +41,15 @@ const (
 	// compaction, which lets Prometheus keep local compaction enabled while the
 	// Thanos sidecar uploads blocks to object storage.
 	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	//
+	// Thanos v0.41.0 introduced the sidecar flags but validated them by
+	// comparing --storage.tsdb.delay-compact-file.path verbatim against
+	// --shipper.meta-file-name, which never matches the absolute path the
+	// operator sets on Prometheus, so the sidecar always fails to start. Thanos
+	// v0.42.0 fixed the comparison to join --tsdb.path with the meta file name.
+	// ref: https://github.com/thanos-io/thanos/pull/8688
 	minVersionPrometheusDelayedCompaction = "3.9.0"
-	minVersionThanosDelayedCompaction     = "0.41.0"
+	minVersionThanosDelayedCompaction     = "0.42.0"
 
 	// thanosShipperMetaFileName is the name of the meta file the Thanos sidecar
 	// shipper writes in the TSDB directory. Prometheus reads it through
@@ -801,7 +808,7 @@ const (
 // Thanos sidecar object-storage setup and the Prometheus and Thanos versions.
 //
 // Delayed compaction requires Prometheus >= v3.9.0
-// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.41.0
+// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.42.0
 // (--shipper.meta-file-name and --shipper.ignore-unequal-block-size); otherwise
 // compaction is disabled while uploading to object storage.
 func compactionModeFor(p *monitoringv1.Prometheus, promVersion semver.Version) (compactionMode, error) {
