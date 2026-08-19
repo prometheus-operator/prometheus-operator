@@ -12853,16 +12853,8 @@ string
 For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
 For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.</p>
 </div>
-<h3 id="monitoring.coreos.com/v1.LabelNameString">LabelNameString
-(<code>string</code> alias)</h3>
-<div>
-<p>LabelNameString represents a valid label name</p>
-</div>
 <h3 id="monitoring.coreos.com/v1.LabelValueTemplate">LabelValueTemplate
 (<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>)
-</p>
 <div>
 <p>LabelValueTemplate represents a label value that can contain template expressions</p>
 </div>
@@ -29415,7 +29407,7 @@ e.g: <code>metadata.name=foobar</code></p>
 <h3 id="monitoring.coreos.com/v1alpha1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -35148,8 +35140,8 @@ route by the Prometheus operator.</p>
 <td>
 <code>labels</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.LabelValueTemplate">
-map[LabelNameString]LabelValueTemplate
+<a href="#monitoring.coreos.com/v1alpha1.KeyValue">
+[]KeyValue
 </a>
 </em>
 </td>
@@ -38923,7 +38915,7 @@ for the inhibition to take effect. This ensures related alerts are properly grou
 <h3 id="monitoring.coreos.com/v1beta1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -40994,8 +40986,8 @@ route by the Prometheus operator.</p>
 <td>
 <code>labels</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.LabelValueTemplate">
-map[LabelNameString]LabelValueTemplate
+<a href="#monitoring.coreos.com/v1beta1.KeyValue">
+[]KeyValue
 </a>
 </em>
 </td>
