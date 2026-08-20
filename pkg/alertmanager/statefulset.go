@@ -340,7 +340,14 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if version.GTE(semver.MustParse("0.30.0")) {
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: fmt.Sprintf("$(%s)", operator.PodNameEnvVar)})
+		// Default the peer name to the pod's own name (injected via the
+		// downward API as $(POD_NAME)). Users can override this default by
+		// setting `.spec.clusterPeerName` on the Alertmanager CR.
+		peerName := fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
+		if a.Spec.ClusterPeerName != nil && *a.Spec.ClusterPeerName != "" {
+			peerName = *a.Spec.ClusterPeerName
+		}
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: peerName})
 	}
 
 	// If multiple Alertmanager clusters are deployed on the same cluster, it can happen

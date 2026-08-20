@@ -335,6 +335,19 @@ type AlertmanagerSpec struct {
 	// clusterPeerTimeout defines the timeout for cluster peering.
 	// +optional
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
+	// clusterPeerName defines the name that this Alertmanager instance uses to
+	// advertise itself to other cluster peers (the `--cluster.peer-name` flag,
+	// available since Alertmanager v0.30.0).
+	//
+	// If not set, the operator defaults to the pod's name (`$(POD_NAME)`),
+	// which is injected via the Kubernetes downward API. Setting this field
+	// lets you override that default with either a literal value or a string
+	// referencing environment variables that are already available in the
+	// Alertmanager container (for example `$(POD_NAME).$(NAMESPACE)`).
+	//
+	// This field only takes effect for Alertmanager v0.30.0 and above.
+	// +optional
+	ClusterPeerName *string `json:"clusterPeerName,omitempty"`
 	// portName defines the port's name for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
