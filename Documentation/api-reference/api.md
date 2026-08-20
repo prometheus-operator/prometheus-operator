@@ -792,6 +792,26 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>This field only takes effect for Alertmanager v0.30.0 and above.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>portName</code><br/>
 <em>
 string
@@ -7397,6 +7417,26 @@ GoDuration
 <td>
 <em>(Optional)</em>
 <p>clusterPeerTimeout defines the timeout for cluster peering.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>This field only takes effect for Alertmanager v0.30.0 and above.</p>
 </td>
 </tr>
 <tr>

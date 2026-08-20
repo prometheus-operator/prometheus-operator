@@ -697,7 +697,7 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 		}, {
 			name:           "empty custom peer name falls back to default",
 			version:        "0.30.0",
-			clusterPeer:    ptr.To(""),
+			clusterPeer:    new(""),
 			expPeerName:    true,
 			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
 		},
