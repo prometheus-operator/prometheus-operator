@@ -1238,6 +1238,7 @@ type PrometheusSpec struct {
 	// Unlike `spec.retention` and `spec.retentionSize`, Prometheus exposes this
 	// setting in the configuration file only. It requires Prometheus >= v3.11.0
 	// and is ignored by older versions.
+	// +kubebuilder:validation:XValidation:rule="quantity(string(self)).compareTo(quantity('0')) >= 0 && quantity(string(self)).compareTo(quantity('100')) <= 0",message="retentionPercentage must be between 0 and 100"
 	// +optional
 	RetentionPercentage *resource.Quantity `json:"retentionPercentage,omitempty"`
 

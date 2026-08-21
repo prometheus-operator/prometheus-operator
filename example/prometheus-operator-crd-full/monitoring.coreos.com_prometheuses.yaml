@@ -8349,6 +8349,10 @@ spec:
                   and is ignored by older versions.
                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                 x-kubernetes-int-or-string: true
+                x-kubernetes-validations:
+                - message: retentionPercentage must be between 0 and 100
+                  rule: quantity(string(self)).compareTo(quantity('0')) >= 0 && quantity(string(self)).compareTo(quantity('100'))
+                    <= 0
               retentionSize:
                 description: retentionSize defines the maximum number of bytes used
                   by the Prometheus data.
