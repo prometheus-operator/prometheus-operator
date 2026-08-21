@@ -16,6 +16,7 @@ package kubelet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -240,35 +241,32 @@ func (c *Controller) Run(ctx context.Context) error {
 	}
 }
 
-// nodeAddress returns the provided node's address, based on the priority:
-// 1. NodeInternalIP
-// 2. NodeExternalIP
-//
-// Copied from github.com/prometheus/prometheus/discovery/kubernetes/node.go.
-func (c *Controller) nodeAddress(node corev1.Node) (string, map[corev1.NodeAddressType][]string, error) {
+// nodeAddresses returns all addresses of the node for the configured priority.
+// It mirrors the priority/fallback logic from
+// github.com/prometheus/prometheus/discovery/kubernetes/node.go.
+func (c *Controller) nodeAddresses(node corev1.Node) ([]string, error) {
 	m := map[corev1.NodeAddressType][]string{}
 	for _, a := range node.Status.Addresses {
 		m[a.Type] = append(m[a.Type], a.Address)
 	}
 
 	switch c.nodeAddressPriority {
-	case "internal":
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
-		}
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
-		}
 	case "external":
-		if addresses, ok := m[corev1.NodeExternalIP]; ok {
-			return addresses[0], m, nil
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
-		if addresses, ok := m[corev1.NodeInternalIP]; ok {
-			return addresses[0], m, nil
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
+		}
+	default: // "internal"
+		if len(m[corev1.NodeInternalIP]) > 0 {
+			return m[corev1.NodeInternalIP], nil
+		}
+		if len(m[corev1.NodeExternalIP]) > 0 {
+			return m[corev1.NodeExternalIP], nil
 		}
 	}
-
-	return "", m, fmt.Errorf("host address unknown")
+	return nil, fmt.Errorf("host address unknown")
 }
 
 // nodeReadyConditionKnown checks the node for a known Ready condition. If the
@@ -332,35 +330,55 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 	)
 
 	for _, n := range nodes {
-		address, _, err := c.nodeAddress(n)
+		nodeIPs, err := c.nodeAddresses(n)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to determine hostname for node %q (priority: %s): %w", n.Name, c.nodeAddressPriority, err))
 			continue
 		}
 
-		ip := net.ParseIP(address)
-		if ip == nil {
-			errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s): %w", address, n.Name, c.nodeAddressPriority, err))
-			continue
-		}
+		// A node with several interfaces reports several addresses per family,
+		// all reaching the same kubelet.
+		var seenIPv4, seenIPv6 bool
 
-		na := nodeAddress{
-			ipAddress:  address,
-			name:       n.Name,
-			uid:        n.UID,
-			apiVersion: n.APIVersion,
-			ipv4:       ip.To4() != nil,
-			ready:      nodeReadyConditionKnown(n),
-		}
-		addresses = append(addresses, na)
+		for _, address := range nodeIPs {
+			ip := net.ParseIP(address)
+			if ip == nil {
+				errs = append(errs, fmt.Errorf("failed to parse IP address %q for node %q (priority: %s)", address, n.Name, c.nodeAddressPriority))
+				continue
+			}
 
-		if !na.ready {
-			c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
-			readyUnknownNodes[address] = n.Name
-			continue
-		}
+			ipv4 := ip.To4() != nil
+			if ipv4 && seenIPv4 {
+				continue
+			}
+			if !ipv4 && seenIPv6 {
+				continue
+			}
 
-		readyKnownNodes[address] = n.Name
+			if ipv4 {
+				seenIPv4 = true
+			} else {
+				seenIPv6 = true
+			}
+
+			na := nodeAddress{
+				ipAddress:  address,
+				name:       n.Name,
+				uid:        n.UID,
+				apiVersion: n.APIVersion,
+				ipv4:       ipv4,
+				ready:      nodeReadyConditionKnown(n),
+			}
+			addresses = append(addresses, na)
+
+			if !na.ready {
+				c.logger.Info("Node Ready condition is Unknown", "node", n.GetName())
+				readyUnknownNodes[address] = n.Name
+				continue
+			}
+
+			readyKnownNodes[address] = n.Name
+		}
 	}
 
 	// We want to remove any nodes that have an unknown ready state *and* a
@@ -414,7 +432,7 @@ func (c *Controller) sync(ctx context.Context) {
 
 	if c.manageEndpoints {
 		c.nodeEndpointSyncs.WithLabelValues(endpointsLabel).Inc()
-		if err = c.syncEndpoints(ctx, addresses); err != nil {
+		if err = c.syncEndpoints(ctx, svc, addresses); err != nil {
 			c.nodeEndpointSyncErrors.WithLabelValues(endpointsLabel).Inc()
 			c.logger.Error("Failed to synchronize kubelet endpoints", "err", err)
 		}
@@ -429,8 +447,48 @@ func (c *Controller) sync(ctx context.Context) {
 	}
 }
 
-func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress) error {
+// singleAddressPerNode returns one address per node, preferring the service's
+// primary IP family. The Endpoints API has no address family filter, unlike the
+// endpointslice one, so keeping every address would make Prometheus scrape
+// dual-stack nodes once per address. Nodes reporting no address of the primary
+// family keep their first address rather than being dropped.
+func singleAddressPerNode(svc *corev1.Service, addresses []nodeAddress) []nodeAddress {
+	var primaryIPv4, hasPrimary bool
+	if svc != nil && len(svc.Spec.IPFamilies) > 0 {
+		hasPrimary = true
+		primaryIPv4 = svc.Spec.IPFamilies[0] == corev1.IPv4Protocol
+	}
+
+	indexes := make(map[string]int, len(addresses))
+
+	filtered := make([]nodeAddress, 0, len(addresses))
+	for _, a := range addresses {
+		i, found := indexes[a.name]
+		if !found {
+			indexes[a.name] = len(filtered)
+			filtered = append(filtered, a)
+
+			continue
+		}
+
+		if !hasPrimary {
+			continue
+		}
+
+		if a.ipv4 != primaryIPv4 {
+			continue
+		}
+
+		filtered[i] = a
+	}
+
+	return filtered
+}
+
+func (c *Controller) syncEndpoints(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpoints")
+
+	addresses = singleAddressPerNode(svc, addresses)
 
 	//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
 	eps := &corev1.Endpoints{
@@ -497,6 +555,10 @@ func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 
 func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpointslice")
+
+	if svc == nil {
+		return errors.New("kubelet service not available")
+	}
 
 	// Get the list of endpointslice objects associated to the service.
 	client := c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace)

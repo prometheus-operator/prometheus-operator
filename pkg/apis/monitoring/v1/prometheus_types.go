@@ -1237,8 +1237,15 @@ type PrometheusSpec struct {
 	ShardRetentionPolicy *ShardRetentionPolicy `json:"shardRetentionPolicy,omitempty"`
 
 	// disableCompaction when true, the Prometheus compaction is disabled.
-	// When `spec.thanos.objectStorageConfig` or `spec.objectStorageConfigFile` are defined, the operator automatically
-	// disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).
+	//
+	// When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
+	// default handling depends on the Prometheus and Thanos sidecar versions:
+	//   - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+	//     conditions during block uploads (as the Thanos documentation recommends).
+	//   - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+	//     with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
+	//     compacted after they have been uploaded.
+	// Setting this field to true always disables local compaction regardless of the versions.
 	// +optional
 	DisableCompaction bool `json:"disableCompaction,omitempty"` // nolint:kubeapilinter
 
@@ -2433,6 +2440,8 @@ type RulesAlert struct {
 type MetadataConfig struct {
 	// send defines whether metric metadata is sent to the remote storage or not.
 	//
+	// The setting is ignored when Remote Write message's version 2.0 is used.
+	//
 	// +optional
 	Send bool `json:"send,omitempty"` // nolint:kubeapilinter
 
@@ -2499,6 +2508,15 @@ type TSDBSpec struct {
 	// It requires Prometheus >= v3.10.0.
 	// +optional
 	StaleSeriesCompactionThreshold *resource.Quantity `json:"staleSeriesCompactionThreshold,omitempty"`
+
+	// chunkEncoding configures per-chunk-type encoding overrides.
+	//
+	// It requires Prometheus >= v3.13.0.
+	//
+	// Notice: Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	// +optional
+	ChunkEncoding *ChunkEncodingSpec `json:"chunkEncoding,omitempty"`
 }
 
 // Validate semantically validates the given TSDBSpec.
@@ -2512,6 +2530,29 @@ func (ts *TSDBSpec) Validate() error {
 	}
 
 	return nil
+}
+
+// +kubebuilder:validation:Enum=Xor;Xor2
+type ChunkEncodingFloats string
+
+const (
+	ChunkEncodingFloatsXor  ChunkEncodingFloats = "Xor"
+	ChunkEncodingFloatsXor2 ChunkEncodingFloats = "Xor2"
+)
+
+// ChunkEncodingSpec configures per-chunk-type encoding overrides.
+type ChunkEncodingSpec struct {
+	// floats selects the encoding used for float chunks.
+	// Valid values are "Xor" and "Xor2".
+	//
+	// Notice:
+	//  * Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	//  * Setting "Xor2" automatically adds the `xor2-encoding` feature flag.
+	//
+	// It requires Prometheus >= v3.13.0.
+	// +optional
+	Floats *ChunkEncodingFloats `json:"floats,omitempty"`
 }
 
 type Exemplars struct {

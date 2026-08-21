@@ -80,8 +80,15 @@ spec:
 
 This will attach Thanos sidecar that will backup all *new blocks* that Prometheus produces every 2 hours to the object storage.
 
-NOTE: This option will also disable the local Prometheus compaction. This means that Thanos compactor is the main singleton component
+NOTE: With Prometheus older than `v3.9.0` or a Thanos sidecar older than `v0.41.0`, this option disables the local Prometheus compaction
+(`--storage.tsdb.min-block-duration` == `--storage.tsdb.max-block-duration`). This means that Thanos compactor is the main singleton component
 responsible for compactions on a global, object storage level.
+
+NOTE: With Prometheus `>= v3.9.0` and a Thanos sidecar `>= v0.41.0`, the operator keeps local Prometheus compaction enabled and instead
+coordinates uploads through the sidecar's shipper meta file: Prometheus is started with `--storage.tsdb.delay-compact-file.path` and the
+sidecar with `--shipper.meta-file-name` and `--shipper.ignore-unequal-block-size`, so that Prometheus only compacts blocks that have already
+been uploaded to object storage. This avoids the query/memory overhead of running Prometheus without local compaction. Set
+`spec.disableCompaction: true` to force the old behavior of disabling local compaction.
 
 ## Thanos Ruler
 
