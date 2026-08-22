@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.92.1
+    app.kubernetes.io/version: 0.93.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -34,42 +34,72 @@ rules:
   resources:
   - alertmanagers
   - alertmanagers/finalizers
-  - alertmanagers/status
-  - alertmanagerconfigs
-  - prometheuses
-  - prometheuses/finalizers
-  - prometheuses/status
   - prometheusagents
   - prometheusagents/finalizers
-  - prometheusagents/status
+  - prometheuses
+  - prometheuses/finalizers
   - thanosrulers
   - thanosrulers/finalizers
-  - thanosrulers/status
-  - scrapeconfigs
-  - scrapeconfigs/status
-  - servicemonitors
-  - servicemonitors/status
-  - podmonitors
-  - podmonitors/status
-  - probes
-  - probes/status
-  - prometheusrules
-  - prometheusrules/status
   verbs:
-  - '*'
+  - patch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers/status
+  - podmonitors/status
+  - probes/status
+  - prometheuses/status
+  - prometheusagents/status
+  - prometheusrules/status
+  - scrapeconfigs/status
+  - servicemonitors/status
+  - thanosrulers/status
+  verbs:
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - alertmanagerconfigs
+  - podmonitors
+  - probes
+  - prometheusagents
+  - prometheuses
+  - prometheusrules
+  - servicemonitors
+  - scrapeconfigs
+  - thanosrulers
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - apps
   resources:
   - statefulsets
   verbs:
-  - '*'
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - ""
   resources:
   - configmaps
   - secrets
   verbs:
-  - '*'
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -212,7 +242,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.92.1
+    app.kubernetes.io/version: 0.93.1
   name: prometheus-operator
   namespace: default
 ```
@@ -228,7 +258,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.92.1
+    app.kubernetes.io/version: 0.93.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
