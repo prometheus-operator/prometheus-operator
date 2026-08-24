@@ -345,8 +345,9 @@ type AlertmanagerSpec struct {
 	// referencing environment variables that are already available in the
 	// Alertmanager container (for example `$(POD_NAME).$(NAMESPACE)`).
 	//
-	// This field only takes effect for Alertmanager v0.30.0 and above.
+	/// It requires Alertmanager >= 0.30.0.
 	// +optional
+	// +kubebuilder:validation:MinLength=1
 	ClusterPeerName *string `json:"clusterPeerName,omitempty"`
 	// portName defines the port's name for the pods and governing service.
 	// Defaults to `web`.

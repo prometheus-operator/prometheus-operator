@@ -2512,7 +2512,8 @@ spec:
                   referencing environment variables that are already available in the
                   Alertmanager container (for example `$(POD_NAME).$(NAMESPACE)`).
 
-                  This field only takes effect for Alertmanager v0.30.0 and above.
+                  / It requires Alertmanager >= 0.30.0.
+                minLength: 1
                 type: string
               clusterPeerTimeout:
                 description: clusterPeerTimeout defines the timeout for cluster peering.

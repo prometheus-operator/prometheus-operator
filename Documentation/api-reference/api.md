@@ -807,7 +807,7 @@ which is injected via the Kubernetes downward API. Setting this field
 lets you override that default with either a literal value or a string
 referencing environment variables that are already available in the
 Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
-<p>This field only takes effect for Alertmanager v0.30.0 and above.</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
@@ -7436,7 +7436,7 @@ which is injected via the Kubernetes downward API. Setting this field
 lets you override that default with either a literal value or a string
 referencing environment variables that are already available in the
 Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
-<p>This field only takes effect for Alertmanager v0.30.0 and above.</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
 </td>
 </tr>
 <tr>
