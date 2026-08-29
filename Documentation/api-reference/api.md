@@ -17939,6 +17939,10 @@ string
 <p><code>Uppercase</code> and <code>Lowercase</code> actions require Prometheus &gt;= v2.36.0.
 <code>DropEqual</code> and <code>KeepEqual</code> actions require Prometheus &gt;= v2.41.0.</p>
 <p>Default: &ldquo;Replace&rdquo;</p>
+<p>An omitted action is treated as replace by the operator and by Prometheus.
+There is no CRD OpenAPI default: Kubernetes would persist <code>action: replace</code>
+on the stored object, and GitOps tools that compare desired manifests
+(field omitted) against live state report permanent drift.</p>
 </td>
 </tr>
 </tbody>

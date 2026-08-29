@@ -259,7 +259,6 @@ spec:
                     More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
                   properties:
                     action:
-                      default: replace
                       description: |-
                         action to perform based on the regex matching.
 
@@ -267,6 +266,11 @@ spec:
                         `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
 
                         Default: "Replace"
+
+                        An omitted action is treated as replace by the operator and by Prometheus.
+                        There is no CRD OpenAPI default: Kubernetes would persist `action: replace`
+                        on the stored object, and GitOps tools that compare desired manifests
+                        (field omitted) against live state report permanent drift.
                       enum:
                       - replace
                       - Replace
@@ -909,7 +913,6 @@ spec:
                             More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
                           properties:
                             action:
-                              default: replace
                               description: |-
                                 action to perform based on the regex matching.
 
@@ -917,6 +920,11 @@ spec:
                                 `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
 
                                 Default: "Replace"
+
+                                An omitted action is treated as replace by the operator and by Prometheus.
+                                There is no CRD OpenAPI default: Kubernetes would persist `action: replace`
+                                on the stored object, and GitOps tools that compare desired manifests
+                                (field omitted) against live state report permanent drift.
                               enum:
                               - replace
                               - Replace
@@ -1060,7 +1068,6 @@ spec:
                             More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
                           properties:
                             action:
-                              default: replace
                               description: |-
                                 action to perform based on the regex matching.
 
@@ -1068,6 +1075,11 @@ spec:
                                 `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
 
                                 Default: "Replace"
+
+                                An omitted action is treated as replace by the operator and by Prometheus.
+                                There is no CRD OpenAPI default: Kubernetes would persist `action: replace`
+                                on the stored object, and GitOps tools that compare desired manifests
+                                (field omitted) against live state report permanent drift.
                               enum:
                               - replace
                               - Replace

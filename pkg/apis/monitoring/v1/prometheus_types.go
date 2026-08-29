@@ -2236,8 +2236,12 @@ type RelabelConfig struct {
 	//
 	// Default: "Replace"
 	//
+	// An omitted action is treated as replace by the operator and by Prometheus.
+	// There is no CRD OpenAPI default: Kubernetes would persist `action: replace`
+	// on the stored object, and GitOps tools that compare desired manifests
+	// (field omitted) against live state report permanent drift.
+	//
 	// +kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
-	// +kubebuilder:default=replace
 	// +optional
 	Action string `json:"action,omitempty"`
 }
