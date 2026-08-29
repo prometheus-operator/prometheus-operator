@@ -1176,14 +1176,9 @@ func containerByName(t *testing.T, sset *appsv1.StatefulSet, name string) corev1
 // >= v0.42.0, the operator keeps local compaction enabled and coordinates block
 // uploads with the sidecar through the shipper meta file instead of disabling
 // compaction. Otherwise (versions too old, or compaction explicitly disabled) it
-// falls back to disabling compaction.
-//
-// Thanos v0.41.0 is deliberately excluded from the supported range: its sidecar
-// validates --shipper.meta-file-name against --storage.tsdb.delay-compact-file.path
-// with a verbatim string comparison, which never matches the absolute path the
-// operator sets on Prometheus, so the sidecar always fails to start against it.
+// falls back to disabling compaction. Thanos v0.41.0 is excluded: its sidecar
+// rejects the resulting flags due to a validation bug (issue #8763).
 // ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
-// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8763
 func TestThanosDelayedCompaction(t *testing.T) {
 	for _, tc := range []struct {
 		name              string
