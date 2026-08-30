@@ -765,6 +765,33 @@ type HTTPConfig struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+	// httpHeaders can be used to specify HTTP headers.
+	//
+	// +optional
+	HTTPHeaders *HTTPHeaders `json:"httpHeaders,omitempty"`
+}
+
+type HTTPHeaders struct {
+	// name defines a HTTP header name.
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name,omitempty"`
+	// values defines values of the HTTP header.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +optional
+	Values []string `json:"values,omitempty"`
+	// secrets defines values of the HTTP header.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	// files defines values of the HTTP header.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +optional
+	Files []string `json:"files,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex
