@@ -58,6 +58,11 @@ type RelabelConfigApplyConfiguration struct {
 	// `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
 	//
 	// Default: "Replace"
+	//
+	// An omitted action is treated as replace by the operator and by Prometheus.
+	// There is no CRD OpenAPI default: Kubernetes would persist `action: replace`
+	// on the stored object, and GitOps tools that compare desired manifests
+	// (field omitted) against live state report permanent drift.
 	Action *string `json:"action,omitempty"`
 }
 
