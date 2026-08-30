@@ -330,8 +330,10 @@ func (in *HTTPConfig) DeepCopyInto(out *HTTPConfig) {
 	}
 	if in.HTTPHeaders != nil {
 		in, out := &in.HTTPHeaders, &out.HTTPHeaders
-		*out = new(HTTPHeaders)
-		(*in).DeepCopyInto(*out)
+		*out = make([]HTTPHeaders, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 

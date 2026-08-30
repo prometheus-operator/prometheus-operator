@@ -766,14 +766,15 @@ type HTTPConfig struct {
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 	// httpHeaders can be used to specify HTTP headers.
-	//
+	// +kubebuilder:validation:MinItems=1
 	// +optional
-	HTTPHeaders *HTTPHeaders `json:"httpHeaders,omitempty"`
+	HTTPHeaders []HTTPHeaders `json:"httpHeaders,omitempty"`
 }
 
 type HTTPHeaders struct {
 	// name defines a HTTP header name.
 	// +kubebuilder:validation:MinLength=1
+	// +required
 	Name string `json:"name,omitempty"`
 	// values defines values of the HTTP header.
 	// +listType=atomic
@@ -781,12 +782,12 @@ type HTTPHeaders struct {
 	// +kubebuilder:validation:items:MinLength=1
 	// +optional
 	Values []string `json:"values,omitempty"`
-	// secrets defines values of the HTTP header.
+	// secrets defines values of the HTTP header retrieving from a secret.
 	// +listType=atomic
 	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
-	// files defines values of the HTTP header.
+	// files defines values of the HTTP header retrieving from a file.
 	// +listType=atomic
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:items:MinLength=1

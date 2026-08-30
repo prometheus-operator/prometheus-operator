@@ -27,9 +27,9 @@ type HTTPHeadersApplyConfiguration struct {
 	Name *string `json:"name,omitempty"`
 	// values defines values of the HTTP header.
 	Values []string `json:"values,omitempty"`
-	// secrets defines values of the HTTP header.
+	// secrets defines values of the HTTP header retrieving from a secret.
 	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
-	// files defines values of the HTTP header.
+	// files defines values of the HTTP header retrieving from a file.
 	Files []string `json:"files,omitempty"`
 }
 

@@ -28705,7 +28705,7 @@ bool
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPHeaders">
-HTTPHeaders
+[]HTTPHeaders
 </a>
 </em>
 </td>
@@ -28765,7 +28765,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>secrets defines values of the HTTP header.</p>
+<p>secrets defines values of the HTTP header retrieving from a secret.</p>
 </td>
 </tr>
 <tr>
@@ -28777,7 +28777,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>files defines values of the HTTP header.</p>
+<p>files defines values of the HTTP header retrieving from a file.</p>
 </td>
 </tr>
 </tbody>
@@ -38909,7 +38909,7 @@ bool
 <code>httpHeaders</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.HTTPHeaders">
-HTTPHeaders
+[]HTTPHeaders
 </a>
 </em>
 </td>
@@ -38969,7 +38969,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>secrets defines values of the HTTP header.</p>
+<p>secrets defines values of the HTTP header retrieving from a secret.</p>
 </td>
 </tr>
 <tr>
@@ -38981,7 +38981,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>files defines values of the HTTP header.</p>
+<p>files defines values of the HTTP header retrieving from a file.</p>
 </td>
 </tr>
 </tbody>
