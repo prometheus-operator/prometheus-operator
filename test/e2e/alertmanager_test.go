@@ -2029,6 +2029,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			WebexConfig: &monitoringv1.GlobalWebexConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://webex.api.url")),
 			},
+			MattermostConfig: &monitoringv1.GlobalMattermostConfig{
+				WebhookURL: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "mattermost",
+					},
+					Key: "webhookurl",
+				},
+			},
 		},
 		Templates: []monitoringv1.SecretOrConfigMap{
 			{
@@ -2119,6 +2127,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"tokenid": []byte(`abc123`),
 		},
 	}
+	mattermost := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "mattermost",
+		},
+		Data: map[string][]byte{
+			"webhookurl": []byte(`https://mattermost.webhook.url`),
+		},
+	}
 
 	ctx := context.Background()
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
@@ -2136,6 +2152,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &wechat, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &rocketchat, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &mattermost, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -2172,6 +2190,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   rocketchat_api_url: https://rocketchat.api.url
   rocketchat_token: abcdef1234567890
   rocketchat_token_id: abc123
+  mattermost_webhook_url: https://mattermost.webhook.url
 route:
   receiver: %[1]s
   routes:
