@@ -33,7 +33,7 @@ const (
 type Target string
 
 // SDFile represents a file used for service discovery
-// +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
+// +kubebuilder:validation:Pattern="^[^*]*(\\*[^/]*)?\\.(json|yml|yaml|JSON|YML|YAML)$"
 type SDFile string
 
 // NamespaceDiscovery is the configuration for discovering
@@ -74,8 +74,8 @@ type Filter struct {
 	Values []string `json:"values"`
 }
 
-// +listType:=map
-// +listMapKey:=name
+// +listType=map
+// +listMapKey=name
 type Filters []Filter
 
 // +kubebuilder:validation:Enum=Pod;Endpoints;Ingress;Service;Node;EndpointSlice
@@ -294,7 +294,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 	// params defines optional HTTP URL parameters
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
@@ -324,26 +324,26 @@ type ScrapeConfigSpec struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
@@ -361,7 +361,7 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
@@ -399,7 +399,7 @@ type StaticConfig struct {
 	// +required
 	Targets []Target `json:"targets"`
 	// labels defines labels assigned to all metrics scraped from the targets.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
@@ -548,12 +548,12 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType:=set
+	// +listType=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
-	// +listType:=set
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// tagSeparator defines the string by which Consul tags are joined into the tag label.
@@ -563,7 +563,7 @@ type ConsulSDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// nodeMeta defines the node metadata key/value pairs to filter nodes for a given service.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
