@@ -27490,6 +27490,29 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmRole">DockerSwarmRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>)
+</p>
+<div>
+<p>DockerSwarmRole defines the role of Docker Swarm targets to retrieve.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Nodes&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Services&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Tasks&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig
 </h3>
 <p>
@@ -27522,7 +27545,9 @@ string
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.DockerSwarmRole">
+DockerSwarmRole
+</a>
 </em>
 </td>
 <td>
@@ -28966,6 +28991,27 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.HetznerRole">HetznerRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>)
+</p>
+<div>
+<p>HetznerRole defines the Hetzner role of entities that should be discovered.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Hcloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Robot&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig
 </h3>
 <p>
@@ -28988,7 +29034,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.HetznerRole">
+HetznerRole
+</a>
 </em>
 </td>
 <td>
@@ -31209,6 +31257,29 @@ If not set, Prometheus uses its default value.</p>
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.OpenStackAvailability">OpenStackAvailability
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>)
+</p>
+<div>
+<p>OpenStackAvailability defines the availability of the endpoint to connect to.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Admin&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Internal&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Public&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.OpenStackRole">OpenStackRole
 (<code>string</code> alias)</h3>
 <p>
@@ -31469,7 +31540,9 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>availability</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.OpenStackAvailability">
+OpenStackAvailability
+</a>
 </em>
 </td>
 <td>

@@ -1822,7 +1822,7 @@ func (in *OpenStackSDConfig) DeepCopyInto(out *OpenStackSDConfig) {
 	}
 	if in.Availability != nil {
 		in, out := &in.Availability, &out.Availability
-		*out = new(string)
+		*out = new(OpenStackAvailability)
 		**out = **in
 	}
 	if in.TLSConfig != nil {

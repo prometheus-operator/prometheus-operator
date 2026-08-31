@@ -4269,7 +4269,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Availability != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "availability",
-					Value: config.Availability,
+					Value: strings.ToLower(string(*config.Availability)),
 				})
 			}
 
@@ -4566,7 +4566,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.FollowRedirects != nil {
@@ -4701,7 +4701,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.Port != nil {

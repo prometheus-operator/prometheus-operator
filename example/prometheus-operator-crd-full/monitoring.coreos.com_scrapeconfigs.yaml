@@ -5519,9 +5519,7 @@ spec:
                       description: role defines the Hetzner role of entities that
                         should be discovered.
                       enum:
-                      - hcloud
                       - Hcloud
-                      - robot
                       - Robot
                       type: string
                     tlsConfig:
@@ -11162,11 +11160,8 @@ spec:
                         to connect to.
                       enum:
                       - Public
-                      - public
                       - Admin
-                      - admin
                       - Internal
-                      - internal
                       type: string
                     domainID:
                       description: domainID defines The OpenStack domainID.

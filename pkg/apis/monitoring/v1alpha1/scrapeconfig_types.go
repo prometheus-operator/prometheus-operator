@@ -846,6 +846,16 @@ const (
 	OpenStackRoleLoadBalancer OpenStackRole = "LoadBalancer"
 )
 
+// OpenStackAvailability defines the availability of the endpoint to connect to.
+// +kubebuilder:validation:Enum=Public;Admin;Internal
+type OpenStackAvailability string
+
+const (
+	OpenStackAvailabilityPublic   OpenStackAvailability = "Public"
+	OpenStackAvailabilityAdmin    OpenStackAvailability = "Admin"
+	OpenStackAvailabilityInternal OpenStackAvailability = "Internal"
+)
+
 // OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
 // +k8s:openapi-gen=true
@@ -929,9 +939,8 @@ type OpenStackSDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// availability defines the availability of the endpoint to connect to.
-	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
-	Availability *string `json:"availability,omitempty"`
+	Availability *OpenStackAvailability `json:"availability,omitempty"`
 	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1107,15 +1116,23 @@ type DockerSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
+// HetznerRole defines the Hetzner role of entities that should be discovered.
+// +kubebuilder:validation:Enum=Hcloud;Robot
+type HetznerRole string
+
+const (
+	HetznerRoleHcloud HetznerRole = "Hcloud"
+	HetznerRoleRobot  HetznerRole = "Robot"
+)
+
 // HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.
 // This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 // +k8s:openapi-gen=true
 type HetznerSDConfig struct {
 	// role defines the Hetzner role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
 	// +required
-	Role string `json:"role"`
+	Role HetznerRole `json:"role"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
@@ -1250,6 +1267,16 @@ type OVHCloudSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
+// DockerSwarmRole defines the role of Docker Swarm targets to retrieve.
+// +kubebuilder:validation:Enum=Services;Tasks;Nodes
+type DockerSwarmRole string
+
+const (
+	DockerSwarmRoleServices DockerSwarmRole = "Services"
+	DockerSwarmRoleTasks    DockerSwarmRole = "Tasks"
+	DockerSwarmRoleNodes    DockerSwarmRole = "Nodes"
+)
+
 // DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
 // +k8s:openapi-gen=true
@@ -1259,9 +1286,8 @@ type DockerSwarmSDConfig struct {
 	// +required
 	Host string `json:"host"`
 	// role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
-	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
 	// +required
-	Role string `json:"role"`
+	Role DockerSwarmRole `json:"role"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// tasks and services that don't have published ports.
 	// +kubebuilder:validation:Minimum=0

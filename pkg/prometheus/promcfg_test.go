@@ -10010,7 +10010,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10041,7 +10041,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10073,7 +10073,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10104,7 +10104,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10128,7 +10128,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10146,7 +10146,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &corev1.ConfigMapKeySelector{
@@ -10178,7 +10178,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
