@@ -1,0 +1,4 @@
+http_headers:
+  foo:
+    values:
+    - bar

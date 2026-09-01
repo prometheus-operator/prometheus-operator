@@ -8898,6 +8898,19 @@ func TestConvertHTTPConfig(t *testing.T) {
 			version: "v0.24.0",
 			golden:  "http_config_enable_http2_not_supported.golden",
 		},
+		{
+			name: "set HTTP headers",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+				},
+			},
+			version: "v0.28.0",
+			golden:  "http_config_set_http_headers.golden",
+		},
 	}
 
 	for _, tc := range testCases {
