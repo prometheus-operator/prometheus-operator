@@ -1,0 +1,21 @@
+http_headers:
+  foo1:
+    values:
+    - bar1
+    - bar2
+    secrets:
+    - bar1
+    - bar2
+    files:
+    - /path/to/bar1
+    - /path/to/bar2
+  foo2:
+    values:
+    - bar3
+    - bar4
+    secrets:
+    - bar3
+    - bar4
+    files:
+    - /second/path/bar1
+    - /second/path/bar2
