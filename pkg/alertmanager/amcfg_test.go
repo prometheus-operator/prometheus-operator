@@ -8903,15 +8903,94 @@ func TestConvertHTTPConfig(t *testing.T) {
 			cfg: monitoringv1alpha1.HTTPConfig{
 				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
 					{
-						Name:   "foo",
-						Values: []string{"bar"},
+						Name:   "foo1",
+						Values: []string{"bar1", "bar2"},
+					},
+					{
+						Name:   "foo2",
+						Values: []string{"bar3", "bar4"},
 					},
 				},
 			},
 			version: "v0.28.0",
 			golden:  "http_config_set_http_headers.golden",
 		},
+		{
+			name: "set HTTP headers with secrets",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name: "header1",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key: "foo",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+							{
+								Key: "foo2",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+						},
+					},
+					{
+						Name: "header2",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key: "foo3",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+							{
+								Key: "foo4",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+						},
+					},
+				},
+			},
+			version: "v0.28.0",
+			golden:  "http_config_set_http_headers_secrets.golden",
+		},
+		{
+			name: "set HTTP headers with files",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:  "foo1",
+						Files: []string{"/path/to/bar1", "/path/to/bar2"},
+					},
+					{
+						Name:  "foo2",
+						Files: []string{"/second/path/bar1", "/second/path/bar2"},
+					},
+				},
+			},
+			version: "v0.28.0",
+			golden:  "http_config_set_http_headers_files.golden",
+		},
 	}
+
+	kclient := fake.NewClientset(
+		&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "http-headers",
+				Namespace: "mynamespace",
+			},
+			Data: map[string]string{
+				"foo1": "bar1",
+				"foo2": "bar2",
+				"foo3": "bar3",
+				"foo4": "bar4",
+			},
+		},
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8926,7 +9005,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 			cb := NewConfigBuilder(
 				logger,
 				v,
-				nil,
+				assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 				&monitoringv1.Alertmanager{
 					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
 					Spec: monitoringv1.AlertmanagerSpec{

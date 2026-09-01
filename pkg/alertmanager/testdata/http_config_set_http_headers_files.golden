@@ -1,0 +1,9 @@
+http_headers:
+  foo1:
+    files:
+    - /path/to/bar1
+    - /path/to/bar2
+  foo2:
+    files:
+    - /second/path/bar1
+    - /second/path/bar2
