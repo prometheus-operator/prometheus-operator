@@ -263,6 +263,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -1300,6 +1301,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -2057,6 +2059,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -2877,6 +2880,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -3714,6 +3718,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -4552,6 +4557,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -5432,6 +5438,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -6385,6 +6392,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -7188,6 +7196,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -8053,6 +8062,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -8847,6 +8857,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -9594,6 +9605,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -10325,6 +10337,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',
@@ -11119,6 +11132,7 @@
                               httpHeaders: {
                                 description: 'httpHeaders can be used to specify HTTP headers.',
                                 items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
                                     files: {
                                       description: 'files defines values of the HTTP header retrieving from a file.',

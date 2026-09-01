@@ -426,6 +426,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -1563,6 +1566,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -2394,6 +2400,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -3296,6 +3305,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -4208,6 +4220,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -5132,6 +5147,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -6124,6 +6142,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -7181,6 +7202,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -8058,6 +8082,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -9017,6 +9044,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -9889,6 +9919,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -10703,6 +10736,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -11497,6 +11533,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -12381,6 +12420,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -13573,6 +13615,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -14686,6 +14731,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -15509,6 +15557,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -16395,6 +16446,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -17293,6 +17347,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -18195,6 +18252,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -19161,6 +19221,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -20203,6 +20266,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -21072,6 +21138,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -22016,6 +22085,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -22873,6 +22945,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -23681,6 +23756,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -24467,6 +24545,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP
@@ -25329,6 +25410,9 @@ spec:
                                 description: httpHeaders can be used to specify HTTP
                                   headers.
                                 items:
+                                  description: |-
+                                    HTTPHeader defines a HTTP header configuration.
+                                    See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
                                     files:
                                       description: files defines values of the HTTP

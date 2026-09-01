@@ -768,10 +768,12 @@ type HTTPConfig struct {
 	// httpHeaders can be used to specify HTTP headers.
 	// +kubebuilder:validation:MinItems=1
 	// +optional
-	HTTPHeaders []HTTPHeaders `json:"httpHeaders,omitempty"`
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
-type HTTPHeaders struct {
+// HTTPHeader defines a HTTP header configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_header
+type HTTPHeader struct {
 	// name defines a HTTP header name.
 	// +kubebuilder:validation:MinLength=1
 	// +required

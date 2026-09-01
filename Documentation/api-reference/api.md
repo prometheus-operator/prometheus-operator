@@ -28704,8 +28704,8 @@ bool
 <td>
 <code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1alpha1.HTTPHeaders">
-[]HTTPHeaders
+<a href="#monitoring.coreos.com/v1alpha1.HTTPHeader">
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -28716,12 +28716,14 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1alpha1.HTTPHeaders">HTTPHeaders
+<h3 id="monitoring.coreos.com/v1alpha1.HTTPHeader">HTTPHeader
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
+<p>HTTPHeader defines a HTTP header configuration.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_header">https://prometheus.io/docs/alerting/latest/configuration/#http_header</a></p>
 </div>
 <table>
 <thead>
@@ -38908,8 +38910,8 @@ bool
 <td>
 <code>httpHeaders</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1beta1.HTTPHeaders">
-[]HTTPHeaders
+<a href="#monitoring.coreos.com/v1beta1.HTTPHeader">
+[]HTTPHeader
 </a>
 </em>
 </td>
@@ -38920,12 +38922,14 @@ bool
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1beta1.HTTPHeaders">HTTPHeaders
+<h3 id="monitoring.coreos.com/v1beta1.HTTPHeader">HTTPHeader
 </h3>
 <p>
 (<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
 </p>
 <div>
+<p>HTTPHeader defines a HTTP header configuration.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_header">https://prometheus.io/docs/alerting/latest/configuration/#http_header</a></p>
 </div>
 <table>
 <thead>

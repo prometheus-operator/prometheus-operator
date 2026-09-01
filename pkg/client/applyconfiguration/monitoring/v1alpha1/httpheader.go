@@ -20,9 +20,12 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-// HTTPHeadersApplyConfiguration represents a declarative configuration of the HTTPHeaders type for use
+// HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
-type HTTPHeadersApplyConfiguration struct {
+//
+// HTTPHeader defines a HTTP header configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_header
+type HTTPHeaderApplyConfiguration struct {
 	// name defines a HTTP header name.
 	Name *string `json:"name,omitempty"`
 	// values defines values of the HTTP header.
@@ -33,16 +36,16 @@ type HTTPHeadersApplyConfiguration struct {
 	Files []string `json:"files,omitempty"`
 }
 
-// HTTPHeadersApplyConfiguration constructs a declarative configuration of the HTTPHeaders type for use with
+// HTTPHeaderApplyConfiguration constructs a declarative configuration of the HTTPHeader type for use with
 // apply.
-func HTTPHeaders() *HTTPHeadersApplyConfiguration {
-	return &HTTPHeadersApplyConfiguration{}
+func HTTPHeader() *HTTPHeaderApplyConfiguration {
+	return &HTTPHeaderApplyConfiguration{}
 }
 
 // WithName sets the Name field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Name field is set to the value of the last call.
-func (b *HTTPHeadersApplyConfiguration) WithName(value string) *HTTPHeadersApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithName(value string) *HTTPHeaderApplyConfiguration {
 	b.Name = &value
 	return b
 }
@@ -50,7 +53,7 @@ func (b *HTTPHeadersApplyConfiguration) WithName(value string) *HTTPHeadersApply
 // WithValues adds the given value to the Values field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Values field.
-func (b *HTTPHeadersApplyConfiguration) WithValues(values ...string) *HTTPHeadersApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithValues(values ...string) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Values = append(b.Values, values[i])
 	}
@@ -60,7 +63,7 @@ func (b *HTTPHeadersApplyConfiguration) WithValues(values ...string) *HTTPHeader
 // WithSecrets adds the given value to the Secrets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *HTTPHeadersApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *HTTPHeadersApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Secrets = append(b.Secrets, values[i])
 	}
@@ -70,7 +73,7 @@ func (b *HTTPHeadersApplyConfiguration) WithSecrets(values ...v1.SecretKeySelect
 // WithFiles adds the given value to the Files field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Files field.
-func (b *HTTPHeadersApplyConfiguration) WithFiles(values ...string) *HTTPHeadersApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithFiles(values ...string) *HTTPHeaderApplyConfiguration {
 	for i := range values {
 		b.Files = append(b.Files, values[i])
 	}

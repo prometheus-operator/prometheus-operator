@@ -1921,6 +1921,41 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	out.HTTPHeaders, err = cb.convertHTTPHeaders(ctx, in.HTTPHeaders, crKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTTPHeaders: %w", err)
+	}
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
+	var out *commoncfg.Headers
+
+	// version check 'http_headers' set in 'http_config' but supported in Alertmanager >= 0.28.0 only
+
+	for _, v := range in {
+		headerName := v.Name
+
+		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
+
+		for i, s := range v.Secrets {
+			extractedSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, s)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get header secret: %w", err)
+			}
+			extractedSecrets[i] = commoncfg.Secret(extractedSecret)
+		}
+
+		header := commoncfg.Header{
+			Values:  v.Values,
+			Secrets: extractedSecrets,
+			Files:   v.Files,
+		}
+
+		out.Headers[headerName] = header
+	}
+
 	return out, nil
 }
 

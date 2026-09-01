@@ -304,8 +304,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1alpha1.HetznerSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1alpha1.HTTPConfigApplyConfiguration{}
-	case v1alpha1.SchemeGroupVersion.WithKind("HTTPHeaders"):
-		return &monitoringv1alpha1.HTTPHeadersApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("HTTPHeader"):
+		return &monitoringv1alpha1.HTTPHeaderApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("HTTPSDConfig"):
 		return &monitoringv1alpha1.HTTPSDConfigApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("InhibitRule"):
@@ -416,8 +416,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1beta1.EmailThreadingConfigApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("HTTPConfig"):
 		return &monitoringv1beta1.HTTPConfigApplyConfiguration{}
-	case v1beta1.SchemeGroupVersion.WithKind("HTTPHeaders"):
-		return &monitoringv1beta1.HTTPHeadersApplyConfiguration{}
+	case v1beta1.SchemeGroupVersion.WithKind("HTTPHeader"):
+		return &monitoringv1beta1.HTTPHeaderApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("InhibitRule"):
 		return &monitoringv1beta1.InhibitRuleApplyConfiguration{}
 	case v1beta1.SchemeGroupVersion.WithKind("KeyValue"):
