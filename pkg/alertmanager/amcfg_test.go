@@ -9014,7 +9014,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 				},
 			)
 
-			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
+			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{Namespace: "mynamespace"})
 			require.NoError(t, err)
 
 			err = cfg.sanitize(v, logger)
