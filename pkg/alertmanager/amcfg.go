@@ -1930,11 +1930,9 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 }
 
 func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
-	var out *commoncfg.Headers
+	out := &commoncfg.Headers{}
 
 	for _, v := range in {
-		headerName := v.Name
-
 		val := make([]string, len(v.Values))
 		copy(val, v.Values)
 
@@ -1950,13 +1948,11 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 		files := make([]string, len(v.Files))
 		copy(files, v.Files)
 
-		header := commoncfg.Header{
+		out.Headers[v.Name] = commoncfg.Header{
 			Values:  val,
 			Secrets: extractedSecrets,
 			Files:   files,
 		}
-
-		out.Headers[headerName] = header
 	}
 
 	return out, nil
