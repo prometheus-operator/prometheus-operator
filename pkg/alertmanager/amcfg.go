@@ -1936,9 +1936,7 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 		headerName := v.Name
 
 		val := make([]string, len(v.Values))
-		for i, v := range v.Values {
-			val[i] = v
-		}
+		copy(val, v.Values)
 
 		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
 		for i, s := range v.Secrets {
@@ -1950,9 +1948,7 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 		}
 
 		files := make([]string, len(v.Files))
-		for i, f := range v.Files {
-			files[i] = f
-		}
+		copy(files, v.Files)
 
 		header := commoncfg.Header{
 			Values:  val,
