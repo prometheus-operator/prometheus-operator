@@ -1984,6 +1984,119 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	c := fake.NewClientset(
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"key1":                 []byte("https://val1.com"),
+				"template-url":         []byte("{{ .labels.url }}"),
+				"invalid-url":          []byte("://foo"),
+				"invalid-template-url": []byte("{{ .labels.url"),
+				"token":                []byte("abc1243"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		version  *semver.Version
+		ok       bool
+	}{
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "http-headers-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+										{
+											Name:   "foo",
+											Values: []string{"bar"},
+										},
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "http-headers-supported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+										{
+											Name:   "foo",
+											Values: []string{"bar"},
+										},
+									},
+								},
+							},
+						},
+					}},
+				},
+			},
+			version: &version28,
+			ok:      true,
+		},
+	} {
+		t.Run(tc.amConfig.Name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
+			require.Error(t, err)
+		})
+	}
+}
+
 // Test to exercise the function provisionAlertmanagerConfiguration
 // and validate that the operator is able to generate an Alertmanager
 // configuration depending on the method chosen by the user.
