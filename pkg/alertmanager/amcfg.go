@@ -1935,8 +1935,12 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 	for _, v := range in {
 		headerName := v.Name
 
-		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
+		val := make([]string, len(v.Values))
+		for i, v := range v.Values {
+			val[i] = v
+		}
 
+		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
 		for i, s := range v.Secrets {
 			extractedSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, s)
 			if err != nil {
@@ -1945,10 +1949,15 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 			extractedSecrets[i] = commoncfg.Secret(extractedSecret)
 		}
 
+		files := make([]string, len(v.Files))
+		for i, f := range v.Files {
+			files[i] = f
+		}
+
 		header := commoncfg.Header{
-			Values:  v.Values,
+			Values:  val,
 			Secrets: extractedSecrets,
-			Files:   v.Files,
+			Files:   files,
 		}
 
 		out.Headers[headerName] = header
