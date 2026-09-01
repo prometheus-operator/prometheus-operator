@@ -1934,7 +1934,9 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 		return nil, nil
 	}
 
-	out := &commoncfg.Headers{}
+	out := &commoncfg.Headers{
+		Headers: map[string]commoncfg.Header{},
+	}
 
 	for _, v := range in {
 		val := make([]string, len(v.Values))
