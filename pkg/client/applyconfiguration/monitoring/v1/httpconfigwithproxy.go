@@ -26,8 +26,8 @@ import (
 // HTTPConfigWithProxy defines the configuration for the HTTP client with proxy
 // configuration. It is used for PodMonitor endpoints and Probes.
 type HTTPConfigWithProxyApplyConfiguration struct {
-	HTTPConfigApplyConfiguration  `json:",inline"`
-	ProxyConfigApplyConfiguration `json:",inline"`
+	HTTPConfigApplyConfiguration  `json:""`
+	ProxyConfigApplyConfiguration `json:""`
 }
 
 // HTTPConfigWithProxyApplyConfiguration constructs a declarative configuration of the HTTPConfigWithProxy type for use with

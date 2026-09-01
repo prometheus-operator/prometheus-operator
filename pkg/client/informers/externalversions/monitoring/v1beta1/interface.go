@@ -23,7 +23,7 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-	AlertmanagerConfigs() AlertmanagerConfigInformer
+	AlertmanagerConfigs() TypedAlertmanagerConfigInformer
 }
 
 type version struct {
@@ -37,7 +37,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
+// AlertmanagerConfigs returns a TypedAlertmanagerConfigInformer.
+func (v *version) AlertmanagerConfigs() TypedAlertmanagerConfigInformer {
 	return &alertmanagerConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

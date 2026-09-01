@@ -55,7 +55,7 @@ type KubernetesSDConfigApplyConfiguration struct {
 	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	OAuth2                           *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	v1.ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.

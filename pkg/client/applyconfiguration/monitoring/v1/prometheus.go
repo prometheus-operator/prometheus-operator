@@ -34,7 +34,7 @@ import (
 // The Operator continuously reconciles the scrape and rules configuration and a sidecar container running in the Prometheus pods triggers a reload of the configuration when needed.
 type PrometheusApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	metav1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of the desired behavior of the Prometheus cluster. More info:

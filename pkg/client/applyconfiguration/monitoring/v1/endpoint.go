@@ -91,7 +91,7 @@ type EndpointApplyConfiguration struct {
 	//
 	// Deprecated: use `authorization` instead.
 	BearerTokenFile                                  *string `json:"bearerTokenFile,omitempty"`
-	HTTPConfigWithProxyAndTLSFilesApplyConfiguration `json:",inline"`
+	HTTPConfigWithProxyAndTLSFilesApplyConfiguration `json:""`
 }
 
 // EndpointApplyConfiguration constructs a declarative configuration of the Endpoint type for use with
