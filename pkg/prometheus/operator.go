@@ -45,6 +45,8 @@ type Config struct {
 	ReloaderConfig                 operator.ContainerConfig
 	PrometheusDefaultBaseImage     string
 	ThanosDefaultBaseImage         string
+	PrometheusDefaultVersion       string
+	ThanosDefaultVersion           string
 	Annotations                    operator.Map
 	Labels                         operator.Map
 	WatchObjectRefsInAllNamespaces bool

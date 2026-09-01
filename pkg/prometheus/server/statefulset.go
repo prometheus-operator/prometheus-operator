@@ -550,7 +550,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compact
 	thanosImage, err := operator.BuildImagePath(
 		ptr.Deref(thanos.Image, ""),
 		ptr.Deref(thanos.BaseImage, c.ThanosDefaultBaseImage),
-		ptr.Deref(thanos.Version, operator.DefaultThanosVersion),
+		ptr.Deref(thanos.Version, c.ThanosDefaultVersion),
 		ptr.Deref(thanos.Tag, ""),
 		ptr.Deref(thanos.SHA, ""),
 	)
@@ -569,7 +569,7 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compact
 		httpBindAddress = "127.0.0.1"
 	}
 
-	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, c.ThanosDefaultVersion))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 	}

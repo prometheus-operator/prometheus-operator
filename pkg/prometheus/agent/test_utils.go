@@ -34,6 +34,7 @@ var (
 		LocalHost:                  "localhost",
 		ReloaderConfig:             operator.DefaultReloaderTestConfig.ReloaderConfig,
 		PrometheusDefaultBaseImage: operator.DefaultPrometheusBaseImage,
+		PrometheusDefaultVersion:   operator.DefaultPrometheusVersion,
 	}
 )
 
