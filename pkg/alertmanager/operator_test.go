@@ -1994,22 +1994,6 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
-	c := fake.NewClientset(
-		&corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "secret",
-				Namespace: "ns1",
-			},
-			Data: map[string][]byte{
-				"key1":                 []byte("https://val1.com"),
-				"template-url":         []byte("{{ .labels.url }}"),
-				"invalid-url":          []byte("://foo"),
-				"invalid-template-url": []byte("{{ .labels.url"),
-				"token":                []byte("abc1243"),
-			},
-		},
-	)
-
 	for _, tc := range []struct {
 		name       string
 		httpConfig *monitoringv1alpha1.HTTPConfig
@@ -2043,7 +2027,7 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 			ok:      true,
 		},
 	} {
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			amVersion := defaultVersion
 			if tc.version != nil {
 				amVersion = *tc.version
