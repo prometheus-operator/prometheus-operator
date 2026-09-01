@@ -1930,6 +1930,10 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 }
 
 func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
+	if len(in) == 0 {
+		return nil, nil
+	}
+
 	out := &commoncfg.Headers{}
 
 	for _, v := range in {
