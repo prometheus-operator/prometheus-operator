@@ -2435,6 +2435,9 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			logger.Warn(msg, "current_version", amVersion.String())
 			hc.HTTPHeaders = nil
 		}
+
+		// set MarshalSecretValue to true to expose secret when marshal to YAML.
+		commoncfg.MarshalSecretValue = true
 	}
 
 	if err := hc.TLSConfig.sanitize(amVersion, logger); err != nil {
