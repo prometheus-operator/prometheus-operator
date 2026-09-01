@@ -2011,81 +2011,44 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 	)
 
 	for _, tc := range []struct {
-		amConfig *monitoringv1alpha1.AlertmanagerConfig
-		version  *semver.Version
-		ok       bool
+		name       string
+		httpConfig *monitoringv1alpha1.HTTPConfig
+		version    *semver.Version
+		ok         bool
 	}{
 		{
-			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "http-headers-unsupported-version",
-					Namespace: "ns1",
-				},
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{{
-						Name: "recv1",
-						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
-							{
-								APIURL: corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
-									Key:                  "key1",
-								},
-								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
-										{
-											Name:   "foo",
-											Values: []string{"bar"},
-										},
-									},
-								},
-							},
-						},
-					}},
+			name: "http-headers-unsupported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
 				},
 			},
 			version: &version27,
 			ok:      false,
 		},
 		{
-			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "http-headers-supported-version",
-					Namespace: "ns1",
-				},
-				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1alpha1.Receiver{{
-						Name: "recv1",
-						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
-							{
-								APIURL: corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
-									Key:                  "key1",
-								},
-								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-									HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
-										{
-											Name:   "foo",
-											Values: []string{"bar"},
-										},
-									},
-								},
-							},
-						},
-					}},
+			name: "http-headers-supported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
 				},
 			},
 			version: &version28,
 			ok:      true,
 		},
 	} {
-		t.Run(tc.amConfig.Name, func(t *testing.T) {
-			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
-
+		t.Run(tc.Name, func(t *testing.T) {
 			amVersion := defaultVersion
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkHTTPConfig(tc.httpConfig, amVersion)
 			if tc.ok {
 				require.NoError(t, err)
 				return
