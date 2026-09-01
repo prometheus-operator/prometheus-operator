@@ -9025,16 +9025,16 @@ func TestConvertHTTPConfig(t *testing.T) {
 	}
 
 	kclient := fake.NewClientset(
-		&corev1.ConfigMap{
+		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "http-headers",
 				Namespace: "mynamespace",
 			},
-			Data: map[string]string{
-				"foo1": "bar1",
-				"foo2": "bar2",
-				"foo3": "bar3",
-				"foo4": "bar4",
+			Data: map[string][]byte{
+				"foo1": []byte("bar1"),
+				"foo2": []byte("bar2"),
+				"foo3": []byte("bar3"),
+				"foo4": []byte("bar4"),
 			},
 		},
 	)
