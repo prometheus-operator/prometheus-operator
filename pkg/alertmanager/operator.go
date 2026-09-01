@@ -1182,6 +1182,13 @@ func checkHTTPConfig(hc *monitoringv1alpha1.HTTPConfig, amVersion semver.Version
 		)
 	}
 
+	if amVersion.LT(semver.MustParse("0.28.0")) && len(hc.HTTPHeaders) > 0 {
+		return fmt.Errorf(
+			"'HTTPHeaders' config set in 'HTTPConfig' but supported in Alertmanager >= 0.28.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
 	return nil
 }
 

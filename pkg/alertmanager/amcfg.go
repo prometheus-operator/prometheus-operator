@@ -1932,8 +1932,6 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
 	var out *commoncfg.Headers
 
-	// version check 'http_headers' set in 'http_config' but supported in Alertmanager >= 0.28.0 only
-
 	for _, v := range in {
 		headerName := v.Name
 
