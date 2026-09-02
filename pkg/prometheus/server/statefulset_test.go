@@ -1173,10 +1173,11 @@ func containerByName(t *testing.T, sset *appsv1.StatefulSet, name string) corev1
 }
 
 // TestThanosDelayedCompaction verifies that with Prometheus >= v3.9.0 and Thanos
-// >= v0.41.0, the operator keeps local compaction enabled and coordinates block
+// >= v0.42.0, the operator keeps local compaction enabled and coordinates block
 // uploads with the sidecar through the shipper meta file instead of disabling
 // compaction. Otherwise (versions too old, or compaction explicitly disabled) it
-// falls back to disabling compaction.
+// falls back to disabling compaction. Thanos v0.41.0 is excluded: its sidecar
+// rejects the resulting flags due to a validation bug (issue #8763).
 // ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
 func TestThanosDelayedCompaction(t *testing.T) {
 	for _, tc := range []struct {
@@ -1186,10 +1187,11 @@ func TestThanosDelayedCompaction(t *testing.T) {
 		disableCompaction bool
 		delayed           bool
 	}{
-		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.41.0", delayed: true},
-		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.41.0"},
+		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.42.0", delayed: true},
+		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.42.0"},
 		{name: "thanos too old", promVersion: "3.9.0", thanosVersion: "0.40.0"},
-		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.41.0", disableCompaction: true},
+		{name: "thanos v0.41.0 unsupported due to strict sidecar validation", promVersion: "3.9.0", thanosVersion: "0.41.0"},
+		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.42.0", disableCompaction: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			thanosVersion := tc.thanosVersion
