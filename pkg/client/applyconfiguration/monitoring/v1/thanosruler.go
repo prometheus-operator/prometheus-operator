@@ -32,7 +32,7 @@ import (
 // The resource defines via label and namespace selectors which `PrometheusRule` objects should be associated to the deployed Thanos Ruler instances.
 type ThanosRulerApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	metav1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of the desired behavior of the ThanosRuler cluster. More info:

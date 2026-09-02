@@ -32,11 +32,39 @@ import (
 )
 
 // ProbeInformer provides access to a shared informer and lister for
-// Probes.
+// Probes. Prefer using the type-safe variant (see [TypedProbeInformer]).
 type ProbeInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.ProbeLister
 }
+
+// TypedProbeInformer provides access to a shared informer and lister for
+// Probes, including the type-safe TypedInformer variant.
+// It is a superset of ProbeInformer.
+type TypedProbeInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ProbeIndexInformer
+	Lister() monitoringv1.ProbeLister
+}
+
+// ProbeIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ProbeIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.Probe]
+
+// ProbeHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for Probe.
+type ProbeHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.Probe]
+
+// ProbeDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for Probe.
+type ProbeDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.Probe]
+
+// ProbeFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for Probe.
+type ProbeFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.Probe]
+
+// ProbeIndexers is a specialization of [cache.TypedIndexers] for Probe.
+type ProbeIndexers = cache.TypedIndexers[*apismonitoringv1.Probe]
+
+// DeletedProbe is a specialization of [cache.DeletedObject] for Probe.
+type DeletedProbe = cache.DeletedObject[*apismonitoringv1.Probe]
 
 type probeInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type probeInformer struct {
 // NewProbeInformer constructs a new informer for Probe type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedProbeInformer]).
 func NewProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewProbeInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedProbeInformer constructs a new informer for Probe type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ProbeIndexers) ProbeIndexInformer {
+	return NewTypedProbeInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredProbeInformer constructs a new informer for Probe type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredProbeInformer]).
 func NewFilteredProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewProbeInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedProbeInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredProbeInformer constructs a new informer for Probe type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredProbeInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ProbeIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ProbeIndexInformer {
+	return NewTypedProbeInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewProbeInformerWithOptions constructs a new informer for Probe type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedProbeInformerWithOptions]).
 func NewProbeInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedProbeInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedProbeInformerWithOptions constructs a new informer for Probe type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedProbeInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) ProbeIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "probes"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Probe](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewProbeInformerWithOptions(client versioned.Interface, namespace string, o
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *probeInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewProbeInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedProbeInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *probeInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.Probe{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *probeInformer) TypedInformer() ProbeIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Probe](f.factory.InformerFor(&apismonitoringv1.Probe{}, f.defaultInformer))
 }
 
 func (f *probeInformer) Lister() monitoringv1.ProbeLister {
 	return monitoringv1.NewProbeLister(f.Informer().GetIndexer())
+}
+
+// ToTypedProbeInformer converts an untyped informer into a TypedProbeInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Probe. If that is not the case, calling type-safe methods of the returned
+// TypedProbeInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedProbeInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedProbeInformer(informer ProbeInformer) TypedProbeInformer {
+	if informer, ok := informer.(TypedProbeInformer); ok {
+		return informer
+	}
+	return &probeTypedInformerAdapter{informer}
+}
+
+type probeTypedInformerAdapter struct {
+	ProbeInformer
+}
+
+func (a *probeTypedInformerAdapter) TypedInformer() ProbeIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Probe](a.Informer())
+}
+
+// ToProbeIndexInformer converts an untyped informer into a ProbeIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Probe. If that is not the case, calling type-safe methods of the returned
+// ProbeIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ProbeIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToProbeIndexInformer(informer cache.SharedIndexInformer) ProbeIndexInformer {
+	if informer, ok := informer.(ProbeIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Probe](informer)
 }

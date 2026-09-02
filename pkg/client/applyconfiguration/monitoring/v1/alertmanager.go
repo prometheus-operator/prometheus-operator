@@ -32,7 +32,7 @@ import (
 // The resource defines via label and namespace selectors which `AlertmanagerConfig` objects should be associated to the deployed Alertmanager instances.
 type AlertmanagerApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	metav1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of the desired behavior of the Alertmanager cluster. More info:

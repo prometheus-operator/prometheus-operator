@@ -24,7 +24,7 @@ The Prometheus Operator uses the official [Go client](https://github.com/kuberne
 The current version of the Prometheus operator uses the following Go client version:
 
 ```$ mdox-exec="go list -m  -f '{{ .Version }}' k8s.io/client-go"
-v0.36.3
+v0.37.0
 ```
 
 ## Prometheus

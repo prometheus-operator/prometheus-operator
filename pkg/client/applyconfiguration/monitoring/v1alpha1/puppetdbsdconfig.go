@@ -52,7 +52,7 @@ type PuppetDBSDConfigApplyConfiguration struct {
 	// oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
 	OAuth2                                     *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the PuppetDB server.
 	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.

@@ -29,7 +29,7 @@ import (
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type PrometheusSpecApplyConfiguration struct {
-	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	CommonPrometheusFieldsApplyConfiguration `json:""`
 	// baseImage is deprecated: use 'spec.image' instead.
 	BaseImage *string `json:"baseImage,omitempty"`
 	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.

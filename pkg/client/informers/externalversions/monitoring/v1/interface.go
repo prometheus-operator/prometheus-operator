@@ -23,19 +23,19 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// Alertmanagers returns a AlertmanagerInformer.
-	Alertmanagers() AlertmanagerInformer
+	Alertmanagers() TypedAlertmanagerInformer
 	// PodMonitors returns a PodMonitorInformer.
-	PodMonitors() PodMonitorInformer
+	PodMonitors() TypedPodMonitorInformer
 	// Probes returns a ProbeInformer.
-	Probes() ProbeInformer
+	Probes() TypedProbeInformer
 	// Prometheuses returns a PrometheusInformer.
-	Prometheuses() PrometheusInformer
+	Prometheuses() TypedPrometheusInformer
 	// PrometheusRules returns a PrometheusRuleInformer.
-	PrometheusRules() PrometheusRuleInformer
+	PrometheusRules() TypedPrometheusRuleInformer
 	// ServiceMonitors returns a ServiceMonitorInformer.
-	ServiceMonitors() ServiceMonitorInformer
+	ServiceMonitors() TypedServiceMonitorInformer
 	// ThanosRulers returns a ThanosRulerInformer.
-	ThanosRulers() ThanosRulerInformer
+	ThanosRulers() TypedThanosRulerInformer
 }
 
 type version struct {
@@ -49,37 +49,37 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// Alertmanagers returns a AlertmanagerInformer.
-func (v *version) Alertmanagers() AlertmanagerInformer {
+// Alertmanagers returns a TypedAlertmanagerInformer.
+func (v *version) Alertmanagers() TypedAlertmanagerInformer {
 	return &alertmanagerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// PodMonitors returns a PodMonitorInformer.
-func (v *version) PodMonitors() PodMonitorInformer {
+// PodMonitors returns a TypedPodMonitorInformer.
+func (v *version) PodMonitors() TypedPodMonitorInformer {
 	return &podMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// Probes returns a ProbeInformer.
-func (v *version) Probes() ProbeInformer {
+// Probes returns a TypedProbeInformer.
+func (v *version) Probes() TypedProbeInformer {
 	return &probeInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// Prometheuses returns a PrometheusInformer.
-func (v *version) Prometheuses() PrometheusInformer {
+// Prometheuses returns a TypedPrometheusInformer.
+func (v *version) Prometheuses() TypedPrometheusInformer {
 	return &prometheusInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// PrometheusRules returns a PrometheusRuleInformer.
-func (v *version) PrometheusRules() PrometheusRuleInformer {
+// PrometheusRules returns a TypedPrometheusRuleInformer.
+func (v *version) PrometheusRules() TypedPrometheusRuleInformer {
 	return &prometheusRuleInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// ServiceMonitors returns a ServiceMonitorInformer.
-func (v *version) ServiceMonitors() ServiceMonitorInformer {
+// ServiceMonitors returns a TypedServiceMonitorInformer.
+func (v *version) ServiceMonitors() TypedServiceMonitorInformer {
 	return &serviceMonitorInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// ThanosRulers returns a ThanosRulerInformer.
-func (v *version) ThanosRulers() ThanosRulerInformer {
+// ThanosRulers returns a TypedThanosRulerInformer.
+func (v *version) ThanosRulers() TypedThanosRulerInformer {
 	return &thanosRulerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

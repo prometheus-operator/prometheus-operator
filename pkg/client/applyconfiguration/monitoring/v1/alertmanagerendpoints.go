@@ -64,7 +64,7 @@ type AlertmanagerEndpointsApplyConfiguration struct {
 	// Cannot be set at the same time as `basicAuth`, `bearerTokenFile` or `authorization`.
 	Sigv4 *Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
 	// ProxyConfig
-	ProxyConfigApplyConfiguration `json:",inline"`
+	ProxyConfigApplyConfiguration `json:""`
 	// apiVersion defines the version of the Alertmanager API that Prometheus uses to send alerts.
 	// It can be "V1" or "V2".
 	// The field has no effect for Prometheus >= v3.0.0 because only the v2 API is supported.

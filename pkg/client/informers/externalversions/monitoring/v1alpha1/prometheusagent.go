@@ -32,11 +32,39 @@ import (
 )
 
 // PrometheusAgentInformer provides access to a shared informer and lister for
-// PrometheusAgents.
+// PrometheusAgents. Prefer using the type-safe variant (see [TypedPrometheusAgentInformer]).
 type PrometheusAgentInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1alpha1.PrometheusAgentLister
 }
+
+// TypedPrometheusAgentInformer provides access to a shared informer and lister for
+// PrometheusAgents, including the type-safe TypedInformer variant.
+// It is a superset of PrometheusAgentInformer.
+type TypedPrometheusAgentInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() PrometheusAgentIndexInformer
+	Lister() monitoringv1alpha1.PrometheusAgentLister
+}
+
+// PrometheusAgentIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type PrometheusAgentIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1alpha1.PrometheusAgent]
+
+// PrometheusAgentHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for PrometheusAgent.
+type PrometheusAgentHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1alpha1.PrometheusAgent]
+
+// PrometheusAgentDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for PrometheusAgent.
+type PrometheusAgentDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1alpha1.PrometheusAgent]
+
+// PrometheusAgentFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for PrometheusAgent.
+type PrometheusAgentFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1alpha1.PrometheusAgent]
+
+// PrometheusAgentIndexers is a specialization of [cache.TypedIndexers] for PrometheusAgent.
+type PrometheusAgentIndexers = cache.TypedIndexers[*apismonitoringv1alpha1.PrometheusAgent]
+
+// DeletedPrometheusAgent is a specialization of [cache.DeletedObject] for PrometheusAgent.
+type DeletedPrometheusAgent = cache.DeletedObject[*apismonitoringv1alpha1.PrometheusAgent]
 
 type prometheusAgentInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type prometheusAgentInformer struct {
 // NewPrometheusAgentInformer constructs a new informer for PrometheusAgent type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPrometheusAgentInformer]).
 func NewPrometheusAgentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewPrometheusAgentInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedPrometheusAgentInformer constructs a new informer for PrometheusAgent type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPrometheusAgentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PrometheusAgentIndexers) PrometheusAgentIndexInformer {
+	return NewTypedPrometheusAgentInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredPrometheusAgentInformer constructs a new informer for PrometheusAgent type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredPrometheusAgentInformer]).
 func NewFilteredPrometheusAgentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewPrometheusAgentInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedPrometheusAgentInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredPrometheusAgentInformer constructs a new informer for PrometheusAgent type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredPrometheusAgentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PrometheusAgentIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) PrometheusAgentIndexInformer {
+	return NewTypedPrometheusAgentInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewPrometheusAgentInformerWithOptions constructs a new informer for PrometheusAgent type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPrometheusAgentInformerWithOptions]).
 func NewPrometheusAgentInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedPrometheusAgentInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedPrometheusAgentInformerWithOptions constructs a new informer for PrometheusAgent type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPrometheusAgentInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) PrometheusAgentIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1alpha1", Resource: "prometheusagents"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.PrometheusAgent](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewPrometheusAgentInformerWithOptions(client versioned.Interface, namespace
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *prometheusAgentInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewPrometheusAgentInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedPrometheusAgentInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *prometheusAgentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1alpha1.PrometheusAgent{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *prometheusAgentInformer) TypedInformer() PrometheusAgentIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.PrometheusAgent](f.factory.InformerFor(&apismonitoringv1alpha1.PrometheusAgent{}, f.defaultInformer))
 }
 
 func (f *prometheusAgentInformer) Lister() monitoringv1alpha1.PrometheusAgentLister {
 	return monitoringv1alpha1.NewPrometheusAgentLister(f.Informer().GetIndexer())
+}
+
+// ToTypedPrometheusAgentInformer converts an untyped informer into a TypedPrometheusAgentInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PrometheusAgent. If that is not the case, calling type-safe methods of the returned
+// TypedPrometheusAgentInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedPrometheusAgentInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedPrometheusAgentInformer(informer PrometheusAgentInformer) TypedPrometheusAgentInformer {
+	if informer, ok := informer.(TypedPrometheusAgentInformer); ok {
+		return informer
+	}
+	return &prometheusAgentTypedInformerAdapter{informer}
+}
+
+type prometheusAgentTypedInformerAdapter struct {
+	PrometheusAgentInformer
+}
+
+func (a *prometheusAgentTypedInformerAdapter) TypedInformer() PrometheusAgentIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.PrometheusAgent](a.Informer())
+}
+
+// ToPrometheusAgentIndexInformer converts an untyped informer into a PrometheusAgentIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PrometheusAgent. If that is not the case, calling type-safe methods of the returned
+// PrometheusAgentIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a PrometheusAgentIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToPrometheusAgentIndexInformer(informer cache.SharedIndexInformer) PrometheusAgentIndexInformer {
+	if informer, ok := informer.(PrometheusAgentIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.PrometheusAgent](informer)
 }
