@@ -158,17 +158,17 @@ func testPrometheusInstanceNamespacesDenyList(t *testing.T) {
 	{
 		p := framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"monitored": "true",
 			},
-		}
+		})
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"group": "monitored",
 			},
-		}
+		})
 
 		s := framework.MakeBasicServiceMonitor("monitored")
 		if _, err := framework.MonClientV1.ServiceMonitors(instanceNs).Create(context.Background(), s, metav1.CreateOptions{}); err != nil {
@@ -266,17 +266,17 @@ func testPrometheusInstanceNamespacesAllowList(t *testing.T) {
 	{
 		p = framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"monitored": "true",
 			},
-		}
+		})
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"group": "monitored",
 			},
-		}
+		})
 
 		// create the prometheus service and wait until it is ready
 		_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)
@@ -416,17 +416,17 @@ func testPrometheusInstanceNamespacesNamespaceNotFound(t *testing.T) {
 	{
 		p := framework.MakeBasicPrometheus(instanceNs, "instance", "instance", 1)
 
-		p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"monitored": "true",
 			},
-		}
+		})
 
-		p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+		p.Spec.ServiceMonitorSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				"group": "monitored",
 			},
-		}
+		})
 
 		// Create the prometheus service and wait until it is ready.
 		_, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), instanceNs, p)

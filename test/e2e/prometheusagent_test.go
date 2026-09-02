@@ -811,11 +811,11 @@ func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
 	// scrapeConfigSelector cannot be set in DaemonSets
-	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "prometheus-agent",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -842,11 +842,11 @@ func testDaemonSetInvalidProbeSelector(t *testing.T) {
 	name := "test-invalid-probe-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ProbeSelector = &metav1.LabelSelector{
+	p.Spec.ProbeSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "test",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -873,11 +873,11 @@ func testDaemonSetInvalidScrapeConfigNamespaceSelector(t *testing.T) {
 	name := "test-invalid-scrape-config-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ScrapeConfigNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ScrapeConfigNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "test",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -904,11 +904,11 @@ func testDaemonSetInvalidProbeNamespaceSelector(t *testing.T) {
 	name := "test-invalid-probe-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ProbeNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ProbeNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "test",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -935,11 +935,11 @@ func testDaemonSetInvalidServiceMonitorSelector(t *testing.T) {
 	name := "test-invalid-service-monitor-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ServiceMonitorSelector = &metav1.LabelSelector{
+	p.Spec.ServiceMonitorSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "test",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
@@ -966,11 +966,11 @@ func testDaemonSetInvalidServiceMonitorNamespaceSelector(t *testing.T) {
 	name := "test-invalid-service-monitor-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
 
-	p.Spec.ServiceMonitorNamespaceSelector = &metav1.LabelSelector{
+	p.Spec.ServiceMonitorNamespaceSelector = framework.NewValidatedLabelSelectorFrom(metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			"app": "test",
 		},
-	}
+	})
 
 	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
