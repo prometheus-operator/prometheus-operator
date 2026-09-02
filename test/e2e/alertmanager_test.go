@@ -2647,6 +2647,14 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 				Replicas:  &replicas,
 				Retention: "0",
 			},
+			expectedError: true,
+		},
+		{
+			name: "empty-time-without-unit",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "",
+			},
 		},
 		{
 			name: "time-in-hours",

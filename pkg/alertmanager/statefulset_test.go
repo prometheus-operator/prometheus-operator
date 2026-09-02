@@ -1000,8 +1000,8 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 
 func TestRetention(t *testing.T) {
 	tests := []struct {
-		specRetention     monitoringv1.GoDuration
-		expectedRetention monitoringv1.GoDuration
+		specRetention     monitoringv1.NonZeroGoDuration
+		expectedRetention monitoringv1.NonZeroGoDuration
 	}{
 		{"", "120h"},
 		{"1d", "1d"},

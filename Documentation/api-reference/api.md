@@ -314,8 +314,8 @@ size.</p>
 <td>
 <code>retention</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -739,8 +739,8 @@ Needs to be provided for non RFC1918 <a href="public">1</a> addresses.
 <td>
 <code>clusterGossipInterval</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -766,8 +766,8 @@ You should only set it when the Alertmanager cluster includes Alertmanager insta
 <td>
 <code>clusterPushpullInterval</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -780,8 +780,8 @@ GoDuration
 <td>
 <code>clusterPeerTimeout</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -6943,8 +6943,8 @@ size.</p>
 <td>
 <code>retention</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -7368,8 +7368,8 @@ Needs to be provided for non RFC1918 <a href="public">1</a> addresses.
 <td>
 <code>clusterGossipInterval</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -7395,8 +7395,8 @@ You should only set it when the Alertmanager cluster includes Alertmanager insta
 <td>
 <code>clusterPushpullInterval</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -7409,8 +7409,8 @@ GoDuration
 <td>
 <code>clusterPeerTimeout</code><br/>
 <em>
-<a href="#monitoring.coreos.com/v1.GoDuration">
-GoDuration
+<a href="#monitoring.coreos.com/v1.NonZeroGoDuration">
+NonZeroGoDuration
 </a>
 </em>
 </td>
@@ -12068,16 +12068,6 @@ URL
 </tr>
 </tbody>
 </table>
-<h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
-</p>
-<div>
-<p>GoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.
-Supported units: h, m, s, ms
-Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</code></p>
-</div>
 <h3 id="monitoring.coreos.com/v1.HTTPConfig">HTTPConfig
 </h3>
 <p>
@@ -13189,6 +13179,16 @@ It requires Prometheus &gt;= v3.0.0.</p>
 Compared to Duration,  NonEmptyDuration enforces a minimum length of 1.
 Supported units: y, w, d, h, m, s, ms
 Examples: <code>30s</code>, <code>1m</code>, <code>1h20m15s</code>, <code>15d</code></p>
+</div>
+<h3 id="monitoring.coreos.com/v1.NonZeroGoDuration">NonZeroGoDuration
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>NonZeroGoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.
+Supported units: h, m, s, ms
+Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</code></p>
 </div>
 <h3 id="monitoring.coreos.com/v1.OAuth2">OAuth2
 </h3>

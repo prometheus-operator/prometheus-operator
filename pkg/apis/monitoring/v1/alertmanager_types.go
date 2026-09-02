@@ -162,7 +162,7 @@ type AlertmanagerSpec struct {
 	// and must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
 	// +kubebuilder:default:="120h"
 	// +optional
-	Retention GoDuration `json:"retention,omitempty"`
+	Retention NonZeroGoDuration `json:"retention,omitempty"`
 	// storage defines the definition of how storage will be used by the Alertmanager
 	// instances.
 	// +optional
@@ -324,17 +324,17 @@ type AlertmanagerSpec struct {
 	ClusterAdvertiseAddress string `json:"clusterAdvertiseAddress,omitempty"`
 	// clusterGossipInterval defines the interval between gossip attempts.
 	// +optional
-	ClusterGossipInterval GoDuration `json:"clusterGossipInterval,omitempty"`
+	ClusterGossipInterval NonZeroGoDuration `json:"clusterGossipInterval,omitempty"`
 	// clusterLabel defines the identifier that uniquely identifies the Alertmanager cluster.
 	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
 	// +optional
 	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// clusterPushpullInterval defines the interval between pushpull attempts.
 	// +optional
-	ClusterPushpullInterval GoDuration `json:"clusterPushpullInterval,omitempty"`
+	ClusterPushpullInterval NonZeroGoDuration `json:"clusterPushpullInterval,omitempty"`
 	// clusterPeerTimeout defines the timeout for cluster peering.
 	// +optional
-	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
+	ClusterPeerTimeout NonZeroGoDuration `json:"clusterPeerTimeout,omitempty"`
 	// clusterPeerName defines the name that this Alertmanager instance uses to
 	// advertise itself to other cluster peers (the `--cluster.peer-name` flag,
 	// available since Alertmanager v0.30.0).
