@@ -9030,6 +9030,13 @@
                         },
                         "type": "object"
                       },
+                      "serviceHTTPPort": {
+                        "description": "serviceHTTPPort defines the port on which the governing service\nexposes the Thanos sidecar's HTTP endpoints (serving metrics, probes\nand more). The service port targets the container port named `http`\n(10902) of the `thanos-sidecar` container.\n\nIf not defined, the governing service doesn't expose the Thanos\nsidecar's HTTP port.\n\nIt only applies when the operator manages the governing service (e.g.\n`spec.serviceName` isn't defined). Note that the sidecar's HTTP\nendpoints aren't reachable through the service when `listenLocal` or\n`httpListenLocal` is true.",
+                        "format": "int32",
+                        "maximum": 65535,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
                       "sha": {
                         "description": "sha is deprecated: use 'image' instead.  The image digest can be specified as part of the image name.",
                         "type": "string"
