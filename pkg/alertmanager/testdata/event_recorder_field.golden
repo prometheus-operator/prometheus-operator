@@ -1,0 +1,24 @@
+route:
+  receiver: "null"
+receivers:
+- name: "null"
+event_recorder:
+  file_outputs:
+  - path: /var/log/alertmanager/events.jsonl
+  webhook_outputs:
+  - url: http://example.com/events
+    http_config:
+      basic_auth:
+        username: user
+        password: secret-pass
+    timeout: 10s
+    workers: 4
+    max_retries: 3
+    retry_backoff: 500ms
+  kafka_outputs:
+  - brokers:
+    - kafka:9092
+    topic: alertmanager-events
+    acks: all
+    compression: gzip
+templates: []
