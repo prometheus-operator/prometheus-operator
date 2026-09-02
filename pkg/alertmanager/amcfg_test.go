@@ -3578,7 +3578,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with SNS Receiver with roleARN and externalId",
-			amVersion: &semver.Version{Major: 0, Minor: 33},
+			amVersion: &semver.Version{Major: 0, Minor: 34},
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -9163,6 +9163,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
 	versionV33 := semver.Version{Major: 0, Minor: 33}
+	versionV34 := semver.Version{Major: 0, Minor: 34}
 
 	for _, tc := range []struct {
 		name           string
@@ -9207,7 +9208,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 		},
 		{
 			name:           "sns valid sigv4.externalid passes in support amVersion",
-			againstVersion: versionV33,
+			againstVersion: versionV34,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{

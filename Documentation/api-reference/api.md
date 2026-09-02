@@ -20218,7 +20218,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.33.0. Currently not supported by Thanos.</p>
+It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.34.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 <tr>
