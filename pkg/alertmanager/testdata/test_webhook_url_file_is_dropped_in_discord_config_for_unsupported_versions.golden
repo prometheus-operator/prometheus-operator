@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  discord_configs:
+  - {}
+templates: []
