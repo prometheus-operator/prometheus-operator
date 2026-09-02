@@ -672,18 +672,34 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecPeerName(t *testing.T) {
+	customPeer := "my-peer-name"
 	for _, tc := range []struct {
-		name        string
-		version     string
-		expPeerName bool
+		name           string
+		version        string
+		clusterPeer    *string
+		expPeerName    bool
+		expPeerNameArg string
 	}{
 		{
 			name:    "no peer name before 0.30.0",
 			version: "0.29.0",
 		}, {
-			name:        "peer name after 0.30.0",
-			version:     "0.30.0",
-			expPeerName: true,
+			name:           "peer name after 0.30.0",
+			version:        "0.30.0",
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
+		}, {
+			name:           "custom peer name overrides default",
+			version:        "0.30.0",
+			clusterPeer:    &customPeer,
+			expPeerName:    true,
+			expPeerNameArg: "--cluster.peer-name=" + customPeer,
+		}, {
+			name:           "empty custom peer name falls back to default",
+			version:        "0.30.0",
+			clusterPeer:    new(""),
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -693,9 +709,10 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 					Namespace: "monitoring",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas: new(int32(1)),
-					Image:    new(operator.DefaultAlertmanagerImage),
-					Version:  tc.version,
+					Replicas:        new(int32(1)),
+					Image:           new(operator.DefaultAlertmanagerImage),
+					Version:         tc.version,
+					ClusterPeerName: tc.clusterPeer,
 				},
 			}
 
@@ -703,9 +720,9 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 			require.NoError(t, err)
 
 			amArgs := statefulSet.Template.Spec.Containers[0].Args
-			expectedArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
+			defaultArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
 			if tc.expPeerName {
-				require.Contains(t, amArgs, expectedArg)
+				require.Contains(t, amArgs, tc.expPeerNameArg)
 				var envVarFound bool
 				for _, envVar := range statefulSet.Template.Spec.Containers[0].Env {
 					if envVar.Name == operator.PodNameEnvVar {
@@ -715,7 +732,7 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 				}
 				require.True(t, envVarFound)
 			} else {
-				require.NotContains(t, amArgs, expectedArg)
+				require.NotContains(t, amArgs, defaultArg)
 			}
 		})
 	}

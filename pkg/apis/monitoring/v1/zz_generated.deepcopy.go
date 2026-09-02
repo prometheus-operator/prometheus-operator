@@ -492,6 +492,11 @@ func (in *AlertmanagerSpec) DeepCopyInto(out *AlertmanagerSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ClusterPeerName != nil {
+		in, out := &in.ClusterPeerName, &out.ClusterPeerName
+		*out = new(string)
+		**out = **in
+	}
 	if in.AlertmanagerConfigSelector != nil {
 		in, out := &in.AlertmanagerConfigSelector, &out.AlertmanagerConfigSelector
 		*out = new(metav1.LabelSelector)
