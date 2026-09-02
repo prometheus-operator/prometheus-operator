@@ -279,7 +279,7 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		Name:      amConfig.Name,
 	}
 
-	if err := checkAlertmanagerConfigResource(ctx, amConfig, cb.amVersion, cb.store); err != nil {
+	if err := checkAlertmanagerConfigResource(ctx, amConfig, cb.amVersion, cb.store, nil); err != nil {
 		return err
 	}
 
