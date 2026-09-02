@@ -2223,6 +2223,72 @@ templates:
 	require.NoError(t, err, "%v: %v", err, lastErr)
 }
 
+func testAlertmanagerConfigTracing(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	alertmanager := framework.MakeBasicAlertmanager(ns, "user-amconfig-tracing", 1)
+	alertmanagerConfig, err := framework.CreateAlertmanagerConfig(context.Background(), ns, "user-amconfig-tracing")
+	require.NoError(t, err)
+
+	alertmanager.Spec.AlertmanagerConfiguration = &monitoringv1.AlertmanagerConfiguration{
+		Name: alertmanagerConfig.Name,
+		TracingConfig: &monitoringv1.TracingConfig{
+			ClientType: new("grpc"),
+			Endpoint:   "tempo.monitoring.svc:4317",
+		},
+	}
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
+
+	var lastErr error
+	generatedConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, generatedConfigSecretName, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			lastErr = err
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing")
+			return false, nil
+		}
+
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		require.NoError(t, err)
+
+		if !strings.Contains(uncompressed, "tracing:\n") {
+			lastErr = errors.New("generated configuration doesn't include tracing block")
+			return false, nil
+		}
+
+		if !strings.Contains(uncompressed, "client_type: grpc") {
+			lastErr = errors.New("generated configuration doesn't include tracing client_type")
+			return false, nil
+		}
+
+		if !strings.Contains(uncompressed, "endpoint: tempo.monitoring.svc:4317") {
+			lastErr = errors.New("generated configuration doesn't include tracing endpoint")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	require.NoError(t, err, "%v: %v", err, lastErr)
+}
+
 func testAMPreserveUserAddedMetadata(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
