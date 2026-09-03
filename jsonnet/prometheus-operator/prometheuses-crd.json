@@ -7101,7 +7101,7 @@
                         "type": "string"
                       }
                     ],
-                    "description": "retentionPercentage defines the maximum percentage of the data volume's\ncapacity used by the Prometheus data.\n\nThe value is a number between 0 and 100. If set to 0, percentage-based\nretention is disabled.\n\nUnlike `spec.retention` and `spec.retentionSize`, Prometheus exposes this\nsetting in the configuration file only. It requires Prometheus >= v3.11.0\nand is ignored by older versions.",
+                    "description": "retentionPercentage defines the maximum percentage of the data volume's\ncapacity used by the Prometheus data.\n\nThe value is a number between 0 and 100. If set to 0, percentage-based\nretention is disabled.\n\nIt requires Prometheus >= v3.11.0 and is ignored by older versions.",
                     "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
                     "x-kubernetes-int-or-string": true,
                     "x-kubernetes-validations": [

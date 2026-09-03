@@ -50,9 +50,7 @@ type PrometheusSpecApplyConfiguration struct {
 	// The value is a number between 0 and 100. If set to 0, percentage-based
 	// retention is disabled.
 	//
-	// Unlike `spec.retention` and `spec.retentionSize`, Prometheus exposes this
-	// setting in the configuration file only. It requires Prometheus >= v3.11.0
-	// and is ignored by older versions.
+	// It requires Prometheus >= v3.11.0 and is ignored by older versions.
 	RetentionPercentage *resource.Quantity `json:"retentionPercentage,omitempty"`
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	//

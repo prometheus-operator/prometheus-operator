@@ -3846,9 +3846,7 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 capacity used by the Prometheus data.</p>
 <p>The value is a number between 0 and 100. If set to 0, percentage-based
 retention is disabled.</p>
-<p>Unlike <code>spec.retention</code> and <code>spec.retentionSize</code>, Prometheus exposes this
-setting in the configuration file only. It requires Prometheus &gt;= v3.11.0
-and is ignored by older versions.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -17060,9 +17058,7 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 capacity used by the Prometheus data.</p>
 <p>The value is a number between 0 and 100. If set to 0, percentage-based
 retention is disabled.</p>
-<p>Unlike <code>spec.retention</code> and <code>spec.retentionSize</code>, Prometheus exposes this
-setting in the configuration file only. It requires Prometheus &gt;= v3.11.0
-and is ignored by older versions.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>

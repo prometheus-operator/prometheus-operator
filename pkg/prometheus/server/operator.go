@@ -1344,7 +1344,7 @@ func deadlineExpired(deadline string) (bool, error) {
 // gracePeriodForPrometheusStorage returns how long the Prometheus data can be available based
 // on the retention settings.
 // If Prometheus is configured with size-based and/or percentage-based
-// retention only, it returns a zero value.
+// retention with no time-based retention, it returns a zero value.
 // The function should only be called when the shard retention policy is set to Retain.
 func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
 	var retention monitoringv1.Duration

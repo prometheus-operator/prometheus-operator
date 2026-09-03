@@ -5513,7 +5513,7 @@ func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
 	}
 
 	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
-		return fmt.Errorf("`retentionPercentage` must be between 0 and 100. The current value is %s", retentionPercentage.String())
+		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
 	}
 
 	return nil
