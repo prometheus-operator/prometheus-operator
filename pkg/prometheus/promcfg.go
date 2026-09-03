@@ -1145,23 +1145,32 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		}
 	}
 
-	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
-		var retentionSlice yaml.MapSlice
+	var (
+		retentionSlice yaml.MapSlice
+		cgRetention    = cg.WithMinimumVersion("3.11.0")
+	)
+
+	if cgRetention.IsCompatible() {
+		// Starting with v3.11.0, the time and size retention settings are read
+		// from the configuration file instead of the command-line arguments.
 		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize, retentionPercentage))
 		if retentionTime != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
 		}
+
 		if retentionSize != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
 		}
-		if retentionPercentage != nil {
-			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "percentage", Value: retentionPercentage.AsApproximateFloat64()})
-		}
+	}
+
+	// Percentage-based retention has no command-line equivalent, hence it can't
+	// be supported by older Prometheus versions.
+	if retentionPercentage != nil {
+		retentionSlice = cgRetention.AppendMapItem(retentionSlice, "percentage", retentionPercentage.AsApproximateFloat64())
+	}
+
+	if len(retentionSlice) > 0 {
 		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
-	} else if retentionPercentage != nil {
-		// Percentage-based retention has no command-line equivalent, hence it
-		// can't be supported by older Prometheus versions.
-		cg.WithMinimumVersion("3.11.0").Warn("retentionPercentage")
 	}
 
 	if len(tsdbSlice) > 0 {
