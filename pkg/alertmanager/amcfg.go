@@ -1432,7 +1432,7 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		// Either userKey or userKeyFile is set, the validation webhook
+		// Either userKey or userKeyFile is set, the controller
 		// rejects configurations that set neither.
 		if in.UserKey != nil {
 			userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
