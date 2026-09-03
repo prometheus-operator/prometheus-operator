@@ -1432,25 +1432,33 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user key: %w", err)
+		// Either userKey or userKeyFile is set, the controller
+		// rejects configurations that set neither.
+		if in.UserKey != nil {
+			userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user key: %w", err)
+			}
+			if userKey == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
+			}
+			out.UserKey = userKey
 		}
-		if userKey == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
-		}
-		out.UserKey = userKey
+		out.UserKeyFile = ptr.Deref(in.UserKeyFile, "")
 	}
 
 	{
-		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get token: %w", err)
+		if in.Token != nil {
+			token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get token: %w", err)
+			}
+			if token == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "token")
+			}
+			out.Token = token
 		}
-		if token == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "token")
-		}
-		out.Token = token
+		out.TokenFile = ptr.Deref(in.TokenFile, "")
 	}
 
 	{
