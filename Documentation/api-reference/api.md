@@ -3833,7 +3833,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -3848,6 +3849,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -17045,7 +17064,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -17060,6 +17080,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>

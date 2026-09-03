@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -1055,7 +1056,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize, p.Spec.RetentionPercentage)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1097,6 +1098,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 	exemplars *monitoringv1.Exemplars,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
+	retentionPercentage *resource.Quantity,
 ) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
@@ -1107,6 +1109,10 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 
 	err := tsdb.Validate()
 	if err != nil {
+		return cfg, err
+	}
+
+	if err := validateRetentionPercentage(retentionPercentage); err != nil {
 		return cfg, err
 	}
 
@@ -1139,15 +1145,31 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		}
 	}
 
-	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
-		var retentionSlice yaml.MapSlice
-		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
+	var (
+		retentionSlice yaml.MapSlice
+		cgRetention    = cg.WithMinimumVersion("3.11.0")
+	)
+
+	if cgRetention.IsCompatible() {
+		// Starting with v3.11.0, the time and size retention settings are read
+		// from the configuration file instead of the command-line arguments.
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize, retentionPercentage))
 		if retentionTime != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
 		}
+
 		if retentionSize != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
 		}
+	}
+
+	// Percentage-based retention has no command-line equivalent, hence it can't
+	// be supported by older Prometheus versions.
+	if retentionPercentage != nil {
+		retentionSlice = cgRetention.AppendMapItem(retentionSlice, "percentage", retentionPercentage.AsApproximateFloat64())
+	}
+
+	if len(retentionSlice) > 0 {
 		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
 	}
 
@@ -5490,6 +5512,20 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 			Node: new(true),
 		},
 	}
+}
+
+// validateRetentionPercentage validates that the percentage-based retention is
+// within the range supported by Prometheus.
+func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
+	if retentionPercentage == nil {
+		return nil
+	}
+
+	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
+		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
+	}
+
+	return nil
 }
 
 // validateChunkEncodingCompatibility validates that the chunk encoding settings

@@ -7168,9 +7168,22 @@
                     "type": "object"
                   },
                   "retention": {
-                    "description": "retention defines how long to retain the Prometheus data.\n\nDefault: \"24h\" if `spec.retention` and `spec.retentionSize` are empty.",
+                    "description": "retention defines how long to retain the Prometheus data.\n\nDefault: \"24h\" if `spec.retention`, `spec.retentionSize` and\n`spec.retentionPercentage` are empty.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                     "type": "string"
+                  },
+                  "retentionPercentage": {
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "retentionPercentage defines the maximum percentage of the data volume's\ncapacity used by the Prometheus data.\n\nThe value is a number between 0 and 100. If set to 0, percentage-based\nretention is disabled.\n\nIt requires Prometheus >= v3.11.0 and is ignored by older versions.",
+                    "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+                    "x-kubernetes-int-or-string": true
                   },
                   "retentionSize": {
                     "description": "retentionSize defines the maximum number of bytes used by the Prometheus data.",
