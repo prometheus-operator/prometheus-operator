@@ -2476,6 +2476,10 @@ func (a *attachMetadataConfig) node() bool {
 	return ptr.Deref(a.attachMetadata.Node, false)
 }
 
+func (a *attachMetadataConfig) namespace() bool {
+	return ptr.Deref(a.attachMetadata.Namespace, false)
+}
+
 // k8s sd config options.
 type k8sSDConfigOptions func(k8sSDConfig yaml.MapSlice) yaml.MapSlice
 
@@ -2488,6 +2492,35 @@ func (cg *ConfigGenerator) withK8SRoleSelectorConfig(
 			return k8sSDConfig
 		}
 		return cg.generateRoleSelectorConfig(k8sSDConfig, roles, selector)
+	}
+}
+
+func (cg *ConfigGenerator) appendAttachMetadata(cfg yaml.MapSlice, attachMetadata *monitoringv1.AttachMetadata, minimumVersion string) yaml.MapSlice {
+	if attachMetadata == nil {
+		return cfg
+	}
+
+	attachMetadataConfig := &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		attachMetadata: attachMetadata,
+	}
+
+	attachMetadataCfg := yaml.MapSlice{}
+	attachMetadataCfg = append(attachMetadataCfg, yaml.MapItem{Key: "node", Value: attachMetadataConfig.node()})
+	attachMetadataCfg = cg.WithMinimumVersion("3.6.0").AppendMapItem(attachMetadataCfg, "namespace", attachMetadataConfig.namespace())
+
+	return cg.WithMinimumVersion(minimumVersion).AppendMapItem(cfg, "attach_metadata", attachMetadataCfg)
+
+}
+
+// convertV1alpha1AttachMetadata converts v1alpha1.AttachMetadata to v1.AttachMetadata.
+func convertV1alpha1AttachMetadata(am *monitoringv1alpha1.AttachMetadata) *monitoringv1.AttachMetadata {
+	if am == nil {
+		return nil
+	}
+	return &monitoringv1.AttachMetadata{
+		Node:      am.Node,
+		Namespace: am.Namespace,
 	}
 }
 
@@ -2548,12 +2581,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 	}
 
 	if attachMetadataConfig != nil {
-		k8sSDConfig = cg.WithMinimumVersion(attachMetadataConfig.MinimumVersion).AppendMapItem(
-			k8sSDConfig,
-			"attach_metadata",
-			yaml.MapSlice{
-				{Key: "node", Value: attachMetadataConfig.node()},
-			})
+		k8sSDConfig = cg.appendAttachMetadata(k8sSDConfig, attachMetadataConfig.attachMetadata, attachMetadataConfig.MinimumVersion)
 	}
 
 	// Specific configuration generated for DaemonSet mode.
@@ -3729,9 +3757,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.AttachMetadata != nil {
 				switch strings.ToLower(string(config.Role)) {
 				case "pod":
-					configs[i] = cg.WithMinimumVersion("2.35.0").AppendMapItem(configs[i], "attach_metadata", config.AttachMetadata)
+					configs[i] = cg.appendAttachMetadata(configs[i], convertV1alpha1AttachMetadata(config.AttachMetadata), "2.35.0")
 				case "endpoints", "endpointslice":
-					configs[i] = cg.WithMinimumVersion("2.37.0").AppendMapItem(configs[i], "attach_metadata", config.AttachMetadata)
+					configs[i] = cg.appendAttachMetadata(configs[i], convertV1alpha1AttachMetadata(config.AttachMetadata), "2.37.0")
+				case "service", "ingress":
+					configs[i] = cg.appendAttachMetadata(configs[i], convertV1alpha1AttachMetadata(config.AttachMetadata), "3.6.0")
 				default:
 					cg.logger.Warn(fmt.Sprintf("ignoring attachMetadata not supported by Prometheus for role: %s", config.Role))
 				}
@@ -5506,11 +5536,19 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 	if amc != nil && amc.node() {
 		return amc
 	}
+
+	attachMetadata := &monitoringv1.AttachMetadata{
+		Node: new(true),
+	}
+
+	// Preserve existing namespace setting if present.
+	if amc != nil && amc.namespace() {
+		attachMetadata.Namespace = new(true)
+	}
+
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
-		attachMetadata: &monitoringv1.AttachMetadata{
-			Node: new(true),
-		},
+		attachMetadata: attachMetadata,
 	}
 }
 

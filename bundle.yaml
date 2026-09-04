@@ -22932,6 +22932,16 @@ spec:
 
                   It requires Prometheus >= v2.35.0.
                 properties:
+                  namespace:
+                    description: |-
+                      namespace when set to true, Prometheus attaches namespace metadata to the discovered
+                      targets.
+
+                      The Prometheus service account must have the `list` and `watch`
+                      permissions on the `Namespaces` objects.
+
+                      It requires Prometheus >= v3.6.0.
+                    type: boolean
                   node:
                     description: |-
                       node when set to true, Prometheus attaches node metadata to the discovered
@@ -32626,6 +32636,16 @@ spec:
                         When the scrape object defines its own configuration, it takes
                         precedence over the scrape class configuration.
                       properties:
+                        namespace:
+                          description: |-
+                            namespace when set to true, Prometheus attaches namespace metadata to the discovered
+                            targets.
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on the `Namespaces` objects.
+
+                            It requires Prometheus >= v3.6.0.
+                          type: boolean
                         node:
                           description: |-
                             node when set to true, Prometheus attaches node metadata to the discovered
@@ -46330,6 +46350,16 @@ spec:
                         When the scrape object defines its own configuration, it takes
                         precedence over the scrape class configuration.
                       properties:
+                        namespace:
+                          description: |-
+                            namespace when set to true, Prometheus attaches namespace metadata to the discovered
+                            targets.
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on the `Namespaces` objects.
+
+                            It requires Prometheus >= v3.6.0.
+                          type: boolean
                         node:
                           description: |-
                             node when set to true, Prometheus attaches node metadata to the discovered
@@ -59275,13 +59305,22 @@ spec:
                     attachMetadata:
                       description: |-
                         attachMetadata defines the metadata to attach to discovered targets.
-                        It requires Prometheus >= v2.35.0 when using the `Pod` role and
-                        Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
+                        It requires Prometheus >= v2.35.0 when using the `Pod` role,
+                        Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and
+                        Prometheus >= v3.6.0 for `Service` and `Ingress` roles.
                       properties:
+                        namespace:
+                          description: |-
+                            namespace attaches namespace metadata to discovered targets.
+                            When set to true, Prometheus must have permissions to list/watch Namespaces.
+                            Only valid for pod, endpoints, endpointslice, service, ingress.
+
+                            It requires Prometheus >= v3.6.0.
+                          type: boolean
                         node:
                           description: |-
                             node attaches node metadata to discovered targets.
-                            When set to true, Prometheus must have the `get` permission on the
+                            When set to true, Prometheus must have the `list/watch` permission on the
                             `Nodes` objects.
                             Only valid for Pod, Endpoint and Endpointslice roles.
                           type: boolean
@@ -60021,6 +60060,17 @@ spec:
                   required:
                   - role
                   type: object
+                  x-kubernetes-validations:
+                  - message: attachMetadata.node is only valid for Pod, Endpoints,
+                      and EndpointSlice roles
+                    rule: '!has(self.attachMetadata) || !has(self.attachMetadata.node)
+                      || !self.attachMetadata.node || self.role in [''Pod'', ''Endpoints'',
+                      ''EndpointSlice'']'
+                  - message: attachMetadata.namespace is only valid for Pod, Endpoints,
+                      EndpointSlice, Service, and Ingress roles
+                    rule: '!has(self.attachMetadata) || !has(self.attachMetadata.namespace)
+                      || !self.attachMetadata.namespace || self.role in [''Pod'',
+                      ''Endpoints'', ''EndpointSlice'', ''Service'', ''Ingress'']'
                 type: array
               kumaSDConfigs:
                 description: kumaSDConfigs defines a list of Kuma service discovery
@@ -65376,6 +65426,16 @@ spec:
 
                   It requires Prometheus >= v2.37.0.
                 properties:
+                  namespace:
+                    description: |-
+                      namespace when set to true, Prometheus attaches namespace metadata to the discovered
+                      targets.
+
+                      The Prometheus service account must have the `list` and `watch`
+                      permissions on the `Namespaces` objects.
+
+                      It requires Prometheus >= v3.6.0.
+                    type: boolean
                   node:
                     description: |-
                       node when set to true, Prometheus attaches node metadata to the discovered

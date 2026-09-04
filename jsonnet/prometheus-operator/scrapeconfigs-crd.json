@@ -6487,10 +6487,14 @@
                           "type": "string"
                         },
                         "attachMetadata": {
-                          "description": "attachMetadata defines the metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role and\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.",
+                          "description": "attachMetadata defines the metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role,\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and\nPrometheus >= v3.6.0 for `Service` and `Ingress` roles.",
                           "properties": {
+                            "namespace": {
+                              "description": "namespace attaches namespace metadata to discovered targets.\nWhen set to true, Prometheus must have permissions to list/watch Namespaces.\nOnly valid for pod, endpoints, endpointslice, service, ingress.\n\nIt requires Prometheus >= v3.6.0.",
+                              "type": "boolean"
+                            },
                             "node": {
-                              "description": "node attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
+                              "description": "node attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `list/watch` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
                               "type": "boolean"
                             }
                           },
@@ -7178,7 +7182,17 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "attachMetadata.node is only valid for Pod, Endpoints, and EndpointSlice roles",
+                          "rule": "!has(self.attachMetadata) || !has(self.attachMetadata.node) || !self.attachMetadata.node || self.role in ['Pod', 'Endpoints', 'EndpointSlice']"
+                        },
+                        {
+                          "message": "attachMetadata.namespace is only valid for Pod, Endpoints, EndpointSlice, Service, and Ingress roles",
+                          "rule": "!has(self.attachMetadata) || !has(self.attachMetadata.namespace) || !self.attachMetadata.namespace || self.role in ['Pod', 'Endpoints', 'EndpointSlice', 'Service', 'Ingress']"
+                        }
+                      ]
                     },
                     "type": "array"
                   },
