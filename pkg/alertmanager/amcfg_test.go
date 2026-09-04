@@ -9919,7 +9919,7 @@ func TestSanitizeSlackConfig(t *testing.T) {
 					{
 						SlackConfigs: []*slackConfig{
 							{
-								APIURL:     "www.test.com",
+								APIURL:     "http://www.test.com",
 								APIURLFile: "/test",
 							},
 						},
@@ -10050,6 +10050,182 @@ func TestSanitizeSlackConfig(t *testing.T) {
 							{
 								APIURL:        "https://api.url",
 								UpdateMessage: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid api_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid app_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 30},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								AppURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid title_link returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:    "http://example.com",
+								TitleLink: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid icon_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								IconURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid image_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								ImageURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid thumb_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								ThumbURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid action url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								Actions: []slackAction{
+									{URL: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:    "https://hooks.slack.com/services/xxx",
+								TitleLink: "https://example.com/title",
+								IconURL:   "https://example.com/icon.png",
+								ImageURL:  "https://example.com/image.png",
+								ThumbURL:  "https://example.com/thumb.png",
+								Actions: []slackAction{
+									{URL: "https://example.com/action"},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "slack_valid_urls_pass_validation.golden",
+		},
+		{
+			name:           "Test templated urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								TitleLink: `{{ .CommonAnnotations.link }}`,
+								IconURL:   `{{ .CommonAnnotations.icon }}`,
+								ImageURL:  `{{ .CommonAnnotations.image }}`,
+								ThumbURL:  `{{ .CommonAnnotations.thumb }}`,
+								Actions: []slackAction{
+									{URL: `{{ .CommonAnnotations.action }}`},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "slack_templated_urls_pass_validation.golden",
+		},
+		{
+			name:           "Test invalid template in title_link returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 22},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								TitleLink: `{{ .CommonAnnotations.link`,
 							},
 						},
 					},
