@@ -63,7 +63,7 @@ func (b *TLSConfigApplyConfiguration) WithKeySecret(value corev1.SecretKeySelect
 // WithServerName sets the ServerName field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ServerName field is set to the value of the last call.
-func (b *TLSConfigApplyConfiguration) WithServerName(value string) *TLSConfigApplyConfiguration {
+func (b *TLSConfigApplyConfiguration) WithServerName(value monitoringv1.TemplateString) *TLSConfigApplyConfiguration {
 	b.SafeTLSConfigApplyConfiguration.ServerName = &value
 	return b
 }
