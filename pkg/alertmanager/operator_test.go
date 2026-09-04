@@ -1984,6 +1984,66 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		name       string
+		httpConfig *monitoringv1alpha1.HTTPConfig
+		version    *semver.Version
+		ok         bool
+	}{
+		{
+			name: "http-headers-unsupported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			name: "http-headers-supported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name:   "foo",
+						Values: []string{"bar"},
+					},
+				},
+			},
+			version: &version28,
+			ok:      true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+			err := checkHTTPConfig(tc.httpConfig, amVersion)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
+			require.Error(t, err)
+		})
+	}
+}
+
 // Test to exercise the function provisionAlertmanagerConfiguration
 // and validate that the operator is able to generate an Alertmanager
 // configuration depending on the method chosen by the user.

@@ -1,0 +1,9 @@
+http_headers:
+  foo1:
+    values:
+    - bar1
+    - bar2
+  foo2:
+    values:
+    - bar3
+    - bar4

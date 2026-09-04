@@ -1929,6 +1929,46 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 		}
 	}
 
+	out.HTTPHeaders, err = cb.convertHTTPHeaders(ctx, in.HTTPHeaders, crKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse HTTPHeaders: %w", err)
+	}
+
+	return out, nil
+}
+
+func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
+	if len(in) == 0 {
+		return nil, nil
+	}
+
+	out := &commoncfg.Headers{
+		Headers: map[string]commoncfg.Header{},
+	}
+
+	for _, v := range in {
+		val := make([]string, len(v.Values))
+		copy(val, v.Values)
+
+		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
+		for i, s := range v.Secrets {
+			extractedSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, s)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get header secret: %w", err)
+			}
+			extractedSecrets[i] = commoncfg.Secret(extractedSecret)
+		}
+
+		files := make([]string, len(v.Files))
+		copy(files, v.Files)
+
+		out.Headers[v.Name] = commoncfg.Header{
+			Values:  val,
+			Secrets: extractedSecrets,
+			Files:   files,
+		}
+	}
+
 	return out, nil
 }
 
@@ -2403,6 +2443,9 @@ func (hc *httpClientConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			logger.Warn(msg, "current_version", amVersion.String())
 			hc.HTTPHeaders = nil
 		}
+
+		// set MarshalSecretValue to true to expose secret when marshal to YAML.
+		commoncfg.MarshalSecretValue = true
 	}
 
 	if err := hc.TLSConfig.sanitize(amVersion, logger); err != nil {

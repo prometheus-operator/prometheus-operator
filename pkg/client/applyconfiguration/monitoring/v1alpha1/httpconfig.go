@@ -53,6 +53,8 @@ type HTTPConfigApplyConfiguration struct {
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHttp2 can be used to disable HTTP2.
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
+	// httpHeaders can be used to specify HTTP headers.
+	HTTPHeaders []HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`
 }
 
 // HTTPConfigApplyConfiguration constructs a declarative configuration of the HTTPConfig type for use with
@@ -160,5 +162,18 @@ func (b *HTTPConfigApplyConfiguration) WithFollowRedirects(value bool) *HTTPConf
 // If called multiple times, the EnableHTTP2 field is set to the value of the last call.
 func (b *HTTPConfigApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigApplyConfiguration {
 	b.EnableHTTP2 = &value
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *HTTPConfigApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *HTTPConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+	}
 	return b
 }

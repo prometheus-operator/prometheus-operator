@@ -733,6 +733,36 @@ type HTTPConfig struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+	// httpHeaders can be used to specify HTTP headers.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
+}
+
+// HTTPHeader defines a HTTP header configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_header
+type HTTPHeader struct {
+	// name defines a HTTP header name.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name,omitempty"`
+	// values defines values of the HTTP header.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +optional
+	Values []string `json:"values,omitempty"`
+	// secrets defines values of the HTTP header retrieving from a secret.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	// files defines values of the HTTP header retrieving from a file.
+	// +listType=atomic
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:items:MinLength=1
+	// +optional
+	Files []string `json:"files,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex
