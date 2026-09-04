@@ -44,6 +44,7 @@ type NamespaceDiscovery struct {
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"` // nolint:kubeapilinter
 	// names defines a list of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Names []string `json:"names,omitempty"`
@@ -548,11 +549,13 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
@@ -1055,7 +1058,6 @@ type EurekaSDConfig struct {
 // +k8s:openapi-gen=true
 type DockerSDConfig struct {
 	// host defines the address of the docker daemon.
-	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
 	Host string `json:"host"`

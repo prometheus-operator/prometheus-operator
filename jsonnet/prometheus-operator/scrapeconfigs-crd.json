@@ -1342,6 +1342,7 @@
                         "services": {
                           "description": "services defines a list of services for which targets are retrieved. If omitted, all services are scraped.",
                           "items": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "type": "array",
@@ -1355,6 +1356,7 @@
                         "tags": {
                           "description": "tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.\nStarting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.",
                           "items": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "type": "array",
@@ -2312,7 +2314,6 @@
                         },
                         "host": {
                           "description": "host defines the address of the docker daemon.",
-                          "minLength": 1,
                           "pattern": "^[a-zA-Z][a-zA-Z0-9+.-]*://.+$",
                           "type": "string"
                         },
@@ -6594,6 +6595,7 @@
                             "names": {
                               "description": "names defines a list of namespaces where to watch for resources.\nIf empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.",
                               "items": {
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "type": "array",
