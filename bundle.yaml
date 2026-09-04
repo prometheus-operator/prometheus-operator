@@ -18908,7 +18908,11 @@ spec:
                   type: string
                 description: nodeSelector defines which Nodes the Pods are scheduled
                   on.
+                maxProperties: 32
                 type: object
+                x-kubernetes-validations:
+                - message: nodeSelector must contain valid Kubernetes labels
+                  rule: self.all(key, key.size() <= 316 && self[key].size() <= 63)
               paused:
                 description: |-
                   paused if set to true all actions on the underlying managed objects are not
@@ -30892,7 +30896,11 @@ spec:
                 additionalProperties:
                   type: string
                 description: nodeSelector defines on which Nodes the Pods are scheduled.
+                maxProperties: 32
                 type: object
+                x-kubernetes-validations:
+                - message: nodeSelector must contain valid Kubernetes labels
+                  rule: self.all(key, key.size() <= 316 && self[key].size() <= 63)
               otlp:
                 description: |-
                   otlp defines the settings related to the OTLP receiver feature.
@@ -43616,7 +43624,11 @@ spec:
                 additionalProperties:
                   type: string
                 description: nodeSelector defines on which Nodes the Pods are scheduled.
+                maxProperties: 32
                 type: object
+                x-kubernetes-validations:
+                - message: nodeSelector must contain valid Kubernetes labels
+                  rule: self.all(key, key.size() <= 316 && self[key].size() <= 63)
               otlp:
                 description: |-
                   otlp defines the settings related to the OTLP receiver feature.
@@ -71512,7 +71524,11 @@ spec:
                   type: string
                 description: nodeSelector defines which Nodes the Pods are scheduled
                   on.
+                maxProperties: 32
                 type: object
+                x-kubernetes-validations:
+                - message: nodeSelector must contain valid Kubernetes labels
+                  rule: self.all(key, key.size() <= 316 && self[key].size() <= 63)
               objectStorageConfig:
                 description: |-
                   objectStorageConfig defines the configuration format is defined at https://thanos.io/tip/thanos/storage.md/#configuring-access-to-object-storage

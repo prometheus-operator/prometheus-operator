@@ -54,7 +54,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// replicas defines the number of thanos ruler instances to deploy.
 	Replicas *int32 `json:"replicas,omitempty"`
 	// nodeSelector defines which Nodes the Pods are scheduled on.
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	NodeSelector *monitoringv1.NodeSelector `json:"nodeSelector,omitempty"`
 	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
 	SchedulerName *string `json:"schedulerName,omitempty"`
 	// resources defines the resource requirements for single Pods.
@@ -411,17 +411,11 @@ func (b *ThanosRulerSpecApplyConfiguration) WithReplicas(value int32) *ThanosRul
 	return b
 }
 
-// WithNodeSelector puts the entries into the NodeSelector field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, the entries provided by each call will be put on the NodeSelector field,
-// overwriting an existing map entries in NodeSelector field with the same key.
-func (b *ThanosRulerSpecApplyConfiguration) WithNodeSelector(entries map[string]string) *ThanosRulerSpecApplyConfiguration {
-	if b.NodeSelector == nil && len(entries) > 0 {
-		b.NodeSelector = make(map[string]string, len(entries))
-	}
-	for k, v := range entries {
-		b.NodeSelector[k] = v
-	}
+// WithNodeSelector sets the NodeSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NodeSelector field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithNodeSelector(value monitoringv1.NodeSelector) *ThanosRulerSpecApplyConfiguration {
+	b.NodeSelector = &value
 	return b
 }
 
