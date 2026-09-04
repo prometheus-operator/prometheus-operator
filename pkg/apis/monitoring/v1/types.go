@@ -646,6 +646,17 @@ type Endpoint struct {
 	// +optional
 	BearerTokenFile string `json:"bearerTokenFile,omitempty"`
 
+	// httpHeaders defines the custom HTTP headers sent with every scrape
+	// request.
+	//
+	// It requires Prometheus >= v2.55.0.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
+
 	HTTPConfigWithProxyAndTLSFiles `json:",inline"`
 }
 

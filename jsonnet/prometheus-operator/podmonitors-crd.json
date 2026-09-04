@@ -271,6 +271,39 @@
                           "description": "honorTimestamps defines whether Prometheus preserves the timestamps\nwhen exposed by the target.",
                           "type": "boolean"
                         },
+                        "httpHeaders": {
+                          "description": "httpHeaders defines the custom HTTP headers sent with every scrape\nrequest.\n\nIt requires Prometheus >= v2.55.0.",
+                          "items": {
+                            "description": "HTTPHeader defines a custom HTTP header sent by the client with each\nrequest.",
+                            "properties": {
+                              "name": {
+                                "description": "name defines the name of the HTTP header.\n\nThe name is case-insensitive and it can't be one of the headers managed\nby Prometheus itself (e.g. `Authorization`, `Host` or `User-Agent`).",
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "values": {
+                                "description": "values defines the values of the HTTP header.",
+                                "items": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "minItems": 1,
+                                "type": "array",
+                                "x-kubernetes-list-type": "atomic"
+                              }
+                            },
+                            "required": [
+                              "name"
+                            ],
+                            "type": "object"
+                          },
+                          "minItems": 1,
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
+                        },
                         "interval": {
                           "description": "interval at which Prometheus scrapes the metrics from the target.\n\nIf empty, Prometheus uses the global scrape interval.",
                           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

@@ -128,6 +128,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.HTTPConfigWithProxyAndTLSFilesApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("HTTPConfigWithTLSFiles"):
 		return &monitoringv1.HTTPConfigWithTLSFilesApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("HTTPHeader"):
+		return &monitoringv1.HTTPHeaderApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("ManagedIdentity"):
 		return &monitoringv1.ManagedIdentityApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("MetadataConfig"):
