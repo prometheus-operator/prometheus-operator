@@ -3276,6 +3276,49 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
 	}
 
+	if rc.APIURL != "" {
+		if _, err := validation.ValidateURL(rc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
+	if rc.TitleLink != "" {
+		if err := validation.ValidateTemplateURL(rc.TitleLink); err != nil {
+			return fmt.Errorf("invalid 'title_link': %w", err)
+		}
+	}
+
+	if rc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(rc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	if rc.ImageURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ImageURL); err != nil {
+			return fmt.Errorf("invalid 'image_url': %w", err)
+		}
+	}
+
+	if rc.ThumbURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ThumbURL); err != nil {
+			return fmt.Errorf("invalid 'thumb_url': %w", err)
+		}
+	}
+
+	for i, action := range rc.Actions {
+		if action.URL != "" {
+			if err := validation.ValidateTemplateURL(action.URL); err != nil {
+				return fmt.Errorf("invalid 'url' in actions[%d]: %w", i, err)
+			}
+		}
+		if action.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(action.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in actions[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return rc.HTTPConfig.sanitize(amVersion, logger)
 }
 
