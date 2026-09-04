@@ -735,7 +735,7 @@ func (rr *ResourceReconciler) isManagedByController(obj metav1.Object) bool {
 	}
 
 	if controllerID != rr.controllerID {
-		rr.logger.Debug("skipping object not managed by the controller", "object", KeyForObject(obj), "object_id", controllerID, "controller_id", rr.controllerID)
+		rr.logger.Debug("skipping object not managed by the controller", "object", KeyForObject(obj), "objectID", controllerID, "controllerID", rr.controllerID)
 		return false
 	}
 

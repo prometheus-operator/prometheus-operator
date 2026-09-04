@@ -145,7 +145,7 @@ func main() {
 		}
 	}
 
-	logger.Info("Starting prometheus-config-reloader", "version", version.Info(), "build_context", version.BuildContext())
+	logger.Info("Starting prometheus-config-reloader", "version", version.Info(), "buildContext", version.BuildContext())
 	goruntime.SetMemLimit(logger, *memlimitRatio)
 
 	r := metrics.NewRegistry("prometheus_config_reloader")
