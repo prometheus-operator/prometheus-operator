@@ -33,6 +33,9 @@ type ReceiverApplyConfiguration struct {
 	SlackConfigs []SlackConfigApplyConfiguration `json:"slackConfigs,omitempty"`
 	// webhookConfigs defines the List of webhook configurations.
 	WebhookConfigs []WebhookConfigApplyConfiguration `json:"webhookConfigs,omitempty"`
+	// incidentioConfigs defines the list of Incident.io configurations.
+	// It requires Alertmanager >= 0.29.0.
+	IncidentioConfigs []IncidentioConfigApplyConfiguration `json:"incidentioConfigs,omitempty"`
 	// wechatConfigs defines the list of WeChat configurations.
 	WeChatConfigs []WeChatConfigApplyConfiguration `json:"wechatConfigs,omitempty"`
 	// emailConfigs defines the list of Email configurations.
@@ -133,6 +136,19 @@ func (b *ReceiverApplyConfiguration) WithWebhookConfigs(values ...*WebhookConfig
 			panic("nil value passed to WithWebhookConfigs")
 		}
 		b.WebhookConfigs = append(b.WebhookConfigs, *values[i])
+	}
+	return b
+}
+
+// WithIncidentioConfigs adds the given value to the IncidentioConfigs field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the IncidentioConfigs field.
+func (b *ReceiverApplyConfiguration) WithIncidentioConfigs(values ...*IncidentioConfigApplyConfiguration) *ReceiverApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithIncidentioConfigs")
+		}
+		b.IncidentioConfigs = append(b.IncidentioConfigs, *values[i])
 	}
 	return b
 }
