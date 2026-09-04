@@ -282,8 +282,7 @@
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
-                                "default": "replace",
-                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"\n\nAn omitted action is treated as replace by the operator and by Prometheus.\nThere is no CRD OpenAPI default: Kubernetes would persist `action: replace`\non the stored object, and GitOps tools that compare desired manifests\n(field omitted) against live state report permanent drift.",
                                 "enum": [
                                   "replace",
                                   "Replace",
@@ -730,8 +729,7 @@
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
                               "action": {
-                                "default": "replace",
-                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                                "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"\n\nAn omitted action is treated as replace by the operator and by Prometheus.\nThere is no CRD OpenAPI default: Kubernetes would persist `action: replace`\non the stored object, and GitOps tools that compare desired manifests\n(field omitted) against live state report permanent drift.",
                                 "enum": [
                                   "replace",
                                   "Replace",

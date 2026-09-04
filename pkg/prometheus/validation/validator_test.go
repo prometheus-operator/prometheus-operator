@@ -201,6 +201,16 @@ func TestValidateRelabelConfig(t *testing.T) {
 			},
 			prometheus: defaultPrometheusSpec,
 		},
+		// Omitted action is replace (Prometheus default). Must stay valid when
+		// the CRD does not persist action via OpenAPI default.
+		{
+			scenario: "valid replace config with omitted action",
+			relabelConfig: monitoringv1.RelabelConfig{
+				TargetLabel: "abc",
+				Replacement: new("static"),
+			},
+			prometheus: defaultPrometheusSpec,
+		},
 		// Test valid labeldrop relabel config with default value
 		{
 			scenario: "valid labeldrop config with default values",
