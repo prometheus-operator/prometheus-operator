@@ -10076,6 +10076,107 @@ func TestSanitizeSlackConfig(t *testing.T) {
 	}
 }
 
+func TestConvertRouteWithLabels(t *testing.T) {
+	cb := NewConfigBuilder(
+		newNopLogger(t),
+		semver.MustParse("0.34.0"),
+		assets.NewStoreBuilder(nil, nil),
+		&monitoringv1.Alertmanager{
+			ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+		},
+	)
+
+	tests := []struct {
+		name           string
+		route          *monitoringv1alpha1.Route
+		expectedLabels map[string]string
+	}{
+		{
+			name: "nil route returns nil",
+		},
+		{
+			name: "route without labels",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "test-receiver",
+			},
+		},
+		{
+			name: "route with empty labels",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "test-receiver",
+				Labels:   []monitoringv1alpha1.KeyValue{},
+			},
+		},
+		{
+			name: "route with simple labels",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "test-receiver",
+				Labels: []monitoringv1alpha1.KeyValue{
+					{Key: "severity", Value: "critical"},
+					{Key: "team", Value: "platform"},
+				},
+			},
+			expectedLabels: map[string]string{
+				"severity": "critical",
+				"team":     "platform",
+			},
+		},
+		{
+			name: "route with template labels",
+			route: &monitoringv1alpha1.Route{
+				Receiver: "test-receiver",
+				Labels: []monitoringv1alpha1.KeyValue{
+					{Key: "environment", Value: "{{ .Labels.env }}"},
+					{Key: "region", Value: "{{ .ExternalLabels.region }}"},
+				},
+			},
+			expectedLabels: map[string]string{
+				"environment": "{{ .Labels.env }}",
+				"region":      "{{ .ExternalLabels.region }}",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			crKey := types.NamespacedName{Name: "test", Namespace: "default"}
+			got := cb.convertRoute(tc.route, crKey)
+
+			if tc.route == nil {
+				require.Nil(t, got)
+				return
+			}
+
+			require.NotNil(t, got)
+			require.Equal(t, tc.expectedLabels, got.Labels)
+		})
+	}
+
+	// Labels are only propagated when amVersion >= 0.34.0.
+	t.Run("labels skipped when amVersion below 0.34.0", func(t *testing.T) {
+		oldCB := NewConfigBuilder(
+			newNopLogger(t),
+			semver.MustParse("0.33.0"),
+			assets.NewStoreBuilder(nil, nil),
+			&monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+			},
+		)
+
+		route := &monitoringv1alpha1.Route{
+			Receiver: "test-receiver",
+			Labels: []monitoringv1alpha1.KeyValue{
+				{Key: "severity", Value: "critical"},
+			},
+		}
+
+		crKey := types.NamespacedName{Name: "test", Namespace: "default"}
+		got := oldCB.convertRoute(route, crKey)
+		require.NotNil(t, got)
+		require.Nil(t, got.Labels)
+	})
+}
+
 func newNopLogger(t *testing.T) *slog.Logger {
 	t.Helper()
 	return slog.New(slog.DiscardHandler)

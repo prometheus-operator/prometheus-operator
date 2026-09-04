@@ -1167,3 +1167,94 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateRouteLabels(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "route with valid labels",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{Name: "test"},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver: "test",
+						Labels: []monitoringv1beta1.KeyValue{
+							{Key: "severity", Value: "critical"},
+							{Key: "team", Value: "platform"},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "route with valid template labels",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{Name: "test"},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver: "test",
+						Labels: []monitoringv1beta1.KeyValue{
+							{Key: "environment", Value: "{{ .Labels.env }}"},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "route with invalid template label - unclosed action",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{Name: "test"},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver: "test",
+						Labels: []monitoringv1beta1.KeyValue{
+							{Key: "environment", Value: "{{ .Labels.env"},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "route with no labels",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{Name: "test"},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver: "test",
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}

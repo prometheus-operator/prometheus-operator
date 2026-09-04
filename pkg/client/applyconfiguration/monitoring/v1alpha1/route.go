@@ -59,6 +59,10 @@ type RouteApplyConfiguration struct {
 	MuteTimeIntervals []string `json:"muteTimeIntervals,omitempty"`
 	// activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
+	// labels defines the list of labels that will be attached to the alerts matching this route.
+	// They can be inherited by child routes and can be overridden by child routes.
+	// The values support template expressions.
+	Labels []KeyValueApplyConfiguration `json:"labels,omitempty"`
 }
 
 // RouteApplyConfiguration constructs a declarative configuration of the Route type for use with
@@ -156,6 +160,19 @@ func (b *RouteApplyConfiguration) WithMuteTimeIntervals(values ...string) *Route
 func (b *RouteApplyConfiguration) WithActiveTimeIntervals(values ...string) *RouteApplyConfiguration {
 	for i := range values {
 		b.ActiveTimeIntervals = append(b.ActiveTimeIntervals, values[i])
+	}
+	return b
+}
+
+// WithLabels adds the given value to the Labels field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Labels field.
+func (b *RouteApplyConfiguration) WithLabels(values ...*KeyValueApplyConfiguration) *RouteApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithLabels")
+		}
+		b.Labels = append(b.Labels, *values[i])
 	}
 	return b
 }

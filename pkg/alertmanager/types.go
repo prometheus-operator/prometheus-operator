@@ -100,6 +100,7 @@ type route struct {
 	RepeatInterval      string            `yaml:"repeat_interval,omitempty"`
 	MuteTimeIntervals   []string          `yaml:"mute_time_intervals,omitempty"`
 	ActiveTimeIntervals []string          `yaml:"active_time_intervals,omitempty"`
+	Labels              map[string]string `yaml:"labels,omitempty"`
 }
 
 type inhibitRule struct {
