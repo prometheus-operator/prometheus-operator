@@ -2800,6 +2800,39 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		}
 	}
 
+	if pdc.URL != "" {
+		if _, err := validation.ValidateURL(pdc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
+	if pdc.ClientURL != "" {
+		if err := validation.ValidateTemplateURL(pdc.ClientURL); err != nil {
+			return fmt.Errorf("invalid 'client_url': %w", err)
+		}
+	}
+
+	for i, image := range pdc.Images {
+		if image.Src != "" {
+			if err := validation.ValidateTemplateURL(image.Src); err != nil {
+				return fmt.Errorf("invalid 'src' in images[%d]: %w", i, err)
+			}
+		}
+		if image.Href != "" {
+			if err := validation.ValidateTemplateURL(image.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in images[%d]: %w", i, err)
+			}
+		}
+	}
+
+	for i, link := range pdc.Links {
+		if link.Href != "" {
+			if err := validation.ValidateTemplateURL(link.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in links[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
 }
 
