@@ -32,7 +32,7 @@ type DockerSwarmSDConfigApplyConfiguration struct {
 	// host defines the address of the Docker daemon
 	Host *string `json:"host,omitempty"`
 	// role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
-	Role *string `json:"role,omitempty"`
+	Role *monitoringv1alpha1.DockerSwarmRole `json:"role,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// tasks and services that don't have published ports.
 	Port *int32 `json:"port,omitempty"`
@@ -80,7 +80,7 @@ func (b *DockerSwarmSDConfigApplyConfiguration) WithHost(value string) *DockerSw
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *DockerSwarmSDConfigApplyConfiguration) WithRole(value string) *DockerSwarmSDConfigApplyConfiguration {
+func (b *DockerSwarmSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.DockerSwarmRole) *DockerSwarmSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

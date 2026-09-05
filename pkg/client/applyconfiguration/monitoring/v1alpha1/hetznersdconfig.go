@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -30,7 +31,7 @@ import (
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 type HetznerSDConfigApplyConfiguration struct {
 	// role defines the Hetzner role of entities that should be discovered.
-	Role *string `json:"role,omitempty"`
+	Role *monitoringv1alpha1.HetznerRole `json:"role,omitempty"`
 	// basicAuth defines information to use on every scrape request.
 	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// authorization defines the header configuration to authenticate against the Hetzner API.
@@ -65,7 +66,7 @@ func HetznerSDConfig() *HetznerSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *HetznerSDConfigApplyConfiguration) WithRole(value string) *HetznerSDConfigApplyConfiguration {
+func (b *HetznerSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.HetznerRole) *HetznerSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

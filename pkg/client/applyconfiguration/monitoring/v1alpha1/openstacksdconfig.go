@@ -80,7 +80,7 @@ type OpenStackSDConfigApplyConfiguration struct {
 	// instead be specified in the relabeling rule.
 	Port *int32 `json:"port,omitempty"`
 	// availability defines the availability of the endpoint to connect to.
-	Availability *string `json:"availability,omitempty"`
+	Availability *monitoringv1alpha1.OpenStackAvailability `json:"availability,omitempty"`
 	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
@@ -222,7 +222,7 @@ func (b *OpenStackSDConfigApplyConfiguration) WithPort(value int32) *OpenStackSD
 // WithAvailability sets the Availability field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Availability field is set to the value of the last call.
-func (b *OpenStackSDConfigApplyConfiguration) WithAvailability(value string) *OpenStackSDConfigApplyConfiguration {
+func (b *OpenStackSDConfigApplyConfiguration) WithAvailability(value monitoringv1alpha1.OpenStackAvailability) *OpenStackSDConfigApplyConfiguration {
 	b.Availability = &value
 	return b
 }
