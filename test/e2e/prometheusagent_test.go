@@ -664,11 +664,14 @@ func testPrometheusAgentDaemonSetCELValidations(t *testing.T) {
 	t.Run("DaemonSetInvalidAdditionalScrapeConfigs", testDaemonSetInvalidAdditionalScrapeConfigs)
 }
 
-func testDaemonSetInvalidReplicas(t *testing.T) {
-	t.Parallel()
+func setupDaemonSetValidationTest(t *testing.T) (context.Context, string) {
+	t.Helper()
+
 	ctx := context.Background()
 	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
+	t.Cleanup(func() {
+		testCtx.Cleanup(t)
+	})
 
 	ns := framework.CreateNamespace(ctx, t, testCtx)
 	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
@@ -680,6 +683,13 @@ func testDaemonSetInvalidReplicas(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
+	return ctx, ns
+}
+
+func testDaemonSetInvalidReplicas(t *testing.T) {
+	t.Parallel()
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-replicas"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -687,27 +697,14 @@ func testDaemonSetInvalidReplicas(t *testing.T) {
 	// no replicas should be set in Daemonsets
 	p.Spec.Replicas = new(int32(3))
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "replicas cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidStorage(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-storage"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -726,27 +723,14 @@ func testDaemonSetInvalidStorage(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "storage cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidShards(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-shards"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -754,27 +738,14 @@ func testDaemonSetInvalidShards(t *testing.T) {
 	// shards cannot be greater than 1 in DaemonSets
 	p.Spec.Shards = new(int32(2))
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "shards cannot be greater than 1 when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-pvc-retention"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -785,27 +756,14 @@ func testDaemonSetInvalidPVCRetentionPolicy(t *testing.T) {
 		WhenScaled:  appsv1.RetainPersistentVolumeClaimRetentionPolicyType,
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "persistentVolumeClaimRetentionPolicy cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-scrape-config-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -817,27 +775,14 @@ func testDaemonSetInvalidScrapeConfigSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scrapeConfigSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidProbeSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-probe-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -848,27 +793,14 @@ func testDaemonSetInvalidProbeSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "probeSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidScrapeConfigNamespaceSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-scrape-config-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -879,27 +811,14 @@ func testDaemonSetInvalidScrapeConfigNamespaceSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidProbeNamespaceSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-probe-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -910,27 +829,14 @@ func testDaemonSetInvalidProbeNamespaceSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "probeNamespaceSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidServiceMonitorSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-service-monitor-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -941,27 +847,14 @@ func testDaemonSetInvalidServiceMonitorSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "serviceMonitorSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidServiceMonitorNamespaceSelector(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-service-monitor-namespace-selector"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -972,27 +865,14 @@ func testDaemonSetInvalidServiceMonitorNamespaceSelector(t *testing.T) {
 		},
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet")
 }
 
 func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	testCtx := framework.NewTestCtx(t)
-	defer testCtx.Cleanup(t)
-
-	ns := framework.CreateNamespace(ctx, t, testCtx)
-	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
-	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
-		ctx, testFramework.PrometheusOperatorOpts{
-			Namespace:           ns,
-			AllowedNamespaces:   []string{ns},
-			EnabledFeatureGates: []operator.FeatureGateName{operator.PrometheusAgentDaemonSetFeature},
-		},
-	)
-	require.NoError(t, err)
+	ctx, ns := setupDaemonSetValidationTest(t)
 
 	name := "test-invalid-additional-scrape-configs"
 	p := framework.MakeBasicPrometheusAgentDaemonSet(ns, name)
@@ -1004,7 +884,7 @@ func testDaemonSetInvalidAdditionalScrapeConfigs(t *testing.T) {
 		Key: "key",
 	}
 
-	_, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	_, err := framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "additionalScrapeConfigs cannot be set when mode is DaemonSet")
 }
