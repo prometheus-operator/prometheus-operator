@@ -98,7 +98,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	// retention defines the time duration Alertmanager shall retain data for. Default is '120h',
 	// and must match the regular expression `[0-9]+(ms|s|m|h)` (milliseconds seconds minutes hours).
-	Retention *monitoringv1.GoDuration `json:"retention,omitempty"`
+	Retention *monitoringv1.NonZeroGoDuration `json:"retention,omitempty"`
 	// storage defines the definition of how storage will be used by the Alertmanager
 	// instances.
 	Storage *StorageSpecApplyConfiguration `json:"storage,omitempty"`
@@ -217,14 +217,14 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// [1] RFC1918: https://tools.ietf.org/html/rfc1918
 	ClusterAdvertiseAddress *string `json:"clusterAdvertiseAddress,omitempty"`
 	// clusterGossipInterval defines the interval between gossip attempts.
-	ClusterGossipInterval *monitoringv1.GoDuration `json:"clusterGossipInterval,omitempty"`
+	ClusterGossipInterval *monitoringv1.NonZeroGoDuration `json:"clusterGossipInterval,omitempty"`
 	// clusterLabel defines the identifier that uniquely identifies the Alertmanager cluster.
 	// You should only set it when the Alertmanager cluster includes Alertmanager instances which are external to this Alertmanager resource. In practice, the addresses of the external instances are provided via the `.spec.additionalPeers` field.
 	ClusterLabel *string `json:"clusterLabel,omitempty"`
 	// clusterPushpullInterval defines the interval between pushpull attempts.
-	ClusterPushpullInterval *monitoringv1.GoDuration `json:"clusterPushpullInterval,omitempty"`
+	ClusterPushpullInterval *monitoringv1.NonZeroGoDuration `json:"clusterPushpullInterval,omitempty"`
 	// clusterPeerTimeout defines the timeout for cluster peering.
-	ClusterPeerTimeout *monitoringv1.GoDuration `json:"clusterPeerTimeout,omitempty"`
+	ClusterPeerTimeout *monitoringv1.NonZeroGoDuration `json:"clusterPeerTimeout,omitempty"`
 	// clusterPeerName defines the name that this Alertmanager instance uses to
 	// advertise itself to other cluster peers (the `--cluster.peer-name` flag,
 	// available since Alertmanager v0.30.0).
@@ -448,7 +448,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithReplicas(value int32) *Alertman
 // WithRetention sets the Retention field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Retention field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithRetention(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithRetention(value monitoringv1.NonZeroGoDuration) *AlertmanagerSpecApplyConfiguration {
 	b.Retention = &value
 	return b
 }
@@ -692,7 +692,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithClusterAdvertiseAddress(value s
 // WithClusterGossipInterval sets the ClusterGossipInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClusterGossipInterval field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithClusterGossipInterval(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithClusterGossipInterval(value monitoringv1.NonZeroGoDuration) *AlertmanagerSpecApplyConfiguration {
 	b.ClusterGossipInterval = &value
 	return b
 }
@@ -708,7 +708,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithClusterLabel(value string) *Ale
 // WithClusterPushpullInterval sets the ClusterPushpullInterval field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClusterPushpullInterval field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithClusterPushpullInterval(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithClusterPushpullInterval(value monitoringv1.NonZeroGoDuration) *AlertmanagerSpecApplyConfiguration {
 	b.ClusterPushpullInterval = &value
 	return b
 }
@@ -716,7 +716,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithClusterPushpullInterval(value m
 // WithClusterPeerTimeout sets the ClusterPeerTimeout field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClusterPeerTimeout field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithClusterPeerTimeout(value monitoringv1.GoDuration) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithClusterPeerTimeout(value monitoringv1.NonZeroGoDuration) *AlertmanagerSpecApplyConfiguration {
 	b.ClusterPeerTimeout = &value
 	return b
 }

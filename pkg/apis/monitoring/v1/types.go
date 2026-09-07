@@ -61,11 +61,11 @@ type Duration string
 // +kubebuilder:validation:MinLength=1
 type NonEmptyDuration string
 
-// GoDuration is a valid time duration that can be parsed by Go's time.ParseDuration() function.
+// NonZeroGoDuration is a valid time duration that can be parsed by Go's time.ParseDuration() function.
 // Supported units: h, m, s, ms
 // Examples: `45ms`, `30s`, `1m`, `1h20m15s`
-// +kubebuilder:validation:Pattern:="^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
-type GoDuration string
+// +kubebuilder:validation:Pattern:="^((([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$"
+type NonZeroGoDuration string
 
 // HostAlias holds the mapping between IP and hostnames that will be injected as an entry in the
 // pod's hosts file.
