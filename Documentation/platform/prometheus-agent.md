@@ -13,9 +13,7 @@ description: Guide for running Prometheus in Agent mode
 
 {{< alert icon="👉" text="Prometheus Operator >= v0.64.0 is required."/>}}
 
-As mentioned in [Prometheus's blog](https://prometheus.io/blog/2021/11/16/agent/), Prometheus Agent
-is a deployment model optimized for environments where all collected data is forwarded to
-a long-term storage solution, e.g. Cortex, Thanos or Prometheus, that do not need storage or rule evaluation.
+As mentioned in [Prometheus's blog](https://prometheus.io/blog/2021/11/16/agent/), Prometheus Agent is a deployment model optimized for environments where all collected data is forwarded to a long-term storage solution, e.g. Cortex, Thanos or Prometheus, that do not need storage or rule evaluation.
 
 First of all, make sure that the PrometheusAgent CRD is installed in the cluster and that the operator has the proper RBAC permissions to reconcile the PrometheusAgent resources.
 
@@ -46,6 +44,7 @@ rules:
   - monitoring.coreos.com
   resources:
   - alertmanagers/status
+  - alertmanagerconfigs/status
   - podmonitors/status
   - probes/status
   - prometheuses/status
