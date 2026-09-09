@@ -483,9 +483,9 @@ func TestBuildStatefulSetService_NoSessionAffinity(t *testing.T) {
 		config,
 	)
 
-	// Check that SessionAffinity is not set (empty string is default)
+	// Check that SessionAffinity is explicitly set to ServiceAffinityNone
 	if svc.Spec.SessionAffinity != corev1.ServiceAffinityNone {
-		t.Errorf("Expected SessionAffinity to be set to ServiceAffinityNone, got: %s (should be ServiceAffinityNone)", svc.Spec.SessionAffinity)
+		t.Errorf("Expected SessionAffinity to be explicitly set to ServiceAffinityNone, got: %s (should be ServiceAffinityNone)", svc.Spec.SessionAffinity)
 	}
 
 	// Check that ClusterIP is None
