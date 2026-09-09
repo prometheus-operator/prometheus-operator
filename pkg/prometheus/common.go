@@ -509,6 +509,7 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	svc := &corev1.Service{
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
+			SessionAffinity: corev1.ServiceAffinityNone,
 			Ports: []corev1.ServicePort{
 				{
 					Name:       portName,

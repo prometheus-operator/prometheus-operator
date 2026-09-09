@@ -453,3 +453,56 @@ func TestLabelSelectorForStatefulSets(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildStatefulSetService_NoSessionAffinity(t *testing.T) {
+	// Create a minimal Prometheus object
+	prom := &monitoringv1.Prometheus{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-prometheus",
+			Namespace: "default",
+		},
+		Spec: monitoringv1.PrometheusSpec{
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				PortName: "web",
+			},
+		},
+	}
+
+	config := Config{
+		Annotations: nil,
+		Labels:      nil,
+	}
+
+	// Build a statefulset service
+	svc := BuildStatefulSetService(
+		"test-prometheus-governing",
+		map[string]string{
+			"prometheus": "test-prometheus",
+		},
+		prom,
+		config,
+	)
+
+	// Check that SessionAffinity is not set (empty string is default)
+	if svc.Spec.SessionAffinity != corev1.ServiceAffinityNone {
+		t.Errorf("Expected SessionAffinity to be set to ServiceAffinityNone, got: %s (should be ServiceAffinityNone)", svc.Spec.SessionAffinity)
+	}
+
+	// Check that ClusterIP is None
+	if svc.Spec.ClusterIP != string(corev1.ClusterIPNone) {
+		t.Errorf("Expected ClusterIP to be 'None', got: %s (should be ServiceAffinityNone)", svc.Spec.ClusterIP)
+	}
+
+	// Check that exactly one port is set
+	if len(svc.Spec.Ports) != 1 {
+		t.Errorf("Expected exactly 1 port, got %d", len(svc.Spec.Ports))
+	}
+
+	// Check that port is web:9090
+	if svc.Spec.Ports[0].Name != "web" {
+		t.Errorf("Expected port name to be 'web', got: %s (should be ServiceAffinityNone)", svc.Spec.Ports[0].Name)
+	}
+	if svc.Spec.Ports[0].Port != 9090 {
+		t.Errorf("Expected port number to be 9090, got: %d", svc.Spec.Ports[0].Port)
+	}
+}
