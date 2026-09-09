@@ -1443,8 +1443,23 @@ func (cg *ConfigGenerator) buildProbeHandler(probePath string) corev1.ProbeHandl
 		Path: probePath,
 		Port: intstr.FromString(cpf.PortName),
 	}
+
+	// When TLS is configured with client authentication, probes must use HTTP
+	// instead of HTTPS because kubelet cannot authenticate with client certificates.
+	// This prevents probe failures when RequireAndVerifyClientCert is used.
 	if cpf.Web != nil && cpf.Web.TLSConfig != nil && cg.IsCompatible() {
-		handler.HTTPGet.Scheme = corev1.URISchemeHTTPS
+		if cpf.Web.TLSConfig.ClientAuthType == nil || *cpf.Web.TLSConfig.ClientAuthType == "" {
+			// No client authentication required, use HTTPS
+			handler.HTTPGet.Scheme = corev1.URISchemeHTTPS
+		} else {
+			// Client authentication required (e.g., RequireAndVerifyClientCert): use HTTP
+			// Kubelet cannot authenticate with client certificates, so we must use HTTP
+			// for the probes. The server will handle authentication for metrics/scrape endpoints.
+			handler.HTTPGet.Scheme = corev1.URISchemeHTTP
+		}
+	} else if cpf.Web == nil || cpf.Web.TLSConfig == nil || !cg.IsCompatible() {
+		// When TLS is not configured or incompatible, use HTTP as default
+		handler.HTTPGet.Scheme = corev1.URISchemeHTTP
 	}
 
 	return handler
