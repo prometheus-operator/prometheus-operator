@@ -5312,6 +5312,16 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 	return cfg
 }
 
+func (cg *ConfigGenerator) appendExtraScrapeMetrics(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if cpf.ExtraScrapeMetrics == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
+}
+
 func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -5420,6 +5430,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 	cfg = cg.appendScrapeNativeHistograms(cfg)
+	cfg = cg.appendExtraScrapeMetrics(cfg)
 
 	return cfg
 }

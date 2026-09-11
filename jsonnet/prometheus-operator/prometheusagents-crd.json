@@ -2800,6 +2800,10 @@
                     "description": "externalUrl defines the external URL under which the Prometheus service is externally\navailable. This is necessary to generate correct URLs (for instance if\nPrometheus is accessible behind an Ingress resource).",
                     "type": "string"
                   },
+                  "extraScrapeMetrics": {
+                    "description": "extraScrapeMetrics defines whether to store additional time series for each scrape:\n`scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.\nThese metrics help monitor how close targets are to their configured limits.\nIt can be overridden per scrape config.\n\nIt requires Prometheus >= v3.10.0.",
+                    "type": "boolean"
+                  },
                   "hostAliases": {
                     "description": "hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's\nhosts file if specified.",
                     "items": {
