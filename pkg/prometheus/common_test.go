@@ -453,3 +453,57 @@ func TestLabelSelectorForStatefulSets(t *testing.T) {
 		})
 	}
 }
+
+// TestVolumeUsesConfigMapForLargeConfig verifies that BuildCommonVolumes uses
+// a ConfigMap volume for the Prometheus configuration instead of a Secret,
+// which avoids the 1MB size limit of Kubernetes Secrets.
+// This addresses issue #4702 where compressed Prometheus configurations
+// exceeding 1MB would fail when stored as Secrets.
+func TestVolumeUsesConfigMapForLargeConfig(t *testing.T) {
+	tests := []struct {
+		name           string
+		prometheus     *monitoringv1.Prometheus
+		wantType       string // "configmap" or "secret"
+	}{
+		{
+			name: "Uses ConfigMap by default",
+			prometheus: &monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-prometheus",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{},
+				},
+			},
+			wantType: "configmap",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			volumes, _, err := BuildCommonVolumes(tt.prometheus, nil, true)
+			require.NoError(t, err)
+
+			// Find the config volume
+			var configVolume corev1.Volume
+			for _, v := range volumes {
+				if v.Name == "config" {
+					configVolume = v
+					break
+				}
+			}
+			require.NotNil(t, configVolume, "config volume not found")
+
+			// Verify it's a ConfigMap, not a Secret
+			switch tt.wantType {
+			case "configmap":
+				require.NotNil(t, configVolume.VolumeSource.ConfigMap, "expected ConfigMap volume source")
+				require.Equal(t, "prometheus-test-prometheus-config", configVolume.VolumeSource.ConfigMap.Name,
+					"expected ConfigMap name to be PrefixedName(p) + '-config'")
+			case "secret":
+				require.NotNil(t, configVolume.VolumeSource.Secret, "expected Secret volume source")
+			}
+		})
+	}
+}

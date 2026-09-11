@@ -59,3 +59,37 @@ func LoadSecretRef(ctx context.Context, logger *slog.Logger, client typedcorev1.
 
 	return b, nil
 }
+
+// LoadConfigMapRef returns the data from a configmap key reference.
+// If the reference is set as optional and the configmap or key isn't found, the
+// function returns no error.
+func LoadConfigMapRef(ctx context.Context, logger *slog.Logger, client typedcorev1.ConfigMapInterface, cmks *corev1.ConfigMapKeySelector) ([]byte, error) {
+	if cmks == nil {
+		return nil, nil
+	}
+
+	// Unless explicitly defined, references aren't optional.
+	optional := ptr.Deref(cmks.Optional, false)
+
+	configmap, err := client.Get(ctx, cmks.Name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) && optional {
+			logger.Debug(fmt.Sprintf("configmap %v could not be found", cmks.Name))
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	b, found := configmap.Data[cmks.Key]
+	if !found {
+		if optional {
+			logger.Debug(fmt.Sprintf("configmap %v could not be found", cmks.Name))
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("key %v could not be found in configmap %v", cmks.Key, cmks.Name)
+	}
+
+	return []byte(b), nil
+}

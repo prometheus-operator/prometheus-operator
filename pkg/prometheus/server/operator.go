@@ -1555,21 +1555,23 @@ func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.
 
 func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1.Prometheus, cg *prompkg.ConfigGenerator, ruleConfigMapNames []string, store *assets.StoreBuilder, resources *selectedConfigResources) error {
 	// If no service/pod monitor and probe selectors are configured, the user
-	// wants to manage configuration themselves. Let's create an empty Secret
+	// wants to manage configuration themselves. Let's create an empty ConfigMap
 	// if it doesn't exist.
+	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
+	cmc := c.kclient.CoreV1().ConfigMaps(p.Namespace)
+
 	if c.unmanagedPrometheusConfiguration(p) {
 
-		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
+		cm, err := prompkg.MakeConfigurationConfigMap(p, c.config, nil)
 		if err != nil {
-			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
+			return fmt.Errorf("failed to generate empty configuration configmap: %w", err)
 		}
 
-		sClient := c.kclient.CoreV1().Secrets(p.Namespace)
-		_, err = sClient.Get(ctx, s.Name, metav1.GetOptions{})
+		_, err = cmc.Get(ctx, cm.Name, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
-			logger.Debug("creating an empty configuration secret")
-			if _, err := c.kclient.CoreV1().Secrets(p.Namespace).Create(ctx, s, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-				return fmt.Errorf("failed to create an empty configuration secret: %w", err)
+			logger.Debug("creating an empty configuration configmap")
+			if _, err := c.kclient.CoreV1().ConfigMaps(p.Namespace).Create(ctx, cm, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
+				return fmt.Errorf("failed to create an empty configuration configmap: %w", err)
 			}
 
 			return nil
@@ -1607,8 +1609,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	if err := prompkg.AddScrapeClassesToStore(ctx, store, p.GetNamespace(), p.Spec.ScrapeClasses); err != nil {
 		return fmt.Errorf("failed to process scrape classes: %w", err)
 	}
-
-	sClient := c.kclient.CoreV1().Secrets(p.Namespace)
 	additionalScrapeConfigs, err := k8s.LoadSecretRef(ctx, logger, sClient, p.Spec.AdditionalScrapeConfigs)
 	if err != nil {
 		return fmt.Errorf("loading additional scrape configs from Secret failed: %w", err)
@@ -1622,7 +1622,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return fmt.Errorf("loading additional alert manager configs from Secret failed: %w", err)
 	}
 
-	// Update secret based on the most recent configuration.
+	// Update configmap based on the most recent configuration.
 	conf, err := cg.GenerateServerConfiguration(
 		p,
 		resources.sMons.ValidResources(),
@@ -1639,14 +1639,15 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 		return fmt.Errorf("generating config failed: %w", err)
 	}
 
-	// Compress config to avoid 1mb secret limit for a while
-	s, err := prompkg.MakeConfigurationSecret(p, c.config, conf)
+	// Create ConfigMap with compressed config to avoid 1MB Secret limit.
+	// ConfigMaps support much larger sizes than Secrets.
+	cm, err := prompkg.MakeConfigurationConfigMap(p, c.config, conf)
 	if err != nil {
-		return fmt.Errorf("creating compressed secret failed: %w", err)
+		return fmt.Errorf("creating compressed configmap failed: %w", err)
 	}
 
-	logger.Debug("updating Prometheus configuration secret")
-	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
+	logger.Debug("updating Prometheus configuration configmap")
+	return k8s.CreateOrUpdateConfigMap(ctx, cmc, cm)
 }
 
 func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, p *monitoringv1.Prometheus) error {

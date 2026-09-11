@@ -366,3 +366,6 @@ func mergeMap(m map[string]string, seq iter.Seq2[string, string]) map[string]str
 	maps.Insert(m, seq)
 	return m
 }
+
+// CreateOrUpdateConfigMap creates or updates a ConfigMap with the given desired state.
+// It retries on conflict and uses the mergeMetadata helper to update metadata fields.

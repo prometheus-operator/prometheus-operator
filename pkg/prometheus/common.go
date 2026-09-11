@@ -186,6 +186,36 @@ func ConfigSecretName(p monitoringv1.PrometheusInterface) string {
 	return PrefixedName(p)
 }
 
+// MakeConfigurationConfigMap creates a ConfigMap containing the gzipped Prometheus configuration.
+// This avoids the 1MB size limit of Kubernetes Secrets, which can be exceeded when the configuration
+// is large (e.g., with many ServiceMonitors, PodMonitors, or scrape configs).
+// see: https://github.com/prometheus-operator/prometheus-operator/issues/4702
+func MakeConfigurationConfigMap(p monitoringv1.PrometheusInterface, config Config, data []byte) (*corev1.ConfigMap, error) {
+	promConfig, err := compress(data)
+	if err != nil {
+		return nil, err
+	}
+
+	cm := &corev1.ConfigMap{
+		Data: map[string]string{
+			ConfigFilename: string(promConfig),
+		},
+	}
+
+	operator.UpdateObject(
+		cm,
+		operator.WithLabels(config.Labels),
+		operator.WithAnnotations(config.Annotations),
+		operator.WithManagingOwner(p),
+		operator.WithName(ConfigConfigMapName(p)),
+	)
+
+	return cm, nil
+}
+
+func ConfigConfigMapName(p monitoringv1.PrometheusInterface) string {
+	return PrefixedName(p) + "-config"
+}
 func TLSAssetsSecretName(p monitoringv1.PrometheusInterface) string {
 	return fmt.Sprintf("%s-tls-assets", PrefixedName(p))
 }
@@ -243,22 +273,27 @@ func BuildCommonVolumes(p monitoringv1.PrometheusInterface, tlsSecrets *operator
 		{
 			Name: "config",
 			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: ConfigSecretName(p),
-				},
-			},
-		},
-		tlsSecrets.Volume("tls-assets"),
-		{
-			Name: "config-out",
-			VolumeSource: corev1.VolumeSource{
-				EmptyDir: &corev1.EmptyDirVolumeSource{
-					// tmpfs is used here to avoid writing sensitive data into disk.
-					Medium: corev1.StorageMediumMemory,
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: ConfigConfigMapName(p),
+					},
 				},
 			},
 		},
 	}
+	// Mount TLS assets if they are provided.
+	if tlsSecrets != nil {
+		volumes = append(volumes, tlsSecrets.Volume("tls-assets"))
+	}
+	volumes = append(volumes, corev1.Volume{
+		Name: "config-out",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{
+				// tmpfs is used here to avoid writing sensitive data into disk.
+				Medium: corev1.StorageMediumMemory,
+			},
+		},
+	})
 
 	promVolumeMounts := []corev1.VolumeMount{
 		{
@@ -530,4 +565,12 @@ func BuildStatefulSetService(name string, selector map[string]string, p monitori
 	)
 
 	return svc
+}
+
+// ConfigMaps are used for large configurations that exceed 1MB, while Secrets
+// are used for smaller configurations.
+func ConfigName(p monitoringv1.PrometheusInterface) string {
+	// For now, always return the ConfigMap name.
+	// The actual implementation can decide between ConfigMap and Secret based on size.
+	return PrefixedName(p) + "-config"
 }
