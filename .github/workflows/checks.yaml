@@ -97,6 +97,19 @@ jobs:
         check-latest: true
     - run: make operator
 
+  build-distroless-images:
+    runs-on: ubuntu-latest
+    name: Build distroless container images
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: Import environment variables from file
+      run: cat ".github/env" >> "$GITHUB_ENV"
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version: '${{ env.golang-version }}'
+        check-latest: true
+    - run: make distroless-image
+
   po-rule-migration:
     runs-on: ubuntu-latest
     name: Build Prometheus Operator rule config map to rule file CRDs CLI tool
