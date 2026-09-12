@@ -57,61 +57,73 @@ for i in ${REGISTRIES}; do
 	WEBHOOKS="$i/${IMAGE_WEBHOOK}${IMAGE_SUFFIX} ${WEBHOOKS}"
 done
 
+# Keep the current images as the default (BusyBox) variant and publish the
+# distroless images under an explicit suffix.
+IMAGE_VARIANTS=("" "-distroless")
+
 echo "Tag: ${TAG}"
 echo "Main branch: ${MAIN_BRANCH}"
 echo "Image suffix: ${IMAGE_SUFFIX}"
 for img in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
-	echo "Building multi-arch image: $img:$TAG"
+	for variant in "${IMAGE_VARIANTS[@]}"; do
+		echo "Building multi-arch image: $img:$TAG$variant"
+	done
 done
 
 # Build images and rename them for each remote registry
 for arch in ${CPU_ARCHS}; do
 	make --always-make image GOARCH="$arch" TAG="${TAG}-$arch"
+	make --always-make distroless-image GOARCH="$arch" TAG="${TAG}-$arch"
 	# Retag operator image
 	for i in ${OPERATORS}; do
 		docker tag "${IMAGE_OPERATOR}:${TAG}-$arch" "${i}:${TAG}-$arch"
+		docker tag "${IMAGE_OPERATOR}:${TAG}-$arch-distroless" "${i}:${TAG}-$arch-distroless"
 	done
 	# Retag reloader image
 	for i in ${RELOADERS}; do
 		docker tag "${IMAGE_RELOADER}:${TAG}-$arch" "${i}:${TAG}-$arch"
+		docker tag "${IMAGE_RELOADER}:${TAG}-$arch-distroless" "${i}:${TAG}-$arch-distroless"
 	done
 	# Retag webhook image
 	for i in ${WEBHOOKS}; do
 		docker tag "${IMAGE_WEBHOOK}:${TAG}-$arch" "${i}:${TAG}-$arch"
+		docker tag "${IMAGE_WEBHOOK}:${TAG}-$arch-distroless" "${i}:${TAG}-$arch-distroless"
 	done
 done
 
 # Compose the multi-arch images and push them to remote repositories.
 export DOCKER_CLI_EXPERIMENTAL=enabled
 for r in ${OPERATORS} ${RELOADERS} ${WEBHOOKS}; do
-	# Images need to be pushed to the remote registry before creating the manifest.
-	MANIFEST="${r}:${TAG}"
-	IMAGES=()
-	for arch in $CPU_ARCHS; do
-		echo "Pushing image ${MANIFEST}-${arch}"
-		docker push "${MANIFEST}-${arch}"
-		IMAGES[${#IMAGES[@]}]="${MANIFEST}-${arch}"
+	for variant in "${IMAGE_VARIANTS[@]}"; do
+		# Images need to be pushed to the remote registry before creating the manifest.
+		MANIFEST="${r}:${TAG}${variant}"
+		IMAGES=()
+		for arch in $CPU_ARCHS; do
+			echo "Pushing image ${r}:${TAG}-${arch}${variant}"
+			docker push "${r}:${TAG}-${arch}${variant}"
+			IMAGES[${#IMAGES[@]}]="${r}:${TAG}-${arch}${variant}"
+		done
+
+		# Create the manifest to join all images under one virtual tag.
+		echo "Creating manifest ${MANIFEST}"
+		docker manifest create --amend "${MANIFEST}" "${IMAGES[@]}"
+
+		# Annotate to set which image is build for which CPU architecture.
+		for arch in $CPU_ARCHS; do
+			docker manifest annotate --arch "$arch" "${MANIFEST}" "${r}:${TAG}-${arch}${variant}"
+		done
+
+		# Push the manifest to the remote registry.
+		echo "Pushing manifest ${MANIFEST}"
+		docker manifest push "${MANIFEST}"
+
+		# Sign the manifest for official tags.
+		if [[ -z "${MAIN_BRANCH}" ]]; then
+			DIGEST="$(crane digest "${MANIFEST}")"
+			echo "Signing manifest ${MANIFEST}@${DIGEST}"
+			cosign sign --yes -a GIT_HASH="${COMMIT_SHA}" -a GIT_VERSION="${TAG}${variant}" "${MANIFEST}@${DIGEST}"
+		else
+			echo "Not signing the manifest because the tag is 'main'"
+		fi
 	done
-
-	# Create the manifest to join all images under one virtual tag.
-	echo "Creating manifest ${MANIFEST}"
-	docker manifest create --amend "${MANIFEST}" "${IMAGES[@]}"
-
-	# Annotate to set which image is build for which CPU architecture.
-	for arch in $CPU_ARCHS; do
-		docker manifest annotate --arch "$arch" "${MANIFEST}" "${r}:${TAG}-$arch"
-	done
-
-	# Push the manifest to the remote registry.
-	echo "Pushing manifest ${MANIFEST}"
-	docker manifest push "${MANIFEST}"
-
-	# Sign the manifest for official tags.
-	if [[ -z "${MAIN_BRANCH}" ]]; then
-		DIGEST="$(crane digest "${MANIFEST}")"
-		echo "Signing manifest ${MANIFEST}@${DIGEST}"
-		cosign sign --yes -a GIT_HASH="${COMMIT_SHA}" -a GIT_VERSION="${TAG}" "${MANIFEST}@${DIGEST}"
-	else
-		echo "Not signing the manifest because the tag is 'main'"
-	fi
 done

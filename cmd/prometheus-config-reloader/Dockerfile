@@ -21,4 +21,6 @@ COPY --from=builder workspace/prometheus-config-reloader /bin/prometheus-config-
 
 USER nobody
 
+LABEL io.prometheus.image.variant="busybox"
+
 ENTRYPOINT ["/bin/prometheus-config-reloader"]

@@ -21,4 +21,6 @@ COPY --from=builder workspace/admission-webhook /bin/admission-webhook
 
 USER nobody
 
+LABEL io.prometheus.image.variant="busybox"
+
 ENTRYPOINT ["/bin/admission-webhook"]
