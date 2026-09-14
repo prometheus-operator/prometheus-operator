@@ -45,6 +45,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	thanosmetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/thanos_ruler"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -220,6 +221,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		thanosStores = append(thanosStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(newThanosRulerCollectorForStores(thanosStores...))
+	o.metrics.MustRegister(thanosmetrics.NewConditionCollector(operator.StoresIter[*monitoringv1.ThanosRuler](thanosStores...)))
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,

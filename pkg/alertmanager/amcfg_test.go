@@ -3197,6 +3197,38 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Pushover_Receiver.golden",
 		},
 		{
+			name:      "CR with Pushover Receiver and file-based credentials",
+			amVersion: &version28,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+								UserKeyFile: new("/etc/pushover/user_key"),
+								TokenFile:   new("/etc/pushover/token"),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Pushover_Receiver_and_file_credentials.golden",
+		},
+		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
 			kclient: fake.NewClientset(
@@ -3578,7 +3610,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with SNS Receiver with roleARN and externalId",
-			amVersion: &semver.Version{Major: 0, Minor: 33},
+			amVersion: &semver.Version{Major: 0, Minor: 34},
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -5346,6 +5378,55 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "discord_config with webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_with_webhook_url_file_set.golden",
+		},
+		{
+			name:           "discord_config both webhook url and webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "discord_config webhook url file dropped for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
 		},
 		{
 			name:           "webex_config for supported versions",
@@ -8835,6 +8916,11 @@ func TestLoadConfig(t *testing.T) {
 	}
 }
 
+func TestLoadConfigDiscordWebhookURLFile(t *testing.T) {
+	_, err := alertmanagerConfigFromBytes(golden.Get(t, "Discord_webhook_url_file_field.golden"))
+	require.NoError(t, err)
+}
+
 func TestConvertHTTPConfig(t *testing.T) {
 	testCases := []struct {
 		name    string
@@ -9302,6 +9388,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
 	versionV33 := semver.Version{Major: 0, Minor: 33}
+	versionV34 := semver.Version{Major: 0, Minor: 34}
 
 	for _, tc := range []struct {
 		name           string
@@ -9346,7 +9433,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 		},
 		{
 			name:           "sns valid sigv4.externalid passes in support amVersion",
-			againstVersion: versionV33,
+			againstVersion: versionV34,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{

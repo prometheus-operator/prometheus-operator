@@ -2660,6 +2660,106 @@ func testThanos(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testThanosSidecarDelayedCompaction verifies the Thanos sidecar behaviour
+// when delayed compaction is enabled with object storage configured.
+// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8763
+func testThanosSidecarDelayedCompaction(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name            string
+		thanosVersion   string
+		expectPathError bool
+	}{
+		{name: "v0.42.0", thanosVersion: "v0.42.0"},
+		{name: "v0.41.0", thanosVersion: "v0.41.0"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			objStoreSecret := &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "thanos-objstore-config",
+				},
+				StringData: map[string]string{
+					"thanos.yaml": `type: S3
+config:
+  bucket: dummy
+  endpoint: localhost:9000
+  insecure: true
+  access_key: dummy
+  secret_key: dummy`,
+				},
+			}
+			_, err := framework.KubeClient.CoreV1().Secrets(ns).Create(context.Background(), objStoreSecret, metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			thanosVersion := tc.thanosVersion
+			prom := framework.MakeBasicPrometheus(ns, "thanos-delayed-compaction", "test-group", 1)
+			prom.Spec.Thanos = &monitoringv1.ThanosSpec{
+				Version: &thanosVersion,
+				ObjectStorageConfig: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "thanos-objstore-config",
+					},
+					Key: "thanos.yaml",
+				},
+			}
+
+			_, err = framework.MonClientV1.Prometheuses(ns).Create(context.Background(), prom, metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			// Wait for the pod to be running so the sidecar has time to
+			// attempt Prometheus flag validation.
+			err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+				pods, listErr := framework.KubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
+					LabelSelector: "app.kubernetes.io/name=prometheus",
+				})
+				if listErr != nil || len(pods.Items) == 0 {
+					return false, nil
+				}
+				for _, pod := range pods.Items {
+					if pod.Status.Phase == corev1.PodRunning {
+						return true, nil
+					}
+				}
+				return false, nil
+			})
+			require.NoError(t, err, "prometheus pod did not reach Running phase")
+
+			// The sidecar retries validation every 30s; wait long enough
+			// for at least one retry cycle to complete.
+			time.Sleep(45 * time.Second)
+
+			pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), metav1.ListOptions{
+				LabelSelector: "app.kubernetes.io/name=prometheus",
+			})
+			require.NoError(t, err)
+			require.NotEmpty(t, pods.Items)
+
+			podName := pods.Items[0].Name
+			logs, err := framework.KubeClient.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{
+				Container: "thanos-sidecar",
+			}).DoRaw(context.Background())
+			require.NoError(t, err)
+
+			pathMismatchError := "Prometheus and Thanos use different paths for tracking block uploads"
+			logsStr := string(logs)
+
+			if tc.expectPathError {
+				require.Contains(t, logsStr, pathMismatchError,
+					"thanos-sidecar should report path mismatch for %s", tc.thanosVersion)
+			} else {
+				require.NotContains(t, logsStr, pathMismatchError,
+					"thanos-sidecar should not report path mismatch for %s", tc.thanosVersion)
+			}
+		})
+	}
+}
+
 func testPromGetAuthSecret(t *testing.T) {
 	t.Parallel()
 	name := "test"

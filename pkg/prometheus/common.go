@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -75,13 +76,20 @@ var (
 )
 
 // RetentionTimeOrDefault returns the configured time-based retention or the
-// default retention when neither time nor size are configured.
-func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize) monitoringv1.Duration {
-	if retention == "" && retentionSize == "" {
+// default retention when none of time, size and percentage are configured.
+func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize, retentionPercentage *resource.Quantity) monitoringv1.Duration {
+	if retention == "" && retentionSize == "" && !RetentionPercentageEnabled(retentionPercentage) {
 		return monitoringv1.Duration(DefaultRetention)
 	}
 
 	return retention
+}
+
+// RetentionPercentageEnabled returns whether the given percentage-based
+// retention is configured. A zero percentage means that percentage-based
+// retention is disabled.
+func RetentionPercentageEnabled(retentionPercentage *resource.Quantity) bool {
+	return retentionPercentage != nil && !retentionPercentage.IsZero()
 }
 
 // LabelSelectorForStatefulSets returns a label selector which selects

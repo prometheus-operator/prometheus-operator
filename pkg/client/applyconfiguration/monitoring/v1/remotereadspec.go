@@ -76,7 +76,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	// tlsConfig to use for the URL.
 	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// Optional ProxyConfig.
-	ProxyConfigApplyConfiguration `json:",inline"`
+	ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
 	// It requires Prometheus >= v2.26.0.

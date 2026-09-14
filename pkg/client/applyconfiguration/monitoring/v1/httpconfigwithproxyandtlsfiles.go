@@ -27,8 +27,8 @@ import (
 // with proxy configuration and TLS configuration. It is used for
 // ServiceMonitor endpoints.
 type HTTPConfigWithProxyAndTLSFilesApplyConfiguration struct {
-	HTTPConfigWithTLSFilesApplyConfiguration `json:",inline"`
-	ProxyConfigApplyConfiguration            `json:",inline"`
+	HTTPConfigWithTLSFilesApplyConfiguration `json:""`
+	ProxyConfigApplyConfiguration            `json:""`
 }
 
 // HTTPConfigWithProxyAndTLSFilesApplyConfiguration constructs a declarative configuration of the HTTPConfigWithProxyAndTLSFiles type for use with

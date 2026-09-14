@@ -32,11 +32,39 @@ import (
 )
 
 // ScrapeConfigInformer provides access to a shared informer and lister for
-// ScrapeConfigs.
+// ScrapeConfigs. Prefer using the type-safe variant (see [TypedScrapeConfigInformer]).
 type ScrapeConfigInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1alpha1.ScrapeConfigLister
 }
+
+// TypedScrapeConfigInformer provides access to a shared informer and lister for
+// ScrapeConfigs, including the type-safe TypedInformer variant.
+// It is a superset of ScrapeConfigInformer.
+type TypedScrapeConfigInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ScrapeConfigIndexInformer
+	Lister() monitoringv1alpha1.ScrapeConfigLister
+}
+
+// ScrapeConfigIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ScrapeConfigIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1alpha1.ScrapeConfig]
+
+// ScrapeConfigHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for ScrapeConfig.
+type ScrapeConfigHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1alpha1.ScrapeConfig]
+
+// ScrapeConfigDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for ScrapeConfig.
+type ScrapeConfigDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1alpha1.ScrapeConfig]
+
+// ScrapeConfigFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for ScrapeConfig.
+type ScrapeConfigFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1alpha1.ScrapeConfig]
+
+// ScrapeConfigIndexers is a specialization of [cache.TypedIndexers] for ScrapeConfig.
+type ScrapeConfigIndexers = cache.TypedIndexers[*apismonitoringv1alpha1.ScrapeConfig]
+
+// DeletedScrapeConfig is a specialization of [cache.DeletedObject] for ScrapeConfig.
+type DeletedScrapeConfig = cache.DeletedObject[*apismonitoringv1alpha1.ScrapeConfig]
 
 type scrapeConfigInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type scrapeConfigInformer struct {
 // NewScrapeConfigInformer constructs a new informer for ScrapeConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedScrapeConfigInformer]).
 func NewScrapeConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewScrapeConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedScrapeConfigInformer constructs a new informer for ScrapeConfig type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedScrapeConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ScrapeConfigIndexers) ScrapeConfigIndexInformer {
+	return NewTypedScrapeConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredScrapeConfigInformer constructs a new informer for ScrapeConfig type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredScrapeConfigInformer]).
 func NewFilteredScrapeConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewScrapeConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedScrapeConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredScrapeConfigInformer constructs a new informer for ScrapeConfig type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredScrapeConfigInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ScrapeConfigIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ScrapeConfigIndexInformer {
+	return NewTypedScrapeConfigInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewScrapeConfigInformerWithOptions constructs a new informer for ScrapeConfig type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedScrapeConfigInformerWithOptions]).
 func NewScrapeConfigInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedScrapeConfigInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedScrapeConfigInformerWithOptions constructs a new informer for ScrapeConfig type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedScrapeConfigInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) ScrapeConfigIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1alpha1", Resource: "scrapeconfigs"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.ScrapeConfig](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewScrapeConfigInformerWithOptions(client versioned.Interface, namespace st
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *scrapeConfigInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewScrapeConfigInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedScrapeConfigInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *scrapeConfigInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1alpha1.ScrapeConfig{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *scrapeConfigInformer) TypedInformer() ScrapeConfigIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.ScrapeConfig](f.factory.InformerFor(&apismonitoringv1alpha1.ScrapeConfig{}, f.defaultInformer))
 }
 
 func (f *scrapeConfigInformer) Lister() monitoringv1alpha1.ScrapeConfigLister {
 	return monitoringv1alpha1.NewScrapeConfigLister(f.Informer().GetIndexer())
+}
+
+// ToTypedScrapeConfigInformer converts an untyped informer into a TypedScrapeConfigInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ScrapeConfig. If that is not the case, calling type-safe methods of the returned
+// TypedScrapeConfigInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedScrapeConfigInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedScrapeConfigInformer(informer ScrapeConfigInformer) TypedScrapeConfigInformer {
+	if informer, ok := informer.(TypedScrapeConfigInformer); ok {
+		return informer
+	}
+	return &scrapeConfigTypedInformerAdapter{informer}
+}
+
+type scrapeConfigTypedInformerAdapter struct {
+	ScrapeConfigInformer
+}
+
+func (a *scrapeConfigTypedInformerAdapter) TypedInformer() ScrapeConfigIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.ScrapeConfig](a.Informer())
+}
+
+// ToScrapeConfigIndexInformer converts an untyped informer into a ScrapeConfigIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ScrapeConfig. If that is not the case, calling type-safe methods of the returned
+// ScrapeConfigIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ScrapeConfigIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToScrapeConfigIndexInformer(informer cache.SharedIndexInformer) ScrapeConfigIndexInformer {
+	if informer, ok := informer.(ScrapeConfigIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1alpha1.ScrapeConfig](informer)
 }

@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
@@ -76,6 +77,46 @@ var (
 	minReplicas         int32 = 1
 	probeTimeoutSeconds int32 = 3
 )
+
+func isZeroGoDuration(value monitoringv1.GoDuration) bool {
+	if value == "" {
+		return false
+	}
+
+	d, err := time.ParseDuration(string(value))
+	return err == nil && d <= 0
+}
+
+func discardZeroDurations(am *monitoringv1.Alertmanager) []string {
+	var ignored []string
+
+	for _, field := range []struct {
+		name  string
+		value *monitoringv1.GoDuration
+	}{
+		{"retention", &am.Spec.Retention},
+		{"clusterGossipInterval", &am.Spec.ClusterGossipInterval},
+		{"clusterPushpullInterval", &am.Spec.ClusterPushpullInterval},
+		{"clusterPeerTimeout", &am.Spec.ClusterPeerTimeout},
+	} {
+		if field.value == nil {
+			continue
+		}
+
+		if !isZeroGoDuration(*field.value) {
+			continue
+		}
+
+		*field.value = ""
+		ignored = append(ignored, fmt.Sprintf("%s (zero value not supported)", field.name))
+	}
+
+	return ignored
+}
+
+func ignoredFieldsMessage(fields []string) string {
+	return "The following fields were ignored: " + strings.Join(fields, ", ")
+}
 
 func getServiceName(a *monitoringv1.Alertmanager) string {
 	return ptr.Deref(a.Spec.ServiceName, defaultOperatedServiceName)
@@ -340,7 +381,14 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	}
 
 	if version.GTE(semver.MustParse("0.30.0")) {
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: fmt.Sprintf("$(%s)", operator.PodNameEnvVar)})
+		// Default the peer name to the pod's own name (injected via the
+		// downward API as $(POD_NAME)). Users can override this default by
+		// setting `.spec.clusterPeerName` on the Alertmanager CR.
+		peerName := fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
+		if a.Spec.ClusterPeerName != nil && *a.Spec.ClusterPeerName != "" {
+			peerName = *a.Spec.ClusterPeerName
+		}
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: peerName})
 	}
 
 	// If multiple Alertmanager clusters are deployed on the same cluster, it can happen

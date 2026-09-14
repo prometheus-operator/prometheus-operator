@@ -42,6 +42,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	promagentmetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/prometheus_agent"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -220,6 +221,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+	o.metrics.MustRegister(promagentmetrics.NewConditionCollector(operator.StoresIter[*monitoringv1alpha1.PrometheusAgent](promStores...)))
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,

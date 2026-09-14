@@ -52,6 +52,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	alertmanagermetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/alertmanager"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
 )
@@ -226,6 +227,7 @@ func (c *Operator) bootstrap(ctx context.Context, config operator.Config) error 
 		alertmanagerStores = append(alertmanagerStores, informer.Informer().GetStore())
 	}
 	c.metrics.MustRegister(newAlertmanagerCollectorForStores(alertmanagerStores...))
+	c.metrics.MustRegister(alertmanagermetrics.NewConditionCollector(operator.StoresIter[*monitoringv1.Alertmanager](alertmanagerStores...)))
 
 	c.alrtCfgInfs, err = informers.NewInformersForResource(
 		informers.NewMonitoringInformerFactories(
@@ -625,6 +627,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, am.Spec.Storage); err != nil {
 		return err
+	}
+
+	if ignored := discardZeroDurations(am); len(ignored) > 0 {
+		c.reconciliations.SetReasonAndMessage(key, operator.IgnoredFieldsReason, ignoredFieldsMessage(ignored))
 	}
 
 	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())

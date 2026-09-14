@@ -6191,11 +6191,13 @@ func TestTSDBConfig(t *testing.T) {
 
 func TestRetentionConfigFile(t *testing.T) {
 	for _, tc := range []struct {
-		name          string
-		version       string
-		retention     monitoringv1.Duration
-		retentionSize monitoringv1.ByteSize
-		golden        string
+		name                string
+		version             string
+		retention           monitoringv1.Duration
+		retentionSize       monitoringv1.ByteSize
+		retentionPercentage *resource.Quantity
+		golden              string
+		expectErr           bool
 	}{
 		{
 			name:      "retention.time set with Prometheus >= v3.11.0",
@@ -6217,7 +6219,27 @@ func TestRetentionConfigFile(t *testing.T) {
 			golden:        "RetentionConfigFile_time_size_v3.11.0.golden",
 		},
 		{
-			name:    "retention defaults to 24h when neither field is set with Prometheus >= v3.11.0",
+			name:                "retention.percentage set with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_percentage_v3.11.0.golden",
+		},
+		{
+			name:                "retention.time, retention.size and retention.percentage set with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retention:           "2d",
+			retentionSize:       "512MB",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_time_size_percentage_v3.11.0.golden",
+		},
+		{
+			name:                "retention.time still defaults to 24h when retention.percentage is zero with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(0, resource.DecimalSI),
+			golden:              "RetentionConfigFile_zero_percentage_v3.11.0.golden",
+		},
+		{
+			name:    "retention defaults to 24h when no field is set with Prometheus >= v3.11.0",
 			version: "v3.11.0",
 			golden:  "RetentionConfigFile_default_v3.11.0.golden",
 		},
@@ -6228,12 +6250,31 @@ func TestRetentionConfigFile(t *testing.T) {
 			retentionSize: "512MB",
 			golden:        "RetentionConfigFile_v3.10.0.golden",
 		},
+		{
+			name:                "retention.percentage is not in the configuration file for Prometheus < v3.11.0",
+			version:             "v3.10.0",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_percentage_v3.10.0.golden",
+		},
+		{
+			name:                "retention.percentage > 100",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(101, resource.DecimalSI),
+			expectErr:           true,
+		},
+		{
+			name:                "retention.percentage < 0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(-1, resource.DecimalSI),
+			expectErr:           true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.Retention = tc.retention
 			p.Spec.RetentionSize = tc.retentionSize
+			p.Spec.RetentionPercentage = tc.retentionPercentage
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -6248,6 +6289,10 @@ func TestRetentionConfigFile(t *testing.T) {
 				nil,
 				nil,
 			)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
@@ -9965,7 +10010,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -9996,7 +10041,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10028,7 +10073,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10059,7 +10104,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10083,7 +10128,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10101,7 +10146,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &corev1.ConfigMapKeySelector{
@@ -10133,7 +10178,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{

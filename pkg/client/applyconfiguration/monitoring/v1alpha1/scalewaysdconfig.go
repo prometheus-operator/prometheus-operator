@@ -53,7 +53,7 @@ type ScalewaySDConfigApplyConfiguration struct {
 	// refreshInterval defines the time after which the provided names are refreshed.
 	// If not set, Prometheus uses its default value.
 	RefreshInterval                                              *monitoringv1.Duration `json:"refreshInterval,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.

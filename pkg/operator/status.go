@@ -31,6 +31,10 @@ const (
 	// DeprecatedFieldsInUseReason is used in status conditions to indicate that
 	// the resource uses deprecated fields.
 	DeprecatedFieldsInUseReason = "DeprecatedFieldsInUse"
+
+	// IgnoredFieldsReason is used in status conditions to indicate that one or
+	// more spec fields were ignored because their values aren't supported.
+	IgnoredFieldsReason = "IgnoredFields"
 )
 
 // StatusGetter represents a workload resource implementing the interface
