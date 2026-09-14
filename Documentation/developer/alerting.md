@@ -166,7 +166,7 @@ for routes and inhibition rules.
 
 ### Deploying Prometheus Rules
 
-The `PrometheusRule` CRD allows to define alerting and recording rules. The
+The `PrometheusRule` CRD allows defining alerting and recording rules. The
 operator knows which PrometheusRule objects to select for a given Prometheus
 based on the `spec.ruleSelector` field.
 
