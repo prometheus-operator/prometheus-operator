@@ -3406,9 +3406,10 @@ bool
 <em>(Optional)</em>
 <p>extraScrapeMetrics defines whether to store additional time series for each scrape:
 <code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
-These metrics help monitor how close targets are to their configured limits.
-It can be overridden per scrape config.</p>
-<p>It requires Prometheus &gt;= v3.10.0.</p>
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0. For Prometheus &lt; v3.10.0, the operator
+enables the <code>extra-scrape-metrics</code> feature flag instead of setting the
+global configuration field.</p>
 </td>
 </tr>
 <tr>
@@ -9827,9 +9828,10 @@ bool
 <em>(Optional)</em>
 <p>extraScrapeMetrics defines whether to store additional time series for each scrape:
 <code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
-These metrics help monitor how close targets are to their configured limits.
-It can be overridden per scrape config.</p>
-<p>It requires Prometheus &gt;= v3.10.0.</p>
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0. For Prometheus &lt; v3.10.0, the operator
+enables the <code>extra-scrape-metrics</code> feature flag instead of setting the
+global configuration field.</p>
 </td>
 </tr>
 <tr>
@@ -16669,9 +16671,10 @@ bool
 <em>(Optional)</em>
 <p>extraScrapeMetrics defines whether to store additional time series for each scrape:
 <code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
-These metrics help monitor how close targets are to their configured limits.
-It can be overridden per scrape config.</p>
-<p>It requires Prometheus &gt;= v3.10.0.</p>
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0. For Prometheus &lt; v3.10.0, the operator
+enables the <code>extra-scrape-metrics</code> feature flag instead of setting the
+global configuration field.</p>
 </td>
 </tr>
 <tr>
@@ -24760,9 +24763,10 @@ bool
 <em>(Optional)</em>
 <p>extraScrapeMetrics defines whether to store additional time series for each scrape:
 <code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
-These metrics help monitor how close targets are to their configured limits.
-It can be overridden per scrape config.</p>
-<p>It requires Prometheus &gt;= v3.10.0.</p>
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0. For Prometheus &lt; v3.10.0, the operator
+enables the <code>extra-scrape-metrics</code> feature flag instead of setting the
+global configuration field.</p>
 </td>
 </tr>
 <tr>
@@ -33692,9 +33696,10 @@ bool
 <em>(Optional)</em>
 <p>extraScrapeMetrics defines whether to store additional time series for each scrape:
 <code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
-These metrics help monitor how close targets are to their configured limits.
-It can be overridden per scrape config.</p>
-<p>It requires Prometheus &gt;= v3.10.0.</p>
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0. For Prometheus &lt; v3.10.0, the operator
+enables the <code>extra-scrape-metrics</code> feature flag instead of setting the
+global configuration field.</p>
 </td>
 </tr>
 <tr>

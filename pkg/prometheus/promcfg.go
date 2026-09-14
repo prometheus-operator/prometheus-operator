@@ -1343,6 +1343,23 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Auto-enable the extra-scrape-metrics feature flag for Prometheus
+	// versions that support the feature but not the global config option;
+	// for >= v3.10.0 the config field emitted by appendExtraScrapeMetrics
+	// is used instead.
+	if ptr.Deref(cpf.ExtraScrapeMetrics, false) {
+		hasExtraScrapeMetrics := false
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "extra-scrape-metrics" {
+				hasExtraScrapeMetrics = true
+				break
+			}
+		}
+		if !hasExtraScrapeMetrics && cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
+			promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
+		}
+	}
+
 	if cpf.ExternalURL != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
 	}
