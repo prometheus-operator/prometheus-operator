@@ -265,16 +265,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -304,16 +294,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -1303,16 +1283,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -1342,16 +1312,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -2061,16 +2021,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -2100,16 +2050,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -2882,16 +2822,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -2921,16 +2851,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -3720,16 +3640,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -3759,16 +3669,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -4559,16 +4459,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -4598,16 +4488,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -5440,16 +5320,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -5479,16 +5349,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -6394,16 +6254,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -6433,16 +6283,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -7198,16 +7038,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -7237,16 +7067,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -8064,16 +7884,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -8103,16 +7913,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -8859,16 +8659,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -8898,16 +8688,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -9607,16 +9387,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -9646,16 +9416,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -10339,16 +10099,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -10378,16 +10128,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -11134,16 +10874,6 @@
                                 items: {
                                   description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
                                   properties: {
-                                    files: {
-                                      description: 'files defines values of the HTTP header retrieving from a file.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
                                     name: {
                                       description: 'name defines a HTTP header name.',
                                       minLength: 1,
@@ -11173,16 +10903,6 @@
                                         ],
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
-                                      },
-                                      minItems: 1,
-                                      type: 'array',
-                                      'x-kubernetes-list-type': 'atomic',
-                                    },
-                                    values: {
-                                      description: 'values defines values of the HTTP header.',
-                                      items: {
-                                        minLength: 1,
-                                        type: 'string',
                                       },
                                       minItems: 1,
                                       type: 'array',

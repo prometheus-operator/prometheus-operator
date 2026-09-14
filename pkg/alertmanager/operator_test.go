@@ -2005,8 +2005,13 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 			httpConfig: &monitoringv1alpha1.HTTPConfig{
 				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
 					{
-						Name:   "foo",
-						Values: []string{"bar"},
+						Name: "foo",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key:                  "secret",
+								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
+							},
+						},
 					},
 				},
 			},
@@ -2018,8 +2023,13 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 			httpConfig: &monitoringv1alpha1.HTTPConfig{
 				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
 					{
-						Name:   "foo",
-						Values: []string{"bar"},
+						Name: "foo",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key:                  "secret",
+								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
+							},
+						},
 					},
 				},
 			},

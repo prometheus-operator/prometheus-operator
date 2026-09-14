@@ -430,15 +430,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -472,15 +463,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -1584,15 +1566,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -1626,15 +1599,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -2428,15 +2392,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -2470,15 +2425,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -3343,15 +3289,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -3385,15 +3322,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -4268,15 +4196,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -4310,15 +4229,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -5205,15 +5115,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -5247,15 +5148,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -6210,15 +6102,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -6252,15 +6135,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -7280,15 +7154,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -7322,15 +7187,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -8170,15 +8026,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -8212,15 +8059,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -9142,15 +8980,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -9184,15 +9013,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -10027,15 +9847,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -10069,15 +9880,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -10854,15 +10656,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -10896,15 +10689,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -11661,15 +11445,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -11703,15 +11478,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -12558,15 +12324,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -12600,15 +12357,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -13763,15 +13511,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -13805,15 +13544,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -14893,15 +14623,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -14935,15 +14656,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -15729,15 +15441,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -15771,15 +15474,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -16628,15 +16322,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -16670,15 +16355,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -17539,15 +17215,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -17581,15 +17248,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -18454,15 +18112,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -18496,15 +18145,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -19433,15 +19073,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -19475,15 +19106,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -20488,15 +20110,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -20530,15 +20143,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -21370,15 +20974,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -21412,15 +21007,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -22327,15 +21913,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -22369,15 +21946,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -23197,15 +22765,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -23239,15 +22798,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -24018,15 +23568,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -24060,15 +23601,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -24817,15 +24349,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -24859,15 +24382,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic
@@ -25692,15 +25206,6 @@ spec:
                                     HTTPHeader defines a HTTP header configuration.
                                     See https://prometheus.io/docs/alerting/latest/configuration/#http_header
                                   properties:
-                                    files:
-                                      description: files defines values of the HTTP
-                                        header retrieving from a file.
-                                      items:
-                                        minLength: 1
-                                        type: string
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
                                     name:
                                       description: name defines a HTTP header name.
                                       minLength: 1
@@ -25734,15 +25239,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
-                                      type: array
-                                      x-kubernetes-list-type: atomic
-                                    values:
-                                      description: values defines values of the HTTP
-                                        header.
-                                      items:
-                                        minLength: 1
-                                        type: string
                                       minItems: 1
                                       type: array
                                       x-kubernetes-list-type: atomic

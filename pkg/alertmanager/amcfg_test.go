@@ -8985,23 +8985,6 @@ func TestConvertHTTPConfig(t *testing.T) {
 			golden:  "http_config_enable_http2_not_supported.golden",
 		},
 		{
-			name: "set HTTP headers",
-			cfg: monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
-					{
-						Name:   "foo1",
-						Values: []string{"bar1", "bar2"},
-					},
-					{
-						Name:   "foo2",
-						Values: []string{"bar3", "bar4"},
-					},
-				},
-			},
-			version: "v0.28.0",
-			golden:  "http_config_set_http_headers.golden",
-		},
-		{
 			name: "set HTTP headers with secrets",
 			cfg: monitoringv1alpha1.HTTPConfig{
 				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
@@ -9043,70 +9026,6 @@ func TestConvertHTTPConfig(t *testing.T) {
 			},
 			version: "v0.28.0",
 			golden:  "http_config_set_http_headers_secrets.golden",
-		},
-		{
-			name: "set HTTP headers with files",
-			cfg: monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
-					{
-						Name:  "foo1",
-						Files: []string{"/path/to/bar1", "/path/to/bar2"},
-					},
-					{
-						Name:  "foo2",
-						Files: []string{"/second/path/bar1", "/second/path/bar2"},
-					},
-				},
-			},
-			version: "v0.28.0",
-			golden:  "http_config_set_http_headers_files.golden",
-		},
-		{
-			name: "set HTTP headers combined values",
-			cfg: monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
-					{
-						Name:   "foo1",
-						Values: []string{"bar1", "bar2"},
-						Secrets: []corev1.SecretKeySelector{
-							{
-								Key: "foo1",
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "http-headers",
-								},
-							},
-							{
-								Key: "foo2",
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "http-headers",
-								},
-							},
-						},
-						Files: []string{"/path/to/bar1", "/path/to/bar2"},
-					},
-					{
-						Name:   "foo2",
-						Values: []string{"bar3", "bar4"},
-						Secrets: []corev1.SecretKeySelector{
-							{
-								Key: "foo3",
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "http-headers",
-								},
-							},
-							{
-								Key: "foo4",
-								LocalObjectReference: corev1.LocalObjectReference{
-									Name: "http-headers",
-								},
-							},
-						},
-						Files: []string{"/second/path/bar1", "/second/path/bar2"},
-					},
-				},
-			},
-			version: "v0.28.0",
-			golden:  "http_config_set_http_headers_combined_values.golden",
 		},
 	}
 
