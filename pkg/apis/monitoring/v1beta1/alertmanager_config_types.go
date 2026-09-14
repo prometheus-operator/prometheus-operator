@@ -750,7 +750,7 @@ type HTTPHeader struct {
 	// +listType=atomic
 	// +kubebuilder:validation:MinItems=1
 	// +optional
-	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	Secrets []SecretKeySelector `json:"secrets,omitempty"`
 }
 
 // WebexConfig configures notification via Cisco Webex
