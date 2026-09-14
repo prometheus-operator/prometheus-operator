@@ -400,7 +400,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					ClientAuthType: new("VerifyClientCertIfGiven"),
+					ClientAuthType: new(tls.RequireAndVerifyClientCert.String()),
 				},
 				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
@@ -425,8 +425,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					// Since we cannot verify hostname in the cert.
-					InsecureSkipVerify: new(true),
+					ServerName: new("PrometheusRemoteWriteClient"),
 				},
 			},
 		},
