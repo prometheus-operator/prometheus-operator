@@ -6268,6 +6268,33 @@ func TestRetentionConfigFile(t *testing.T) {
 			retentionPercentage: resource.NewQuantity(-1, resource.DecimalSI),
 			expectErr:           true,
 		},
+		{
+			name:    "retention.percentage rejects milli quantity suffix",
+			version: "v3.11.0",
+			retentionPercentage: func() *resource.Quantity {
+				q := resource.MustParse("80m")
+				return &q
+			}(),
+			expectErr: true,
+		},
+		{
+			name:    "retention.percentage rejects binary quantity suffix",
+			version: "v3.11.0",
+			retentionPercentage: func() *resource.Quantity {
+				q := resource.MustParse("80Mi")
+				return &q
+			}(),
+			expectErr: true,
+		},
+		{
+			name:    "retention.percentage rejects non-integer decimal",
+			version: "v3.11.0",
+			retentionPercentage: func() *resource.Quantity {
+				q := resource.MustParse("80.5")
+				return &q
+			}(),
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()

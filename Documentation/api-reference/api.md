@@ -3864,7 +3864,8 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <em>(Optional)</em>
 <p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
 capacity used by the Prometheus data.</p>
-<p>The value is a number between 0 and 100. If set to 0, percentage-based
+<p>The value must be an integer between 0 and 100 without a unit suffix
+(for example <code>80</code>, not <code>80m</code> or <code>80Mi</code>). If set to 0, percentage-based
 retention is disabled.</p>
 <p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
@@ -17095,7 +17096,8 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <em>(Optional)</em>
 <p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
 capacity used by the Prometheus data.</p>
-<p>The value is a number between 0 and 100. If set to 0, percentage-based
+<p>The value must be an integer between 0 and 100 without a unit suffix
+(for example <code>80</code>, not <code>80m</code> or <code>80Mi</code>). If set to 0, percentage-based
 retention is disabled.</p>
 <p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>

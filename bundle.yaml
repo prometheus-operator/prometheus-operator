@@ -46135,7 +46135,8 @@ spec:
                   retentionPercentage defines the maximum percentage of the data volume's
                   capacity used by the Prometheus data.
 
-                  The value is a number between 0 and 100. If set to 0, percentage-based
+                  The value must be an integer between 0 and 100 without a unit suffix
+                  (for example `80`, not `80m` or `80Mi`). If set to 0, percentage-based
                   retention is disabled.
 
                   It requires Prometheus >= v3.11.0 and is ignored by older versions.

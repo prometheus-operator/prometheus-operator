@@ -5515,13 +5515,21 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 }
 
 // validateRetentionPercentage validates that the percentage-based retention is
-// within the range supported by Prometheus.
+// an integer in the range supported by Prometheus.
+//
+// resource.Quantity accepts SI suffixes (for example "80m" meaning 0.08). Requiring
+// AsInt64() rejects those forms so a user intending 80% cannot silently configure
+// 0.08% retention.
 func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
 	if retentionPercentage == nil {
 		return nil
 	}
 
-	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
+	v, ok := retentionPercentage.AsInt64()
+	if !ok {
+		return fmt.Errorf("`retentionPercentage` must be an integer between 0 and 100 without a unit suffix (the current value is %q)", retentionPercentage.String())
+	}
+	if v < 0 || v > 100 {
 		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
 	}
 
