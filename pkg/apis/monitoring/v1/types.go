@@ -456,7 +456,7 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
 	//
 	// +optional
-	ClientAuthType *string `json:"clientAuthType,omitempty"`
+	ClientAuthType *ClientAuthType `json:"clientAuthType,omitempty"`
 
 	// minVersion defines the minimum TLS version that is acceptable.
 	//
@@ -494,6 +494,34 @@ type WebTLSConfig struct {
 	// +optional
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
+
+// Taken from https://golang.org/pkg/crypto/tls/#ClientAuthType.
+// +kubebuilder:validation:Enum=NoClientCert;RequestClientCert;RequireAnyClientCert;VerifyClientCertIfGiven;RequireAndVerifyClientCert
+type ClientAuthType string
+
+const (
+	// NoClientCert indicates that no client certificate should be requested
+	// during the handshake, and if any certificates are sent they will not
+	// be verified.
+	NoClientCert ClientAuthType = "NoClientCert"
+	// RequestClientCert indicates that a client certificate should be requested
+	// during the handshake, but does not require that the client send any
+	// certificates.
+	RequestClientCert ClientAuthType = "RequestClientCert"
+	// RequireAnyClientCert indicates that a client certificate should be requested
+	// during the handshake, and that at least one certificate is required to be
+	// sent by the client, but that certificate is not required to be valid.
+	RequireAnyClientCert ClientAuthType = "RequireAnyClientCert"
+	// VerifyClientCertIfGiven indicates that a client certificate should be requested
+	// during the handshake, but does not require that the client sends a
+	// certificate. If the client does send a certificate it is required to be
+	// valid.
+	VerifyClientCertIfGiven ClientAuthType = "VerifyClientCertIfGiven"
+	// RequireAndVerifyClientCert indicates that a client certificate should be requested
+	// during the handshake, and that at least one valid certificate is required
+	// to be sent by the client.
+	RequireAndVerifyClientCert ClientAuthType = "RequireAndVerifyClientCert"
+)
 
 // Validate returns an error if one of the WebTLSConfig fields is invalid.
 // A valid WebTLSConfig should have (Cert or CertFile) and (KeySecret or KeyFile) fields which are not
