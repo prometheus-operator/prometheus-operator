@@ -3482,7 +3482,7 @@
                     "type": "string"
                   },
                   "extraScrapeMetrics": {
-                    "description": "extraScrapeMetrics defines whether to store additional time series for each scrape:\n`scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.\nThese metrics help monitor how close targets are to their configured limits.\nIt can be overridden per scrape config.\n\nIt requires Prometheus >= v3.10.0.",
+                    "description": "extraScrapeMetrics defines whether to store additional time series for each scrape:\n`scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.\nThese metrics help monitor how close targets are to their configured limits.\n\nIt requires Prometheus >= v2.32.0.",
                     "type": "boolean"
                   },
                   "hostAliases": {

@@ -1912,7 +1912,7 @@ func TestAutoEnableExtraScrapeMetricsFeature(t *testing.T) {
 			expectedFlag: false,
 		},
 		{
-			name:           "user-provided feature flag - no duplicate",
+			name:           "user-provided feature flag - duplicate tolerated",
 			version:        "v2.40.0",
 			extraScrape:    ptr.To(true),
 			enableFeatures: []monitoringv1.EnableFeature{"extra-scrape-metrics"},
