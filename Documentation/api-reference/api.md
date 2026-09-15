@@ -1308,6 +1308,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 int64
@@ -1728,6 +1743,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -4519,6 +4549,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -14371,6 +14416,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 int64
@@ -14763,6 +14823,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -19875,6 +19950,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -25733,6 +25823,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -36309,6 +36414,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
