@@ -833,9 +833,7 @@ type CommonPrometheusFields struct {
 	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
 	// These metrics help monitor how close targets are to their configured limits.
 	//
-	// It requires Prometheus >= v2.32.0. For Prometheus < v3.10.0, the operator
-	// enables the `extra-scrape-metrics` feature flag instead of setting the
-	// global configuration field.
+	// It requires Prometheus >= v2.32.0.
 	//
 	// +optional
 	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"` // nolint:kubeapilinter

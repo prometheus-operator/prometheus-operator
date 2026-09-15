@@ -552,9 +552,8 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// extraScrapeMetrics defines whether to store additional time series for each scrape:
 	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
 	// These metrics help monitor how close targets are to their configured limits.
-	// It can be overridden per scrape config.
 	//
-	// It requires Prometheus >= v3.10.0.
+	// It requires Prometheus >= v2.32.0.
 	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// minReadySeconds defines the minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.

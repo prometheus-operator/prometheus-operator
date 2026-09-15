@@ -1346,18 +1346,10 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 	// Auto-enable the extra-scrape-metrics feature flag for Prometheus
 	// versions that support the feature but not the global config option;
 	// for >= v3.10.0 the config field emitted by appendExtraScrapeMetrics
-	// is used instead.
-	if ptr.Deref(cpf.ExtraScrapeMetrics, false) {
-		hasExtraScrapeMetrics := false
-		for _, f := range cpf.EnableFeatures {
-			if string(f) == "extra-scrape-metrics" {
-				hasExtraScrapeMetrics = true
-				break
-			}
-		}
-		if !hasExtraScrapeMetrics && cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
-			promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
-		}
+	// is used instead. Duplicate values in enableFeatures are fine.
+	if ptr.Deref(cpf.ExtraScrapeMetrics, false) &&
+		cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
+		promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
 	}
 
 	if cpf.ExternalURL != "" {
@@ -5332,11 +5324,18 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 func (cg *ConfigGenerator) appendExtraScrapeMetrics(cfg yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
-	if cpf.ExtraScrapeMetrics == nil {
+	if !ptr.Deref(cpf.ExtraScrapeMetrics, false) {
 		return cfg
 	}
 
-	return cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
+	// Don't use WithMinimumVersion() to avoid the warning log: versions
+	// >= v2.32.0 and < v3.10.0 honor the setting through the
+	// extra-scrape-metrics feature flag injected in BuildCommonPrometheusArgs.
+	if cg.Version().LT(semver.MustParse("3.10.0")) {
+		return cfg
+	}
+
+	return cg.AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
 }
 
 func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
