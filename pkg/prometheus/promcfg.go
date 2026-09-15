@@ -795,7 +795,6 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		if ss != nil && ss.Mode != nil &&
 			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
 			ss.Topology != nil {
-
 			// Default label name is "zone"; nil means use default.
 			// Empty string means skip.
 			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
@@ -861,7 +860,6 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	store assets.StoreGetter,
 	safetls *monitoringv1.SafeTLSConfig,
 ) yaml.MapSlice {
-
 	if safetls == nil {
 		return cfg
 	}
@@ -1548,7 +1546,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-
 		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
@@ -2528,7 +2525,6 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store, apiserverConfig.BasicAuth)
 
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
@@ -2787,7 +2783,6 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(remoteRead []monitoringv1.Re
 
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
@@ -2969,7 +2964,6 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
@@ -3252,7 +3246,6 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
@@ -3275,7 +3268,6 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
@@ -3298,7 +3290,6 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
@@ -3450,7 +3441,6 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-
 	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
@@ -3942,7 +3932,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -4485,7 +4474,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "docker_sd_configs",
@@ -4545,14 +4533,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.FollowRedirects,
 				})
 			}
-
 		}
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "linode_sd_configs",
 			Value: configs,
 		})
-
 	}
 
 	// HetznerSDConfig
@@ -4731,7 +4717,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dockerswarm_sd_configs",
@@ -4839,7 +4824,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)

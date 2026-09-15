@@ -17,11 +17,14 @@ linters:
     - misspell
     - modernize
     - nilnesserr
+    - nolintlint
     - recvcheck
     - revive
     - sloglint
     - testifylint
     - unconvert
+    - unused
+    - whitespace
   settings:
     depguard:
       rules:
@@ -96,6 +99,8 @@ linters:
     modernize:
       disable:
         - omitzero
+    nolintlint:
+      require-no-space: false
   exclusions:
     generated: strict
     presets:

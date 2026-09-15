@@ -1213,7 +1213,6 @@ func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
@@ -1242,7 +1241,6 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
-
 			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
 				c.logger.Error(

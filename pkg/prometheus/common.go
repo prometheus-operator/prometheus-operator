@@ -42,7 +42,7 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	// TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	// nolint:godoclint
+	//nolint:godoclint
 	RulesDir               = "/etc/prometheus/rules"
 	secretsDir             = "/etc/prometheus/secrets/"
 	configmapsDir          = "/etc/prometheus/configmaps/"
@@ -248,7 +248,6 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 
 // SubPathForStorage is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}
@@ -459,7 +458,6 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 }
 
 func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []monitoringv1.TopologySpreadConstraint) []corev1.TopologySpreadConstraint {
-
 	coreTscs := make([]corev1.TopologySpreadConstraint, 0, len(tscs))
 
 	for _, tsc := range tscs {

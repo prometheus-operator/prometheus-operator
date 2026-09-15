@@ -164,12 +164,12 @@ func makeStatefulSetSpec(
 
 	pImagePath, err := operator.BuildImagePath(
 		ptr.Deref(cpf.Image, ""),
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+
 		operator.StringValOrDefault(p.Spec.BaseImage, c.PrometheusDefaultBaseImage),
 		"v"+cg.Version().String(),
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+
 		operator.StringValOrDefault(p.Spec.Tag, ""),
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+
 		operator.StringValOrDefault(p.Spec.SHA, ""),
 	)
 	if err != nil {
@@ -564,12 +564,11 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compact
 	}
 
 	var grpcBindAddress, httpBindAddress string
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+
 	if thanos.ListenLocal || thanos.GRPCListenLocal {
 		grpcBindAddress = "127.0.0.1"
 	}
 
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if thanos.ListenLocal || thanos.HTTPListenLocal {
 		httpBindAddress = "127.0.0.1"
 	}

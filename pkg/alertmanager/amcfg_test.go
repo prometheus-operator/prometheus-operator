@@ -8068,7 +8068,6 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
-
 }
 
 func TestSanitizeRocketChatConfig(t *testing.T) {

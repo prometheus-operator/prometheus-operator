@@ -634,7 +634,6 @@ func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *m
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
-	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if len(tr.Spec.PrometheusRulesExcludedFromEnforce) > 0 {
 		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement"))
 	}
@@ -748,7 +747,6 @@ func (o *Operator) UpdateStatus(ctx context.Context, key string) error {
 }
 
 func createSSetInputHash(tr monitoringv1.ThanosRuler, c Config, tlsAssets *operator.ShardedSecret, ruleConfigMapNames []string, ss appsv1.StatefulSetSpec) (string, error) {
-
 	// The controller should ignore any changes to RevisionHistoryLimit field because
 	// it may be modified by external actors.
 	// See https://github.com/prometheus-operator/prometheus-operator/issues/5712

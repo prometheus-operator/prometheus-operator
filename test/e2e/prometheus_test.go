@@ -714,7 +714,6 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			success: true,
 		},
 	} {
-
 		t.Run(tc.name, func(t *testing.T) {
 			// The sub-test deploys the following setup:
 			//
@@ -2812,7 +2811,7 @@ func testPromGetAuthSecret(t *testing.T) {
 			},
 			serviceMonitor: func() *monitoringv1.ServiceMonitor {
 				sm := framework.MakeBasicServiceMonitor(name)
-				sm.Spec.Endpoints[0].BearerTokenSecret = &corev1.SecretKeySelector{ //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+				sm.Spec.Endpoints[0].BearerTokenSecret = &corev1.SecretKeySelector{
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},
@@ -2825,7 +2824,6 @@ func testPromGetAuthSecret(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -2917,7 +2915,6 @@ func testOperatorNSScope(t *testing.T) {
 	secondAlertName := "secondAlert"
 
 	t.Run("SingleNS", func(t *testing.T) {
-
 		testCtx := framework.NewTestCtx(t)
 		defer testCtx.Cleanup(t)
 
@@ -2983,7 +2980,6 @@ func testOperatorNSScope(t *testing.T) {
 	})
 
 	t.Run("MultiNS", func(t *testing.T) {
-
 		testCtx := framework.NewTestCtx(t)
 		defer testCtx.Cleanup(t)
 
@@ -3239,7 +3235,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -3326,7 +3321,6 @@ func testPromArbitraryFSAcc(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // mountTLSFiles is a helper to manually mount TLS certificate files
@@ -3751,7 +3745,6 @@ func testPromSecurePodMonitor(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -5029,7 +5022,6 @@ func testPrometheusCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -5127,7 +5119,6 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.scenario, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)

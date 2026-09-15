@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// nolint
 package log
 
 import (
@@ -91,7 +90,7 @@ func NewLogger(c Config) (log.Logger, error) {
 	return logger, nil
 }
 
-// AvailableLogLevels is a list of supported logging levels
+// AvailableLogLevels is a list of supported logging levels.
 var AvailableLogLevels = []string{
 	LevelAll,
 	LevelDebug,
@@ -101,7 +100,7 @@ var AvailableLogLevels = []string{
 	LevelNone,
 }
 
-// AvailableLogFormats is a list of supported log formats
+// AvailableLogFormats is a list of supported log formats.
 var AvailableLogFormats = []string{
 	FormatLogFmt,
 	FormatJSON,
