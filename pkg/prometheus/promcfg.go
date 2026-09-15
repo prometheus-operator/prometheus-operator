@@ -1343,6 +1343,15 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Auto-enable the extra-scrape-metrics feature flag for Prometheus
+	// versions that support the feature but not the global config option;
+	// for >= v3.10.0 the config field emitted by appendExtraScrapeMetrics
+	// is used instead. Duplicate values in enableFeatures are fine.
+	if ptr.Deref(cpf.ExtraScrapeMetrics, false) &&
+		cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
+		promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
+	}
+
 	if cpf.ExternalURL != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
 	}
@@ -5312,6 +5321,23 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 	return cfg
 }
 
+func (cg *ConfigGenerator) appendExtraScrapeMetrics(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if !ptr.Deref(cpf.ExtraScrapeMetrics, false) {
+		return cfg
+	}
+
+	// Don't use WithMinimumVersion() to avoid the warning log: versions
+	// >= v2.32.0 and < v3.10.0 honor the setting through the
+	// extra-scrape-metrics feature flag injected in BuildCommonPrometheusArgs.
+	if cg.Version().LT(semver.MustParse("3.10.0")) {
+		return cfg
+	}
+
+	return cg.AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
+}
+
 func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -5420,6 +5446,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 	cfg = cg.appendScrapeNativeHistograms(cfg)
+	cfg = cg.appendExtraScrapeMetrics(cfg)
 
 	return cfg
 }
