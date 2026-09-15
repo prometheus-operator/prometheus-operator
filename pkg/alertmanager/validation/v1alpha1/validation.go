@@ -23,6 +23,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
@@ -609,6 +610,12 @@ func validateRoute(r *monitoringv1alpha1.Route, receivers, muteTimeIntervals map
 	for i, m := range r.Matchers {
 		if err := m.Validate(); err != nil {
 			return fmt.Errorf("matcher[%d]: %w", i, err)
+		}
+	}
+
+	for _, kv := range r.Labels {
+		if err := monitoringv1.LabelValueTemplate(kv.Value).Validate(); err != nil {
+			return fmt.Errorf("labels[%v]%v: %w", kv.Key, kv.Value, err)
 		}
 	}
 
