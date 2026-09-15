@@ -19,7 +19,7 @@
 package v1beta1
 
 import (
-	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
