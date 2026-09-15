@@ -90,7 +90,12 @@ type EndpointApplyConfiguration struct {
 	// bearerTokenFile defines the file to read bearer token for scraping the target.
 	//
 	// Deprecated: use `authorization` instead.
-	BearerTokenFile                                  *string `json:"bearerTokenFile,omitempty"`
+	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
+	// httpHeaders defines the custom HTTP headers sent with every scrape
+	// request.
+	//
+	// It requires Prometheus >= v2.55.0.
+	HTTPHeaders                                      []HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`
 	HTTPConfigWithProxyAndTLSFilesApplyConfiguration `json:""`
 }
 
@@ -225,6 +230,19 @@ func (b *EndpointApplyConfiguration) WithFilterRunning(value bool) *EndpointAppl
 // If called multiple times, the BearerTokenFile field is set to the value of the last call.
 func (b *EndpointApplyConfiguration) WithBearerTokenFile(value string) *EndpointApplyConfiguration {
 	b.BearerTokenFile = &value
+	return b
+}
+
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *EndpointApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *EndpointApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPHeaders = append(b.HTTPHeaders, *values[i])
+	}
 	return b
 }
 

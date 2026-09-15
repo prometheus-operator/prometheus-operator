@@ -5924,6 +5924,140 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 	}
 }
 
+func TestServiceMonitorEndpointHTTPHeaders(t *testing.T) {
+	for _, tc := range []struct {
+		version string
+		golden  string
+	}{
+		{
+			version: "v2.54.0",
+			golden:  "ServiceMonitorEndpointHTTPHeaders_v2.54.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			golden:  "ServiceMonitorEndpointHTTPHeaders_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name:   "X-Scope-OrgID",
+									Values: []string{"tenant-a"},
+								},
+								{
+									Name:   "X-Custom-Header",
+									Values: []string{"value-1", "value-2"},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestPodMonitorEndpointHTTPHeaders(t *testing.T) {
+	for _, tc := range []struct {
+		version string
+		golden  string
+	}{
+		{
+			version: "v2.54.0",
+			golden:  "PodMonitorEndpointHTTPHeaders_v2.54.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			golden:  "PodMonitorEndpointHTTPHeaders_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			podMonitor := monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "pod-monitor-ns",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     new("web"),
+							Interval: "30s",
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name:   "X-Scope-OrgID",
+									Values: []string{"tenant-a"},
+								},
+								{
+									Name:   "X-Custom-Header",
+									Values: []string{"value-1", "value-2"},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": &podMonitor,
+				},
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestRuntimeConfig(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario string
