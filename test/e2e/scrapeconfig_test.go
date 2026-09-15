@@ -611,6 +611,9 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 	t.Run("IonosSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, IonosSDTestCases)
 	})
+	t.Run("OutscaleSD", func(t *testing.T) {
+		runScrapeConfigCRDValidation(t, OutscaleSDTestCases)
+	})
 	t.Run("LightSailSD", func(t *testing.T) {
 		runScrapeConfigCRDValidation(t, LightSailSDTestCases)
 	})
@@ -2186,6 +2189,205 @@ var IonosSDTestCases = []scrapeCRDTestCase{
 				{
 					DataCenterID: "11111111-1111-1111-1111-111111111111",
 					Port:         new(int32(-1)), // minimum Port number = 0
+				},
+			},
+		},
+		expectedError: true,
+	},
+}
+
+var OutscaleSDTestCases = []scrapeCRDTestCase{
+	{
+		name: "Valid AccessKey",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty AccessKey",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Region: new("eu-west-2"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty Region",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Region: new(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Endpoint: new("https://api.eu-west-2.outscale.com/api/v1"),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid empty Endpoint",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Endpoint: new(""),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid Port number",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(8080)),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid Port number exceeding the maximum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(65536)), // maximum Port number = 65535
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Invalid Port number below the minimum value",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					Port: new(int32(-1)), // minimum Port number = 0
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "Valid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					RefreshInterval: ptr.To(monitoringv1.Duration("60s")),
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "Invalid RefreshInterval",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			OutscaleSDConfigs: []monitoringv1alpha1.OutscaleSDConfig{
+				{
+					AccessKey: "AKXXXXXXXXXXXXXXXXXX",
+					SecretKey: corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "secret",
+						},
+						Key: "key.pem",
+					},
+					RefreshInterval: ptr.To(monitoringv1.Duration("60g")),
 				},
 			},
 		},
