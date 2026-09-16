@@ -16,10 +16,6 @@
 
 package v1beta1
 
-import (
-	v1 "k8s.io/api/core/v1"
-)
-
 // HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
 //
@@ -29,7 +25,7 @@ type HTTPHeaderApplyConfiguration struct {
 	// name defines a HTTP header name.
 	Name *string `json:"name,omitempty"`
 	// secrets defines values of the HTTP header retrieving from a secret.
-	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+	Secrets []SecretKeySelectorApplyConfiguration `json:"secrets,omitempty"`
 }
 
 // HTTPHeaderApplyConfiguration constructs a declarative configuration of the HTTPHeader type for use with
@@ -49,9 +45,12 @@ func (b *HTTPHeaderApplyConfiguration) WithName(value string) *HTTPHeaderApplyCo
 // WithSecrets adds the given value to the Secrets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
 // If called multiple times, values provided by each call will be appended to the Secrets field.
-func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...v1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
+func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...*SecretKeySelectorApplyConfiguration) *HTTPHeaderApplyConfiguration {
 	for i := range values {
-		b.Secrets = append(b.Secrets, values[i])
+		if values[i] == nil {
+			panic("nil value passed to WithSecrets")
+		}
+		b.Secrets = append(b.Secrets, *values[i])
 	}
 	return b
 }

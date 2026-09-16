@@ -28848,18 +28848,6 @@ string
 </tr>
 <tr>
 <td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>values defines values of the HTTP header.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>secrets</code><br/>
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
@@ -28870,18 +28858,6 @@ string
 <td>
 <em>(Optional)</em>
 <p>secrets defines values of the HTTP header retrieving from a secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>files</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>files defines values of the HTTP header retrieving from a file.</p>
 </td>
 </tr>
 </tbody>
@@ -39102,40 +39078,16 @@ string
 </tr>
 <tr>
 <td>
-<code>values</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>values defines values of the HTTP header.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>secrets</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
-[]Kubernetes core/v1.SecretKeySelector
+<a href="#monitoring.coreos.com/v1beta1.SecretKeySelector">
+[]SecretKeySelector
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>secrets defines values of the HTTP header retrieving from a secret.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>files</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>files defines values of the HTTP header retrieving from a file.</p>
 </td>
 </tr>
 </tbody>
@@ -41446,7 +41398,7 @@ is set; set explicitly when configuring ca_bundle via shared AWS config.</p>
 <h3 id="monitoring.coreos.com/v1beta1.SecretKeySelector">SecretKeySelector
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPHeader">HTTPHeader</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PushoverConfig">PushoverConfig</a>, <a href="#monitoring.coreos.com/v1beta1.SlackConfig">SlackConfig</a>, <a href="#monitoring.coreos.com/v1beta1.TelegramConfig">TelegramConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WeChatConfig">WeChatConfig</a>, <a href="#monitoring.coreos.com/v1beta1.WebhookConfig">WebhookConfig</a>)
 </p>
 <div>
 <p>SecretKeySelector selects a key of a Secret.</p>
