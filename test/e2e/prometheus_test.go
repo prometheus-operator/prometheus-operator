@@ -2811,7 +2811,7 @@ func testPromGetAuthSecret(t *testing.T) {
 			},
 			serviceMonitor: func() *monitoringv1.ServiceMonitor {
 				sm := framework.MakeBasicServiceMonitor(name)
-				sm.Spec.Endpoints[0].BearerTokenSecret = &corev1.SecretKeySelector{
+				sm.Spec.Endpoints[0].BearerTokenSecret = &corev1.SecretKeySelector{ //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},

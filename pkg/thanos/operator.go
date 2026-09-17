@@ -634,6 +634,7 @@ func (o *Operator) recordDeprecatedFields(key string, logger *slog.Logger, tr *m
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if len(tr.Spec.PrometheusRulesExcludedFromEnforce) > 0 {
 		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.prometheusRulesExcludedFromEnforce", "spec.excludedFromEnforcement"))
 	}

@@ -215,6 +215,7 @@ func Prefix(p monitoringv1.PrometheusInterface) string {
 
 // SubPathForStorage is stil here because promcfg still uses it.
 func SubPathForStorage(s *monitoringv1.StorageSpec) string {
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if s == nil || s.DisableMountSubPath {
 		return ""
 	}

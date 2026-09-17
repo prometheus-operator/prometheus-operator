@@ -5876,7 +5876,7 @@
                     "description": "storage defines the definition of how storage will be used by the Alertmanager\ninstances.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "disableMountSubPath deprecated: subPath usage will be removed in a future release.",
+                        "description": "disableMountSubPath disables the use of subPath for mounts.\nDeprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
@@ -6286,7 +6286,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "status is deprecated: this field is never set.",
+                            "description": "status is never set.\nDeprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",

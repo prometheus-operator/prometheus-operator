@@ -48,7 +48,8 @@ type APIServerConfigApplyConfiguration struct {
 	// Cannot be set at the same time as `basicAuth`, `bearerToken`, or
 	// `bearerTokenFile`.
 	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	// bearerToken is deprecated: this will be removed in a future release.
+	// bearerToken specifies the bearer token used for authentication.
+	// Deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	BearerToken *string `json:"bearerToken,omitempty"`

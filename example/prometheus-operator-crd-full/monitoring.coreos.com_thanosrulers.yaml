@@ -5177,7 +5177,8 @@ spec:
                       type: object
                     bearerToken:
                       description: |-
-                        bearerToken is deprecated: this will be removed in a future release.
+                        bearerToken specifies the bearer token used for authentication.
+                        Deprecated: this will be removed in a future release.
                         *Warning: this field shouldn't be used because the token value appears
                         in clear-text. Prefer using `authorization`.*
                       type: string
@@ -6568,8 +6569,9 @@ spec:
                   be used.
                 properties:
                   disableMountSubPath:
-                    description: 'disableMountSubPath deprecated: subPath usage will
-                      be removed in a future release.'
+                    description: |-
+                      disableMountSubPath disables the use of subPath for mounts.
+                      Deprecated: subPath usage will be removed in a future release.
                     type: boolean
                   emptyDir:
                     description: |-
@@ -7104,7 +7106,9 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: 'status is deprecated: this field is never set.'
+                        description: |-
+                          status is never set.
+                          Deprecated: this field is never set.
                         properties:
                           accessModes:
                             description: |-

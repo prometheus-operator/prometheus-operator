@@ -11456,7 +11456,7 @@ func TestPodMonitorPortNumber(t *testing.T) {
 
 		podMonitor.Spec.PodMetricsEndpoints[0].Port = new(tc.port)
 		podMonitor.Spec.PodMetricsEndpoints[0].PortNumber = new(tc.portNumber)
-
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		podMonitor.Spec.PodMetricsEndpoints[0].TargetPort = new(tc.targetPort)
 
 		cg := mustNewConfigGenerator(t, p)

@@ -1414,27 +1414,33 @@ func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, p *mo
 	deprecationWarningf := "field %q is deprecated, field %q should be used instead"
 	var deprecations []string
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.BaseImage != "" {
 		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.baseImage", "spec.image"))
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.Tag != "" {
 		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.tag", "spec.image"))
 	}
 
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if p.Spec.SHA != "" {
 		deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.sha", "spec.image"))
 	}
 
 	if p.Spec.Thanos != nil {
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.BaseImage != nil && *p.Spec.Thanos.BaseImage != "" {
 			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.baseImage", "spec.thanos.image"))
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.Tag != nil && *p.Spec.Thanos.Tag != "" {
 			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.tag", "spec.thanos.image"))
 		}
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if p.Spec.Thanos.SHA != nil && *p.Spec.Thanos.SHA != "" {
 			deprecations = append(deprecations, fmt.Sprintf(deprecationWarningf, "spec.thanos.sha", "spec.thanos.image"))
 		}

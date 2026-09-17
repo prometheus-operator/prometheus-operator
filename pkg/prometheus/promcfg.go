@@ -2525,6 +2525,7 @@ func (cg *ConfigGenerator) generateK8SSDConfig(
 
 		k8sSDConfig = cg.addBasicAuthToYaml(k8sSDConfig, store, apiserverConfig.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if apiserverConfig.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			k8sSDConfig = append(k8sSDConfig, yaml.MapItem{Key: "bearer_token", Value: apiserverConfig.BearerToken})
@@ -2783,6 +2784,7 @@ func (cg *ConfigGenerator) generateRemoteReadConfig(remoteRead []monitoringv1.Re
 
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
@@ -2964,6 +2966,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 
 		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
 
+		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if spec.BearerToken != "" {
 			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
 			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})

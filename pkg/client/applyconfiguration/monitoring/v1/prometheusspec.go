@@ -31,11 +31,14 @@ import (
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type PrometheusSpecApplyConfiguration struct {
 	CommonPrometheusFieldsApplyConfiguration `json:""`
-	// baseImage is deprecated: use 'spec.image' instead.
+	// baseImage defines the base image used for the Prometheus container.
+	// Deprecated: use 'spec.image' instead.
 	BaseImage *string `json:"baseImage,omitempty"`
-	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
+	// tag defines the tag of the Prometheus container image.
+	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	Tag *string `json:"tag,omitempty"`
-	// sha is deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
+	// sha defines the sha256 digest of the Prometheus container image.
+	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	SHA *string `json:"sha,omitempty"`
 	// retention defines how long to retain the Prometheus data.
 	//

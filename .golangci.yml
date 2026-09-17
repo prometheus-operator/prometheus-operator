@@ -101,6 +101,9 @@ linters:
         - omitzero
     nolintlint:
       require-no-space: false
+      # Workaround for golangci-lint cache bug that causes false "unused nolint" reports.
+      # See: https://github.com/golangci/golangci-lint/issues/3228
+      allow-unused: true
   exclusions:
     generated: strict
     presets:
