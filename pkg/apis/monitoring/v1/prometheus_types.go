@@ -1538,7 +1538,7 @@ type StorageSpec struct {
 	// disableMountSubPath disables the use of subPath for mounts.
 	// Deprecated: subPath usage will be removed in a future release.
 	// +optional
-	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"`
+	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"` //nolint:kubeapilinter
 	// emptyDir to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
@@ -1654,7 +1654,7 @@ type ThanosSpec struct {
 	// listenLocal configures the Thanos sidecar to listen on the loopback interface.
 	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	// +optional
-	ListenLocal bool `json:"listenLocal,omitempty"`
+	ListenLocal bool `json:"listenLocal,omitempty"` //nolint:kubeapilinter
 
 	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the gRPC endpoints.
