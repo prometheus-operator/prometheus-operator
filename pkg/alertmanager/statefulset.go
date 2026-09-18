@@ -341,7 +341,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
 			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
 		}
-
 	}
 
 	if version.GTE(semver.MustParse("0.30.0")) && a.Spec.MinReadySeconds != nil {

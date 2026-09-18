@@ -59,7 +59,6 @@ func testCreatePrometheusAgent(t *testing.T) {
 
 	err = framework.DeletePrometheusAgentAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
-
 }
 
 func testCreatePrometheusAgentDaemonSet(t *testing.T) {
@@ -112,7 +111,6 @@ func testAgentAndServerNameColision(t *testing.T) {
 	require.NoError(t, err)
 	err = framework.DeletePrometheusAndWaitUntilGone(context.Background(), ns, name)
 	require.NoError(t, err)
-
 }
 
 func testAgentCheckStorageClass(t *testing.T) {
@@ -634,7 +632,6 @@ func testPrometheusAgentSSetServiceName(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, svcList.Items, 1)
 	require.Equal(t, svcList.Items[0].Name, svc.Name)
-
 }
 
 type Target struct {

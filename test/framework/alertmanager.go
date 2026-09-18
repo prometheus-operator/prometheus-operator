@@ -366,7 +366,6 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode, https bool) error {
 	var pollError error
 	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
-
 		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, name, https)
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
@@ -389,14 +388,12 @@ func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, n
 		}
 
 		if len(amStatus.Cluster.Peers) != amountPeers {
-
 			var addrs = make([]string, len(amStatus.Cluster.Peers))
 			for i := range amStatus.Cluster.Peers {
 				addrs[i] = *amStatus.Cluster.Peers[i].Name
 			}
 			pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d, addresses %v", amountPeers, len(amStatus.Cluster.Peers), addrs)
 			return false, nil
-
 		}
 		return true, nil
 	})

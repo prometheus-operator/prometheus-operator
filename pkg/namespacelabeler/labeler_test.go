@@ -26,7 +26,6 @@ import (
 )
 
 func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
-
 	type testCase struct {
 		Name                           string
 		PromRule                       monitoringv1.PrometheusRule
@@ -244,7 +243,6 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Name,
 			func(t *testing.T) {
-
 				excludedFromEnforcement := tc.ExcludedFromEnforcement
 				// append the deprecated PrometheusRulesExcludedFromEnforce
 				for _, rule := range tc.PromSpecExcludedRules {
@@ -270,7 +268,6 @@ func TestEnforceNamespaceLabelOnPrometheusRules(t *testing.T) {
 }
 
 func TestEnforceNamespaceLabelOnPrometheusMonitors(t *testing.T) {
-
 	type testCase struct {
 		Name                           string
 		ServiceMonitor                 monitoringv1.ServiceMonitor
