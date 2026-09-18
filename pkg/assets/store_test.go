@@ -322,7 +322,6 @@ func TestProxyCongfig(t *testing.T) {
 			err:           true,
 		},
 	} {
-
 		t.Run("", func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
@@ -353,7 +352,6 @@ func TestProxyCongfig(t *testing.T) {
 			require.Equal(t, tc.selectedValue, string(b))
 		})
 	}
-
 }
 
 func TestAddTLSConfig(t *testing.T) {

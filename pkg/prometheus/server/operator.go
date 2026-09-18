@@ -825,7 +825,6 @@ func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
@@ -855,7 +854,6 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
-
 			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
 				c.logger.Error(
@@ -1565,7 +1563,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
-
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
 			return fmt.Errorf("failed to generate empty configuration secret: %w", err)
