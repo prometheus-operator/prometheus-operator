@@ -11,15 +11,20 @@ rules:
   - monitoring.coreos.com
   resources:
   - alertmanagers
-  - alertmanagers/finalizers
   - prometheusagents
-  - prometheusagents/finalizers
   - prometheuses
-  - prometheuses/finalizers
   - thanosrulers
-  - thanosrulers/finalizers
   verbs:
   - patch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers/finalizers
+  - prometheusagents/finalizers
+  - prometheuses/finalizers
+  - thanosrulers/finalizers
+  verbs:
+  - update
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -84,7 +89,6 @@ rules:
   - pods
   verbs:
   - list
-  - delete
 - apiGroups:
   - ""
   resources:
@@ -95,13 +99,6 @@ rules:
   - create
   - update
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -131,6 +128,13 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:

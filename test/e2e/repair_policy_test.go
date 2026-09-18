@@ -46,43 +46,50 @@ func testRepairPolicy(t *testing.T) {
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
-			if tc.policy == string(operator.EvictRepairPolicy) {
-				// Grant evict permission to the prometheus-operator service account.
-				// TODO: remove when the permission gets included into the
-				// default set of permissions for the service account.
-				evictRole := &rbacv1.Role{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: "evict",
-					},
-					Rules: []rbacv1.PolicyRule{{
-						Verbs:     []string{"create"},
-						Resources: []string{"pods/eviction"},
-						APIGroups: []string{""},
-					}},
-				}
-				evictRole, err := framework.KubeClient.RbacV1().Roles(ns).Create(context.Background(), evictRole, metav1.CreateOptions{})
-				require.NoError(t, err)
-
-				roleBinding := &rbacv1.RoleBinding{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: evictRole.Name,
-					},
-					RoleRef: rbacv1.RoleRef{
-						APIGroup: "rbac.authorization.k8s.io",
-						Kind:     "Role",
-						Name:     evictRole.Name,
-					},
-					Subjects: []rbacv1.Subject{{
-						Kind:      "ServiceAccount",
-						Name:      "prometheus-operator",
-						Namespace: ns,
-					}},
-				}
-				_, err = framework.KubeClient.RbacV1().RoleBindings(ns).Create(context.Background(), roleBinding, metav1.CreateOptions{})
-				require.NoError(t, err)
+			role := &rbacv1.Role{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "repair",
+				},
+			}
+			switch tc.policy {
+			case string(operator.EvictRepairPolicy):
+				role.Rules = []rbacv1.PolicyRule{{
+					Verbs:     []string{"create"},
+					Resources: []string{"pods/eviction"},
+					APIGroups: []string{""},
+				}}
+			case string(operator.DeleteRepairPolicy):
+				role.Rules = []rbacv1.PolicyRule{{
+					Verbs:     []string{"delete"},
+					Resources: []string{"pods"},
+					APIGroups: []string{""},
+				}}
+			default:
+				t.Fatalf("unexpected repair policy: %s", tc.policy)
 			}
 
-			_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+			role, err := framework.KubeClient.RbacV1().Roles(ns).Create(context.Background(), role, metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			roleBinding := &rbacv1.RoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: role.Name,
+				},
+				RoleRef: rbacv1.RoleRef{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "Role",
+					Name:     role.Name,
+				},
+				Subjects: []rbacv1.Subject{{
+					Kind:      "ServiceAccount",
+					Name:      "prometheus-operator",
+					Namespace: ns,
+				}},
+			}
+			_, err = framework.KubeClient.RbacV1().RoleBindings(ns).Create(context.Background(), roleBinding, metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			_, err = framework.CreateOrUpdatePrometheusOperatorWithOpts(
 				context.Background(),
 				operatorFramework.PrometheusOperatorOpts{
 					Namespace:         ns,

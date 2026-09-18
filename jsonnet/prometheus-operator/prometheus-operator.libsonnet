@@ -79,20 +79,35 @@ function(params) {
       labels: po.config.commonLabels,
     },
     rules: [
+             // The operator needs the patch permission on the workload
+             // resources to add/remove its finalizer.
              {
                apiGroups: ['monitoring.coreos.com'],
                resources: [
                  'alertmanagers',
-                 'alertmanagers/finalizers',
                  'prometheusagents',
-                 'prometheusagents/finalizers',
                  'prometheuses',
-                 'prometheuses/finalizers',
                  'thanosrulers',
-                 'thanosrulers/finalizers',
                ],
                verbs: ['patch'],
              },
+             // The operator needs update the permission on the workload's
+             // finalizers when the OwnerReferencesPermissionEnforcement
+             // admission controller is enabled (it is disabled in vanilla
+             // Kubernetes but enabled for some distributions, e.g. OpenShift).
+             // See https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#ownerreferencespermissionenforcement.
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
+                 'alertmanagers/finalizers',
+                 'prometheusagents/finalizers',
+                 'prometheuses/finalizers',
+                 'thanosrulers/finalizers',
+               ],
+               verbs: ['update'],
+             },
+             // The operator manages the status subresources of these
+             // monitoring resources.
              {
                apiGroups: ['monitoring.coreos.com'],
                resources: [
@@ -108,6 +123,8 @@ function(params) {
                ],
                verbs: ['create', 'update', 'patch', 'delete'],
              },
+             // The operator needs read permissions on all monitoring
+             // resources.
              {
                apiGroups: ['monitoring.coreos.com'],
                resources: [
@@ -134,10 +151,12 @@ function(params) {
                resources: ['configmaps', 'secrets'],
                verbs: ['get', 'list', 'watch', 'create', 'update', 'delete'],
              },
+             // The operator needs the 'list' permission to reconcile the
+             // status of workload resources.
              {
                apiGroups: [''],
                resources: ['pods'],
-               verbs: ['list', 'delete'],
+               verbs: ['list'],
              },
              {
                apiGroups: [''],
@@ -149,30 +168,41 @@ function(params) {
              },
              {
                apiGroups: [''],
-               resources: ['nodes'],
-               verbs: ['list', 'watch'],
-             },
-             {
-               apiGroups: [''],
                resources: ['namespaces'],
                verbs: ['get', 'list', 'watch'],
              },
+             // The operator emits events during reconciliations.
              {
                apiGroups: ['events.k8s.io'],
                resources: ['events'],
                verbs: ['patch', 'create'],
              },
+             // TODO: remove?
              {
                apiGroups: ['networking.k8s.io'],
                resources: ['ingresses'],
                verbs: ['get', 'list', 'watch'],
              },
+             // The operator needs to validate that a storage class exists
+             // during workload reconciliation.
              {
                apiGroups: ['storage.k8s.io'],
                resources: ['storageclasses'],
                verbs: ['get'],
              },
            ] + (
+             if po.config.kubeletEndpointsEnabled || po.config.kubeletEndpointSliceEnabled then
+               // The kubelet controller needs the read permissions on the Node resources.
+               [
+                 {
+                   apiGroups: [''],
+                   resources: ['nodes'],
+                   verbs: ['list', 'watch'],
+                 },
+               ]
+             else
+               []
+           ) + (
              if po.config.kubeletEndpointsEnabled then
                [
                  {
@@ -209,6 +239,16 @@ function(params) {
                      'pods/eviction',
                    ],
                    verbs: ['create'],
+                 },
+               ]
+             else if po.config.repairPolicy == 'delete' then
+               [
+                 // The operator needs the 'delete' permission on pods to
+                 // repair broken StatefulSet rollouts.
+                 {
+                   apiGroups: [''],
+                   resources: ['pods'],
+                   verbs: ['delete'],
                  },
                ]
              else
