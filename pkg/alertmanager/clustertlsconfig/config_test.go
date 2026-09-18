@@ -213,7 +213,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						},
 						Key: "tls.keySecret",
 					},
-					ClientAuthType:           new("RequireAnyClientCert"),
+					ClientAuthType:           new(monitoringv1.RequireAnyClientCert),
 					MinVersion:               new("TLS11"),
 					MaxVersion:               new("TLS13"),
 					CipherSuites:             []string{"cipher-1", "cipher-2"},
