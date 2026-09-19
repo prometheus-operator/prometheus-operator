@@ -152,7 +152,27 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 		ProxyConfig:       in.ProxyConfig,
 		FollowRedirects:   in.FollowRedirects,
 		EnableHTTP2:       in.EnableHTTP2,
+		HTTPHeaders:       convertHTTPHeadersFrom(in.HTTPHeaders),
 	}
+}
+
+func convertHTTPHeadersFrom(in []v1alpha1.HTTPHeader) []HTTPHeader {
+	out := make([]HTTPHeader, len(in))
+	for i := range in {
+		out[i] = HTTPHeader{
+			Name:    in[i].Name,
+			Secrets: convertSecretKeySelectorsFrom(in[i].Secrets),
+		}
+	}
+	return out
+}
+
+func convertSecretKeySelectorsFrom(in []v1.SecretKeySelector) []SecretKeySelector {
+	out := make([]SecretKeySelector, len(in))
+	for i := range in {
+		out[i] = *convertSecretKeySelectorFrom(&in[i])
+	}
+	return out
 }
 
 func convertKeyValuesFrom(in []v1alpha1.KeyValue) []KeyValue {

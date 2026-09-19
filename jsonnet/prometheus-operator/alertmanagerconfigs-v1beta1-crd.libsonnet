@@ -260,6 +260,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -1230,6 +1275,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -1919,6 +2009,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -2672,6 +2807,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -3443,6 +3623,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -4213,6 +4438,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -5026,6 +5296,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -5913,6 +6228,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -6648,6 +7008,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -7447,6 +7852,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -8174,6 +8624,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -8854,6 +9349,51 @@
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
                               },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
+                              },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
                                 type: 'string',
@@ -9517,6 +10057,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -10244,6 +10829,51 @@
                               followRedirects: {
                                 description: 'followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\nWhen true, the client will automatically follow redirect responses.',
                                 type: 'boolean',
+                              },
+                              httpHeaders: {
+                                description: 'httpHeaders can be used to specify HTTP headers.',
+                                items: {
+                                  description: 'HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header',
+                                  properties: {
+                                    name: {
+                                      description: 'name defines a HTTP header name.',
+                                      minLength: 1,
+                                      type: 'string',
+                                    },
+                                    secrets: {
+                                      description: 'secrets defines values of the HTTP header retrieving from a secret.',
+                                      items: {
+                                        description: 'SecretKeySelector selects a key of a Secret.',
+                                        properties: {
+                                          key: {
+                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                          name: {
+                                            description: "name defines the name of the secret in the object's namespace to select from.",
+                                            minLength: 1,
+                                            type: 'string',
+                                          },
+                                        },
+                                        required: [
+                                          'key',
+                                          'name',
+                                        ],
+                                        type: 'object',
+                                      },
+                                      minItems: 1,
+                                      type: 'array',
+                                      'x-kubernetes-list-type': 'atomic',
+                                    },
+                                  },
+                                  required: [
+                                    'name',
+                                  ],
+                                  type: 'object',
+                                },
+                                minItems: 1,
+                                type: 'array',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',

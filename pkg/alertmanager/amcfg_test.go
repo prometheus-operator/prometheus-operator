@@ -8983,7 +8983,65 @@ func TestConvertHTTPConfig(t *testing.T) {
 			version: "v0.24.0",
 			golden:  "http_config_enable_http2_not_supported.golden",
 		},
+		{
+			name: "set HTTP headers with secrets",
+			cfg: monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+					{
+						Name: "header1",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key: "foo1",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+							{
+								Key: "foo2",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+						},
+					},
+					{
+						Name: "header2",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key: "foo3",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+							{
+								Key: "foo4",
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "http-headers",
+								},
+							},
+						},
+					},
+				},
+			},
+			version: "v0.28.0",
+			golden:  "http_config_set_http_headers_secrets.golden",
+		},
 	}
+
+	kclient := fake.NewClientset(
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "http-headers",
+				Namespace: "mynamespace",
+			},
+			Data: map[string][]byte{
+				"foo1": []byte("bar1"),
+				"foo2": []byte("bar2"),
+				"foo3": []byte("bar3"),
+				"foo4": []byte("bar4"),
+			},
+		},
+	)
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -8998,7 +9056,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 			cb := NewConfigBuilder(
 				logger,
 				v,
-				nil,
+				assets.NewStoreBuilder(kclient.CoreV1(), kclient.CoreV1()),
 				&monitoringv1.Alertmanager{
 					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
 					Spec: monitoringv1.AlertmanagerSpec{
@@ -9007,7 +9065,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 				},
 			)
 
-			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{})
+			cfg, err := cb.convertHTTPConfig(context.Background(), &tc.cfg, types.NamespacedName{Namespace: "mynamespace"})
 			require.NoError(t, err)
 
 			err = cfg.sanitize(v, logger)
