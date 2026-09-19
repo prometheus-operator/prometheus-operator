@@ -1,6 +1,7 @@
 /operator
 /admission-webhook
 /prometheus-config-reloader
+/scripts/certs/certs
 example/alertmanager-webhook/linux/
 .build/
 *~
