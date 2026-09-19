@@ -68,6 +68,19 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			golden: "v0.24.0_remote_write_config.golden",
 		},
 		{
+			name:    "with v0.24.0 dropping unsupported fields",
+			version: "v0.24.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:                  "http://example.com",
+					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+					SendNativeHistograms: new(true),
+					RoundRobinDNS:        new(true),
+				},
+			},
+			golden: "v0.24.0_remote_write_config.golden",
+		},
+		{
 			name:    "sigv4 external_id not support in any thanos version",
 			version: operator.DefaultThanosVersion,
 			remoteWrite: []monitoringv1.RemoteWriteSpec{
