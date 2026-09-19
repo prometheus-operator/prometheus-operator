@@ -91,7 +91,7 @@ function(params) {
                  'thanosrulers',
                  'thanosrulers/finalizers',
                ],
-               verbs: ['patch'],
+               verbs: ['update', 'patch'],
              },
              {
                apiGroups: ['monitoring.coreos.com'],
