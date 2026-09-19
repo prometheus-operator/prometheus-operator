@@ -3397,6 +3397,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -9798,6 +9813,21 @@ bool
 <p>scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.</p>
 <p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -16624,6 +16654,21 @@ bool
 <p>scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.</p>
 <p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -24699,6 +24744,21 @@ bool
 <p>scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.</p>
 <p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -33615,6 +33675,21 @@ bool
 <p>scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.</p>
 <p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
 </td>
 </tr>
 <tr>
