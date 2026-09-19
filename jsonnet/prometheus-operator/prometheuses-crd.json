@@ -1631,7 +1631,7 @@
                         "type": "object"
                       },
                       "bearerToken": {
-                        "description": "bearerToken is deprecated: this will be removed in a future release.\n *Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
+                        "description": "bearerToken specifies the bearer token used for authentication.\nDeprecated: this will be removed in a future release.\n *Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
                         "type": "string"
                       },
                       "bearerTokenFile": {
@@ -1880,7 +1880,7 @@
                     "type": "boolean"
                   },
                   "baseImage": {
-                    "description": "baseImage is deprecated: use 'spec.image' instead.",
+                    "description": "baseImage defines the base image used for the Prometheus container.\nDeprecated: use 'spec.image' instead.",
                     "type": "string"
                   },
                   "bodySizeLimit": {
@@ -5488,7 +5488,7 @@
                           "type": "object"
                         },
                         "bearerToken": {
-                          "description": "bearerToken is deprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
+                          "description": "bearerToken specifies the bearer token used for authentication.\nDeprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
                           "type": "string"
                         },
                         "bearerTokenFile": {
@@ -6272,7 +6272,7 @@
                           "type": "object"
                         },
                         "bearerToken": {
-                          "description": "bearerToken is deprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
+                          "description": "bearerToken specifies the bearer token used for authentication.\nDeprecated: this will be removed in a future release.\n*Warning: this field shouldn't be used because the token value appears\nin clear-text. Prefer using `authorization`.*",
                           "type": "string"
                         },
                         "bearerTokenFile": {
@@ -8123,7 +8123,7 @@
                     "type": "string"
                   },
                   "sha": {
-                    "description": "sha is deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
+                    "description": "sha defines the sha256 digest of the Prometheus container image.\nDeprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.",
                     "type": "string"
                   },
                   "shardRetentionPolicy": {
@@ -8202,7 +8202,7 @@
                     "description": "storage defines the storage used by Prometheus.",
                     "properties": {
                       "disableMountSubPath": {
-                        "description": "disableMountSubPath deprecated: subPath usage will be removed in a future release.",
+                        "description": "disableMountSubPath disables the use of subPath for mounts.\nDeprecated: subPath usage will be removed in a future release.",
                         "type": "boolean"
                       },
                       "emptyDir": {
@@ -8612,7 +8612,7 @@
                             "type": "object"
                           },
                           "status": {
-                            "description": "status is deprecated: this field is never set.",
+                            "description": "status is never set.\nDeprecated: this field is never set.",
                             "properties": {
                               "accessModes": {
                                 "description": "accessModes contains the actual access modes the volume backing the PVC has.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#access-modes-1",
@@ -8789,7 +8789,7 @@
                     "type": "object"
                   },
                   "tag": {
-                    "description": "tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.",
+                    "description": "tag defines the tag of the Prometheus container image.\nDeprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.",
                     "type": "string"
                   },
                   "targetLimit": {
@@ -8830,7 +8830,7 @@
                         "type": "array"
                       },
                       "baseImage": {
-                        "description": "baseImage is deprecated: use 'image' instead.",
+                        "description": "baseImage defines the base image used for the Thanos sidecar container.\nDeprecated: use 'image' instead.",
                         "type": "string"
                       },
                       "blockSize": {
@@ -9053,7 +9053,7 @@
                         "type": "string"
                       },
                       "listenLocal": {
-                        "description": "listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.",
+                        "description": "listenLocal configures the Thanos sidecar to listen on the loopback interface.\nDeprecated: use `grpcListenLocal` and `httpListenLocal` instead.",
                         "type": "boolean"
                       },
                       "logFormat": {
@@ -9176,11 +9176,11 @@
                         "type": "object"
                       },
                       "sha": {
-                        "description": "sha is deprecated: use 'image' instead.  The image digest can be specified as part of the image name.",
+                        "description": "sha defines the sha256 digest of the Thanos sidecar container image.\nDeprecated: use 'image' instead.  The image digest can be specified as part of the image name.",
                         "type": "string"
                       },
                       "tag": {
-                        "description": "tag is deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.",
+                        "description": "tag defines the tag of the Thanos sidecar container image.\nDeprecated: use 'image' instead. The image's tag can be specified as as part of the image name.",
                         "type": "string"
                       },
                       "tracingConfig": {

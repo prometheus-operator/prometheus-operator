@@ -3794,7 +3794,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>baseImage is deprecated: use &lsquo;spec.image&rsquo; instead.</p>
+<p>baseImage defines the base image used for the Prometheus container.
+Deprecated: use &lsquo;spec.image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -3806,7 +3807,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>tag is deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
+<p>tag defines the tag of the Prometheus container image.
+Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -3818,7 +3820,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>sha is deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
+<p>sha defines the sha256 digest of the Prometheus container image.
+Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -5921,7 +5924,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>bearerToken is deprecated: this will be removed in a future release.
+<p>bearerToken specifies the bearer token used for authentication.
+Deprecated: this will be removed in a future release.
 <em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
 </td>
@@ -11019,7 +11023,8 @@ Kubernetes core/v1.PersistentVolumeClaimStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>status is deprecated: this field is never set.</p>
+<p>status is never set.
+Deprecated: this field is never set.</p>
 </td>
 </tr>
 </tbody>
@@ -17025,7 +17030,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>baseImage is deprecated: use &lsquo;spec.image&rsquo; instead.</p>
+<p>baseImage defines the base image used for the Prometheus container.
+Deprecated: use &lsquo;spec.image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -17037,7 +17043,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>tag is deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
+<p>tag defines the tag of the Prometheus container image.
+Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s tag can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -17049,7 +17056,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>sha is deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
+<p>sha defines the sha256 digest of the Prometheus container image.
+Deprecated: use &lsquo;spec.image&rsquo; instead. The image&rsquo;s digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -18211,7 +18219,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>bearerToken is deprecated: this will be removed in a future release.
+<p>bearerToken specifies the bearer token used for authentication.
+Deprecated: this will be removed in a future release.
 <em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
 </td>
@@ -18574,7 +18583,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>bearerToken is deprecated: this will be removed in a future release.
+<p>bearerToken specifies the bearer token used for authentication.
+Deprecated: this will be removed in a future release.
 <em>Warning: this field shouldn&rsquo;t be used because the token value appears
 in clear-text. Prefer using <code>authorization</code>.</em></p>
 </td>
@@ -20385,7 +20395,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableMountSubPath deprecated: subPath usage will be removed in a future release.</p>
+<p>disableMountSubPath disables the use of subPath for mounts.
+Deprecated: subPath usage will be removed in a future release.</p>
 </td>
 </tr>
 <tr>
@@ -21980,7 +21991,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>tag is deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as as part of the image name.</p>
+<p>tag defines the tag of the Thanos sidecar container image.
+Deprecated: use &lsquo;image&rsquo; instead. The image&rsquo;s tag can be specified as as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -21992,7 +22004,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>sha is deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified as part of the image name.</p>
+<p>sha defines the sha256 digest of the Thanos sidecar container image.
+Deprecated: use &lsquo;image&rsquo; instead.  The image digest can be specified as part of the image name.</p>
 </td>
 </tr>
 <tr>
@@ -22004,7 +22017,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>baseImage is deprecated: use &lsquo;image&rsquo; instead.</p>
+<p>baseImage defines the base image used for the Thanos sidecar container.
+Deprecated: use &lsquo;image&rsquo; instead.</p>
 </td>
 </tr>
 <tr>
@@ -22060,7 +22074,8 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>listenLocal is deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
+<p>listenLocal configures the Thanos sidecar to listen on the loopback interface.
+Deprecated: use <code>grpcListenLocal</code> and <code>httpListenLocal</code> instead.</p>
 </td>
 </tr>
 <tr>

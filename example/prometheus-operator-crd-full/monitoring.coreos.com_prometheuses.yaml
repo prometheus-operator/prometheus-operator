@@ -1928,7 +1928,8 @@ spec:
                     type: object
                   bearerToken:
                     description: |-
-                      bearerToken is deprecated: this will be removed in a future release.
+                      bearerToken specifies the bearer token used for authentication.
+                      Deprecated: this will be removed in a future release.
                        *Warning: this field shouldn't be used because the token value appears
                       in clear-text. Prefer using `authorization`.*
                     type: string
@@ -2213,7 +2214,9 @@ spec:
                   It is possible to use strategic merge patch to project the service account token into the 'prometheus' container.
                 type: boolean
               baseImage:
-                description: 'baseImage is deprecated: use ''spec.image'' instead.'
+                description: |-
+                  baseImage defines the base image used for the Prometheus container.
+                  Deprecated: use 'spec.image' instead.
                 type: string
               bodySizeLimit:
                 description: |-
@@ -6576,7 +6579,8 @@ spec:
                       type: object
                     bearerToken:
                       description: |-
-                        bearerToken is deprecated: this will be removed in a future release.
+                        bearerToken specifies the bearer token used for authentication.
+                        Deprecated: this will be removed in a future release.
                         *Warning: this field shouldn't be used because the token value appears
                         in clear-text. Prefer using `authorization`.*
                       type: string
@@ -7453,7 +7457,8 @@ spec:
                       type: object
                     bearerToken:
                       description: |-
-                        bearerToken is deprecated: this will be removed in a future release.
+                        bearerToken specifies the bearer token used for authentication.
+                        Deprecated: this will be removed in a future release.
                         *Warning: this field shouldn't be used because the token value appears
                         in clear-text. Prefer using `authorization`.*
                       type: string
@@ -9701,8 +9706,9 @@ spec:
                 minLength: 1
                 type: string
               sha:
-                description: 'sha is deprecated: use ''spec.image'' instead. The image''s
-                  digest can be specified as part of the image name.'
+                description: |-
+                  sha defines the sha256 digest of the Prometheus container image.
+                  Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
                 type: string
               shardRetentionPolicy:
                 description: |-
@@ -9825,8 +9831,9 @@ spec:
                 description: storage defines the storage used by Prometheus.
                 properties:
                   disableMountSubPath:
-                    description: 'disableMountSubPath deprecated: subPath usage will
-                      be removed in a future release.'
+                    description: |-
+                      disableMountSubPath disables the use of subPath for mounts.
+                      Deprecated: subPath usage will be removed in a future release.
                     type: boolean
                   emptyDir:
                     description: |-
@@ -10361,7 +10368,9 @@ spec:
                             type: string
                         type: object
                       status:
-                        description: 'status is deprecated: this field is never set.'
+                        description: |-
+                          status is never set.
+                          Deprecated: this field is never set.
                         properties:
                           accessModes:
                             description: |-
@@ -10593,8 +10602,9 @@ spec:
                     type: object
                 type: object
               tag:
-                description: 'tag is deprecated: use ''spec.image'' instead. The image''s
-                  tag can be specified as part of the image name.'
+                description: |-
+                  tag defines the tag of the Prometheus container image.
+                  Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
                 type: string
               targetLimit:
                 description: |-
@@ -10644,7 +10654,9 @@ spec:
                       type: object
                     type: array
                   baseImage:
-                    description: 'baseImage is deprecated: use ''image'' instead.'
+                    description: |-
+                      baseImage defines the base image used for the Thanos sidecar container.
+                      Deprecated: use 'image' instead.
                     type: string
                   blockSize:
                     default: 2h
@@ -10915,8 +10927,9 @@ spec:
                       the time when the operator was released.
                     type: string
                   listenLocal:
-                    description: 'listenLocal is deprecated: use `grpcListenLocal`
-                      and `httpListenLocal` instead.'
+                    description: |-
+                      listenLocal configures the Thanos sidecar to listen on the loopback interface.
+                      Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
                     type: boolean
                   logFormat:
                     description: logFormat for the Thanos sidecar.
@@ -11045,12 +11058,14 @@ spec:
                         type: object
                     type: object
                   sha:
-                    description: 'sha is deprecated: use ''image'' instead.  The image
-                      digest can be specified as part of the image name.'
+                    description: |-
+                      sha defines the sha256 digest of the Thanos sidecar container image.
+                      Deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
                     type: string
                   tag:
-                    description: 'tag is deprecated: use ''image'' instead. The image''s
-                      tag can be specified as as part of the image name.'
+                    description: |-
+                      tag defines the tag of the Thanos sidecar container image.
+                      Deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
                     type: string
                   tracingConfig:
                     description: |-

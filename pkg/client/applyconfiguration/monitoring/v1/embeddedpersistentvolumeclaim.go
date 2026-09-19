@@ -34,7 +34,8 @@ type EmbeddedPersistentVolumeClaimApplyConfiguration struct {
 	// spec defines the specification of the  characteristics of a volume requested by a pod author.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	Spec *corev1.PersistentVolumeClaimSpec `json:"spec,omitempty"`
-	// status is deprecated: this field is never set.
+	// status is never set.
+	// Deprecated: this field is never set.
 	Status *corev1.PersistentVolumeClaimStatus `json:"status,omitempty"`
 }
 

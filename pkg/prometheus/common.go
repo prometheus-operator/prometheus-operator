@@ -42,7 +42,7 @@ const (
 	tlsAssetsDir = "/etc/prometheus/certs"
 	// TODO: RulesDir should be moved to the server package, since it is not used by the agent.
 	// It is here at the moment because promcfg uses it, and moving as is will cause import cycle error.
-	// nolint:godoclint
+	//nolint:godoclint
 	RulesDir               = "/etc/prometheus/rules"
 	secretsDir             = "/etc/prometheus/secrets/"
 	configmapsDir          = "/etc/prometheus/configmaps/"

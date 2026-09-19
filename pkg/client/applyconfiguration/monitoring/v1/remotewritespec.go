@@ -101,7 +101,8 @@ type RemoteWriteSpecApplyConfiguration struct {
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
 	AzureAD *AzureADApplyConfiguration `json:"azureAd,omitempty"`
-	// bearerToken is deprecated: this will be removed in a future release.
+	// bearerToken specifies the bearer token used for authentication.
+	// Deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	BearerToken *string `json:"bearerToken,omitempty"`

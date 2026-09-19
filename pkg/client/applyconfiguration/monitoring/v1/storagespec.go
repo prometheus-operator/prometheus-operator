@@ -31,7 +31,8 @@ import (
 // 2. ephemeral
 // 3. volumeClaimTemplate
 type StorageSpecApplyConfiguration struct {
-	// disableMountSubPath deprecated: subPath usage will be removed in a future release.
+	// disableMountSubPath disables the use of subPath for mounts.
+	// Deprecated: subPath usage will be removed in a future release.
 	DisableMountSubPath *bool `json:"disableMountSubPath,omitempty"`
 	// emptyDir to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.

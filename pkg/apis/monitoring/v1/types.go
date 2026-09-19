@@ -306,7 +306,8 @@ type EmbeddedPersistentVolumeClaim struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
 	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
-	// status is deprecated: this field is never set.
+	// status is never set.
+	// Deprecated: this field is never set.
 	// +optional
 	Status v1.PersistentVolumeClaimStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
