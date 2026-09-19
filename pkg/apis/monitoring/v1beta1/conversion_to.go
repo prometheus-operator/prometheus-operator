@@ -415,6 +415,18 @@ func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 	}
 }
 
+func convertIncidentioConfigTo(in IncidentioConfig) v1alpha1.IncidentioConfig {
+	return v1alpha1.IncidentioConfig{
+		SendResolved:     in.SendResolved,
+		URL:              in.URL,
+		URLSecret:        convertSecretKeySelectorTo(in.URLSecret),
+		AlertSourceToken: convertSecretKeySelectorTo(in.AlertSourceToken),
+		HTTPConfig:       convertHTTPConfigTo(in.HTTPConfig),
+		MaxAlerts:        in.MaxAlerts,
+		Timeout:          in.Timeout,
+	}
+}
+
 func convertWeChatConfigTo(in WeChatConfig) v1alpha1.WeChatConfig {
 	return v1alpha1.WeChatConfig{
 		SendResolved: in.SendResolved,
@@ -598,6 +610,13 @@ func (src *AlertmanagerConfig) ConvertTo(dstRaw conversion.Hub) error {
 			out.WebhookConfigs = append(
 				out.WebhookConfigs,
 				convertWebhookConfigTo(in),
+			)
+		}
+
+		for _, in := range in.IncidentioConfigs {
+			out.IncidentioConfigs = append(
+				out.IncidentioConfigs,
+				convertIncidentioConfigTo(in),
 			)
 		}
 
