@@ -41,6 +41,7 @@ rules:
   - thanosrulers
   - thanosrulers/finalizers
   verbs:
+  - update
   - patch
 - apiGroups:
   - monitoring.coreos.com
