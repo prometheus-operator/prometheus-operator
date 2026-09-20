@@ -20272,6 +20272,22 @@ bool
 It requires Prometheus &gt;= v2.54.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serviceName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>serviceName defines the name of the AWS service to sign requests for.
+If not specified, the default value is <code>aps</code> for Amazon Managed Service
+for Prometheus (AMP) or <code>s3</code> for S3-compatible remote write.
+It requires Prometheus &gt;= v3.5.0.
+It is currently not supported by Alertmanager and Thanos.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.StatefulSetUpdateStrategy">StatefulSetUpdateStrategy
