@@ -109,7 +109,9 @@ func makeDaemonSetSpec(
 
 	promArgs = append(promArgs, confArg)
 	volumes = append(volumes, configVol...)
+	volumes = append(volumes, cpf.Volumes...)
 	promVolumeMounts = append(promVolumeMounts, configMount...)
+	promVolumeMounts = append(promVolumeMounts, cpf.VolumeMounts...)
 
 	configReloaderWebConfigFile = confArg.Value
 	configReloaderVolumeMounts = append(configReloaderVolumeMounts, configMount...)
