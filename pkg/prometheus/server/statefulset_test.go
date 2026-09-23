@@ -1173,10 +1173,11 @@ func containerByName(t *testing.T, sset *appsv1.StatefulSet, name string) corev1
 }
 
 // TestThanosDelayedCompaction verifies that with Prometheus >= v3.9.0 and Thanos
-// >= v0.41.0, the operator keeps local compaction enabled and coordinates block
+// >= v0.42.0, the operator keeps local compaction enabled and coordinates block
 // uploads with the sidecar through the shipper meta file instead of disabling
 // compaction. Otherwise (versions too old, or compaction explicitly disabled) it
-// falls back to disabling compaction.
+// falls back to disabling compaction. Thanos v0.41.0 is excluded: its sidecar
+// rejects the resulting flags due to a validation bug (issue #8763).
 // ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
 func TestThanosDelayedCompaction(t *testing.T) {
 	for _, tc := range []struct {
@@ -1186,10 +1187,11 @@ func TestThanosDelayedCompaction(t *testing.T) {
 		disableCompaction bool
 		delayed           bool
 	}{
-		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.41.0", delayed: true},
-		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.41.0"},
+		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.42.0", delayed: true},
+		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.42.0"},
 		{name: "thanos too old", promVersion: "3.9.0", thanosVersion: "0.40.0"},
-		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.41.0", disableCompaction: true},
+		{name: "thanos v0.41.0 unsupported due to strict sidecar validation", promVersion: "3.9.0", thanosVersion: "0.41.0"},
+		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.42.0", disableCompaction: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			thanosVersion := tc.thanosVersion
@@ -1382,24 +1384,29 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		version                    string
 		specRetention              monitoringv1.Duration
 		specRetentionSize          monitoringv1.ByteSize
+		specRetentionPercentage    *resource.Quantity
 		expectedRetentionArg       string
 		expectedRetentionSizeArg   string
 		shouldContainRetention     bool
 		shouldContainRetentionSize bool
 	}{
-		{"v2.5.0", "", "", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "1d", "", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "", "512MB", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.5.0", "1d", "512MB", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.7.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
-		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
-		{"v3.10.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
-		{"v3.11.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
-		{"v3.11.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
-		{"v3.11.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
-		{"v3.11.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v2.5.0", "", "", nil, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "1d", "", nil, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "", "512MB", nil, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "1d", "512MB", nil, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.7.0", "", "", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "1d", "", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "", "512MB", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.7.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v3.10.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		// Percentage-based retention isn't supported before v3.11.0 so it
+		// shouldn't prevent the default time-based retention from being set.
+		{"v3.10.0", "", "", resource.NewQuantity(80, resource.DecimalSI), "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v3.11.0", "", "", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "1d", "", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "", "512MB", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v3.11.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v3.11.0", "", "", resource.NewQuantity(80, resource.DecimalSI), "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
 	}
 
 	for _, test := range tests {
@@ -1409,8 +1416,9 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: test.version,
 					},
-					Retention:     test.specRetention,
-					RetentionSize: test.specRetentionSize,
+					Retention:           test.specRetention,
+					RetentionSize:       test.specRetentionSize,
+					RetentionPercentage: test.specRetentionPercentage,
 				},
 			})
 			require.NoError(t, err)

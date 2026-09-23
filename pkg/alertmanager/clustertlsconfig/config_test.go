@@ -27,7 +27,6 @@ import (
 )
 
 func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
-
 	tc := []struct {
 		name             string
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
@@ -306,7 +305,6 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 			golden.Assert(t, string(data), tt.golden)
 		})
 	}
-
 }
 
 func TestGetMountParameters(t *testing.T) {

@@ -60,7 +60,8 @@ GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
-TOOLING=$(CONTROLLER_GEN_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
+METRICS_GEN_BINARY=$(TOOLS_BIN_DIR)/metrics-gen
+TOOLING=$(CONTROLLER_GEN_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY) $(METRICS_GEN_BINARY)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -238,7 +239,7 @@ tidy: ## Tidy Go modules.
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version ## Generate all files (CRDs, client-go libraries, docs, etc.).
+generate: k8s-gen generate-crds generate-metrics bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version ## Generate all files (CRDs, client-go libraries, docs, etc.).
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -253,6 +254,10 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 	find example/prometheus-operator-crd/ -name '*.yaml' -print0 | xargs -0 -I{} sh -c '$(GOJSONTOYAML_BINARY) -yamltojson < "$$1" | jq > "$(PWD)/jsonnet/prometheus-operator/$$(basename $$1 | cut -d'_' -f2 | cut -d. -f1)-crd.json"' -- {}
 	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - >> $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
+
+.PHONY: generate-metrics
+generate-metrics: $(METRICS_GEN_BINARY) .header ## Generate Prometheus condition collector code from API markers.
+	$(METRICS_GEN_BINARY) -metric-namespace prometheus_operator -go-header-file $(shell pwd)/.header -api-dir=./pkg/apis/monitoring -out-dir=./pkg/metrics -module=$(GO_PKG)
 
 .PHONY: generate-tls-certs
 generate-tls-certs: ## Generate TLS certificates for testing.

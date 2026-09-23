@@ -23,11 +23,11 @@ import (
 // Interface provides access to all the informers in this group version.
 type Interface interface {
 	// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-	AlertmanagerConfigs() AlertmanagerConfigInformer
+	AlertmanagerConfigs() TypedAlertmanagerConfigInformer
 	// PrometheusAgents returns a PrometheusAgentInformer.
-	PrometheusAgents() PrometheusAgentInformer
+	PrometheusAgents() TypedPrometheusAgentInformer
 	// ScrapeConfigs returns a ScrapeConfigInformer.
-	ScrapeConfigs() ScrapeConfigInformer
+	ScrapeConfigs() TypedScrapeConfigInformer
 }
 
 type version struct {
@@ -41,17 +41,17 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// AlertmanagerConfigs returns a AlertmanagerConfigInformer.
-func (v *version) AlertmanagerConfigs() AlertmanagerConfigInformer {
+// AlertmanagerConfigs returns a TypedAlertmanagerConfigInformer.
+func (v *version) AlertmanagerConfigs() TypedAlertmanagerConfigInformer {
 	return &alertmanagerConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// PrometheusAgents returns a PrometheusAgentInformer.
-func (v *version) PrometheusAgents() PrometheusAgentInformer {
+// PrometheusAgents returns a TypedPrometheusAgentInformer.
+func (v *version) PrometheusAgents() TypedPrometheusAgentInformer {
 	return &prometheusAgentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// ScrapeConfigs returns a ScrapeConfigInformer.
-func (v *version) ScrapeConfigs() ScrapeConfigInformer {
+// ScrapeConfigs returns a TypedScrapeConfigInformer.
+func (v *version) ScrapeConfigs() TypedScrapeConfigInformer {
 	return &scrapeConfigInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

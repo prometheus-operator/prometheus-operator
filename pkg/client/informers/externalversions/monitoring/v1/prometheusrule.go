@@ -32,11 +32,39 @@ import (
 )
 
 // PrometheusRuleInformer provides access to a shared informer and lister for
-// PrometheusRules.
+// PrometheusRules. Prefer using the type-safe variant (see [TypedPrometheusRuleInformer]).
 type PrometheusRuleInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.PrometheusRuleLister
 }
+
+// TypedPrometheusRuleInformer provides access to a shared informer and lister for
+// PrometheusRules, including the type-safe TypedInformer variant.
+// It is a superset of PrometheusRuleInformer.
+type TypedPrometheusRuleInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() PrometheusRuleIndexInformer
+	Lister() monitoringv1.PrometheusRuleLister
+}
+
+// PrometheusRuleIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type PrometheusRuleIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.PrometheusRule]
+
+// PrometheusRuleHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for PrometheusRule.
+type PrometheusRuleHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.PrometheusRule]
+
+// PrometheusRuleDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for PrometheusRule.
+type PrometheusRuleDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.PrometheusRule]
+
+// PrometheusRuleFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for PrometheusRule.
+type PrometheusRuleFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.PrometheusRule]
+
+// PrometheusRuleIndexers is a specialization of [cache.TypedIndexers] for PrometheusRule.
+type PrometheusRuleIndexers = cache.TypedIndexers[*apismonitoringv1.PrometheusRule]
+
+// DeletedPrometheusRule is a specialization of [cache.DeletedObject] for PrometheusRule.
+type DeletedPrometheusRule = cache.DeletedObject[*apismonitoringv1.PrometheusRule]
 
 type prometheusRuleInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type prometheusRuleInformer struct {
 // NewPrometheusRuleInformer constructs a new informer for PrometheusRule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPrometheusRuleInformer]).
 func NewPrometheusRuleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewPrometheusRuleInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedPrometheusRuleInformer constructs a new informer for PrometheusRule type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPrometheusRuleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PrometheusRuleIndexers) PrometheusRuleIndexInformer {
+	return NewTypedPrometheusRuleInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredPrometheusRuleInformer constructs a new informer for PrometheusRule type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredPrometheusRuleInformer]).
 func NewFilteredPrometheusRuleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewPrometheusRuleInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedPrometheusRuleInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredPrometheusRuleInformer constructs a new informer for PrometheusRule type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredPrometheusRuleInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PrometheusRuleIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) PrometheusRuleIndexInformer {
+	return NewTypedPrometheusRuleInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewPrometheusRuleInformerWithOptions constructs a new informer for PrometheusRule type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPrometheusRuleInformerWithOptions]).
 func NewPrometheusRuleInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedPrometheusRuleInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedPrometheusRuleInformerWithOptions constructs a new informer for PrometheusRule type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPrometheusRuleInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) PrometheusRuleIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "prometheusrules"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PrometheusRule](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewPrometheusRuleInformerWithOptions(client versioned.Interface, namespace 
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *prometheusRuleInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewPrometheusRuleInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedPrometheusRuleInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *prometheusRuleInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.PrometheusRule{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *prometheusRuleInformer) TypedInformer() PrometheusRuleIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PrometheusRule](f.factory.InformerFor(&apismonitoringv1.PrometheusRule{}, f.defaultInformer))
 }
 
 func (f *prometheusRuleInformer) Lister() monitoringv1.PrometheusRuleLister {
 	return monitoringv1.NewPrometheusRuleLister(f.Informer().GetIndexer())
+}
+
+// ToTypedPrometheusRuleInformer converts an untyped informer into a TypedPrometheusRuleInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PrometheusRule. If that is not the case, calling type-safe methods of the returned
+// TypedPrometheusRuleInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedPrometheusRuleInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedPrometheusRuleInformer(informer PrometheusRuleInformer) TypedPrometheusRuleInformer {
+	if informer, ok := informer.(TypedPrometheusRuleInformer); ok {
+		return informer
+	}
+	return &prometheusRuleTypedInformerAdapter{informer}
+}
+
+type prometheusRuleTypedInformerAdapter struct {
+	PrometheusRuleInformer
+}
+
+func (a *prometheusRuleTypedInformerAdapter) TypedInformer() PrometheusRuleIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PrometheusRule](a.Informer())
+}
+
+// ToPrometheusRuleIndexInformer converts an untyped informer into a PrometheusRuleIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PrometheusRule. If that is not the case, calling type-safe methods of the returned
+// PrometheusRuleIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a PrometheusRuleIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToPrometheusRuleIndexInformer(informer cache.SharedIndexInformer) PrometheusRuleIndexInformer {
+	if informer, ok := informer.(PrometheusRuleIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PrometheusRule](informer)
 }
