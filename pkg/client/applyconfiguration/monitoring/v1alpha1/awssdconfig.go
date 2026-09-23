@@ -61,7 +61,7 @@ type AWSSDConfigApplyConfiguration struct {
 	// - https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html
 	// - Filter API documentation: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Filter.html
 	Filters                                                      *monitoringv1alpha1.Filters `json:"filters,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the Consul API.
 	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
