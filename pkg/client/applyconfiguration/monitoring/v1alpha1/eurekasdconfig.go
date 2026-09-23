@@ -42,7 +42,7 @@ type EurekaSDConfigApplyConfiguration struct {
 	// tlsConfig defines the TLS configuration to connect to the Eureka server.
 	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	v1.ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.

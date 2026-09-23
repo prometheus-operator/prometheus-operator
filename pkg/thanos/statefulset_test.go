@@ -1448,7 +1448,6 @@ func TestRuleResendDelay(t *testing.T) {
 
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
-
 			sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 				Spec: monitoringv1.ThanosRulerSpec{
 					ResendDelay:    ts.resendDelay,

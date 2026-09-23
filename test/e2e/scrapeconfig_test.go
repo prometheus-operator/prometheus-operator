@@ -207,7 +207,6 @@ func testScrapeConfigCreation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)
@@ -3303,7 +3302,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: new("public"),
+					Availability: ptr.To(monitoringv1alpha1.OpenStackAvailabilityPublic),
 				},
 			},
 		},
@@ -3316,7 +3315,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: new("admin"),
+					Availability: ptr.To(monitoringv1alpha1.OpenStackAvailabilityAdmin),
 				},
 			},
 		},
@@ -3329,7 +3328,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: new("internal"),
+					Availability: ptr.To(monitoringv1alpha1.OpenStackAvailabilityInternal),
 				},
 			},
 		},
@@ -3342,7 +3341,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: new("private"),
+					Availability: ptr.To(monitoringv1alpha1.OpenStackAvailability("private")),
 				},
 			},
 		},
@@ -3355,7 +3354,7 @@ var OpenStackSDTestCases = []scrapeCRDTestCase{
 				{
 					Role:         monitoringv1alpha1.OpenStackRoleHypervisor,
 					Region:       "default",
-					Availability: new(""),
+					Availability: ptr.To(monitoringv1alpha1.OpenStackAvailability("")),
 				},
 			},
 		},
