@@ -356,7 +356,6 @@ func testAMClusterGossipSilences(t *testing.T) {
 	secretName := "cluster-tls-creds"
 	testcase := []struct {
 		name             string
-		clusterSize      int
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 	}{
 		{
@@ -436,30 +435,77 @@ func testAMClusterGossipSilences(t *testing.T) {
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
 
-			silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
-			require.NoError(t, err)
-
-			for i := 0; i < tc.clusterSize; i++ {
-				err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-					silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
-					if err != nil {
-						return false, err
-					}
-
-					if len(silences) != 1 {
-						return false, nil
-					}
-
-					if *silences[0].ID != silID {
-						return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
-					}
-
-					return true, nil
-				})
-				require.NoError(t, err)
-			}
+			require.NoError(t, framework.CheckGossipReplication(context.Background(), alertmanager))
 		})
 	}
+}
+
+func testAMGossipTLSConfigurationRollout(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	const secretName = "cluster-tls-creds"
+	createMutualTLSSecret(t, secretName, ns)
+	ca := monitoringv1.SecretOrConfigMap{
+		Secret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+			Key:                  "ca.crt",
+		},
+	}
+	cert := monitoringv1.SecretOrConfigMap{
+		Secret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+			Key:                  "cert.pem",
+		},
+	}
+	key := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+		Key:                  "key.pem",
+	}
+
+	const clusterSize = 3
+	am := framework.MakeBasicAlertmanager(ns, "gossip-tls-rollout", clusterSize)
+	am.Spec.ClusterTLS = &monitoringv1.ClusterTLSConfig{
+		ServerTLS: monitoringv1.WebTLSConfig{
+			ClientCA:       ca,
+			Cert:           cert,
+			KeySecret:      key,
+			ClientAuthType: new(monitoringv1.RequireAndVerifyClientCert),
+		},
+		ClientTLS: monitoringv1.SafeTLSConfig{
+			CA:         ca,
+			Cert:       cert,
+			KeySecret:  &key,
+			ServerName: new("InvalidName"),
+		},
+	}
+
+	am, err := framework.CreateAlertmanager(ctx, am)
+	require.NoError(t, err)
+	am, err = framework.WaitForAlertmanagerAvailable(ctx, am)
+	require.NoError(t, err)
+
+	// The pods are available, but the invalid server name prevents them from
+	// joining each other: each pod only sees itself as a cluster peer.
+	for i := range clusterSize {
+		pod := fmt.Sprintf("alertmanager-%s-%d", am.Name, i)
+		status, err := framework.GetAlertmanagerPodStatus(ctx, ns, pod, false)
+		require.NoError(t, err)
+		require.NotNil(t, status.Cluster, "pod %s", pod)
+		require.Len(t, status.Cluster.Peers, 1, "pod %s should be isolated", pod)
+	}
+
+	am.Spec.ClusterTLS.ClientTLS.ServerName = new("PrometheusRemoteWriteClient")
+	am, err = framework.PatchAlertmanagerAndWaitUntilReady(ctx, am.Name, ns, monitoringv1.AlertmanagerSpec{
+		ClusterTLS: am.Spec.ClusterTLS,
+	})
+	require.NoError(t, err)
+	require.NoError(t, framework.CheckGossipReplication(ctx, am))
 }
 
 func testAMReloadConfig(t *testing.T) {
