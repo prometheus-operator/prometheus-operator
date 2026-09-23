@@ -305,7 +305,6 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:             "valid_global_config_with_rule_query_offset.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "example",
@@ -1187,7 +1186,6 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 			golden:  "AlertmanagerBasicAuth_Invalid_Prom_Version.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -6744,7 +6742,6 @@ func TestProbeSpecConfig(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -7834,7 +7831,6 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8144,7 +8140,6 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8464,7 +8459,6 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -10367,7 +10361,6 @@ func TestAppendNameValidationScheme(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -10424,7 +10417,6 @@ func TestAppendNameEscapingScheme(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -10481,7 +10473,6 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -14353,7 +14344,6 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion_MinVersion.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -14385,7 +14375,6 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
-
 	}
 }
 
@@ -14721,7 +14710,6 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -14778,7 +14766,6 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version

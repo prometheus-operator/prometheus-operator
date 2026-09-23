@@ -2231,7 +2231,6 @@ func TestSelectScrapeConfigs(t *testing.T) {
 						},
 					},
 				}
-
 			},
 			valid: false,
 		},
