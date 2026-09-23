@@ -1,3 +1,7 @@
+## 0.94.1 / 2026-09-23
+
+* [BUGFIX] Restore `update` permission on finalizer subresources in the operator's ClusterRole, required by `OwnerReferencesPermissionEnforcement` when `blockOwnerDeletion` is set. #8830
+
 ## 0.94.0 / 2026-09-09
 
 * [CHANGE] Update the default Alertmanager version to v0.34.0 and discard zero-value duration fields (`retention`, `clusterGossipInterval`, `clusterPushpullInterval`, `clusterPeerTimeout`) in `Alertmanager` resources instead of passing them as CLI flags, which Alertmanager rejects and can cause startup failures. Ignored fields are reported via the `IgnoredFields` status condition. #8800
