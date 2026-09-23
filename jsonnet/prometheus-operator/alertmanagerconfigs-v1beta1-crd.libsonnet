@@ -1290,7 +1290,7 @@
                                         description: 'configMap defines the ConfigMap containing data to use for the targets.',
                                         properties: {
                                           key: {
-                                            description: 'The key to select.',
+                                            description: "The key to select from the ConfigMap's Data field.\nKeys in the BinaryData field are not currently propagated to container env vars.",
                                             type: 'string',
                                           },
                                           name: {
@@ -1426,7 +1426,7 @@
                                             description: 'configMap defines the ConfigMap containing data to use for the targets.',
                                             properties: {
                                               key: {
-                                                description: 'The key to select.',
+                                                description: "The key to select from the ConfigMap's Data field.\nKeys in the BinaryData field are not currently propagated to container env vars.",
                                                 type: 'string',
                                               },
                                               name: {
@@ -1478,7 +1478,7 @@
                                             description: 'configMap defines the ConfigMap containing data to use for the targets.',
                                             properties: {
                                               key: {
-                                                description: 'The key to select.',
+                                                description: "The key to select from the ConfigMap's Data field.\nKeys in the BinaryData field are not currently propagated to container env vars.",
                                                 type: 'string',
                                               },
                                               name: {
@@ -1644,7 +1644,7 @@
                                         description: 'configMap defines the ConfigMap containing data to use for the targets.',
                                         properties: {
                                           key: {
-                                            description: 'The key to select.',
+                                            description: "The key to select from the ConfigMap's Data field.\nKeys in the BinaryData field are not currently propagated to container env vars.",
                                             type: 'string',
                                           },
                                           name: {
@@ -1696,7 +1696,7 @@
                                         description: 'configMap defines the ConfigMap containing data to use for the targets.',
                                         properties: {
                                           key: {
-                                            description: 'The key to select.',
+                                            description: "The key to select from the ConfigMap's Data field.\nKeys in the BinaryData field are not currently propagated to container env vars.",
                                             type: 'string',
                                           },
                                           name: {
