@@ -1445,25 +1445,33 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 	}
 
 	{
-		userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user key: %w", err)
+		// Either userKey or userKeyFile is set, the controller
+		// rejects configurations that set neither.
+		if in.UserKey != nil {
+			userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user key: %w", err)
+			}
+			if userKey == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
+			}
+			out.UserKey = userKey
 		}
-		if userKey == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
-		}
-		out.UserKey = userKey
+		out.UserKeyFile = ptr.Deref(in.UserKeyFile, "")
 	}
 
 	{
-		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get token: %w", err)
+		if in.Token != nil {
+			token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get token: %w", err)
+			}
+			if token == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "token")
+			}
+			out.Token = token
 		}
-		if token == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "token")
-		}
-		out.Token = token
+		out.TokenFile = ptr.Deref(in.TokenFile, "")
 	}
 
 	{
@@ -1578,7 +1586,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			RoleARN: in.Sigv4.RoleArn,
 		}
 
-		if cb.amVersion.GTE(semver.MustParse("0.33.0")) {
+		if cb.amVersion.GTE(semver.MustParse("0.34.0")) {
 			out.Sigv4.ExternalID = in.Sigv4.ExternalID
 		}
 
@@ -1591,7 +1599,6 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get AWS secret key: %w", err)
-
 			}
 			out.Sigv4.AccessKey = accessKey
 			out.Sigv4.SecretKey = secretKey
@@ -3164,8 +3171,8 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 		if sc.Sigv4.RoleARN == "" {
 			return fmt.Errorf("'external_id' in sigv4 config requires 'role_arn' to be set")
 		}
-		if amVersion.LT(semver.MustParse("0.33.0")) {
-			msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
+		if amVersion.LT(semver.MustParse("0.34.0")) {
+			msg := "'external_id' supported in Alertmanager >= 0.34.0 only - dropping field `external_id` from sigv4 config"
 			logger.Warn(msg)
 			sc.Sigv4.ExternalID = ""
 		}
@@ -3242,6 +3249,20 @@ func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 
 	if !discordAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
+	}
+
+	if dc.WebhookURLFile != "" && lessThanV0_28 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.WebhookURLFile = ""
+	}
+
+	if dc.WebhookURL == "" && dc.WebhookURLFile == "" {
+		return errors.New("no webhook_url or webhook_url_file provided")
+	}
+
+	if dc.WebhookURL != "" && dc.WebhookURLFile != "" {
+		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
 	}
 
 	if dc.Content != "" && lessThanV0_28 {
@@ -3380,6 +3401,67 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			msg := "'fields'" + commonErrorMsg
 			logger.Warn(msg, "current_version", amVersion.String())
 			mc.Fields = nil
+		}
+	}
+
+	if mc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(mc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
+	if mc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(mc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	for name, value := range map[string]string{
+		"author_link": mc.AuthorLink,
+		"author_icon": mc.AuthorIcon,
+		"title_link":  mc.TitleLink,
+		"thumb_url":   mc.ThumbURL,
+		"footer_icon": mc.FooterIcon,
+		"image_url":   mc.ImageURL,
+	} {
+		if value == "" {
+			continue
+		}
+		if err := validation.ValidateTemplateURL(value); err != nil {
+			return fmt.Errorf("invalid '%s': %w", name, err)
+		}
+	}
+
+	for i, attachment := range mc.Attachments {
+		if attachment.AuthorLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorLink); err != nil {
+				return fmt.Errorf("invalid 'author_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.AuthorIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorIcon); err != nil {
+				return fmt.Errorf("invalid 'author_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.TitleLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.TitleLink); err != nil {
+				return fmt.Errorf("invalid 'title_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ThumbURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ThumbURL); err != nil {
+				return fmt.Errorf("invalid 'thumb_url' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.FooterIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.FooterIcon); err != nil {
+				return fmt.Errorf("invalid 'footer_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in attachments[%d]: %w", i, err)
+			}
 		}
 	}
 

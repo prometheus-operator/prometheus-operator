@@ -33,7 +33,7 @@ const (
 type Target string
 
 // SDFile represents a file used for service discovery
-// +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
+// +kubebuilder:validation:Pattern="^[^*]*(\\*[^/]*)?\\.(json|yml|yaml|JSON|YML|YAML)$"
 type SDFile string
 
 // NamespaceDiscovery is the configuration for discovering
@@ -44,6 +44,7 @@ type NamespaceDiscovery struct {
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"` // nolint:kubeapilinter
 	// names defines a list of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Names []string `json:"names,omitempty"`
@@ -74,8 +75,8 @@ type Filter struct {
 	Values []string `json:"values"`
 }
 
-// +listType:=map
-// +listMapKey:=name
+// +listType=map
+// +listMapKey=name
 type Filters []Filter
 
 // +kubebuilder:validation:Enum=Pod;Endpoints;Ingress;Service;Node;EndpointSlice
@@ -294,7 +295,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 	// params defines optional HTTP URL parameters
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
@@ -324,26 +325,26 @@ type ScrapeConfigSpec struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
@@ -361,7 +362,7 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	//
-	// +kubebuilder:validation:Minimum:=0
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
@@ -399,7 +400,7 @@ type StaticConfig struct {
 	// +required
 	Targets []Target `json:"targets"`
 	// labels defines labels assigned to all metrics scraped from the targets.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
@@ -548,12 +549,14 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType:=set
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
-	// +listType:=set
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// tagSeparator defines the string by which Consul tags are joined into the tag label.
@@ -563,7 +566,7 @@ type ConsulSDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// nodeMeta defines the node metadata key/value pairs to filter nodes for a given service.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
@@ -843,6 +846,16 @@ const (
 	OpenStackRoleLoadBalancer OpenStackRole = "LoadBalancer"
 )
 
+// OpenStackAvailability defines the availability of the endpoint to connect to.
+// +kubebuilder:validation:Enum=Public;Admin;Internal
+type OpenStackAvailability string
+
+const (
+	OpenStackAvailabilityPublic   OpenStackAvailability = "Public"
+	OpenStackAvailabilityAdmin    OpenStackAvailability = "Admin"
+	OpenStackAvailabilityInternal OpenStackAvailability = "Internal"
+)
+
 // OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#openstack_sd_config
 // +k8s:openapi-gen=true
@@ -926,9 +939,8 @@ type OpenStackSDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// availability defines the availability of the endpoint to connect to.
-	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
-	Availability *string `json:"availability,omitempty"`
+	Availability *OpenStackAvailability `json:"availability,omitempty"`
 	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1055,7 +1067,6 @@ type EurekaSDConfig struct {
 // +k8s:openapi-gen=true
 type DockerSDConfig struct {
 	// host defines the address of the docker daemon.
-	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
 	Host string `json:"host"`
@@ -1105,15 +1116,23 @@ type DockerSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
+// HetznerRole defines the Hetzner role of entities that should be discovered.
+// +kubebuilder:validation:Enum=Hcloud;Robot
+type HetznerRole string
+
+const (
+	HetznerRoleHcloud HetznerRole = "Hcloud"
+	HetznerRoleRobot  HetznerRole = "Robot"
+)
+
 // HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.
 // This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 // +k8s:openapi-gen=true
 type HetznerSDConfig struct {
 	// role defines the Hetzner role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
 	// +required
-	Role string `json:"role"`
+	Role HetznerRole `json:"role"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
@@ -1248,6 +1267,16 @@ type OVHCloudSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
+// DockerSwarmRole defines the role of Docker Swarm targets to retrieve.
+// +kubebuilder:validation:Enum=Services;Tasks;Nodes
+type DockerSwarmRole string
+
+const (
+	DockerSwarmRoleServices DockerSwarmRole = "Services"
+	DockerSwarmRoleTasks    DockerSwarmRole = "Tasks"
+	DockerSwarmRoleNodes    DockerSwarmRole = "Nodes"
+)
+
 // DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
 // +k8s:openapi-gen=true
@@ -1257,9 +1286,8 @@ type DockerSwarmSDConfig struct {
 	// +required
 	Host string `json:"host"`
 	// role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
-	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
 	// +required
-	Role string `json:"role"`
+	Role DockerSwarmRole `json:"role"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// tasks and services that don't have published ports.
 	// +kubebuilder:validation:Minimum=0

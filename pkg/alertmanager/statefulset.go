@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/units"
 	"github.com/blang/semver/v4"
@@ -76,6 +77,46 @@ var (
 	minReplicas         int32 = 1
 	probeTimeoutSeconds int32 = 3
 )
+
+func isZeroGoDuration(value monitoringv1.GoDuration) bool {
+	if value == "" {
+		return false
+	}
+
+	d, err := time.ParseDuration(string(value))
+	return err == nil && d <= 0
+}
+
+func discardZeroDurations(am *monitoringv1.Alertmanager) []string {
+	var ignored []string
+
+	for _, field := range []struct {
+		name  string
+		value *monitoringv1.GoDuration
+	}{
+		{"retention", &am.Spec.Retention},
+		{"clusterGossipInterval", &am.Spec.ClusterGossipInterval},
+		{"clusterPushpullInterval", &am.Spec.ClusterPushpullInterval},
+		{"clusterPeerTimeout", &am.Spec.ClusterPeerTimeout},
+	} {
+		if field.value == nil {
+			continue
+		}
+
+		if !isZeroGoDuration(*field.value) {
+			continue
+		}
+
+		*field.value = ""
+		ignored = append(ignored, fmt.Sprintf("%s (zero value not supported)", field.name))
+	}
+
+	return ignored
+}
+
+func ignoredFieldsMessage(fields []string) string {
+	return "The following fields were ignored: " + strings.Join(fields, ", ")
+}
 
 func getServiceName(a *monitoringv1.Alertmanager) string {
 	return ptr.Deref(a.Spec.ServiceName, defaultOperatedServiceName)
@@ -300,7 +341,6 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
 			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
 		}
-
 	}
 
 	if version.GTE(semver.MustParse("0.30.0")) && a.Spec.MinReadySeconds != nil {
@@ -337,6 +377,17 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 
 	if a.Spec.ClusterPeerTimeout != "" {
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-timeout", Value: string(a.Spec.ClusterPeerTimeout)})
+	}
+
+	if version.GTE(semver.MustParse("0.30.0")) {
+		// Default the peer name to the pod's own name (injected via the
+		// downward API as $(POD_NAME)). Users can override this default by
+		// setting `.spec.clusterPeerName` on the Alertmanager CR.
+		peerName := fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
+		if a.Spec.ClusterPeerName != nil && *a.Spec.ClusterPeerName != "" {
+			peerName = *a.Spec.ClusterPeerName
+		}
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "cluster.peer-name", Value: peerName})
 	}
 
 	// If multiple Alertmanager clusters are deployed on the same cluster, it can happen
@@ -698,37 +749,48 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		return nil, err
 	}
 
-	defaultContainers := []corev1.Container{
-		{
-			Args:            containerArgs,
-			Name:            "alertmanager",
-			Image:           amImagePath,
-			ImagePullPolicy: a.Spec.ImagePullPolicy,
-			Ports:           ports,
-			VolumeMounts:    amVolumeMounts,
-			LivenessProbe:   livenessProbe,
-			ReadinessProbe:  readinessProbe,
-			Resources:       a.Spec.Resources,
-			SecurityContext: &corev1.SecurityContext{
-				AllowPrivilegeEscalation: new(false),
-				ReadOnlyRootFilesystem:   new(true),
-				Capabilities: &corev1.Capabilities{
-					Drop: []corev1.Capability{"ALL"},
-				},
+	alertmanagerContainer := corev1.Container{
+		Args:            containerArgs,
+		Name:            "alertmanager",
+		Image:           amImagePath,
+		ImagePullPolicy: a.Spec.ImagePullPolicy,
+		Ports:           ports,
+		VolumeMounts:    amVolumeMounts,
+		LivenessProbe:   livenessProbe,
+		ReadinessProbe:  readinessProbe,
+		Resources:       a.Spec.Resources,
+		SecurityContext: &corev1.SecurityContext{
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
+			Capabilities: &corev1.Capabilities{
+				Drop: []corev1.Capability{"ALL"},
 			},
-			Env: []corev1.EnvVar{
-				{
-					// Necessary for '--cluster.listen-address' flag
-					Name: "POD_IP",
-					ValueFrom: &corev1.EnvVarSource{
-						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: "status.podIP",
-						},
+		},
+		Env: []corev1.EnvVar{
+			{
+				// Necessary for '--cluster.listen-address' flag
+				Name: "POD_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
 					},
 				},
 			},
-			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		},
+		TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+	}
+
+	if version.GTE(semver.MustParse("0.30.0")) {
+		alertmanagerContainer.Env = append(alertmanagerContainer.Env, corev1.EnvVar{
+			Name: operator.PodNameEnvVar,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.name"},
+			},
+		})
+	}
+
+	defaultContainers := []corev1.Container{
+		alertmanagerContainer,
 		operator.CreateConfigReloader(
 			"config-reloader",
 			operator.ReloaderConfig(config.ReloaderConfig),

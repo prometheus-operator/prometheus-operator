@@ -54,7 +54,7 @@ type EC2SDConfigApplyConfiguration struct {
 	// Filter API documentation: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Filter.html
 	// It requires Prometheus >= v2.3.0
 	Filters                                                      *monitoringv1alpha1.Filters `json:"filters,omitempty"`
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the EC2 API.
 	// It requires Prometheus >= v2.41.0
 	TLSConfig *applyconfigurationmonitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`

@@ -40,7 +40,7 @@ type KumaSDConfigApplyConfiguration struct {
 	// fetchTimeout defines the time after which the monitoring assignments are refreshed.
 	FetchTimeout *v1.Duration `json:"fetchTimeout,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the Kuma control plane.
 	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// basicAuth defines information to use on every scrape request.

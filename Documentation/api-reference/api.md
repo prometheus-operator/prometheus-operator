@@ -792,6 +792,26 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>portName</code><br/>
 <em>
 string
@@ -3813,7 +3833,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -3828,6 +3849,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -3854,9 +3893,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.42.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.42.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
@@ -7395,6 +7440,26 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>portName</code><br/>
 <em>
 string
@@ -8296,6 +8361,64 @@ authentication.</p>
 <p>ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: <code>512MB</code>.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingFloats">ChunkEncodingFloats
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Xor&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Xor2&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ChunkEncodingSpec">ChunkEncodingSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.TSDBSpec">TSDBSpec</a>)
+</p>
+<div>
+<p>ChunkEncodingSpec configures per-chunk-type encoding overrides.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>floats</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingFloats">
+ChunkEncodingFloats
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>floats selects the encoding used for float chunks.
+Valid values are &ldquo;Xor&rdquo; and &ldquo;Xor2&rdquo;.</p>
+<p>Notice:
+* Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).
+* Setting &ldquo;Xor2&rdquo; automatically adds the <code>xor2-encoding</code> feature flag.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig
 </h3>
 <p>
@@ -10821,8 +10944,8 @@ Kubernetes core/v1.TypedLocalObjectReference
 * An existing PVC (PersistentVolumeClaim)
 If the provisioner or an external controller can support the specified data source,
 it will create a new volume based on the contents of the specified data source.
-When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+copied to dataSource when dataSourceRef.namespace is not specified.
 If the namespace is specified, then dataSourceRef will not be copied to dataSource.</p>
 </td>
 </tr>
@@ -10858,7 +10981,6 @@ preserves all values, and generates an error if a disallowed value is
 specified.
 * While dataSource only allows local objects, dataSourceRef allows objects
 in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
 (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.</p>
 </td>
 </tr>
@@ -12846,6 +12968,7 @@ bool
 <td>
 <em>(Optional)</em>
 <p>send defines whether metric metadata is sent to the remote storage or not.</p>
+<p>The setting is ignored when Remote Write message&rsquo;s version 2.0 is used.</p>
 </td>
 </tr>
 <tr>
@@ -16941,7 +17064,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -16956,6 +17080,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -16982,9 +17124,15 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>disableCompaction when true, the Prometheus compaction is disabled.
-When <code>spec.thanos.objectStorageConfig</code> or <code>spec.objectStorageConfigFile</code> are defined, the operator automatically
-disables block compaction to avoid race conditions during block uploads (as the Thanos documentation recommends).</p>
+<p>disableCompaction when true, the Prometheus compaction is disabled.</p>
+<p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
+default handling depends on the Prometheus and Thanos sidecar versions:
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.42.0, block compaction is disabled to avoid race
+conditions during block uploads (as the Thanos documentation recommends).
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.42.0, local compaction is kept enabled and coordinated
+with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
+compacted after they have been uploaded.
+Setting this field to true always disables local compaction regardless of the versions.</p>
 </td>
 </tr>
 <tr>
@@ -20108,7 +20256,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.33.0. Currently not supported by Thanos.</p>
+It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.34.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 <tr>
@@ -20575,6 +20723,23 @@ It may not trigger the stale series compaction if the usual head compaction
 is about to happen soon.</p>
 <p>If set to 0, stale series compaction is disabled.</p>
 <p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>chunkEncoding</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.ChunkEncodingSpec">
+ChunkEncodingSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>chunkEncoding configures per-chunk-type encoding overrides.</p>
+<p>It requires Prometheus &gt;= v3.13.0.</p>
+<p>Notice: Setting &ldquo;Xor&rdquo; is incompatible with &ndash;enable-feature=st-storage
+(XOR chunks do not store start timestamps).</p>
 </td>
 </tr>
 </tbody>
@@ -27325,6 +27490,29 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmRole">DockerSwarmRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>)
+</p>
+<div>
+<p>DockerSwarmRole defines the role of Docker Swarm targets to retrieve.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Nodes&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Services&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Tasks&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig
 </h3>
 <p>
@@ -27357,7 +27545,9 @@ string
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.DockerSwarmRole">
+DockerSwarmRole
+</a>
 </em>
 </td>
 <td>
@@ -28801,6 +28991,27 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.HetznerRole">HetznerRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>)
+</p>
+<div>
+<p>HetznerRole defines the Hetzner role of entities that should be discovered.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Hcloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Robot&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig
 </h3>
 <p>
@@ -28823,7 +29034,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.HetznerRole">
+HetznerRole
+</a>
 </em>
 </td>
 <td>
@@ -31327,6 +31540,29 @@ If not set, Prometheus uses its default value.</p>
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.OpenStackAvailability">OpenStackAvailability
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>)
+</p>
+<div>
+<p>OpenStackAvailability defines the availability of the endpoint to connect to.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Admin&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Internal&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Public&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.OpenStackRole">OpenStackRole
 (<code>string</code> alias)</h3>
 <p>
@@ -31587,7 +31823,9 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>availability</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.OpenStackAvailability">
+OpenStackAvailability
+</a>
 </em>
 </td>
 <td>
