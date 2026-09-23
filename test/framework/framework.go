@@ -255,7 +255,6 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	ctx context.Context,
 	opts PrometheusOperatorOpts,
 ) ([]FinalizerFn, error) {
-
 	var finalizers []FinalizerFn
 
 	_, err := f.createOrUpdateServiceAccount(
@@ -790,7 +789,6 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	namespace string,
 	image string,
 ) (*corev1.Service, []byte, error) {
-
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
 		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
 		nil,

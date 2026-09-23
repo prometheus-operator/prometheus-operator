@@ -37,7 +37,7 @@ type ProberSpecApplyConfiguration struct {
 	// path to collect metrics from.
 	// Defaults to `/probe`.
 	Path                          *string `json:"path,omitempty"`
-	ProxyConfigApplyConfiguration `json:",inline"`
+	ProxyConfigApplyConfiguration `json:""`
 }
 
 // ProberSpecApplyConfiguration constructs a declarative configuration of the ProberSpec type for use with

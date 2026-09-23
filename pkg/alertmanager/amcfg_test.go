@@ -3194,6 +3194,38 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Pushover_Receiver.golden",
 		},
 		{
+			name:      "CR with Pushover Receiver and file-based credentials",
+			amVersion: &version28,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+								UserKeyFile: new("/etc/pushover/user_key"),
+								TokenFile:   new("/etc/pushover/token"),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Pushover_Receiver_and_file_credentials.golden",
+		},
+		{
 			name:      "CR with Telegram Receiver",
 			amVersion: &version24,
 			kclient: fake.NewClientset(
@@ -3575,7 +3607,7 @@ func TestGenerateConfig(t *testing.T) {
 		},
 		{
 			name:      "CR with SNS Receiver with roleARN and externalId",
-			amVersion: &semver.Version{Major: 0, Minor: 33},
+			amVersion: &semver.Version{Major: 0, Minor: 34},
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -5401,6 +5433,55 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
 		},
 		{
+			name:           "discord_config with webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_with_webhook_url_file_set.golden",
+		},
+		{
+			name:           "discord_config both webhook url and webhook url file set",
+			againstVersion: versionDiscordMessageFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "discord_config webhook url file dropped for unsupported versions",
+			againstVersion: versionDiscordMessageFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "webex_config for supported versions",
 			againstVersion: versionWebexAllowed,
 			in: &alertmanagerConfig{
@@ -5745,7 +5826,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -5762,7 +5843,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Text:       "test text",
 							},
 						},
@@ -5779,7 +5860,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL:     "www.test.com",
+								WebhookURL:     "http://www.test.com",
 								WebhookURLFile: "/test",
 								Text:           "test text",
 							},
@@ -5841,7 +5922,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 							},
 						},
 					},
@@ -5857,7 +5938,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								AuthorName: "test author",
 							},
 						},
@@ -5874,7 +5955,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								AuthorName: "test author",
 							},
 						},
@@ -5891,7 +5972,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Fields: []mattermostField{
 									{
 										Title: "foo",
@@ -5913,7 +5994,7 @@ func TestSanitizeConfig(t *testing.T) {
 					{
 						MattermostConfigs: []*mattermostConfig{
 							{
-								WebhookURL: "www.test.com",
+								WebhookURL: "http://www.test.com",
 								Fields: []mattermostField{
 									{
 										Title: "foo",
@@ -8040,7 +8121,6 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 			golden.Assert(t, string(amConfigs), tc.golden)
 		})
 	}
-
 }
 
 func TestSanitizeRocketChatConfig(t *testing.T) {
@@ -8133,6 +8213,317 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 								APIURL:      "http://example.com",
 								TokenID:     new("t123456"),
 								TokenIDFile: "/var/kubernetes/secrets/token-id",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			amConfigs, err := yaml.Marshal(tc.in)
+			require.NoError(t, err)
+
+			golden.Assert(t, string(amConfigs), tc.golden)
+		})
+	}
+}
+
+func TestSanitizeMattermostConfig(t *testing.T) {
+	logger := newNopLogger(t)
+	versionMattermostAllowed := semver.Version{Major: 0, Minor: 30}
+	for _, tc := range []struct {
+		name           string
+		againstVersion semver.Version
+		in             *alertmanagerConfig
+		golden         string
+		expectErr      bool
+	}{
+		{
+			name:           "mattermost_configs invalid webhook_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid icon_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "not-a-valid-url",
+								Text:       "test",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment author_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment title_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										TitleLink: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment thumb_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ThumbURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment footer_icon returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										FooterIcon: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs invalid attachment image_url returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										ImageURL: "not-a-valid-url",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs valid urls pass validation",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    "https://example.com/icon.png",
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: "https://example.com/author",
+										AuthorIcon: "https://example.com/author-icon.png",
+										TitleLink:  "https://example.com/title",
+										ThumbURL:   "https://example.com/thumb.png",
+										FooterIcon: "https://example.com/footer-icon.png",
+										ImageURL:   "https://example.com/image.png",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_valid_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs templated urls pass validation",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								IconURL:    `{{ .CommonAnnotations.icon }}`,
+								Text:       "test",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										AuthorLink: `{{ .CommonAnnotations.author }}`,
+										AuthorIcon: `{{ .CommonAnnotations.authorIcon }}`,
+										TitleLink:  `{{ .CommonAnnotations.title }}`,
+										ThumbURL:   `{{ .CommonAnnotations.thumb }}`,
+										FooterIcon: `{{ .CommonAnnotations.footerIcon }}`,
+										ImageURL:   `{{ .CommonAnnotations.image }}`,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_templated_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs invalid top-level author_link returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								AuthorLink: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "mattermost_configs valid and templated top-level urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 32},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								AuthorLink: "https://example.com/author",
+								AuthorIcon: `{{ .CommonAnnotations.authorIcon }}`,
+								TitleLink:  `{{ .CommonAnnotations.title }}`,
+								ThumbURL:   "https://example.com/thumb.png",
+								FooterIcon: `{{ .CommonAnnotations.footerIcon }}`,
+								ImageURL:   "https://example.com/image.png",
+							},
+						},
+					},
+				},
+			},
+			golden: "mattermost_top_level_urls_pass_validation.golden",
+		},
+		{
+			name:           "mattermost_configs invalid template in attachment title_link returns error",
+			againstVersion: versionMattermostAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://mattermost.example.com/hooks/xxx",
+								Attachments: []*mattermostAttachmentConfig{
+									{
+										TitleLink: `{{ .CommonAnnotations.title`,
+									},
+								},
 							},
 						},
 					},
@@ -8577,6 +8968,11 @@ func TestLoadConfig(t *testing.T) {
 	}
 }
 
+func TestLoadConfigDiscordWebhookURLFile(t *testing.T) {
+	_, err := alertmanagerConfigFromBytes(golden.Get(t, "Discord_webhook_url_file_field.golden"))
+	require.NoError(t, err)
+}
+
 func TestConvertHTTPConfig(t *testing.T) {
 	testCases := []struct {
 		name    string
@@ -8905,6 +9301,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 	logger := newNopLogger(t)
 	versionSNSAllowed := semver.Version{Major: 0, Minor: 25}
 	versionV33 := semver.Version{Major: 0, Minor: 33}
+	versionV34 := semver.Version{Major: 0, Minor: 34}
 
 	for _, tc := range []struct {
 		name           string
@@ -8949,7 +9346,7 @@ func TestSanitizeSNSConfig(t *testing.T) {
 		},
 		{
 			name:           "sns valid sigv4.externalid passes in support amVersion",
-			againstVersion: versionV33,
+			againstVersion: versionV34,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{

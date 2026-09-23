@@ -58,7 +58,6 @@ var (
 )
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
-
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = corev1.ResourceList{}
 	}
@@ -325,11 +324,15 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		}
 
 		if len(tls.CipherSuites) > 0 && version.GTE(semver.MustParse("0.42.0")) {
-			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: strings.Join(tls.CipherSuites, ",")})
+			for _, cs := range tls.CipherSuites {
+				trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: cs})
+			}
 		}
 
 		if len(tls.Curves) > 0 && version.GTE(semver.MustParse("0.42.0")) {
-			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: strings.Join(tls.Curves, ",")})
+			for _, c := range tls.Curves {
+				trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: c})
+			}
 		}
 	}
 

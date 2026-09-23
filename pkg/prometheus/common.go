@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -75,13 +76,20 @@ var (
 )
 
 // RetentionTimeOrDefault returns the configured time-based retention or the
-// default retention when neither time nor size are configured.
-func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize) monitoringv1.Duration {
-	if retention == "" && retentionSize == "" {
+// default retention when none of time, size and percentage are configured.
+func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize, retentionPercentage *resource.Quantity) monitoringv1.Duration {
+	if retention == "" && retentionSize == "" && !RetentionPercentageEnabled(retentionPercentage) {
 		return monitoringv1.Duration(DefaultRetention)
 	}
 
 	return retention
+}
+
+// RetentionPercentageEnabled returns whether the given percentage-based
+// retention is configured. A zero percentage means that percentage-based
+// retention is disabled.
+func RetentionPercentageEnabled(retentionPercentage *resource.Quantity) bool {
+	return retentionPercentage != nil && !retentionPercentage.IsZero()
 }
 
 // LabelSelectorForStatefulSets returns a label selector which selects
@@ -118,6 +126,39 @@ func shardsNumber(
 	}
 
 	return *cpf.Shards
+}
+
+// UnbalancedTopologyShardingMessage returns true and a warning message when the
+// resource uses topology sharding with a number of shards that isn't a multiple
+// of the number of topology zones. In that case, shard indices wrap around and
+// some targets end up being scraped by more than one shard, resulting in
+// duplicated samples. It returns false and an empty string otherwise.
+//
+// Callers are expected to only invoke it when the PrometheusTopologySharding
+// feature gate is enabled.
+func UnbalancedTopologyShardingMessage(p monitoringv1.PrometheusInterface) (bool, string) {
+	ss := p.GetCommonPrometheusFields().ShardingStrategy
+	if ss == nil ||
+		ss.Mode == nil ||
+		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		ss.Topology == nil {
+		return false, ""
+	}
+
+	numZones := int32(len(ss.Topology.Values))
+	if numZones == 0 {
+		return false, ""
+	}
+
+	shards := shardsNumber(p)
+	if shards%numZones == 0 {
+		return false, ""
+	}
+
+	return true, fmt.Sprintf(
+		"the number of shards (%d) isn't a multiple of the number of topology zones (%d); some targets will be scraped by more than one shard, resulting in duplicated samples",
+		shards, numZones,
+	)
 }
 
 // ReplicasNumberPtr returns a ptr to the normalized number of replicas.
@@ -418,7 +459,6 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 }
 
 func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []monitoringv1.TopologySpreadConstraint) []corev1.TopologySpreadConstraint {
-
 	coreTscs := make([]corev1.TopologySpreadConstraint, 0, len(tscs))
 
 	for _, tsc := range tscs {

@@ -486,6 +486,37 @@ func TestGracePeriodForPrometheusStorage(t *testing.T) {
 			expectedDuration: 7 * 24 * time.Hour,
 		},
 		{
+			name: "percentage-only retention returns zero duration",
+			spec: monitoringv1.PrometheusSpec{
+				RetentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
+				},
+			},
+			expectedDuration: 0,
+		},
+		{
+			name: "zero percentage retention falls back to the default duration",
+			spec: monitoringv1.PrometheusSpec{
+				RetentionPercentage: resource.NewQuantity(0, resource.DecimalSI),
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
+				},
+			},
+			expectedDuration: 24 * time.Hour,
+		},
+		{
+			name: "percentage and time retention uses time-based value",
+			spec: monitoringv1.PrometheusSpec{
+				Retention:           "7d",
+				RetentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+				ShardRetentionPolicy: &monitoringv1.ShardRetentionPolicy{
+					WhenScaled: new(monitoringv1.RetainWhenScaledRetentionType),
+				},
+			},
+			expectedDuration: 7 * 24 * time.Hour,
+		},
+		{
 			name: "invalid retention returns error",
 			spec: monitoringv1.PrometheusSpec{
 				Retention: "invalid",

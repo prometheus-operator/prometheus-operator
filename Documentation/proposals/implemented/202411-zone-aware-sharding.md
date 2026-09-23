@@ -166,7 +166,7 @@ for Prometheus in case it is not already allowed to read node objects.
 ### API changes
 
 > [!NOTE]
-> This proposal is mutually exclusive to [DaemonSet mode](202405-agent-daemonset.md),
+> This proposal is mutually exclusive to [DaemonSet mode](../accepted/202405-agent-daemonset.md),
 > as Prometheus always scrapes a single node in that case.
 > Defining a `shardingStrategy` when `DaemonSet mode` is active, should lead to
 > a reconciliation error.

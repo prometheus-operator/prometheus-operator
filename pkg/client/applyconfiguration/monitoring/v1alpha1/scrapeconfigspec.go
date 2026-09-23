@@ -153,7 +153,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.28.0.
 	BodySizeLimit                              *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
-	v1.NativeHistogramConfigApplyConfiguration `json:",inline"`
+	v1.NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -162,7 +162,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
 	MetricRelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	v1.ProxyConfigApplyConfiguration `json:""`
 	// nameValidationScheme defines the validation scheme for metric and label names.
 	//
 	// It requires Prometheus >= v3.0.0.

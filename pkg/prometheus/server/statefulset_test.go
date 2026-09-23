@@ -17,6 +17,7 @@ package prometheus
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strconv"
@@ -996,6 +997,12 @@ func TestThanosObjectStorage(t *testing.T) {
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled (min == max block duration) rather than delegated to the
+			// delayed-compaction coordination path.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfig: &corev1.SecretKeySelector{
 					Key: testKey,
@@ -1056,6 +1063,12 @@ func TestThanosObjectStorageFile(t *testing.T) {
 	testPath := "/vault/secret/config.yaml"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled (min == max block duration) rather than delegated to the
+			// delayed-compaction coordination path.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				ObjectStorageConfigFile: &testPath,
 				BlockDuration:           "2h",
@@ -1122,6 +1135,12 @@ func TestThanosBlockDuration(t *testing.T) {
 
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
 		Spec: monitoringv1.PrometheusSpec{
+			// Pin a Prometheus version older than v3.9.0 so that compaction is
+			// disabled and the BlockDuration is applied to the min/max block
+			// duration flags.
+			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+				Version: "2.55.0",
+			},
 			Thanos: &monitoringv1.ThanosSpec{
 				BlockDuration: "1h",
 				ObjectStorageConfig: &corev1.SecretKeySelector{
@@ -1139,6 +1158,96 @@ func TestThanosBlockDuration(t *testing.T) {
 		}
 	}
 	require.True(t, found, "Thanos BlockDuration arg change not found")
+}
+
+// containerByName returns the container with the given name from the pod spec.
+func containerByName(t *testing.T, sset *appsv1.StatefulSet, name string) corev1.Container {
+	t.Helper()
+	for _, c := range sset.Spec.Template.Spec.Containers {
+		if c.Name == name {
+			return c
+		}
+	}
+	require.Failf(t, "container not found", "no container named %q in the pod spec", name)
+	return corev1.Container{}
+}
+
+// TestThanosDelayedCompaction verifies that with Prometheus >= v3.9.0 and Thanos
+// >= v0.42.0, the operator keeps local compaction enabled and coordinates block
+// uploads with the sidecar through the shipper meta file instead of disabling
+// compaction. Otherwise (versions too old, or compaction explicitly disabled) it
+// falls back to disabling compaction. Thanos v0.41.0 is excluded: its sidecar
+// rejects the resulting flags due to a validation bug (issue #8763).
+// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+func TestThanosDelayedCompaction(t *testing.T) {
+	for _, tc := range []struct {
+		name              string
+		promVersion       string
+		thanosVersion     string
+		disableCompaction bool
+		delayed           bool
+	}{
+		{name: "supported versions", promVersion: "3.9.0", thanosVersion: "0.42.0", delayed: true},
+		{name: "prometheus too old", promVersion: "3.8.0", thanosVersion: "0.42.0"},
+		{name: "thanos too old", promVersion: "3.9.0", thanosVersion: "0.40.0"},
+		{name: "thanos v0.41.0 unsupported due to strict sidecar validation", promVersion: "3.9.0", thanosVersion: "0.41.0"},
+		{name: "compaction explicitly disabled", promVersion: "3.9.0", thanosVersion: "0.42.0", disableCompaction: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			thanosVersion := tc.thanosVersion
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: tc.promVersion,
+					},
+					DisableCompaction: tc.disableCompaction,
+					Thanos: &monitoringv1.ThanosSpec{
+						Version: &thanosVersion,
+						ObjectStorageConfig: &corev1.SecretKeySelector{
+							Key: "thanos-config-secret-test",
+						},
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := containerByName(t, sset, "prometheus").Args
+			sidecarArgs := containerByName(t, sset, "thanos-sidecar").Args
+			delayArg := "--storage.tsdb.delay-compact-file.path=" + filepath.Join(prompkg.StorageDir, "thanos.shipper.json")
+
+			if tc.delayed {
+				require.Contains(t, promArgs, delayArg)
+				for _, arg := range promArgs {
+					require.False(t, strings.HasPrefix(arg, "--storage.tsdb.max-block-duration="), "compaction should stay enabled: %q", arg)
+					require.False(t, strings.HasPrefix(arg, "--storage.tsdb.min-block-duration="), "compaction should stay enabled: %q", arg)
+				}
+				require.Contains(t, sidecarArgs, "--shipper.meta-file-name=thanos.shipper.json")
+				require.Contains(t, sidecarArgs, "--shipper.ignore-unequal-block-size")
+				return
+			}
+
+			require.Contains(t, promArgs, "--storage.tsdb.max-block-duration=2h")
+			require.NotContains(t, promArgs, delayArg)
+			require.NotContains(t, sidecarArgs, "--shipper.ignore-unequal-block-size")
+		})
+	}
+}
+
+// TestThanosInvalidVersion verifies that an unparsable Thanos version surfaces
+// an error instead of being silently swallowed.
+func TestThanosInvalidVersion(t *testing.T) {
+	invalidVersion := "not-a-version"
+	_, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+		Spec: monitoringv1.PrometheusSpec{
+			Thanos: &monitoringv1.ThanosSpec{
+				Version: &invalidVersion,
+				ObjectStorageConfig: &corev1.SecretKeySelector{
+					Key: "thanos-config-secret-test",
+				},
+			},
+		},
+	})
+	require.Error(t, err)
 }
 
 func TestThanosWithNamedPVC(t *testing.T) {
@@ -1275,24 +1384,29 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 		version                    string
 		specRetention              monitoringv1.Duration
 		specRetentionSize          monitoringv1.ByteSize
+		specRetentionPercentage    *resource.Quantity
 		expectedRetentionArg       string
 		expectedRetentionSizeArg   string
 		shouldContainRetention     bool
 		shouldContainRetentionSize bool
 	}{
-		{"v2.5.0", "", "", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "1d", "", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.5.0", "", "512MB", "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.5.0", "1d", "512MB", "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
-		{"v2.7.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
-		{"v2.7.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
-		{"v2.7.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
-		{"v3.10.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
-		{"v3.11.0", "", "", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
-		{"v3.11.0", "1d", "", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
-		{"v3.11.0", "", "512MB", "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
-		{"v3.11.0", "1d", "512MB", "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v2.5.0", "", "", nil, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "1d", "", nil, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.5.0", "", "512MB", nil, "--storage.tsdb.retention=24h", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.5.0", "1d", "512MB", nil, "--storage.tsdb.retention=1d", "--storage.tsdb.retention.size=512MB", true, false},
+		{"v2.7.0", "", "", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "1d", "", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", true, false},
+		{"v2.7.0", "", "512MB", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, true},
+		{"v2.7.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		{"v3.10.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", true, true},
+		// Percentage-based retention isn't supported before v3.11.0 so it
+		// shouldn't prevent the default time-based retention from being set.
+		{"v3.10.0", "", "", resource.NewQuantity(80, resource.DecimalSI), "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", true, false},
+		{"v3.11.0", "", "", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "1d", "", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=", false, false},
+		{"v3.11.0", "", "512MB", nil, "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v3.11.0", "1d", "512MB", nil, "--storage.tsdb.retention.time=1d", "--storage.tsdb.retention.size=512MB", false, false},
+		{"v3.11.0", "", "", resource.NewQuantity(80, resource.DecimalSI), "--storage.tsdb.retention.time=24h", "--storage.tsdb.retention.size=", false, false},
 	}
 
 	for _, test := range tests {
@@ -1302,8 +1416,9 @@ func TestRetentionAndRetentionSize(t *testing.T) {
 					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
 						Version: test.version,
 					},
-					Retention:     test.specRetention,
-					RetentionSize: test.specRetentionSize,
+					Retention:           test.specRetention,
+					RetentionSize:       test.specRetentionSize,
+					RetentionPercentage: test.specRetentionPercentage,
 				},
 			})
 			require.NoError(t, err)
@@ -1698,6 +1813,60 @@ func TestEnableFeaturesWithMultipleFeature(t *testing.T) {
 	}
 
 	require.True(t, found, "Prometheus enabled features are not correctly set.")
+}
+
+func TestAutoEnableXOR2EncodingFeature(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		chunkEncoding  *monitoringv1.ChunkEncodingSpec
+		enableFeatures []monitoringv1.EnableFeature
+		expectedFlag   bool
+	}{
+		{
+			name:          "no chunk encoding",
+			chunkEncoding: nil,
+			expectedFlag:  false,
+		},
+		{
+			name: "chunk encoding xor",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor),
+			},
+			expectedFlag: false,
+		},
+		{
+			name: "chunk encoding xor2 auto-enables feature",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+			},
+			expectedFlag: true,
+		},
+		{
+			name: "chunk encoding xor2 with user feature flag - no duplicate",
+			chunkEncoding: &monitoringv1.ChunkEncodingSpec{
+				Floats: ptr.To(monitoringv1.ChunkEncodingFloatsXor2),
+			},
+			enableFeatures: []monitoringv1.EnableFeature{"xor2-encoding"},
+			expectedFlag:   true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:        "v3.13.0",
+						TSDB:           &monitoringv1.TSDBSpec{ChunkEncoding: tc.chunkEncoding},
+						EnableFeatures: tc.enableFeatures,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := sset.Spec.Template.Spec.Containers[0].Args
+			found := slices.Contains(promArgs, "--enable-feature=xor2-encoding")
+			require.Equal(t, tc.expectedFlag, found, "xor2-encoding feature flag mismatch. Args: %v", promArgs)
+		})
+	}
 }
 
 func TestWebPageTitle(t *testing.T) {
@@ -2608,8 +2777,13 @@ func TestGRPCServerTLSCipherSuites(t *testing.T) {
 			require.NoError(t, err)
 
 			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
-			expectedArg := "--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384"
-			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+			expectedArgs := []string{
+				"--grpc-server-tls-ciphers=TLS_AES_128_GCM_SHA256",
+				"--grpc-server-tls-ciphers=TLS_AES_256_GCM_SHA384",
+			}
+			for _, expectedArg := range expectedArgs {
+				require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg), "expected %q presence to be %v", expectedArg, tc.shouldHaveArg)
+			}
 		})
 	}
 }
@@ -2656,8 +2830,13 @@ func TestGRPCServerTLSCurves(t *testing.T) {
 			require.NoError(t, err)
 
 			thanosArgs := sset.Spec.Template.Spec.Containers[2].Args
-			expectedArg := "--grpc-server-tls-curves=CurveP256,X25519"
-			require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg))
+			expectedArgs := []string{
+				"--grpc-server-tls-curves=CurveP256",
+				"--grpc-server-tls-curves=X25519",
+			}
+			for _, expectedArg := range expectedArgs {
+				require.Equal(t, tc.shouldHaveArg, slices.Contains(thanosArgs, expectedArg), "expected %q presence to be %v", expectedArg, tc.shouldHaveArg)
+			}
 		})
 	}
 }

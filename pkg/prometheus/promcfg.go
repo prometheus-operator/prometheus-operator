@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -794,7 +795,6 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		if ss != nil && ss.Mode != nil &&
 			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
 			ss.Topology != nil {
-
 			// Default label name is "zone"; nil means use default.
 			// Empty string means skip.
 			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
@@ -860,7 +860,6 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	store assets.StoreGetter,
 	safetls *monitoringv1.SafeTLSConfig,
 ) yaml.MapSlice {
-
 	if safetls == nil {
 		return cfg
 	}
@@ -1055,7 +1054,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize, p.Spec.RetentionPercentage)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1097,6 +1096,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 	exemplars *monitoringv1.Exemplars,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
+	retentionPercentage *resource.Quantity,
 ) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
@@ -1107,6 +1107,14 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 
 	err := tsdb.Validate()
 	if err != nil {
+		return cfg, err
+	}
+
+	if err := validateRetentionPercentage(retentionPercentage); err != nil {
+		return cfg, err
+	}
+
+	if err := validateChunkEncodingCompatibility(cg.prom.GetCommonPrometheusFields()); err != nil {
 		return cfg, err
 	}
 
@@ -1127,17 +1135,39 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		if tsdb.StaleSeriesCompactionThreshold != nil {
 			tsdbSlice = cg.WithMinimumVersion("3.10.0").AppendMapItem(tsdbSlice, "stale_series_compaction_threshold", tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64())
 		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			tsdbSlice = cg.WithMinimumVersion("3.13.0").AppendMapItem(tsdbSlice, "chunk_encoding", yaml.MapSlice{
+				{Key: "floats", Value: strings.ToLower(string(*tsdb.ChunkEncoding.Floats))},
+			})
+		}
 	}
 
-	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
-		var retentionSlice yaml.MapSlice
-		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
+	var (
+		retentionSlice yaml.MapSlice
+		cgRetention    = cg.WithMinimumVersion("3.11.0")
+	)
+
+	if cgRetention.IsCompatible() {
+		// Starting with v3.11.0, the time and size retention settings are read
+		// from the configuration file instead of the command-line arguments.
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize, retentionPercentage))
 		if retentionTime != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
 		}
+
 		if retentionSize != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
 		}
+	}
+
+	// Percentage-based retention has no command-line equivalent, hence it can't
+	// be supported by older Prometheus versions.
+	if retentionPercentage != nil {
+		retentionSlice = cgRetention.AppendMapItem(retentionSlice, "percentage", retentionPercentage.AsApproximateFloat64())
+	}
+
+	if len(retentionSlice) > 0 {
 		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
 	}
 
@@ -1263,9 +1293,13 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
-	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
-	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
-	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// metadata-wal-records is in the process of being deprecated as part of
+	// remote write v2 stabilization: it causes some increase in resource usage
+	// overall. The feature used to be automatically enabled in older Prometheus
+	// versions but it isn't anymore since v3.4.0.
+	// For more context, see:
+	// https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// https://github.com/prometheus/prometheus/issues/16944.
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
 			cg = cg.WithMinimumVersion("2.54.0")
@@ -1291,6 +1325,20 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 			efs[i] = string(cpf.EnableFeatures[i])
 		}
 		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
+	}
+
+	// Auto-enable xor2-encoding feature flag when chunk encoding is set to xor2.
+	if cpf.TSDB != nil && cpf.TSDB.ChunkEncoding != nil && cpf.TSDB.ChunkEncoding.Floats != nil && *cpf.TSDB.ChunkEncoding.Floats == monitoringv1.ChunkEncodingFloatsXor2 {
+		hasXOR2 := false
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "xor2-encoding" {
+				hasXOR2 = true
+				break
+			}
+		}
+		if !hasXOR2 {
+			promArgs = cg.WithMinimumVersion("3.13.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "xor2-encoding"})
+		}
 	}
 
 	if cpf.ExternalURL != "" {
@@ -1498,7 +1546,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-
 		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
@@ -3049,7 +3096,13 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 		}
 
 		if spec.MetadataConfig != nil {
-			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			var metadataConfig yaml.MapSlice
+			if ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
+				// Prometheus automatically turns off metadata sending when remote-write v2 is used.
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: false})
+			} else {
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			}
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}
@@ -3196,7 +3249,6 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
@@ -3219,7 +3271,6 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
@@ -3242,7 +3293,6 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
@@ -3328,6 +3378,10 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		return nil, err
 	}
 
+	if err := validateChunkEncodingCompatibility(cpf); err != nil {
+		return nil, err
+	}
+
 	if tsdb != nil {
 		if tsdb.OutOfOrderTimeWindow != nil {
 			var storage yaml.MapSlice
@@ -3349,6 +3403,19 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 				},
 			})
 			cfg = cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key: "chunk_encoding",
+					Value: yaml.MapSlice{
+						{Key: "floats", Value: strings.ToLower(string(*tsdb.ChunkEncoding.Floats))},
+					},
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.13.0").AppendMapItem(cfg, "storage", storage)
 		}
 	}
 
@@ -3377,7 +3444,6 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-
 	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
@@ -3869,7 +3935,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -4196,7 +4261,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Availability != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "availability",
-					Value: config.Availability,
+					Value: strings.ToLower(string(*config.Availability)),
 				})
 			}
 
@@ -4412,7 +4477,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "docker_sd_configs",
@@ -4472,14 +4536,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.FollowRedirects,
 				})
 			}
-
 		}
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "linode_sd_configs",
 			Value: configs,
 		})
-
 	}
 
 	// HetznerSDConfig
@@ -4493,7 +4555,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.FollowRedirects != nil {
@@ -4628,7 +4690,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.Port != nil {
@@ -4658,7 +4720,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dockerswarm_sd_configs",
@@ -4766,7 +4827,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -5439,4 +5499,38 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 			Node: new(true),
 		},
 	}
+}
+
+// validateRetentionPercentage validates that the percentage-based retention is
+// within the range supported by Prometheus.
+func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
+	if retentionPercentage == nil {
+		return nil
+	}
+
+	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
+		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
+	}
+
+	return nil
+}
+
+// validateChunkEncodingCompatibility validates that the chunk encoding settings
+// are compatible with the enabled feature flags.
+func validateChunkEncodingCompatibility(cpf monitoringv1.CommonPrometheusFields) error {
+	if cpf.TSDB == nil || cpf.TSDB.ChunkEncoding == nil || cpf.TSDB.ChunkEncoding.Floats == nil {
+		return nil
+	}
+
+	// Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	if *cpf.TSDB.ChunkEncoding.Floats == monitoringv1.ChunkEncodingFloatsXor {
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "st-storage" {
+				return fmt.Errorf("chunk encoding \"Xor\" is incompatible with --enable-feature=st-storage (XOR chunks do not store start timestamps)")
+			}
+		}
+	}
+
+	return nil
 }

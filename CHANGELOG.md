@@ -1,6 +1,37 @@
-## UNRELEASED
+## 0.94.0 / 2026-09-09
 
+* [CHANGE] Update the default Alertmanager version to v0.34.0 and discard zero-value duration fields (`retention`, `clusterGossipInterval`, `clusterPushpullInterval`, `clusterPeerTimeout`) in `Alertmanager` resources instead of passing them as CLI flags, which Alertmanager rejects and can cause startup failures. Ignored fields are reported via the `IgnoredFields` status condition. #8800
+* [CHANGE] Add named enum types for Hetzner, Docker Swarm, and OpenStack service discovery fields in the `ScrapeConfig` CRD (`HetznerRole`, `DockerSwarmRole`, `OpenStackAvailability`). #8789
+* [CHANGE] Reject empty strings in `namespaceDiscovery.names`, `consulSDConfig.services`, and `consulSDConfig.tags` list fields in the `ScrapeConfig` CRD. #8786
+* [FEATURE] Add `retentionPercentage` field to `Prometheus` and `PrometheusAgent` CRDs for volume-based retention (requires Prometheus >= v3.11.0). Setting only the percentage no longer falls back to the default 24h time-based retention. #8728
+* [FEATURE] Add `clusterPeerName` field to `Alertmanager` CRD to override the `--cluster.peer-name` flag (requires Alertmanager >= v0.30.0). #8767
+* [FEATURE] Expose status conditions as Prometheus metrics for `Prometheus`, `PrometheusAgent`, `Alertmanager`, and `ThanosRuler` resources (`prometheus_operator_<resource>_status_condition`). #8719
+* [ENHANCEMENT] Tighten the operator's ClusterRole by replacing wildcard verbs with explicit permissions per resource. #8752
+* [ENHANCEMENT] Support `webhook_url_file` for Discord receiver in Alertmanager configuration Secret (requires Alertmanager >= v0.28.0). #8035
+* [BUGFIX] Require Thanos >= v0.42.0 for delayed compaction with object storage uploads, raised from v0.41.0. Thanos v0.41.0 mis-validates the delayed-compaction paths and the sidecar crash-loops; deployments pinned to v0.41.0 fall back to disabling local compaction. #8764
+* [BUGFIX] Add URL validation for Mattermost receiver fields in Alertmanager configuration Secret. #8225
+* [BUGFIX] Fix operator panic when `AlertmanagerConfig` Pushover receivers use `userKeyFile` or `tokenFile` instead of secret selectors. #8775
+* [BUGFIX] Fix operator panic when kubelet Service synchronization fails and the service is unavailable. #8743
+* [BUGFIX] Fix resources stuck during deletion when the informer misses the deletion timestamp update. #8727
+* [BUGFIX] Fix `TracingConfig` fields in `Prometheus` CRD not being serialized due to invalid JSON struct tags. #8730
+* [BUGFIX] Fix `externalId` version gating for Alertmanager SigV4 configuration to require version >= v0.34.0 (was incorrectly set to v0.33.0). #8759
+
+## 0.93.1 / 2026-08-10
+
+* [BUGFIX] Fix duplicate kubelet targets for nodes reporting several addresses of the same IP family. #8739
+* [BUGFIX] Fix argument list for Thanos containers when custom TLS ciphers or curves are specified. #8749
+
+## 0.93.0 / 2026-07-28
+
+* [CHANGE] Switch from uint to int types in the Go definition of the CRDs and add API validations to reject negative values. #8662 #8666
+* [CHANGE] Keep local Prometheus compaction enabled when the Thanos sidecar uploads to object storage, for Prometheus >= v3.9.0 and Thanos >= v0.41.0. The operator now coordinates uploads through the shipper meta file (`--storage.tsdb.delay-compact-file.path`, `--shipper.meta-file-name`, `--shipper.ignore-unequal-block-size`) instead of disabling compaction. Set `spec.disableCompaction: true` to keep the previous behavior. #8694
+* [CHANGE] Define a default value of 1 for `.spec.shards` for `Prometheus` and `PrometheusAgent` CRDs. #8691
 * [CHANGE/BUGFIX] Add validation markers to all unsigned int fields to reject negative values. #8662
+* [CHANGE/BUGFIX] Disable metadata sending when the remote-write configuration uses message version v2.0. #8700
+* [FEATURE] Add `updateMessage` field to the Slack receiver in the `AlertmanagerConfig` CRD. #8506
+* [FEATURE] Add `chunkEncoding` field to `TSDBSpec` for runtime float encoding selection in `Prometheus` and `PrometheusAgent` CRDs. #8675
+* [ENHANCEMENT] Use pod's name as the peer name for Alertmanager >= v0.30.0. #8705
+* [BUGFIX] Create IPv6 EndpointSlice for the `kubelet` Service on dual-stack clusters. #8682
 
 ## 0.92.1 / 2026-06-30
 
