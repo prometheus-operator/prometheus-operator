@@ -5107,7 +5107,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
