@@ -1211,13 +1211,16 @@ type PrometheusSpec struct {
 	// +optional
 	CommonPrometheusFields `json:",inline"`
 
-	// baseImage is deprecated: use 'spec.image' instead.
+	// baseImage defines the base image used for the Prometheus container.
+	// Deprecated: use 'spec.image' instead.
 	// +optional
 	BaseImage string `json:"baseImage,omitempty"`
-	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
+	// tag defines the tag of the Prometheus container image.
+	// Deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
 	// +optional
 	Tag string `json:"tag,omitempty"`
-	// sha is deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
+	// sha defines the sha256 digest of the Prometheus container image.
+	// Deprecated: use 'spec.image' instead. The image's digest can be specified as part of the image name.
 	// +optional
 	SHA string `json:"sha,omitempty"`
 
@@ -1532,9 +1535,10 @@ type AlertingSpec struct {
 //
 // +k8s:openapi-gen=true
 type StorageSpec struct {
-	// disableMountSubPath deprecated: subPath usage will be removed in a future release.
+	// disableMountSubPath disables the use of subPath for mounts.
+	// Deprecated: subPath usage will be removed in a future release.
 	// +optional
-	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"` // nolint:kubeapilinter
+	DisableMountSubPath bool `json:"disableMountSubPath,omitempty"` //nolint:kubeapilinter
 	// emptyDir to be used by the StatefulSet.
 	// If specified, it takes precedence over `ephemeral` and `volumeClaimTemplate`.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
@@ -1615,13 +1619,16 @@ type ThanosSpec struct {
 	//
 	// +optional
 	Version *string `json:"version,omitempty"`
-	// tag is deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
+	// tag defines the tag of the Thanos sidecar container image.
+	// Deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
 	// +optional
 	Tag *string `json:"tag,omitempty"`
-	// sha is deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
+	// sha defines the sha256 digest of the Thanos sidecar container image.
+	// Deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
 	// +optional
 	SHA *string `json:"sha,omitempty"`
-	// baseImage is deprecated: use 'image' instead.
+	// baseImage defines the base image used for the Thanos sidecar container.
+	// Deprecated: use 'image' instead.
 	// +optional
 	BaseImage *string `json:"baseImage,omitempty"`
 
@@ -1644,9 +1651,10 @@ type ThanosSpec struct {
 	// +optional
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 
-	// listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
+	// listenLocal configures the Thanos sidecar to listen on the loopback interface.
+	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	// +optional
-	ListenLocal bool `json:"listenLocal,omitempty"` // nolint:kubeapilinter
+	ListenLocal bool `json:"listenLocal,omitempty"` //nolint:kubeapilinter
 
 	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the gRPC endpoints.
@@ -1863,7 +1871,8 @@ type RemoteWriteSpec struct {
 	// +optional
 	AzureAD *AzureAD `json:"azureAd,omitempty"`
 
-	// bearerToken is deprecated: this will be removed in a future release.
+	// bearerToken specifies the bearer token used for authentication.
+	// Deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//
@@ -2164,7 +2173,8 @@ type RemoteReadSpec struct {
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
 
-	// bearerToken is deprecated: this will be removed in a future release.
+	// bearerToken specifies the bearer token used for authentication.
+	// Deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//
@@ -2293,7 +2303,8 @@ type APIServerConfig struct {
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
 
-	// bearerToken is deprecated: this will be removed in a future release.
+	// bearerToken specifies the bearer token used for authentication.
+	// Deprecated: this will be removed in a future release.
 	//  *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
 	//

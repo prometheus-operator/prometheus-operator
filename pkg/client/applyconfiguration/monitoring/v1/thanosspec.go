@@ -44,11 +44,14 @@ type ThanosSpecApplyConfiguration struct {
 	// Thanos available at the time when the version of the operator was
 	// released.
 	Version *string `json:"version,omitempty"`
-	// tag is deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
+	// tag defines the tag of the Thanos sidecar container image.
+	// Deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
 	Tag *string `json:"tag,omitempty"`
-	// sha is deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
+	// sha defines the sha256 digest of the Thanos sidecar container image.
+	// Deprecated: use 'image' instead.  The image digest can be specified as part of the image name.
 	SHA *string `json:"sha,omitempty"`
-	// baseImage is deprecated: use 'image' instead.
+	// baseImage defines the base image used for the Thanos sidecar container.
+	// Deprecated: use 'image' instead.
 	BaseImage *string `json:"baseImage,omitempty"`
 	// resources defines the resources requests and limits of the Thanos sidecar.
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
@@ -64,7 +67,8 @@ type ThanosSpecApplyConfiguration struct {
 	//
 	// This field takes precedence over objectStorageConfig.
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
-	// listenLocal is deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
+	// listenLocal configures the Thanos sidecar to listen on the loopback interface.
+	// Deprecated: use `grpcListenLocal` and `httpListenLocal` instead.
 	ListenLocal *bool `json:"listenLocal,omitempty"`
 	// grpcListenLocal defines when true, the Thanos sidecar listens on the loopback interface instead
 	// of the Pod IP's address for the gRPC endpoints.
