@@ -9393,6 +9393,13 @@
                           },
                           "clientAuthType": {
                             "description": "clientAuthType defines the server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "enum": [
+                              "NoClientCert",
+                              "RequestClientCert",
+                              "RequireAnyClientCert",
+                              "VerifyClientCertIfGiven",
+                              "RequireAndVerifyClientCert"
+                            ],
                             "type": "string"
                           },
                           "clientCAFile": {
