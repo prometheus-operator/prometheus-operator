@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -42,6 +42,15 @@ rules:
   - thanosrulers/finalizers
   verbs:
   - patch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers/finalizers
+  - prometheusagents/finalizers
+  - prometheuses/finalizers
+  - thanosrulers/finalizers
+  verbs:
+  - update
 - apiGroups:
   - monitoring.coreos.com
   resources:
@@ -242,7 +251,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
   namespace: default
 ```
@@ -258,7 +267,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io

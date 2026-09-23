@@ -96,6 +96,16 @@ function(params) {
              {
                apiGroups: ['monitoring.coreos.com'],
                resources: [
+                 'alertmanagers/finalizers',
+                 'prometheusagents/finalizers',
+                 'prometheuses/finalizers',
+                 'thanosrulers/finalizers',
+               ],
+               verbs: ['update'],
+             },
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
                  'alertmanagers/status',
                  'podmonitors/status',
                  'probes/status',
