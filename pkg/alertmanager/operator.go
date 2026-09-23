@@ -1785,7 +1785,6 @@ func checkJiraConfigs(
 	}
 
 	for _, config := range configs {
-
 		if config.APIType != nil && amVersion.LT(semver.MustParse("0.29.0")) {
 			return fmt.Errorf(
 				"'apiType' config set in 'jiraConfig' but supported in Alertmanager >= 0.29.0 only - current %s",
