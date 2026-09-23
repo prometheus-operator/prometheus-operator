@@ -121,7 +121,6 @@ func validateReceivers(receivers []monitoringv1beta1.Receiver) (map[string]struc
 		if err := validateMattermostConfigs(receiver.MattermostConfigs); err != nil {
 			return nil, fmt.Errorf("failed to validate 'mattermostConfig' - receiver %s: %w", receiver.Name, err)
 		}
-
 	}
 
 	return receiverNames, nil
@@ -569,7 +568,6 @@ func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error
 
 func validateMattermostConfigs(configs []monitoringv1beta1.MattermostConfig) error {
 	for i, config := range configs {
-
 		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
 			return fmt.Errorf("[%d]: iconURL: %w", i, err)
 		}
