@@ -414,10 +414,6 @@ func validateSNSConfigs(configs []monitoringv1beta1.SNSConfig) error {
 
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	v := func(conf monitoringv1beta1.TelegramConfig) error {
-		if conf.BotToken == nil && conf.BotTokenFile == nil {
-			return errors.New("mandatory field botToken or botTokenfile is empty")
-		}
-
 		if conf.BotToken != nil && conf.BotTokenFile != nil {
 			return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 		}
