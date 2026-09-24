@@ -115,7 +115,6 @@ rules:
   - pods
   verbs:
   - list
-  - delete
 - apiGroups:
   - ""
   resources:
@@ -126,13 +125,6 @@ rules:
   - create
   - update
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -162,6 +154,13 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
