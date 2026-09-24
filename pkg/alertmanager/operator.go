@@ -1281,18 +1281,18 @@ func checkPagerDutyConfigs(
 ) error {
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
-			return err
+			return fmt.Errorf("httpConfig: %w", err)
 		}
 
 		if config.RoutingKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("routingKey: %w", err)
 			}
 		}
 
 		if config.ServiceKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("serviceKey: %w", err)
 			}
 		}
 

@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [BUGFIX] Reject AlertmanagerConfig resources where PagerDuty `routingKey` and `serviceKey` references resolve to empty strings. #8842
+
 ## 0.94.1 / 2026-09-23
 
 * [BUGFIX] Restore `update` permission on finalizer subresources in the operator's ClusterRole, required by `OwnerReferencesPermissionEnforcement` when `blockOwnerDeletion` is set. #8830
