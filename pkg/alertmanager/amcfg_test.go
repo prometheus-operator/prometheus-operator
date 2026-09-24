@@ -7741,6 +7741,159 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name:           "Test invalid url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								URL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid client_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ClientURL: "not-a-valid-url",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid image src returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Images: []pagerdutyImage{
+									{Src: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid image href returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Images: []pagerdutyImage{
+									{Href: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test invalid link href returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								Links: []pagerdutyLink{
+									{Href: "not-a-valid-url"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test valid urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								URL:       "https://events.pagerduty.com/v2/enqueue",
+								ClientURL: "https://example.com/client",
+								Images: []pagerdutyImage{
+									{
+										Src:  "https://example.com/image.png",
+										Href: "https://example.com/link",
+									},
+								},
+								Links: []pagerdutyLink{
+									{Href: "https://example.com/docs"},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_valid_urls_pass_validation_in_pagerduty_config.golden",
+		},
+		{
+			name:           "Test templated urls pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ClientURL: `{{ .CommonAnnotations.client }}`,
+								Images: []pagerdutyImage{
+									{
+										Src:  `{{ .CommonAnnotations.image }}`,
+										Href: `{{ .CommonAnnotations.link }}`,
+									},
+								},
+								Links: []pagerdutyLink{
+									{Href: `{{ .CommonAnnotations.docs }}`},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_templated_urls_pass_validation_in_pagerduty_config.golden",
+		},
+		{
+			name:           "Test invalid template in client_url returns error",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ClientURL: `{{ .CommonAnnotations.client`,
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
