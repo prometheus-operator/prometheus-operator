@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/cespare/xxhash/v2"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -649,10 +650,10 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
-	// TODO(simonpasquier): the operator should take into account changes to
-	// the cluster TLS configuration to trigger a rollout of the pods (this
-	// configuration doesn't support live reload).
-	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+	// A change to the cluster TLS configuration triggers a rollout of the pods
+	// (this configuration doesn't support live reload).
+	clusterTLSConfigHash, err := c.createOrUpdateClusterTLSConfigSecret(ctx, am)
+	if err != nil {
 		return fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
 
@@ -684,12 +685,12 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		return nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec, clusterTLSConfigHash)
 	if err != nil {
 		return err
 	}
 
-	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsShardedSecret)
+	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, clusterTLSConfigHash, tlsShardedSecret)
 	if err != nil {
 		return fmt.Errorf("failed to generate statefulset: %w", err)
 	}
@@ -818,7 +819,7 @@ func labelSelectorForStatefulSets() string {
 	)
 }
 
-func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec, clusterTLSConfigHash string) (string, error) {
 	var http2 *bool
 	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
 		http2 = a.Spec.Web.HTTPConfig.HTTP2
@@ -837,6 +838,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
+		ClusterTLSConfigHash    string
 	}{
 		AlertmanagerLabels:      a.Labels,
 		AlertmanagerAnnotations: a.Annotations,
@@ -845,6 +847,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
+		ClusterTLSConfigHash:    clusterTLSConfigHash,
 	},
 		nil,
 	)
@@ -1908,15 +1911,15 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	return nil
 }
 
-func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) (string, error) {
 	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 	if err != nil {
-		return fmt.Errorf("failed to initialize the configuration: %w", err)
+		return "", fmt.Errorf("failed to initialize the configuration: %w", err)
 	}
 
 	data, err := clusterTLSConfig.ClusterTLSConfiguration()
 	if err != nil {
-		return fmt.Errorf("failed to generate the configuration: %w", err)
+		return "", fmt.Errorf("failed to generate the configuration: %w", err)
 	}
 
 	s := &corev1.Secret{
@@ -1935,10 +1938,10 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	)
 
 	if err = k8s.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
-		return fmt.Errorf("failed to reconcile secret: %w", err)
+		return "", fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
-	return nil
+	return fmt.Sprintf("%x", xxhash.Sum64(data)), nil
 }
 
 func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, a *monitoringv1.Alertmanager) {

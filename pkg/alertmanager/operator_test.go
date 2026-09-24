@@ -168,10 +168,10 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			a1Hash, err := createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
+			a1Hash, err := createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{}, "")
 			require.NoError(t, err)
 
-			a2Hash, err := createSSetInputHash(tc.b, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{})
+			a2Hash, err := createSSetInputHash(tc.b, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{}, "")
 			require.NoError(t, err)
 
 			if !tc.equal {
@@ -181,12 +181,26 @@ func TestCreateStatefulSetInputHash(t *testing.T) {
 
 			require.Equal(t, a1Hash, a2Hash, "expected two Alertmanager CRDs to produce the same hash but got different hash")
 
-			a2Hash, err = createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: new(int32(2))})
+			a2Hash, err = createSSetInputHash(tc.a, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{Replicas: new(int32(2))}, "")
 			require.NoError(t, err)
 
 			require.NotEqual(t, a1Hash, a2Hash, "expected same Alertmanager CRDs with different statefulset specs to produce different hashes but got equal hash")
 		})
 	}
+}
+
+func TestCreateStatefulSetInputHashClusterTLSConfig(t *testing.T) {
+	am := monitoringv1.Alertmanager{}
+	initialHash, err := createSSetInputHash(am, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{}, "123")
+	require.NoError(t, err)
+
+	sameHash, err := createSSetInputHash(am, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{}, "123")
+	require.NoError(t, err)
+	require.Equal(t, initialHash, sameHash)
+
+	changedHash, err := createSSetInputHash(am, Config{}, &operator.ShardedSecret{}, appsv1.StatefulSetSpec{}, "456")
+	require.NoError(t, err)
+	require.NotEqual(t, initialHash, changedHash)
 }
 
 // Test to exercise the function checkAlertmanagerConfigResource
