@@ -55,6 +55,7 @@ rules:
   - monitoring.coreos.com
   resources:
   - alertmanagers/status
+  - alertmanagerconfigs/status
   - podmonitors/status
   - probes/status
   - prometheuses/status
