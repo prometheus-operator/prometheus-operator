@@ -1,0 +1,10 @@
+receivers:
+- name: ""
+  slack_configs:
+  - title_link: '{{ .CommonAnnotations.link }}'
+    icon_url: '{{ .CommonAnnotations.icon }}'
+    image_url: '{{ .CommonAnnotations.image }}'
+    thumb_url: '{{ .CommonAnnotations.thumb }}'
+    actions:
+    - url: '{{ .CommonAnnotations.action }}'
+templates: []
