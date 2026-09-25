@@ -59,6 +59,19 @@ The release shepherd is responsible for the entire release series of a major or 
 
 See the next section for details on cutting an individual release.
 
+## AI-assisted release PR preparation
+
+An AI agent skill is available at `.agents/skills/release-prep/SKILL.md` to
+guide an AI agent (e.g. Cursor, Claude) through the release preparation steps
+(dependency bumps, version bumps, code generation and CHANGELOG updates). The
+skill includes review gates to ensure human approval at each step.
+
+To use it, invoke the skill with:
+
+```text
+/release-prep prepare the release for vX.Y.Z
+```
+
 ## How to cut a new release
 
 > This guide is strongly based on the [Prometheus release instructions](https://github.com/prometheus/prometheus/blob/main/RELEASE.md).
