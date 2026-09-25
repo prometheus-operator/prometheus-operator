@@ -155,7 +155,7 @@ func (a *Admission) serveAdmission(w http.ResponseWriter, r *http.Request, admit
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		a.logger.Warn(fmt.Sprintf("invalid Content-Type %s, want `application/json`", contentType))
+		a.logger.Warn("invalid Content-Type, want `application/json`", "contentType", contentType)
 		http.Error(w, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
 		return
 	}
