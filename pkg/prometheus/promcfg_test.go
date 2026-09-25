@@ -4402,6 +4402,56 @@ func TestRemoteWriteConfig(t *testing.T) {
 			golden: "RemoteWriteConfig_v2.26.0_3.golden",
 		},
 		{
+			version: "v3.5.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile:     "profilename",
+					RoleArn:     "arn:aws:iam::123456789012:instance-profile/prometheus",
+					ServiceName: "aps",
+					AccessKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
+			},
+			golden: "RemoteWriteConfig_v3.5.0_ServiceName.golden",
+		},
+		{
+			version: "v3.4.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				Sigv4: &monitoringv1.Sigv4{
+					Profile:     "profilename",
+					RoleArn:     "arn:aws:iam::123456789012:instance-profile/prometheus",
+					ServiceName: "aps",
+					AccessKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "access-key",
+					},
+					SecretKey: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "sigv4-secret",
+						},
+						Key: "secret-key",
+					},
+					Region: "us-central-0",
+				},
+			},
+			golden: "RemoteWriteConfig_v3.4.0_ServiceName.golden",
+		},
+		{
 			version: "v2.26.0",
 			remoteWrite: monitoringv1.RemoteWriteSpec{
 				URL:           "http://example.com",
