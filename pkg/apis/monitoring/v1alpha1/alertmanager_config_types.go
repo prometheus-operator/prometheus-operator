@@ -161,6 +161,13 @@ type Route struct {
 	// +listType=set
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
+	// labels defines the list of labels that will be attached to the alerts matching this route.
+	// They can be inherited by child routes and can be overridden by child routes.
+	// The values support template expressions.
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	Labels []KeyValue `json:"labels,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.
