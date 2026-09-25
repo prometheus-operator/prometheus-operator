@@ -1869,6 +1869,75 @@ func TestAutoEnableXOR2EncodingFeature(t *testing.T) {
 	}
 }
 
+func TestAutoEnableExtraScrapeMetricsFeature(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		version        string
+		extraScrape    *bool
+		enableFeatures []monitoringv1.EnableFeature
+		expectedFlag   bool
+	}{
+		{
+			name:    "field unset",
+			version: "v2.40.0",
+		},
+		{
+			name:         "field false",
+			version:      "v2.40.0",
+			extraScrape:  new(false),
+			expectedFlag: false,
+		},
+		{
+			name:         "auto-enable on v2.40",
+			version:      "v2.40.0",
+			extraScrape:  new(true),
+			expectedFlag: true,
+		},
+		{
+			name:         "auto-enable on v3.9",
+			version:      "v3.9.0",
+			extraScrape:  new(true),
+			expectedFlag: true,
+		},
+		{
+			name:         "config field used on v3.10, no flag",
+			version:      "v3.10.0",
+			extraScrape:  new(true),
+			expectedFlag: false,
+		},
+		{
+			name:         "version too old",
+			version:      "v2.31.0",
+			extraScrape:  new(true),
+			expectedFlag: false,
+		},
+		{
+			name:           "user-provided feature flag - duplicate tolerated",
+			version:        "v2.40.0",
+			extraScrape:    new(true),
+			enableFeatures: []monitoringv1.EnableFeature{"extra-scrape-metrics"},
+			expectedFlag:   true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version:            tc.version,
+						ExtraScrapeMetrics: tc.extraScrape,
+						EnableFeatures:     tc.enableFeatures,
+					},
+				},
+			})
+			require.NoError(t, err)
+
+			promArgs := sset.Spec.Template.Spec.Containers[0].Args
+			found := slices.Contains(promArgs, "--enable-feature=extra-scrape-metrics")
+			require.Equal(t, tc.expectedFlag, found, "extra-scrape-metrics feature flag mismatch. Args: %v", promArgs)
+		})
+	}
+}
+
 func TestWebPageTitle(t *testing.T) {
 	pageTitle := "my-page-title"
 	sset, err := makeStatefulSetFromPrometheus(monitoringv1.Prometheus{
