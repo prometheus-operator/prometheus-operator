@@ -25,7 +25,7 @@ IMAGE_RELOADER?=quay.io/prometheus-operator/prometheus-config-reloader
 IMAGE_WEBHOOK?=quay.io/prometheus-operator/admission-webhook
 TAG?=$(shell git rev-parse --short HEAD)
 VERSION?=$(shell cat VERSION | tr -d " \t\n\r")
-GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//")
+GO_VERSION?=$(shell grep golang-version .github/env | sed "s/golang-version=//" | cut -d. -f1-2)
 
 CRD_OPTIONS ?= "crd:crdVersions=v1"
 
