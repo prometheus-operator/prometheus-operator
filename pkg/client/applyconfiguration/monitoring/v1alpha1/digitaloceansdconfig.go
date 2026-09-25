@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -29,6 +30,9 @@ import (
 // This service discovery uses the public IPv4 address by default, by that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 type DigitalOceanSDConfigApplyConfiguration struct {
+	// role defines the DigitalOcean role to use for service discovery.
+	// Must be one of: Droplets or Databases. Default: Droplets
+	Role *monitoringv1alpha1.DigitalOceanRole `json:"role,omitempty"`
 	// authorization defines the header configuration to authenticate against the DigitalOcean API.
 	// Cannot be set at the same time as `oauth2`.
 	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
@@ -53,6 +57,14 @@ type DigitalOceanSDConfigApplyConfiguration struct {
 // apply.
 func DigitalOceanSDConfig() *DigitalOceanSDConfigApplyConfiguration {
 	return &DigitalOceanSDConfigApplyConfiguration{}
+}
+
+// WithRole sets the Role field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Role field is set to the value of the last call.
+func (b *DigitalOceanSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.DigitalOceanRole) *DigitalOceanSDConfigApplyConfiguration {
+	b.Role = &value
+	return b
 }
 
 // WithAuthorization sets the Authorization field in the declarative configuration to the given value
