@@ -116,15 +116,15 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 	}
 
 	if (action == string(relabel.Replace)) && !varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'targetLabel' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if (action == string(relabel.Replace)) && varInRegexTemplate(rc.TargetLabel) && !lcv.isValidLabelName(rc.TargetLabel) {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'targetLabel' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && !lcv.isValidLabelName(rc.TargetLabel) {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'targetLabel' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if (action == string(relabel.Lowercase) || action == string(relabel.Uppercase) || action == string(relabel.KeepEqual) || action == string(relabel.DropEqual)) && (rc.Replacement != nil && *rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
@@ -136,7 +136,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 	}
 
 	if action == string(relabel.HashMod) && !lcv.isValidLabelName(rc.TargetLabel) {
-		return fmt.Errorf("%q is invalid 'target_label' for %s action", rc.TargetLabel, rc.Action)
+		return fmt.Errorf("%q is invalid 'targetLabel' for %s action", rc.TargetLabel, rc.Action)
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
@@ -146,7 +146,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 			(rc.Separator != nil &&
 				*rc.Separator != relabel.DefaultRelabelConfig.Separator) ||
 			(rc.Replacement != nil && *rc.Replacement != relabel.DefaultRelabelConfig.Replacement) {
-			return fmt.Errorf("%s action requires only 'source_labels' and `target_label`, and no other fields", rc.Action)
+			return fmt.Errorf("%s action requires only 'sourceLabels' and 'targetLabel', and no other fields", rc.Action)
 		}
 	}
 

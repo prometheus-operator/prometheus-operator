@@ -47,10 +47,11 @@ func TestValidateRelabelConfig(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		scenario      string
-		relabelConfig monitoringv1.RelabelConfig
-		prometheus    monitoringv1.Prometheus
-		expectedErr   bool
+		scenario       string
+		relabelConfig  monitoringv1.RelabelConfig
+		prometheus     monitoringv1.Prometheus
+		expectedErr    bool
+		expectedErrMsg string
 	}{
 		// Test invalid regex expression
 		{
@@ -68,8 +69,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 				Action:      "replace",
 				TargetLabel: "l\\${3}",
 			},
-			prometheus:  defaultPrometheusSpec,
-			expectedErr: true,
+			prometheus:     defaultPrometheusSpec,
+			expectedErr:    true,
+			expectedErrMsg: "is invalid 'targetLabel' for replace action",
 		},
 		// Test empty target label for action replace
 		{
@@ -364,6 +366,25 @@ func TestValidateRelabelConfig(t *testing.T) {
 			},
 			expectedErr: true,
 		},
+		// Test keepequal with non default separator
+		{
+			scenario: "keepequal config with non default separator",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port1",
+				Separator:    new("^"),
+				Action:       "keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+			expectedErr:    true,
+			expectedErrMsg: "keepequal action requires only 'sourceLabels' and 'targetLabel', and no other fields",
+		},
 		// Test valid keepequal with default values for other fields
 		{
 			scenario: "valid keepequal config with default values for other fields",
@@ -410,6 +431,9 @@ func TestValidateRelabelConfig(t *testing.T) {
 			err = lcv.ValidateRelabelConfig(tc.relabelConfig)
 			if tc.expectedErr {
 				require.Error(t, err)
+				if tc.expectedErrMsg != "" {
+					require.ErrorContains(t, err, tc.expectedErrMsg)
+				}
 				return
 			}
 			require.NoError(t, err)
