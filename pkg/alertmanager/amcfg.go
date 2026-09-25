@@ -271,7 +271,7 @@ func (cb *ConfigBuilder) MarshalJSON() ([]byte, error) {
 }
 
 // initializeFromAlertmanagerConfig initializes the configuration from an AlertmanagerConfig object.
-func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, globalConfig *monitoringv1.AlertmanagerGlobalConfig, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
+func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, globalConfig *monitoringv1.AlertmanagerGlobalConfig, tracingCfg *monitoringv1.TracingConfig, amConfig *monitoringv1alpha1.AlertmanagerConfig) error {
 	globalAlertmanagerConfig := &alertmanagerConfig{}
 
 	crKey := types.NamespacedName{
@@ -292,6 +292,12 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		return err
 	}
 	globalAlertmanagerConfig.Global = global
+
+	tracingConfig, err := cb.convertTracingConfig(tracingCfg, crKey)
+	if err != nil {
+		return fmt.Errorf("invalid tracingConfig: %w", err)
+	}
+	globalAlertmanagerConfig.TracingConfig = tracingConfig
 
 	// This is need to check required fields are set either at global or receiver level at later step.
 	if global != nil {
@@ -334,6 +340,69 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 
 	cb.cfg = globalAlertmanagerConfig
 	return nil
+}
+
+func (cb *ConfigBuilder) convertTracingConfig(in *monitoringv1.TracingConfig, crKey types.NamespacedName) (*tracingConfig, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	if err := in.Validate(); err != nil {
+		return nil, err
+	}
+
+	out := &tracingConfig{
+		Endpoint: in.Endpoint,
+	}
+
+	if in.ClientType != nil {
+		out.ClientType = strings.ToLower(*in.ClientType)
+	}
+
+	if in.SamplingFraction != nil {
+		out.SamplingFraction = in.SamplingFraction.AsApproximateFloat64()
+	}
+
+	if in.Insecure != nil {
+		out.Insecure = *in.Insecure
+	}
+
+	if in.TLSConfig != nil {
+		tlsConfig := cb.convertTLSConfig(&in.TLSConfig.SafeTLSConfig, crKey)
+		if in.TLSConfig.CAFile != "" {
+			tlsConfig.CAFile = in.TLSConfig.CAFile
+		}
+		if in.TLSConfig.CertFile != "" {
+			tlsConfig.CertFile = in.TLSConfig.CertFile
+		}
+		if in.TLSConfig.KeyFile != "" {
+			tlsConfig.KeyFile = in.TLSConfig.KeyFile
+		}
+		out.TLSConfig = tlsConfig
+	}
+
+	if len(in.Headers) > 0 {
+		headers := make(map[string]commoncfg.Header, len(in.Headers))
+		for key, value := range in.Headers {
+			headers[key] = commoncfg.Header{Values: []string{value}}
+		}
+
+		out.Headers = &commoncfg.Headers{Headers: headers}
+	}
+
+	if in.Compression != nil {
+		out.Compression = strings.ToLower(*in.Compression)
+	}
+
+	if in.Timeout != nil {
+		timeout, err := model.ParseDuration(string(*in.Timeout))
+		if err != nil {
+			return nil, fmt.Errorf("parse tracing timeout: %w", err)
+		}
+		out.Timeout = &timeout
+	}
+
+	return out, nil
 }
 
 // InitializeFromRawConfiguration initializes the configuration from raw data.
