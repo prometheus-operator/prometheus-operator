@@ -1337,30 +1337,7 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create an AlertmanagerConfig with valid configuration
-	alc := &monitoringv1alpha1.AlertmanagerConfig{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "amcfg1",
-			Namespace: ns,
-			Labels: map[string]string{
-				"group": name,
-			},
-		},
-		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-			Route: &monitoringv1alpha1.Route{
-				Receiver: "default",
-			},
-			Receivers: []monitoringv1alpha1.Receiver{
-				{
-					Name: "default",
-					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
-						{
-							URL: new("http://test.url"),
-						},
-					},
-				},
-			},
-		},
-	}
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
 
 	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -1386,4 +1363,157 @@ func testAlertmanagerConfigStatusSubresource(t *testing.T) {
 	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
 	require.NoError(t, err)
 	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
+// testFinalizerForAlertmanagerWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for Alertmanager when StatusForConfigurationResourcesFeature is enabled.
+func testFinalizerForAlertmanagerWhenStatusForConfigResEnabled(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-status-cleanup-finalizer-test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	finalizers := am.GetFinalizers()
+	require.NotEmpty(t, finalizers)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+}
+
+// testGarbageCollectionOfAlertmanagerConfigBinding validates that the operator removes the reference to the
+// Alertmanager resource when the AlertmanagerConfig isn't selected anymore.
+func testGarbageCollectionOfAlertmanagerConfigBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-binding-cleanup"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Remove the label so that the AlertmanagerConfig isn't selected anymore.
+	alc.Labels = map[string]string{}
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Update(ctx, alc, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx, alc, am, monitoringv1.AlertmanagerName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmAlertmanagerConfigBindingDuringWorkloadDelete validates that the operator removes the reference to the
+// Alertmanager resource when the workload is deleted.
+func testRmAlertmanagerConfigBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-binding-workload-delete"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx, alc, am, monitoringv1.AlertmanagerName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// makeBasicAlertmanagerConfig returns an AlertmanagerConfig with a valid
+// configuration, labeled so that it can be selected by the Alertmanager
+// identified by group.
+func makeBasicAlertmanagerConfig(ns, name, group string) *monitoringv1alpha1.AlertmanagerConfig {
+	return &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "default",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "default",
+					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+						{
+							URL: new("http://test.url"),
+						},
+					},
+				},
+			},
+		},
+	}
 }
