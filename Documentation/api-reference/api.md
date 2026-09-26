@@ -28856,7 +28856,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>secrets defines values of the HTTP header retrieving from a secret.</p>
 </td>
 </tr>
@@ -39086,7 +39085,6 @@ string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>secrets defines values of the HTTP header retrieving from a secret.</p>
 </td>
 </tr>

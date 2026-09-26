@@ -439,11 +439,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -1469,11 +1473,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -2211,11 +2219,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -3020,11 +3032,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -3847,11 +3863,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -4676,11 +4696,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -5551,11 +5575,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -6492,11 +6520,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -7280,11 +7312,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -8133,11 +8169,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -8915,11 +8955,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -9647,11 +9691,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -10363,11 +10411,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
@@ -11148,11 +11200,15 @@
                                           },
                                           "minItems": 1,
                                           "type": "array",
-                                          "x-kubernetes-list-type": "atomic"
+                                          "x-kubernetes-list-map-keys": [
+                                            "name"
+                                          ],
+                                          "x-kubernetes-list-type": "map"
                                         }
                                       },
                                       "required": [
-                                        "name"
+                                        "name",
+                                        "secrets"
                                       ],
                                       "type": "object"
                                     },
