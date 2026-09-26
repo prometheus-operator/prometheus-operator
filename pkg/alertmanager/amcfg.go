@@ -1947,7 +1947,6 @@ func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoring
 	}
 
 	for _, v := range in {
-
 		extractedSecrets := make([]commoncfg.Secret, len(v.Secrets))
 		for i, s := range v.Secrets {
 			extractedSecret, err := cb.store.GetSecretKey(ctx, crKey.Namespace, s)
