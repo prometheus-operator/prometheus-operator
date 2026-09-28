@@ -130,21 +130,33 @@ func (f *Framework) WaitForRule(ctx context.Context, ns, name string) error {
 	})
 }
 
-func (f *Framework) UpdateRule(ctx context.Context, ns string, ar *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
+func (f *Framework) UpdateRuleSpec(ctx context.Context, pr *monitoringv1.PrometheusRule) (*monitoringv1.PrometheusRule, error) {
 	var (
-		rule *monitoringv1.PrometheusRule
-		err  error
+		rule    *monitoringv1.PrometheusRule
+		pollErr error
 	)
 
-	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(ctx context.Context) (bool, error) {
-		rule, err = f.MonClientV1.PrometheusRules(ns).Update(ctx, ar, metav1.UpdateOptions{})
+	if err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute, false, func(_ context.Context) (bool, error) {
+		var err error
+		rule, err = f.MonClientV1.PrometheusRules(pr.Namespace).Get(ctx, pr.Name, metav1.GetOptions{})
 		if err != nil {
-			return false, fmt.Errorf("updating %v RuleFile failed: %v", ar.Name, err)
+			pollErr = fmt.Errorf("failed to get %s/%s PrometheusRule: %w", pr.Namespace, pr.Name, err)
+			return false, nil
 		}
-		return true, nil
-	})
+		rule.Spec = pr.Spec
 
-	return rule, err
+		rule, err = f.MonClientV1.PrometheusRules(pr.Namespace).Update(ctx, rule, metav1.UpdateOptions{})
+		if err != nil {
+			pollErr = fmt.Errorf("failed to update %s/%s PrometheusRule: %w", pr.Namespace, pr.Name, err)
+			return false, nil
+		}
+
+		return true, nil
+	}); err != nil {
+		return nil, fmt.Errorf("%w: %w", err, pollErr)
+	}
+
+	return rule, nil
 }
 
 func (f *Framework) DeleteRule(ctx context.Context, ns string, r string) error {
