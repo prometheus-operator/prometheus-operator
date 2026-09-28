@@ -474,6 +474,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1613,6 +1616,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2442,6 +2448,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3342,6 +3351,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4252,6 +4264,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5174,6 +5189,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6164,6 +6182,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7219,6 +7240,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8094,6 +8118,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9051,6 +9078,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9921,6 +9951,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10733,6 +10766,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11525,6 +11561,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -12407,6 +12446,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -13597,6 +13639,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -14712,6 +14757,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -15533,6 +15581,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -16417,6 +16468,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -17313,6 +17367,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -18213,6 +18270,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -19177,6 +19237,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -20217,6 +20280,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -21084,6 +21150,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -22026,6 +22095,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -22881,6 +22953,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -23687,6 +23762,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -24471,6 +24549,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -25331,6 +25412,9 @@ spec:
                                   type: object
                                 minItems: 1
                                 type: array
+                                x-kubernetes-list-map-keys:
+                                - name
+                                x-kubernetes-list-type: map
                               noProxy:
                                 description: |-
                                   noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names

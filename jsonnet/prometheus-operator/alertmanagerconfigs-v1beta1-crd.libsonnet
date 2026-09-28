@@ -311,6 +311,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -1333,6 +1337,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -2075,6 +2083,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -2880,6 +2892,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -3702,6 +3718,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -4525,6 +4545,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -5390,6 +5414,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -6328,6 +6356,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -7116,6 +7148,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -7966,6 +8002,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -8745,6 +8785,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -9477,6 +9521,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -10193,6 +10241,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',
@@ -10972,6 +11024,10 @@
                                 },
                                 minItems: 1,
                                 type: 'array',
+                                'x-kubernetes-list-map-keys': [
+                                  'name',
+                                ],
+                                'x-kubernetes-list-type': 'map',
                               },
                               noProxy: {
                                 description: 'noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names\nthat should be excluded from proxying. IP and domain names can\ncontain port numbers.\n\nIt requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.',

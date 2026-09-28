@@ -113,6 +113,8 @@ type HTTPConfigWithoutTLS struct {
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
 	// httpHeaders can be used to specify HTTP headers.
 	// +kubebuilder:validation:MinItems=1
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }

@@ -321,7 +321,11 @@
                             "type": "object"
                           },
                           "minItems": 1,
-                          "type": "array"
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
                         },
                         "interval": {
                           "description": "interval at which Prometheus scrapes the metrics from the target.\n\nIf empty, Prometheus uses the global scrape interval.",
