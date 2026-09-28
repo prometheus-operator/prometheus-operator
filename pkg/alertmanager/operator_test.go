@@ -2003,7 +2003,7 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 		{
 			name: "http-headers-unsupported-version",
 			httpConfig: &monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+				HTTPHeaders: []monitoringv1.HTTPHeader{
 					{
 						Name: "foo",
 						Secrets: []corev1.SecretKeySelector{
@@ -2021,7 +2021,7 @@ func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
 		{
 			name: "http-headers-supported-version",
 			httpConfig: &monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+				HTTPHeaders: []monitoringv1.HTTPHeader{
 					{
 						Name: "foo",
 						Secrets: []corev1.SecretKeySelector{

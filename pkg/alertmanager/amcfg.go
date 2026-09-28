@@ -1936,7 +1936,7 @@ func (cb *ConfigBuilder) convertHTTPConfig(ctx context.Context, in *monitoringv1
 	return out, nil
 }
 
-func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1alpha1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
+func (cb *ConfigBuilder) convertHTTPHeaders(ctx context.Context, in []monitoringv1.HTTPHeader, crKey types.NamespacedName) (*commoncfg.Headers, error) {
 	if len(in) == 0 {
 		return nil, nil
 	}

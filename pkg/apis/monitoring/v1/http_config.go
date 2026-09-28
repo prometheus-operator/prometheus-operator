@@ -111,6 +111,10 @@ type HTTPConfigWithoutTLS struct {
 	//
 	// +optional
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"` // nolint:kubeapilinter
+	// httpHeaders can be used to specify HTTP headers.
+	// +kubebuilder:validation:MinItems=1
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty"`
 }
 
 // Validate semantically validates the given HTTPConfigWithoutTLS.

@@ -276,21 +276,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -1295,21 +1298,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -2034,21 +2040,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -2836,21 +2845,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -3655,21 +3667,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -4475,21 +4490,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -5337,21 +5355,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -6272,21 +6293,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -7057,21 +7081,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -7904,21 +7931,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -8680,21 +8710,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -9409,21 +9442,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -10122,21 +10158,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',
@@ -10898,21 +10937,24 @@
                                         description: 'SecretKeySelector selects a key of a Secret.',
                                         properties: {
                                           key: {
-                                            description: 'key defines the key of the secret to select from.  Must be a valid secret key.',
-                                            minLength: 1,
+                                            description: 'The key of the secret to select from.  Must be a valid secret key.',
                                             type: 'string',
                                           },
                                           name: {
-                                            description: "name defines the name of the secret in the object's namespace to select from.",
-                                            minLength: 1,
+                                            default: '',
+                                            description: 'Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names',
                                             type: 'string',
+                                          },
+                                          optional: {
+                                            description: 'Specify whether the Secret or its key must be defined',
+                                            type: 'boolean',
                                           },
                                         },
                                         required: [
                                           'key',
-                                          'name',
                                         ],
                                         type: 'object',
+                                        'x-kubernetes-map-type': 'atomic',
                                       },
                                       minItems: 1,
                                       type: 'array',

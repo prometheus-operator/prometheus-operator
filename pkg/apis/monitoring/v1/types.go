@@ -779,6 +779,22 @@ type BasicAuth struct {
 	Password v1.SecretKeySelector `json:"password,omitempty"`
 }
 
+// HTTPHeader defines a HTTP header configuration.
+// See https://prometheus.io/docs/alerting/latest/configuration/#http_header
+// +k8s:openapi-gen=true
+type HTTPHeader struct {
+	// name defines a HTTP header name.
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name,omitempty"`
+	// secrets defines values of the HTTP header retrieving from a secret.
+	// +listType=map
+	// +listMapKey=name
+	// +kubebuilder:validation:MinItems=1
+	// +required
+	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
+}
+
 // SecretOrConfigMap allows to specify data as a Secret or ConfigMap. Fields are mutually exclusive.
 type SecretOrConfigMap struct {
 	// secret defines the Secret containing data to use for the targets.

@@ -9384,7 +9384,7 @@ func TestConvertHTTPConfig(t *testing.T) {
 		{
 			name: "set HTTP headers with secrets",
 			cfg: monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1alpha1.HTTPHeader{
+				HTTPHeaders: []monitoringv1.HTTPHeader{
 					{
 						Name: "header1",
 						Secrets: []corev1.SecretKeySelector{
