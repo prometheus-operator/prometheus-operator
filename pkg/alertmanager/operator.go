@@ -148,7 +148,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
-		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
+		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
 	}
 
 	mclient, err := monitoringclient.NewForConfig(restConfig)
