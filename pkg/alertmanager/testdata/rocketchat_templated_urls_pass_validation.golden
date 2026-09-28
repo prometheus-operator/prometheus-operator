@@ -1,0 +1,15 @@
+receivers:
+- name: ""
+  rocketchat_configs:
+  - title_link: '{{ .CommonAnnotations.link }}'
+    short_fields: false
+    icon_url: '{{ .CommonAnnotations.icon }}'
+    image_url: '{{ .CommonAnnotations.image }}'
+    thumb_url: '{{ .CommonAnnotations.thumb }}'
+    link_names: false
+    actions:
+    - url: '{{ .CommonAnnotations.action }}'
+      image_url: '{{ .CommonAnnotations.actionImage }}'
+      is_webview: false
+      msg_in_chat_window: false
+templates: []

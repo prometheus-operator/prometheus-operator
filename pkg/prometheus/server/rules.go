@@ -97,7 +97,6 @@ func (c *Operator) selectPrometheusRules(p *monitoringv1.Prometheus, logger *slo
 }
 
 func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitoringv1.Prometheus, rules operator.PrometheusRuleSelection, logger *slog.Logger) ([]string, error) {
-
 	// Update the corresponding ConfigMap resources.
 	prs := operator.NewPrometheusRuleSyncer(
 		logger,

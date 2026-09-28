@@ -319,12 +319,6 @@ func testAMClusterInitialization(t *testing.T) {
 
 	_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, alertmanagerService)
 	require.NoError(t, err)
-
-	for i := range amClusterSize {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
-		require.NoError(t, err)
-	}
 }
 
 // testAMClusterAfterRollingUpdate tests whether all Alertmanager instances join
@@ -346,12 +340,6 @@ func testAMClusterAfterRollingUpdate(t *testing.T) {
 
 	alertmanager, err = framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 	require.NoError(t, err)
-
-	for i := range amClusterSize {
-		name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-		err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, amClusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
-		require.NoError(t, err)
-	}
 
 	// We need to force a rolling update, e.g. by changing one of the command
 	// line flags via the Retention.
@@ -400,7 +388,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					ClientAuthType: new("VerifyClientCertIfGiven"),
+					ClientAuthType: new(monitoringv1.RequireAndVerifyClientCert),
 				},
 				ClientTLS: monitoringv1.SafeTLSConfig{
 					CA: monitoringv1.SecretOrConfigMap{
@@ -425,8 +413,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 						},
 						Key: "key.pem",
 					},
-					// Since we cannot verify hostname in the cert.
-					InsecureSkipVerify: new(true),
+					ServerName: new("PrometheusRemoteWriteClient"),
 				},
 			},
 		},
@@ -449,12 +436,6 @@ func testAMClusterGossipSilences(t *testing.T) {
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
 
-			for i := 0; i < tc.clusterSize; i++ {
-				name := "alertmanager-" + alertmanager.Name + "-" + strconv.Itoa(i)
-				err := framework.WaitForAlertmanagerPodInitialized(context.Background(), ns, name, tc.clusterSize, alertmanager.Spec.ForceEnableClusterMode, false)
-				require.NoError(t, err)
-			}
-
 			silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
 			require.NoError(t, err)
 
@@ -472,6 +453,7 @@ func testAMClusterGossipSilences(t *testing.T) {
 					if *silences[0].ID != silID {
 						return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
 					}
+
 					return true, nil
 				})
 				require.NoError(t, err)
@@ -2864,7 +2846,6 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			testCtx := framework.NewTestCtx(t)

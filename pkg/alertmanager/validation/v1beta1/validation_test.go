@@ -45,47 +45,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate email config - missing to field",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							EmailConfigs: []monitoringv1beta1.EmailConfig{
-								{},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate email config - invalid smarthost",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							EmailConfigs: []monitoringv1beta1.EmailConfig{
-								{
-									To:        new("a"),
-									Smarthost: new("invalid"),
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate VictorOpsConfigs - missing routing key",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -1197,6 +1156,145 @@ func TestValidateWechatAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateEmailAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate email config - missing to field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - invalid smarthost",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("invalid"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - valid smarthost",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate email config - duplicate headers",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+									Headers: []monitoringv1beta1.KeyValue{
+										{Key: "Foo", Value: "bar"},
+										{Key: "Foo", Value: "bar"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - non-duplicate headers",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+									Headers: []monitoringv1beta1.KeyValue{
+										{Key: "Foo1", Value: "bar"},
+										{Key: "Foo2", Value: "bar"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
 		},
 	}
 	for _, tc := range testCases {

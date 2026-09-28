@@ -432,7 +432,6 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
-
 	tt := []struct {
 		scenario         string
 		version          string
@@ -478,7 +477,6 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
-
 	tt := []struct {
 		scenario                string
 		version                 string
@@ -1395,7 +1393,6 @@ func TestConfigReloader(t *testing.T) {
 			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
 		}
 	}
-
 }
 
 func TestAutomountServiceAccountToken(t *testing.T) {

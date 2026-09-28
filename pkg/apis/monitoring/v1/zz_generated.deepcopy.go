@@ -4512,7 +4512,7 @@ func (in *WebTLSConfig) DeepCopyInto(out *WebTLSConfig) {
 	}
 	if in.ClientAuthType != nil {
 		in, out := &in.ClientAuthType, &out.ClientAuthType
-		*out = new(string)
+		*out = new(ClientAuthType)
 		**out = **in
 	}
 	if in.MinVersion != nil {

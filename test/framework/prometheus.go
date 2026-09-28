@@ -317,7 +317,7 @@ func (f *Framework) EnableRemoteWriteReceiverWithTLS(p *monitoringv1.Prometheus)
 					Key: PrivateKey,
 				},
 				// Liveness/readiness probes don't work when using "RequireAndVerifyClientCert".
-				ClientAuthType: new("VerifyClientCertIfGiven"),
+				ClientAuthType: new(monitoringv1.VerifyClientCertIfGiven),
 			},
 		},
 	}

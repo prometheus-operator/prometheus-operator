@@ -1586,7 +1586,6 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get AWS secret key: %w", err)
-
 			}
 			out.Sigv4.AccessKey = accessKey
 			out.Sigv4.SecretKey = secretKey
@@ -2835,6 +2834,39 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		}
 	}
 
+	if pdc.URL != "" {
+		if _, err := validation.ValidateURL(pdc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
+	if pdc.ClientURL != "" {
+		if err := validation.ValidateTemplateURL(pdc.ClientURL); err != nil {
+			return fmt.Errorf("invalid 'client_url': %w", err)
+		}
+	}
+
+	for i, image := range pdc.Images {
+		if image.Src != "" {
+			if err := validation.ValidateTemplateURL(image.Src); err != nil {
+				return fmt.Errorf("invalid 'src' in images[%d]: %w", i, err)
+			}
+		}
+		if image.Href != "" {
+			if err := validation.ValidateTemplateURL(image.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in images[%d]: %w", i, err)
+			}
+		}
+	}
+
+	for i, link := range pdc.Links {
+		if link.Href != "" {
+			if err := validation.ValidateTemplateURL(link.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in links[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -3309,6 +3341,49 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 	if rc.TokenID != nil && len(rc.TokenIDFile) > 0 {
 		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
+	}
+
+	if rc.APIURL != "" {
+		if _, err := validation.ValidateURL(rc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
+	if rc.TitleLink != "" {
+		if err := validation.ValidateTemplateURL(rc.TitleLink); err != nil {
+			return fmt.Errorf("invalid 'title_link': %w", err)
+		}
+	}
+
+	if rc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(rc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	if rc.ImageURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ImageURL); err != nil {
+			return fmt.Errorf("invalid 'image_url': %w", err)
+		}
+	}
+
+	if rc.ThumbURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ThumbURL); err != nil {
+			return fmt.Errorf("invalid 'thumb_url': %w", err)
+		}
+	}
+
+	for i, action := range rc.Actions {
+		if action.URL != "" {
+			if err := validation.ValidateTemplateURL(action.URL); err != nil {
+				return fmt.Errorf("invalid 'url' in actions[%d]: %w", i, err)
+			}
+		}
+		if action.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(action.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in actions[%d]: %w", i, err)
+			}
+		}
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)
