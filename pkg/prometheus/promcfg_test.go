@@ -5957,12 +5957,32 @@ func TestServiceMonitorEndpointHTTPHeaders(t *testing.T) {
 							Interval: "30s",
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
-									Name:   "X-Scope-OrgID",
-									Values: []string{"tenant-a"},
+									Name: "X-Scope-OrgID",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "tenant",
+										},
+									},
 								},
 								{
-									Name:   "X-Custom-Header",
-									Values: []string{"value-1", "value-2"},
+									Name: "X-Custom-Header",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-1",
+										},
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-2",
+										},
+									},
 								},
 							},
 						},
@@ -5979,7 +5999,19 @@ func TestServiceMonitorEndpointHTTPHeaders(t *testing.T) {
 				nil,
 				nil,
 				nil,
-				&assets.StoreBuilder{},
+				assets.NewTestStoreBuilder(
+					&corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "http-headers",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"tenant":   []byte("tenant-a"),
+							"custom-1": []byte("value-1"),
+							"custom-2": []byte("value-2"),
+						},
+					},
+				),
 				nil,
 				nil,
 				nil,
@@ -6024,12 +6056,32 @@ func TestPodMonitorEndpointHTTPHeaders(t *testing.T) {
 							Interval: "30s",
 							HTTPHeaders: []monitoringv1.HTTPHeader{
 								{
-									Name:   "X-Scope-OrgID",
-									Values: []string{"tenant-a"},
+									Name: "X-Scope-OrgID",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "tenant",
+										},
+									},
 								},
 								{
-									Name:   "X-Custom-Header",
-									Values: []string{"value-1", "value-2"},
+									Name: "X-Custom-Header",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-1",
+										},
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-2",
+										},
+									},
 								},
 							},
 						},
@@ -6046,7 +6098,19 @@ func TestPodMonitorEndpointHTTPHeaders(t *testing.T) {
 				},
 				nil,
 				nil,
-				&assets.StoreBuilder{},
+				assets.NewTestStoreBuilder(
+					&corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "http-headers",
+							Namespace: "pod-monitor-ns",
+						},
+						Data: map[string][]byte{
+							"tenant":   []byte("tenant-a"),
+							"custom-1": []byte("value-1"),
+							"custom-2": []byte("value-2"),
+						},
+					},
+				),
 				nil,
 				nil,
 				nil,

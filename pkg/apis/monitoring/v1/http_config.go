@@ -194,19 +194,20 @@ type HTTPHeader struct {
 	// +required
 	Name string `json:"name"`
 
-	// values defines the values of the HTTP header.
+	// secrets defines the keys of Secrets containing the values of the HTTP
+	// header. The secrets need to be in the same namespace as the custom
+	// resource and readable by the Prometheus Operator.
 	//
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:items:MinLength=1
 	// +listType=atomic
-	// +optional
-	Values []string `json:"values,omitempty"`
+	// +required
+	Secrets []v1.SecretKeySelector `json:"secrets"`
 }
 
 // Validate semantically validates the given HTTPHeader.
 func (h *HTTPHeader) Validate() error {
-	if len(h.Values) == 0 {
-		return errors.New("values must contain at least one item")
+	if len(h.Secrets) == 0 {
+		return errors.New("secrets must contain at least one item")
 	}
 
 	return nil

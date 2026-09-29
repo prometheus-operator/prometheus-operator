@@ -650,8 +650,15 @@ func TestSelectServiceMonitors(t *testing.T) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
-							Name:   "X-Scope-OrgID",
-							Values: []string{"tenant-a"},
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
 						},
 					},
 				})
@@ -664,8 +671,15 @@ func TestSelectServiceMonitors(t *testing.T) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
-							Name:   "authorization",
-							Values: []string{"Bearer foo"},
+							Name: "authorization",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
 						},
 					},
 				})
@@ -673,12 +687,33 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: false,
 		},
 		{
-			scenario: "HTTP header without value",
+			scenario: "HTTP header without secrets",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "X-Scope-OrgID",
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header with a missing secret key",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "missing",
+								},
+							},
 						},
 					},
 				})
@@ -1279,8 +1314,15 @@ func TestSelectPodMonitors(t *testing.T) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
-							Name:   "X-Scope-OrgID",
-							Values: []string{"tenant-a"},
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
 						},
 					},
 				})
@@ -1293,8 +1335,15 @@ func TestSelectPodMonitors(t *testing.T) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
-							Name:   "authorization",
-							Values: []string{"Bearer foo"},
+							Name: "authorization",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
 						},
 					},
 				})
@@ -1302,12 +1351,33 @@ func TestSelectPodMonitors(t *testing.T) {
 			valid: false,
 		},
 		{
-			scenario: "HTTP header without value",
+			scenario: "HTTP header without secrets",
 			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
 				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
 					HTTPHeaders: []monitoringv1.HTTPHeader{
 						{
 							Name: "X-Scope-OrgID",
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header with a missing secret key",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "missing",
+								},
+							},
 						},
 					},
 				})

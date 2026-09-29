@@ -12868,14 +12868,17 @@ by Prometheus itself (e.g. <code>Authorization</code>, <code>Host</code> or <cod
 </tr>
 <tr>
 <td>
-<code>values</code><br/>
+<code>secrets</code><br/>
 <em>
-[]string
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+[]Kubernetes core/v1.SecretKeySelector
+</a>
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>values defines the values of the HTTP header.</p>
+<p>secrets defines the keys of Secrets containing the values of the HTTP
+header. The secrets need to be in the same namespace as the custom
+resource and readable by the Prometheus Operator.</p>
 </td>
 </tr>
 </tbody>

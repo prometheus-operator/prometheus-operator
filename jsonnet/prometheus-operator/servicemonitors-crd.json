@@ -210,11 +210,30 @@
                                 "minLength": 1,
                                 "type": "string"
                               },
-                              "values": {
-                                "description": "values defines the values of the HTTP header.",
+                              "secrets": {
+                                "description": "secrets defines the keys of Secrets containing the values of the HTTP\nheader. The secrets need to be in the same namespace as the custom\nresource and readable by the Prometheus Operator.",
                                 "items": {
-                                  "minLength": 1,
-                                  "type": "string"
+                                  "description": "SecretKeySelector selects a key of a Secret.",
+                                  "properties": {
+                                    "key": {
+                                      "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "default": "",
+                                      "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                      "type": "string"
+                                    },
+                                    "optional": {
+                                      "description": "Specify whether the Secret or its key must be defined",
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "key"
+                                  ],
+                                  "type": "object",
+                                  "x-kubernetes-map-type": "atomic"
                                 },
                                 "minItems": 1,
                                 "type": "array",
@@ -222,7 +241,8 @@
                               }
                             },
                             "required": [
-                              "name"
+                              "name",
+                              "secrets"
                             ],
                             "type": "object"
                           },

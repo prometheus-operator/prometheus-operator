@@ -256,6 +256,10 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
 
+		if err := rs.store.AddHTTPHeaders(ctx, sm.GetNamespace(), endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: httpHeaders: %w", epErr, err)
+		}
+
 		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, sm.GetNamespace()); err != nil {
 			return err
 		}
@@ -386,6 +390,10 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 		if err := validateHTTPHeaders(endpoint.HTTPHeaders); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
+		if err := rs.store.AddHTTPHeaders(ctx, pm.GetNamespace(), endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: httpHeaders: %w", epErr, err)
 		}
 
 		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfigWithProxy, pm.GetNamespace()); err != nil {

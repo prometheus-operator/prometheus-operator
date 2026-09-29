@@ -952,6 +952,7 @@ func (cg *ConfigGenerator) addHTTPConfigToYAML(
 // configuration.
 func (cg *ConfigGenerator) addHTTPHeadersToYAML(
 	cfg yaml.MapSlice,
+	store assets.StoreGetter,
 	headers []monitoringv1.HTTPHeader,
 ) yaml.MapSlice {
 	if len(headers) == 0 {
@@ -960,9 +961,15 @@ func (cg *ConfigGenerator) addHTTPHeadersToYAML(
 
 	httpHeaders := yaml.MapSlice{}
 	for _, header := range headers {
+		secrets := make([]string, 0, len(header.Secrets))
+		for _, sel := range header.Secrets {
+			value, _ := store.GetSecretKey(sel)
+			secrets = append(secrets, string(value))
+		}
+
 		httpHeaders = append(httpHeaders, yaml.MapItem{
 			Key:   header.Name,
-			Value: yaml.MapSlice{{Key: "values", Value: header.Values}},
+			Value: yaml.MapSlice{{Key: "secrets", Value: secrets}},
 		})
 	}
 
@@ -1540,7 +1547,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
 
-	cfg = cg.addHTTPHeadersToYAML(cfg, ep.HTTPHeaders)
+	cfg = cg.addHTTPHeadersToYAML(cfg, s, ep.HTTPHeaders)
 
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
@@ -2056,7 +2063,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
 
-	cfg = cg.addHTTPHeadersToYAML(cfg, ep.HTTPHeaders)
+	cfg = cg.addHTTPHeadersToYAML(cfg, s, ep.HTTPHeaders)
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 

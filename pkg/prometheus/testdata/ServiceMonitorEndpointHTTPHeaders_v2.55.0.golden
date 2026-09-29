@@ -15,10 +15,10 @@ scrape_configs:
   scrape_interval: 30s
   http_headers:
     X-Scope-OrgID:
-      values:
+      secrets:
       - tenant-a
     X-Custom-Header:
-      values:
+      secrets:
       - value-1
       - value-2
   relabel_configs:

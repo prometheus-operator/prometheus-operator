@@ -16,6 +16,10 @@
 
 package v1
 
+import (
+	corev1 "k8s.io/api/core/v1"
+)
+
 // HTTPHeaderApplyConfiguration represents a declarative configuration of the HTTPHeader type for use
 // with apply.
 //
@@ -27,8 +31,10 @@ type HTTPHeaderApplyConfiguration struct {
 	// The name is case-insensitive and it can't be one of the headers managed
 	// by Prometheus itself (e.g. `Authorization`, `Host` or `User-Agent`).
 	Name *string `json:"name,omitempty"`
-	// values defines the values of the HTTP header.
-	Values []string `json:"values,omitempty"`
+	// secrets defines the keys of Secrets containing the values of the HTTP
+	// header. The secrets need to be in the same namespace as the custom
+	// resource and readable by the Prometheus Operator.
+	Secrets []corev1.SecretKeySelector `json:"secrets,omitempty"`
 }
 
 // HTTPHeaderApplyConfiguration constructs a declarative configuration of the HTTPHeader type for use with
@@ -45,12 +51,12 @@ func (b *HTTPHeaderApplyConfiguration) WithName(value string) *HTTPHeaderApplyCo
 	return b
 }
 
-// WithValues adds the given value to the Values field in the declarative configuration
+// WithSecrets adds the given value to the Secrets field in the declarative configuration
 // and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, values provided by each call will be appended to the Values field.
-func (b *HTTPHeaderApplyConfiguration) WithValues(values ...string) *HTTPHeaderApplyConfiguration {
+// If called multiple times, values provided by each call will be appended to the Secrets field.
+func (b *HTTPHeaderApplyConfiguration) WithSecrets(values ...corev1.SecretKeySelector) *HTTPHeaderApplyConfiguration {
 	for i := range values {
-		b.Values = append(b.Values, values[i])
+		b.Secrets = append(b.Secrets, values[i])
 	}
 	return b
 }
