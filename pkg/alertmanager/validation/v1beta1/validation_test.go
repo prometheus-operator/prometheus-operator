@@ -1428,7 +1428,7 @@ func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "Test validate on rocketchat config - valid API URL",
+			name: "Test validate on rocketchat config - valid URLs",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -1439,7 +1439,15 @@ func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
 							Name: "different",
 							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
 								{
-									APIURL: ptr.To(monitoringv1beta1.URL("http://sns.api.url")),
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://rocketchat.api.url")),
+									IconURL:  new("{{ .labels.url }}"),
+									ImageURL: new("{{ .labels.url }}"),
+									ThumbURL: new("{{ .labels.url }}"),
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url }}"),
+										},
+									},
 								},
 							},
 						},
@@ -1461,6 +1469,94 @@ func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
 							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
 								{
 									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid icon URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									IconURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid image URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ImageURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid thumb URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ThumbURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid action URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url"),
+										},
+									},
 								},
 							},
 						},
