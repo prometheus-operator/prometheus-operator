@@ -347,6 +347,93 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
+// testPodMonitorStatusSubresourceForPrometheusAgent validates PodMonitor status updates upon PrometheusAgent selection.
+func testPodMonitorStatusSubresourceForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "podmonitor-status-agent-test"
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first PodMonitor to check that the operator only updates the binding when needed.
+	pm1 := framework.MakeBasicPodMonitor("pmon1")
+	pm1.Labels["group"] = name
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEmpty(t, ts)
+
+	// Create a second PodMonitor to check that the operator updates the binding when the condition changes.
+	pm2 := framework.MakeBasicPodMonitor("pmon2")
+	pm2.Labels["group"] = name
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// A label update doesn't change the PodMonitor's status.
+	pm1.Labels["test"] = "test"
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm1, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Reference a non-existing Secret to make the second PodMonitor invalid.
+	pm2.Spec.PodMetricsEndpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm2, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second PodMonitor should change to Accepted=False.
+	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pm2.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, operator.InvalidConfiguration, cond.Reason)
+	require.NotEmpty(t, cond.Message)
+	require.Equal(t, pm2.Generation, cond.ObservedGeneration)
+
+	// The first PodMonitor should remain unchanged.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
 // testProbeStatusSubresource validates Probe status updates upon Prometheus selection.
 func testProbeStatusSubresource(t *testing.T) {
 	t.Parallel()
@@ -483,6 +570,44 @@ func testGarbageCollectionOfPodMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testGarbageCollectionOfPodMonitorBindingForPrometheusAgent validates that deselecting a PodMonitor removes its PrometheusAgent workload binding.
+func testGarbageCollectionOfPodMonitorBindingForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "pmon-agent-binding-cleanup-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	pm.Labels = map[string]string{}
+	pm, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testRmPodMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource from PodMonitor's status when workload is deleted.
 func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	t.Parallel()
@@ -518,6 +643,43 @@ func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmPodMonitorBindingDuringPrometheusAgentDelete validates that deleting a PrometheusAgent removes its binding from the PodMonitor status.
+func testRmPodMonitorBindingDuringPrometheusAgentDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "agent-delete-pmon-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
