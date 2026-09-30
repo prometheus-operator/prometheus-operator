@@ -46,7 +46,7 @@ const (
 // ConfigurationResource is a type constraint that permits only the specific pointer types for configuration resources
 // selectable by Prometheus, PrometheusAgent, Alertmanager or ThanosRuler.
 type ConfigurationResource interface {
-	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule
+	*monitoringv1.ServiceMonitor | *monitoringv1.PodMonitor | *monitoringv1.Probe | *monitoringv1alpha1.ScrapeConfig | *monitoringv1.PrometheusRule | *monitoringv1alpha1.AlertmanagerConfig
 }
 
 // TypedConfigurationResource is a generic type that holds a configuration resource with its validation status.

@@ -1,0 +1,10 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - client_url: '{{ .CommonAnnotations.client }}'
+    images:
+    - src: '{{ .CommonAnnotations.image }}'
+      href: '{{ .CommonAnnotations.link }}'
+    links:
+    - href: '{{ .CommonAnnotations.docs }}'
+templates: []
