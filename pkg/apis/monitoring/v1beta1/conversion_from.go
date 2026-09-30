@@ -458,6 +458,10 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 }
 
 func convertEmailThreadingConfigFrom(in *v1alpha1.EmailThreadingConfig) *EmailThreadingConfig {
+	if in == nil {
+		return nil
+	}
+
 	return &EmailThreadingConfig{
 		ThreadByDate: ThreadByDateType(in.ThreadByDate),
 	}
