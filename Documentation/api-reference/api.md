@@ -8419,6 +8419,49 @@ Valid values are &ldquo;Xor&rdquo; and &ldquo;Xor2&rdquo;.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.ClientAuthType">ClientAuthType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig</a>)
+</p>
+<div>
+<p>Taken from <a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;NoClientCert&#34;</p></td>
+<td><p>NoClientCert indicates that no client certificate should be requested
+during the handshake, and if any certificates are sent they will not
+be verified.</p>
+</td>
+</tr><tr><td><p>&#34;RequestClientCert&#34;</p></td>
+<td><p>RequestClientCert indicates that a client certificate should be requested
+during the handshake, but does not require that the client send any
+certificates.</p>
+</td>
+</tr><tr><td><p>&#34;RequireAndVerifyClientCert&#34;</p></td>
+<td><p>RequireAndVerifyClientCert indicates that a client certificate should be requested
+during the handshake, and that at least one valid certificate is required
+to be sent by the client.</p>
+</td>
+</tr><tr><td><p>&#34;RequireAnyClientCert&#34;</p></td>
+<td><p>RequireAnyClientCert indicates that a client certificate should be requested
+during the handshake, and that at least one certificate is required to be
+sent by the client, but that certificate is not required to be valid.</p>
+</td>
+</tr><tr><td><p>&#34;VerifyClientCertIfGiven&#34;</p></td>
+<td><p>VerifyClientCertIfGiven indicates that a client certificate should be requested
+during the handshake, but does not require that the client sends a
+certificate. If the client does send a certificate it is required to be
+valid.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig
 </h3>
 <p>
@@ -11945,6 +11988,36 @@ URL
 <em>(Optional)</em>
 <p>apiURL defines he default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botToken</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>botToken represents the bot token configuration for Telegram.
+It is mutually exclusive with <code>botTokenFile</code>.
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>botTokenFile defines the file to read the Telegram bot token from.
+It is mutually exclusive with <code>botToken</code>.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -22986,7 +23059,9 @@ the server.</p>
 <td>
 <code>clientAuthType</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ClientAuthType">
+ClientAuthType
+</a>
 </em>
 </td>
 <td>
