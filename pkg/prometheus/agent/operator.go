@@ -143,14 +143,6 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithConfigResourceStatus tells that the controller can manage the status of
-// configuration resources.
-func WithConfigResourceStatus() ControllerOption {
-	return func(o *Operator) {
-		o.configResourcesStatusEnabled = true
-	}
-}
-
 // WithPodTopologyLabels tells that the cluster runs K8s >= 1.35 where
 // PodTopologyLabelsAdmission automatically injects topology labels onto pods.
 func WithPodTopologyLabels() ControllerOption {

@@ -166,14 +166,6 @@ func WithoutUnmanagedConfiguration() ControllerOption {
 	}
 }
 
-// WithConfigResourceStatus tells that the controller can manage the status of
-// configuration resources.
-func WithConfigResourceStatus() ControllerOption {
-	return func(o *Operator) {
-		o.configResourcesStatusEnabled = true
-	}
-}
-
 // WithPodTopologyLabels tells that the cluster runs K8s >= 1.35 where
 // PodTopologyLabelsAdmission automatically injects topology labels onto pods.
 // When set, the operator uses pod label SD meta labels for zone detection in
@@ -231,11 +223,12 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		metrics:         operator.NewMetrics(r),
 		reconciliations: &operator.ReconciliationTracker{},
 
-		controllerID:             c.ControllerID,
-		newEventRecorder:         c.EventRecorderFactory(client, controllerName),
-		retentionPoliciesEnabled: c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
-		topologyShardingEnabled:  c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
-		finalizerSyncer:          operator.NewNoopFinalizerSyncer(),
+		controllerID:                 c.ControllerID,
+		newEventRecorder:             c.EventRecorderFactory(client, controllerName),
+		retentionPoliciesEnabled:     c.Gates.Enabled(operator.PrometheusShardRetentionPolicyFeature),
+		topologyShardingEnabled:      c.Gates.Enabled(operator.PrometheusTopologyShardingFeature),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range opts {
 		opt(o)
