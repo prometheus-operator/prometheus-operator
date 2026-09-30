@@ -204,15 +204,6 @@ type HTTPHeader struct {
 	Secrets []v1.SecretKeySelector `json:"secrets"`
 }
 
-// Validate semantically validates the given HTTPHeader.
-func (h *HTTPHeader) Validate() error {
-	if len(h.Secrets) == 0 {
-		return errors.New("secrets must contain at least one item")
-	}
-
-	return nil
-}
-
 // HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
 // (from secret/configmap references as well as files).
 type HTTPConfigWithTLSFiles struct {

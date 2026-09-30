@@ -312,10 +312,6 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 // the user because Prometheus manages it itself.
 func validateHTTPHeaders(headers []monitoringv1.HTTPHeader) error {
 	for i, header := range headers {
-		if err := header.Validate(); err != nil {
-			return fmt.Errorf("httpHeaders[%d]: %w", i, err)
-		}
-
 		if _, found := commoncfg.ReservedHeaders[http.CanonicalHeaderKey(header.Name)]; found {
 			return fmt.Errorf("httpHeaders[%d]: setting the %q header isn't allowed", i, header.Name)
 		}

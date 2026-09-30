@@ -687,19 +687,6 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: false,
 		},
 		{
-			scenario: "HTTP header without secrets",
-			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
-				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
-					HTTPHeaders: []monitoringv1.HTTPHeader{
-						{
-							Name: "X-Scope-OrgID",
-						},
-					},
-				})
-			},
-			valid: false,
-		},
-		{
 			scenario: "HTTP header with a missing secret key",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
@@ -1344,19 +1331,6 @@ func TestSelectPodMonitors(t *testing.T) {
 									Key: "key1",
 								},
 							},
-						},
-					},
-				})
-			},
-			valid: false,
-		},
-		{
-			scenario: "HTTP header without secrets",
-			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
-				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
-					HTTPHeaders: []monitoringv1.HTTPHeader{
-						{
-							Name: "X-Scope-OrgID",
 						},
 					},
 				})
