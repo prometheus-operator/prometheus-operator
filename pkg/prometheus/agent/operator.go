@@ -1059,7 +1059,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-// updateConfigResourcesStatus updates the status of PodMonitor resources selected by PrometheusAgent.
+// updateConfigResourcesStatus updates the status of ServiceMonitor and
+// PodMonitor resources selected by PrometheusAgent.
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, resources selectedConfigResources) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1067,10 +1068,20 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	configResourceSyncer := operator.NewConfigResourceSyncer(p, c.dclient, c.accessor)
 
+	for key, configResource := range resources.sMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update ServiceMonitor %s status: %w", key, err)
+		}
+	}
+
 	for key, configResource := range resources.pMons {
 		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
 			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
 		}
+	}
+
+	if err := operator.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
 
 	if err := operator.CleanupBindings(ctx, c.pmonInfs.ListAll, resources.pMons, configResourceSyncer); err != nil {
@@ -1080,13 +1091,18 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 	return nil
 }
 
-// configResStatusCleanup removes the PrometheusAgent binding from all PodMonitor resources.
+// configResStatusCleanup removes the PrometheusAgent binding from all
+// ServiceMonitor and PodMonitor resources.
 func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
 	}
 
 	configResourceSyncer := operator.NewConfigResourceSyncer(p, c.dclient, c.accessor)
+	if err := operator.CleanupBindings(ctx, c.smonInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
+	}
+
 	if err := operator.CleanupBindings(ctx, c.pmonInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}

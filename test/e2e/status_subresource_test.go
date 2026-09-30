@@ -144,6 +144,93 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
+// testServiceMonitorStatusSubresourceForPrometheusAgent validates ServiceMonitor status updates upon PrometheusAgent selection.
+func testServiceMonitorStatusSubresourceForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "servicemonitor-status-agent-test"
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first ServiceMonitor to check that the operator only updates the binding when needed.
+	sm1 := framework.MakeBasicServiceMonitor("smon1")
+	sm1.Labels["group"] = name
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEmpty(t, ts)
+
+	// Create a second ServiceMonitor to check that the operator updates the binding when the condition changes.
+	sm2 := framework.MakeBasicServiceMonitor("smon2")
+	sm2.Labels["group"] = name
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// A label update doesn't change the ServiceMonitor's status.
+	sm1.Labels["test"] = "test"
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm1, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Reference a non-existing Secret to make the second ServiceMonitor invalid.
+	sm2.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm2, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second ServiceMonitor should change to Accepted=False.
+	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sm2.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, operator.InvalidConfiguration, cond.Reason)
+	require.NotEmpty(t, cond.Message)
+	require.Equal(t, sm2.Generation, cond.ObservedGeneration)
+
+	// The first ServiceMonitor should remain unchanged.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
 // testGarbageCollectionOfServiceMonitorBinding validates that the operator removes the reference to the Prometheus resource when the ServiceMonitor isn't selected anymore by the workload.
 func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	t.Parallel()
@@ -181,6 +268,44 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testGarbageCollectionOfServiceMonitorBindingForPrometheusAgent validates that deselecting a ServiceMonitor removes its PrometheusAgent workload binding.
+func testGarbageCollectionOfServiceMonitorBindingForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "smon-agent-binding-cleanup-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	sm.Labels = map[string]string{}
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
@@ -226,6 +351,52 @@ func testServiceMonitorStatusWithMultipleWorkloads(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testServiceMonitorStatusWithMultiplePrometheusAgents validates ServiceMonitor status updates with multiple PrometheusAgent resources.
+func testServiceMonitorStatusWithMultiplePrometheusAgents(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "servicemonitor-status-multiple-agents"
+	p1 := framework.MakeBasicPrometheusAgent(ns, "agent1", name, 1)
+	p1, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p1)
+	require.NoError(t, err)
+
+	p2 := framework.MakeBasicPrometheusAgent(ns, "agent2", name, 1)
+	p2.Spec.ArbitraryFSAccessThroughSMs.Deny = true
+	p2, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p2)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].BearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// The ServiceMonitor should be accepted by the first PrometheusAgent resource.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p1, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The ServiceMonitor should be rejected by the second PrometheusAgent resource because it wants to access the service account token file.
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p2, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first PrometheusAgent binding should remain present and accepted.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p1, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testRmServiceMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource when workload is deleted.
 func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	t.Parallel()
@@ -261,6 +432,43 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmServiceMonitorBindingDuringPrometheusAgentDelete validates that deleting a PrometheusAgent removes its binding from the ServiceMonitor status.
+func testRmServiceMonitorBindingDuringPrometheusAgentDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "agent-delete-smon-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
