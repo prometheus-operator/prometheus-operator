@@ -29,6 +29,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/metadata"
 	"k8s.io/client-go/rest"
@@ -60,6 +61,7 @@ const (
 // monitoring configurations.
 type Operator struct {
 	kclient  kubernetes.Interface
+	dclient  dynamic.Interface
 	mdClient metadata.Interface
 	mclient  monitoringclient.Interface
 
@@ -106,6 +108,18 @@ type Operator struct {
 }
 
 type ControllerOption func(*Operator)
+
+// selectedConfigResources contains the configuration resources selected by PrometheusAgent.
+type selectedConfigResources struct {
+	sMons         operator.TypedResourcesSelection[*monitoringv1.ServiceMonitor]
+	pMons         operator.TypedResourcesSelection[*monitoringv1.PodMonitor]
+	bMons         operator.TypedResourcesSelection[*monitoringv1.Probe]
+	scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
+}
+
+func (s *selectedConfigResources) Len() int {
+	return len(s.sMons) + len(s.pMons) + len(s.bMons) + len(s.scrapeConfigs)
+}
 
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
 func WithEndpointSlice() ControllerOption {
@@ -154,6 +168,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		return nil, fmt.Errorf("instantiating kubernetes client failed: %w", err)
 	}
 
+	dclient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("instantiating dynamic client failed: %w", err)
+	}
+
 	mdClient, err := metadata.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("instantiating metadata client failed: %w", err)
@@ -169,9 +188,11 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 
 	o := &Operator{
 		kclient:  client,
+		dclient:  dclient,
 		mdClient: mdClient,
 		mclient:  mclient,
 		logger:   logger,
+		accessor: operator.NewAccessor(logger),
 		config: prompkg.Config{
 			LocalHost:                      c.LocalHost,
 			ReloaderConfig:                 c.ReloaderConfig,
@@ -635,51 +656,62 @@ func (c *Operator) addHandlers() {
 // Sync implements the operator.Syncer interface.
 func (c *Operator) Sync(ctx context.Context, key string) error {
 	c.reconciliations.ResetStatus(key)
-	err := c.sync(ctx, key)
+
+	closure, err := c.sync(ctx, key)
+	if err != nil {
+		_ = closure(ctx)
+	} else {
+		err = closure(ctx)
+	}
+
 	c.reconciliations.SetStatus(key, err)
 
 	return err
 }
 
-func (c *Operator) sync(ctx context.Context, key string) error {
+func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) error, error) {
+	closure := func(context.Context) error { return nil }
+
 	p, err := operator.GetObjectFromKey[*monitoringv1alpha1.PrometheusAgent](c.promInfs, key)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if p == nil {
 		c.reconciliations.ForgetObject(key)
 		// Dependent resources are cleaned up by K8s via OwnerReferences
-		return nil
+		return closure, nil
 	}
 
 	logger := c.logger.With("key", key)
 	logger.Info("sync prometheusagent")
 
-	finalizersAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error { return nil })
+	finalizersAdded, err := c.finalizerSyncer.Sync(ctx, p, c.rr.DeletionInProgress(p), func() error {
+		return c.configResStatusCleanup(ctx, p)
+	})
 	if err != nil {
-		return err
+		return closure, err
 	}
 
 	if finalizersAdded {
 		// Since the object has been updated, let's trigger another sync.
 		c.rr.EnqueueForReconciliation(p)
-		return nil
+		return closure, nil
 	}
 
 	// Check if the Agent instance is marked for deletion.
 	if c.rr.DeletionInProgress(p) {
 		c.reconciliations.ForgetObject(key)
-		return nil
+		return closure, nil
 	}
 
 	if p.Spec.Paused {
 		logger.Info("no action taken (the resource is paused)")
-		return nil
+		return closure, nil
 	}
 
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
-		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
+		return closure, fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
 	}
 
 	if c.topologyShardingEnabled {
@@ -689,11 +721,25 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		}
 	}
 
+	assetStore := assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
+
+	resources, err := c.getSelectedConfigResources(ctx, logger, p, assetStore)
+	if err != nil {
+		return closure, err
+	}
+
+	// Return updateConfigResourcesStatus as the closure so that Sync calls it
+	// at the end of each reconciliation, including after an error.
+	closure = func(ctx context.Context) error {
+		return c.updateConfigResourcesStatus(ctx, p, *resources)
+	}
+
+	if resources.Len() == 0 {
+		c.reconciliations.SetReasonAndMessage(key, operator.NoSelectedResourcesReason, noSelectedResourcesMessage)
+	}
+
 	// Generate the configuration data.
-	var (
-		assetStore = assets.NewStoreBuilder(c.kclient.CoreV1(), c.kclient.CoreV1())
-		opts       = []prompkg.ConfigGeneratorOption{}
-	)
+	opts := []prompkg.ConfigGeneratorOption{}
 	if c.endpointSliceSupported {
 		opts = append(opts, prompkg.WithEndpointSliceSupport())
 	}
@@ -709,21 +755,21 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	cg, err := prompkg.NewConfigGenerator(logger, p, opts...)
 	if err != nil {
-		return err
+		return closure, err
 	}
 
-	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, assetStore); err != nil {
-		return fmt.Errorf("creating config failed: %w", err)
+	if err := c.createOrUpdateConfigurationSecret(ctx, logger, p, cg, assetStore, resources); err != nil {
+		return closure, fmt.Errorf("creating config failed: %w", err)
 	}
 	c.reconciliations.UpdateReferenceTracker(key, assetStore.RefTracker())
 
 	tlsAssets, err := operator.ReconcileShardedSecret(ctx, assetStore.TLSAssets(), c.kclient, prompkg.NewTLSAssetSecret(p, c.config))
 	if err != nil {
-		return fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
+		return closure, fmt.Errorf("failed to reconcile the TLS secrets: %w", err)
 	}
 
 	if err := c.createOrUpdateWebConfigSecret(ctx, p); err != nil {
-		return fmt.Errorf("synchronizing web config secret failed: %w", err)
+		return closure, fmt.Errorf("synchronizing web config secret failed: %w", err)
 	}
 
 	switch ptr.Deref(p.Spec.Mode, "") {
@@ -731,13 +777,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 		err = c.syncDaemonSet(ctx, key, p, cg, tlsAssets)
 	default:
 		if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
-			return err
+			return closure, err
 		}
 
 		err = c.syncStatefulSet(ctx, key, p, cg, tlsAssets)
 	}
 
-	return err
+	return closure, err
 }
 
 func (c *Operator) syncDaemonSet(ctx context.Context, key string, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, tlsAssets *operator.ShardedSecret) error {
@@ -934,39 +980,44 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 	return nil
 }
 
-func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder) error {
+func (c *Operator) getSelectedConfigResources(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, store *assets.StoreBuilder) (*selectedConfigResources, error) {
 	resourceSelector, err := prompkg.NewResourceSelector(logger, p, store, c.nsMonInf, c.metrics, c.newEventRecorder(p))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	smons, err := resourceSelector.SelectServiceMonitors(ctx, c.smonInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting ServiceMonitors failed: %w", err)
+		return nil, fmt.Errorf("selecting ServiceMonitors failed: %w", err)
 	}
 
 	pmons, err := resourceSelector.SelectPodMonitors(ctx, c.pmonInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting PodMonitors failed: %w", err)
+		return nil, fmt.Errorf("selecting PodMonitors failed: %w", err)
 	}
 
 	bmons, err := resourceSelector.SelectProbes(ctx, c.probeInfs.ListAllByNamespace)
 	if err != nil {
-		return fmt.Errorf("selecting Probes failed: %w", err)
+		return nil, fmt.Errorf("selecting Probes failed: %w", err)
 	}
 
 	var scrapeConfigs operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]
 	if c.sconInfs != nil {
 		scrapeConfigs, err = resourceSelector.SelectScrapeConfigs(ctx, c.sconInfs.ListAllByNamespace)
 		if err != nil {
-			return fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
+			return nil, fmt.Errorf("selecting ScrapeConfigs failed: %w", err)
 		}
 	}
 
-	if len(smons)+len(pmons)+len(bmons)+len(scrapeConfigs) == 0 {
-		c.reconciliations.SetReasonAndMessage(operator.KeyForObject(p), operator.NoSelectedResourcesReason, noSelectedResourcesMessage)
-	}
+	return &selectedConfigResources{
+		sMons:         smons,
+		pMons:         pmons,
+		bMons:         bmons,
+		scrapeConfigs: scrapeConfigs,
+	}, nil
+}
 
+func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger *slog.Logger, p *monitoringv1alpha1.PrometheusAgent, cg *prompkg.ConfigGenerator, store *assets.StoreBuilder, resources *selectedConfigResources) error {
 	if err := cg.AddRemoteWriteToStore(ctx, store, p.GetNamespace(), p.Spec.RemoteWrite); err != nil {
 		return err
 	}
@@ -987,10 +1038,10 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		smons.ValidResources(),
-		pmons.ValidResources(),
-		bmons.ValidResources(),
-		scrapeConfigs.ValidResources(),
+		resources.sMons.ValidResources(),
+		resources.pMons.ValidResources(),
+		resources.bMons.ValidResources(),
+		resources.scrapeConfigs.ValidResources(),
 		store,
 		additionalScrapeConfigs,
 	)
@@ -1006,6 +1057,41 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 
 	logger.Debug("updating Prometheus configuration secret")
 	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
+}
+
+// updateConfigResourcesStatus updates the status of PodMonitor resources selected by PrometheusAgent.
+func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, resources selectedConfigResources) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	configResourceSyncer := operator.NewConfigResourceSyncer(p, c.dclient, c.accessor)
+
+	for key, configResource := range resources.pMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update PodMonitor %s status: %w", key, err)
+		}
+	}
+
+	if err := operator.CleanupBindings(ctx, c.pmonInfs.ListAll, resources.pMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	return nil
+}
+
+// configResStatusCleanup removes the PrometheusAgent binding from all PodMonitor resources.
+func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
+	if !c.configResourcesStatusEnabled {
+		return nil
+	}
+
+	configResourceSyncer := operator.NewConfigResourceSyncer(p, c.dclient, c.accessor)
+	if err := operator.CleanupBindings(ctx, c.pmonInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	return nil
 }
 
 func createSSetInputHash(p monitoringv1alpha1.PrometheusAgent, c prompkg.Config, tlsAssets *operator.ShardedSecret, ssSpec appsv1.StatefulSetSpec) (string, error) {
