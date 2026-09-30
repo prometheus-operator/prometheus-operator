@@ -175,6 +175,61 @@
                     "description": "followRedirects defines whether the client should follow HTTP 3xx\nredirects.",
                     "type": "boolean"
                   },
+                  "httpHeaders": {
+                    "description": "httpHeaders can be used to specify HTTP headers.",
+                    "items": {
+                      "description": "HTTPHeader defines a HTTP header configuration.\nSee https://prometheus.io/docs/alerting/latest/configuration/#http_header",
+                      "properties": {
+                        "name": {
+                          "description": "name defines a HTTP header name.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "secrets": {
+                          "description": "secrets defines values of the HTTP header retrieving from a secret.",
+                          "items": {
+                            "description": "SecretKeySelector selects a key of a Secret.",
+                            "properties": {
+                              "key": {
+                                "description": "The key of the secret to select from.  Must be a valid secret key.",
+                                "type": "string"
+                              },
+                              "name": {
+                                "default": "",
+                                "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                                "type": "string"
+                              },
+                              "optional": {
+                                "description": "Specify whether the Secret or its key must be defined",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "key"
+                            ],
+                            "type": "object",
+                            "x-kubernetes-map-type": "atomic"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-map-keys": [
+                            "name"
+                          ],
+                          "x-kubernetes-list-type": "map"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "secrets"
+                      ],
+                      "type": "object"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
+                  },
                   "interval": {
                     "description": "interval at which targets are probed using the configured prober.\nIf not specified Prometheus' global scrape interval is used.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",

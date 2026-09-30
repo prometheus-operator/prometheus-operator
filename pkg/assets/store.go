@@ -156,6 +156,19 @@ func (s *StoreBuilder) AddProxyConfig(ctx context.Context, namespace string, pc 
 	return nil
 }
 
+// AddHeaderConfig processes the given []HTTPHeader and adds the referenced credentials to the store.
+func (s *StoreBuilder) AddHeaderConfig(ctx context.Context, namespace string, headers []monitoringv1.HTTPHeader) error {
+	for k, v := range headers {
+		for index, sel := range v.Secrets {
+			if _, err := s.GetSecretKey(ctx, namespace, sel); err != nil {
+				return fmt.Errorf("header[%d][%d]: %w", k, index, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // AddOAuth2 processes the given *OAuth2 and adds the referenced credentials to the store.
 func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitoringv1.OAuth2) error {
 	if oauth2 == nil {
