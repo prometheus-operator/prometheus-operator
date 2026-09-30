@@ -106,7 +106,7 @@ type PodMetricsEndpointApplyConfiguration struct {
 	//
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
 	FilterRunning                         *bool `json:"filterRunning,omitempty"`
-	HTTPConfigWithProxyApplyConfiguration `json:",inline"`
+	HTTPConfigWithProxyApplyConfiguration `json:""`
 }
 
 // PodMetricsEndpointApplyConfiguration constructs a declarative configuration of the PodMetricsEndpoint type for use with

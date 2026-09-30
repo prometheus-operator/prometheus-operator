@@ -345,7 +345,6 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 			"object", KeyForObject(cur),
 		)
 		return true
-
 	}
 	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
 		rr.logger.Debug("different annotations",
@@ -408,7 +407,6 @@ func (rr *ResourceReconciler) FindOwner(obj metav1.Object) metav1.Object {
 
 // OnAdd implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnAdd(obj any, _ bool) {
-
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetAdd(v)

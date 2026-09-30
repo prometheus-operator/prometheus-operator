@@ -42,6 +42,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	promagentmetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/prometheus_agent"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/webconfig"
@@ -220,6 +221,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+	o.metrics.MustRegister(promagentmetrics.NewConditionCollector(operator.StoresIter[*monitoringv1alpha1.PrometheusAgent](promStores...)))
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
@@ -678,6 +680,13 @@ func (c *Operator) sync(ctx context.Context, key string) error {
 
 	if ptr.Deref(p.Spec.Mode, "") == monitoringv1alpha1.DaemonSetPrometheusAgentMode && !c.daemonSetFeatureGateEnabled {
 		return fmt.Errorf("feature gate for Prometheus Agent's DaemonSet mode is not enabled")
+	}
+
+	if c.topologyShardingEnabled {
+		if ok, msg := prompkg.UnbalancedTopologyShardingMessage(p); ok {
+			logger.Warn(msg)
+			c.reconciliations.SetReasonAndMessage(key, operator.UnbalancedTopologyShardingReason, msg)
+		}
 	}
 
 	// Generate the configuration data.
@@ -1204,7 +1213,6 @@ func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
@@ -1233,7 +1241,6 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
-
 			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
 				c.logger.Error(

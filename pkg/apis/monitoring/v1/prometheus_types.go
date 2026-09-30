@@ -1155,6 +1155,7 @@ func (cpf *CommonPrometheusFields) WebRoutePrefix() string {
 // +kubebuilder:subresource:scale:specpath=.spec.shards,statuspath=.status.shards,selectorpath=.status.selector
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
+// +metrics:conditions:path=.status.conditions,resourceType=prometheus
 
 // The `Prometheus` custom resource definition (CRD) defines a desired [Prometheus](https://prometheus.io/docs/prometheus) setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage, and Alertmanagers where firing alerts should be sent and many more.
 //
@@ -1222,12 +1223,22 @@ type PrometheusSpec struct {
 
 	// retention defines how long to retain the Prometheus data.
 	//
-	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+	// Default: "24h" if `spec.retention`, `spec.retentionSize` and
+	// `spec.retentionPercentage` are empty.
 	// +optional
 	Retention Duration `json:"retention,omitempty"`
 	// retentionSize defines the maximum number of bytes used by the Prometheus data.
 	// +optional
 	RetentionSize ByteSize `json:"retentionSize,omitempty"`
+	// retentionPercentage defines the maximum percentage of the data volume's
+	// capacity used by the Prometheus data.
+	//
+	// The value is a number between 0 and 100. If set to 0, percentage-based
+	// retention is disabled.
+	//
+	// It requires Prometheus >= v3.11.0 and is ignored by older versions.
+	// +optional
+	RetentionPercentage *resource.Quantity `json:"retentionPercentage,omitempty"`
 
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	//
@@ -1240,9 +1251,9 @@ type PrometheusSpec struct {
 	//
 	// When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
 	// default handling depends on the Prometheus and Thanos sidecar versions:
-	//   - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+	//   - With Prometheus < v3.9.0 or a Thanos sidecar < v0.42.0, block compaction is disabled to avoid race
 	//     conditions during block uploads (as the Thanos documentation recommends).
-	//   - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+	//   - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.42.0, local compaction is kept enabled and coordinated
 	//     with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
 	//     compacted after they have been uploaded.
 	// Setting this field to true always disables local compaction regardless of the versions.
@@ -1984,7 +1995,7 @@ type Sigv4 struct {
 	// +optional
 	RoleArn string `json:"roleArn,omitempty"`
 	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.33.0. Currently not supported by Thanos.
+	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
 	//
 	// +kubebuilder:validation:MinLength=1
 	// +optional

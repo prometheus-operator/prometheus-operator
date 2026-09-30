@@ -31,7 +31,7 @@ import (
 // `Alertmanager` objects select `AlertmanagerConfig` objects using label and namespace selectors.
 type AlertmanagerConfigApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	v1.TypeMetaApplyConfiguration `json:",inline"`
+	v1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of AlertmanagerConfigSpec

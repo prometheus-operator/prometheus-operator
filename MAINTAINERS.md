@@ -2,8 +2,8 @@
 
 | Name              | Email                     | Kubernetes Slack     | GitHub                                               | Company                        |
 |-------------------|---------------------------|----------------------|------------------------------------------------------|--------------------------------|
-| Frederic Branczyk | fbranczyk@gmail.com       | `@brancz`            | [@brancz](https://github.com/brancz)                 | Polar Signals                  |
-| Matthias Loibl    | mail@matthiasloibl.com    | `@metalmatze`        | [@metalmatze](https://github.com/metalmatze)         | Polar Signals                  |
+| Frederic Branczyk | fbranczyk@gmail.com       | `@brancz`            | [@brancz](https://github.com/brancz)                 | Dash0                          |
+| Matthias Loibl    | mail@matthiasloibl.com    | `@metalmatze`        | [@metalmatze](https://github.com/metalmatze)         | Dash0                          |
 | Paweł Krupa       | paulfantom@gmail.com      | `@paulfantom`        | [@paulfantom](https://github.com/paulfantom)         | AVSystem                       |
 | Simon Pasquier    | pasquier.simon@gmail.com  | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier)   | Red Hat                        |
 | Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)         | Grafana                        |
@@ -11,7 +11,7 @@
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)       | Red Hat                        |
 | Guillaume Hérail  | github@xiu.io             | `@xiu`               | [@xiu](https://github.com/xiu)                       | Sony Interactive Entertainment |
 | Jayapriya Pai     | slashpai9@gmail.com       | `@jp`                | [@slashpai](https://github.com/slashpai)             | Red Hat                        |
-| Nicolas Takashi   | nicolas.tcs@hotmail.com   | `@ntakashi`          | [@nicolastakashi](https://github.com/nicolastakashi) | Coralogix                      |
+| Nicolas Takashi   | nicolas.tcs@hotmail.com   | `@ntakashi`          | [@nicolastakashi](https://github.com/nicolastakashi) | Dash0                          |
 | M Viswanath Sai   | viswanathsai021@gmail.com | `@mviswanathsai`     | [@mviswanathsai](https://github.com/mviswanathsai)   | Student, IIT(BHU)              |
 | Hélia Barroso     | helia_barroso@hotmail.com | `@Hélia Barroso`     | [@heliapb](https://github.com/heliapb)               | Five9                          |
 

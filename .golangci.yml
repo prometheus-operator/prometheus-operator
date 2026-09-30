@@ -22,6 +22,8 @@ linters:
     - sloglint
     - testifylint
     - unconvert
+    - unused
+    - whitespace
   settings:
     depguard:
       rules:

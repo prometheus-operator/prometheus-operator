@@ -49,6 +49,7 @@ import (
 	"github.com/prometheus-operator/prometheus-operator/pkg/informers"
 	"github.com/prometheus-operator/prometheus-operator/pkg/k8s"
 	"github.com/prometheus-operator/prometheus-operator/pkg/listwatch"
+	prommetrics "github.com/prometheus-operator/prometheus-operator/pkg/metrics/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	prompkg "github.com/prometheus-operator/prometheus-operator/pkg/prometheus"
 	"github.com/prometheus-operator/prometheus-operator/pkg/prometheus/validation"
@@ -267,6 +268,7 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 		promStores = append(promStores, informer.Informer().GetStore())
 	}
 	o.metrics.MustRegister(prompkg.NewCollectorForStores(promStores...))
+	o.metrics.MustRegister(prommetrics.NewConditionCollector(operator.StoresIter[*monitoringv1.Prometheus](promStores...)))
 
 	o.rr = operator.NewResourceReconciler(
 		o.logger,
@@ -823,7 +825,6 @@ func (c *Operator) enqueueForNamespace(gbk operator.GetByKeyer, nsName string) {
 			"err", err,
 		)
 	}
-
 }
 
 func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
@@ -853,7 +854,6 @@ func (c *Operator) handleMonitorNamespaceUpdate(oldo, curo any) {
 			"ScrapeConfigs":   p.Spec.ScrapeConfigNamespaceSelector,
 			"ServiceMonitors": p.Spec.ServiceMonitorNamespaceSelector,
 		} {
-
 			sync, err := k8s.LabelSelectionHasChanged(old.Labels, cur.Labels, selector)
 			if err != nil {
 				c.logger.Error(
@@ -937,6 +937,13 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	}
 
 	c.recordDeprecatedFields(key, logger, p)
+
+	if c.topologyShardingEnabled {
+		if ok, msg := prompkg.UnbalancedTopologyShardingMessage(p); ok {
+			logger.Warn(msg)
+			c.reconciliations.SetReasonAndMessage(key, operator.UnbalancedTopologyShardingReason, msg)
+		}
+	}
 
 	if err := operator.CheckStorageClass(ctx, c.canReadStorageClass, c.kclient, p.Spec.Storage); err != nil {
 		return closure, err
@@ -1343,15 +1350,15 @@ func deadlineExpired(deadline string) (bool, error) {
 
 // gracePeriodForPrometheusStorage returns how long the Prometheus data can be available based
 // on the retention settings.
-// If Prometheus is configured with size-based retention only, it returns a
-// zero value.
+// If Prometheus is configured with size-based and/or percentage-based
+// retention with no time-based retention, it returns a zero value.
 // The function should only be called when the shard retention policy is set to Retain.
 func gracePeriodForPrometheusStorage(p *monitoringv1.Prometheus) (time.Duration, error) {
 	var retention monitoringv1.Duration
 	if p.Spec.ShardRetentionPolicy.Retain != nil {
 		retention = p.Spec.ShardRetentionPolicy.Retain.RetentionPeriod
 	} else {
-		if p.Spec.RetentionSize != "" && p.Spec.Retention == "" {
+		if p.Spec.Retention == "" && (p.Spec.RetentionSize != "" || prompkg.RetentionPercentageEnabled(p.Spec.RetentionPercentage)) {
 			return time.Duration(0), nil
 		}
 
@@ -1556,7 +1563,6 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	// wants to manage configuration themselves. Let's create an empty Secret
 	// if it doesn't exist.
 	if c.unmanagedPrometheusConfiguration(p) {
-
 		s, err := prompkg.MakeConfigurationSecret(p, c.config, nil)
 		if err != nil {
 			return fmt.Errorf("failed to generate empty configuration secret: %w", err)

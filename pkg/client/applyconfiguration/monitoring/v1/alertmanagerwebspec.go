@@ -21,7 +21,7 @@ package v1
 //
 // AlertmanagerWebSpec defines the web command line flags when starting Alertmanager.
 type AlertmanagerWebSpecApplyConfiguration struct {
-	WebConfigFileFieldsApplyConfiguration `json:",inline"`
+	WebConfigFileFieldsApplyConfiguration `json:""`
 	// getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the
 	// Alertmanager's `--web.get-concurrency` flag.
 	GetConcurrency *uint32 `json:"getConcurrency,omitempty"`

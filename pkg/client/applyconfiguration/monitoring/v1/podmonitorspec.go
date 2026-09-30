@@ -84,7 +84,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.27.0.
 	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
-	NativeHistogramConfigApplyConfiguration `json:",inline"`
+	NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//

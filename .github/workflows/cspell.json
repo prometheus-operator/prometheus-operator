@@ -430,6 +430,8 @@
     "prompkg",
     "nutmos",
     "nattapong",
-    "AWSHTTP"
+    "AWSHTTP",
+    "nodev",
+    "nosuid"
   ]
 }

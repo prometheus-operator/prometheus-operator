@@ -24,7 +24,6 @@ import (
 
 func MakeSecretWithCert(ns, name string, keyList []string,
 	dataList [][]byte) *corev1.Secret {
-
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
 		Type:       corev1.SecretType("Opaque"),

@@ -30,7 +30,7 @@ import (
 // `Prometheus` and `ThanosRuler` objects select `PrometheusRule` objects using label and namespace selectors.
 type PrometheusRuleApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	metav1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of desired alerting rule definitions for Prometheus.

@@ -31,7 +31,7 @@ import (
 // The CRD is very similar to the `Prometheus` CRD except for features which aren't available in agent mode like rule evaluation, persistent storage and Thanos sidecar.
 type PrometheusAgentApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	v1.TypeMetaApplyConfiguration `json:",inline"`
+	v1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of the desired behavior of the Prometheus agent. More info:

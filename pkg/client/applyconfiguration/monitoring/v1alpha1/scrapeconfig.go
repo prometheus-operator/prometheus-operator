@@ -30,7 +30,7 @@ import (
 // multiple namespaces into the Prometheus configuration.
 type ScrapeConfigApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	v1.TypeMetaApplyConfiguration `json:",inline"`
+	v1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*v1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of ScrapeConfigSpec.

@@ -20,6 +20,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	resource "k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
@@ -29,7 +30,7 @@ import (
 // PrometheusSpec is a specification of the desired behavior of the Prometheus cluster. More info:
 // https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type PrometheusSpecApplyConfiguration struct {
-	CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	CommonPrometheusFieldsApplyConfiguration `json:""`
 	// baseImage is deprecated: use 'spec.image' instead.
 	BaseImage *string `json:"baseImage,omitempty"`
 	// tag is deprecated: use 'spec.image' instead. The image's tag can be specified as part of the image name.
@@ -38,10 +39,19 @@ type PrometheusSpecApplyConfiguration struct {
 	SHA *string `json:"sha,omitempty"`
 	// retention defines how long to retain the Prometheus data.
 	//
-	// Default: "24h" if `spec.retention` and `spec.retentionSize` are empty.
+	// Default: "24h" if `spec.retention`, `spec.retentionSize` and
+	// `spec.retentionPercentage` are empty.
 	Retention *monitoringv1.Duration `json:"retention,omitempty"`
 	// retentionSize defines the maximum number of bytes used by the Prometheus data.
 	RetentionSize *monitoringv1.ByteSize `json:"retentionSize,omitempty"`
+	// retentionPercentage defines the maximum percentage of the data volume's
+	// capacity used by the Prometheus data.
+	//
+	// The value is a number between 0 and 100. If set to 0, percentage-based
+	// retention is disabled.
+	//
+	// It requires Prometheus >= v3.11.0 and is ignored by older versions.
+	RetentionPercentage *resource.Quantity `json:"retentionPercentage,omitempty"`
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	//
 	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
@@ -50,9 +60,9 @@ type PrometheusSpecApplyConfiguration struct {
 	//
 	// When `spec.thanos.objectStorageConfig` or `spec.thanos.objectStorageConfigFile` are defined, the operator's
 	// default handling depends on the Prometheus and Thanos sidecar versions:
-	// - With Prometheus < v3.9.0 or a Thanos sidecar < v0.41.0, block compaction is disabled to avoid race
+	// - With Prometheus < v3.9.0 or a Thanos sidecar < v0.42.0, block compaction is disabled to avoid race
 	// conditions during block uploads (as the Thanos documentation recommends).
-	// - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.41.0, local compaction is kept enabled and coordinated
+	// - With Prometheus >= v3.9.0 and a Thanos sidecar >= v0.42.0, local compaction is kept enabled and coordinated
 	// with the sidecar through the shipper meta file (`--storage.tsdb.delay-compact-file.path`), so blocks are only
 	// compacted after they have been uploaded.
 	// Setting this field to true always disables local compaction regardless of the versions.
@@ -1081,6 +1091,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRetention(value monitoringv1.Dura
 // If called multiple times, the RetentionSize field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithRetentionSize(value monitoringv1.ByteSize) *PrometheusSpecApplyConfiguration {
 	b.RetentionSize = &value
+	return b
+}
+
+// WithRetentionPercentage sets the RetentionPercentage field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RetentionPercentage field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRetentionPercentage(value resource.Quantity) *PrometheusSpecApplyConfiguration {
+	b.RetentionPercentage = &value
 	return b
 }
 

@@ -53,7 +53,7 @@ type APIServerConfigApplyConfiguration struct {
 	// in clear-text. Prefer using `authorization`.*
 	BearerToken *string `json:"bearerToken,omitempty"`
 	// Optional ProxyConfig.
-	ProxyConfigApplyConfiguration `json:",inline"`
+	ProxyConfigApplyConfiguration `json:""`
 }
 
 // APIServerConfigApplyConfiguration constructs a declarative configuration of the APIServerConfig type for use with

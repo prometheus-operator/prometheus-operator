@@ -40,9 +40,11 @@ const (
 	// Minimum Prometheus and Thanos versions supporting coordinated (delayed)
 	// compaction, which lets Prometheus keep local compaction enabled while the
 	// Thanos sidecar uploads blocks to object storage.
+	// Thanos < v0.42.0 rejects the resulting flags due to a sidecar validation bug.
 	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	// ref: https://github.com/thanos-io/thanos/pull/8688
 	minVersionPrometheusDelayedCompaction = "3.9.0"
-	minVersionThanosDelayedCompaction     = "0.41.0"
+	minVersionThanosDelayedCompaction     = "0.42.0"
 
 	// thanosShipperMetaFileName is the name of the meta file the Thanos sidecar
 	// shipper writes in the TSDB directory. Prometheus reads it through
@@ -432,7 +434,10 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 			retentionTimeFlagValue = prompkg.DefaultRetention
 		}
 	} else {
-		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize))
+		// The command-line flags are only used by Prometheus < v3.11.0 which
+		// doesn't support percentage-based retention, hence it shouldn't
+		// prevent the default time-based retention from being applied.
+		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize, nil))
 	}
 
 	// Starting with Prometheus v3.11.0, retention settings are populated in the configuration file.
@@ -801,7 +806,7 @@ const (
 // Thanos sidecar object-storage setup and the Prometheus and Thanos versions.
 //
 // Delayed compaction requires Prometheus >= v3.9.0
-// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.41.0
+// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.42.0
 // (--shipper.meta-file-name and --shipper.ignore-unequal-block-size); otherwise
 // compaction is disabled while uploading to object storage.
 func compactionModeFor(p *monitoringv1.Prometheus, promVersion semver.Version) (compactionMode, error) {

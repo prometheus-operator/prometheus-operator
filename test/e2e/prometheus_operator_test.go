@@ -96,6 +96,8 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		"prometheus_operator_managed_resources",
 		"prometheus_operator_spec_replicas",
 		"prometheus_operator_spec_shards",
+
+		"prometheus_operator_prometheus_status_condition",
 	}
 
 	name := "test"

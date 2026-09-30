@@ -73,7 +73,7 @@ type ProbeSpecApplyConfiguration struct {
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
 	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
-	NativeHistogramConfigApplyConfiguration `json:",inline"`
+	NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -85,7 +85,7 @@ type ProbeSpecApplyConfiguration struct {
 	// Please note that the `.spec.module` field takes precedence over the `module` parameter from this list when both are defined.
 	// The module name must be added using Module under ProbeSpec.
 	Params                       []ProbeParamApplyConfiguration `json:"params,omitempty"`
-	HTTPConfigApplyConfiguration `json:",inline"`
+	HTTPConfigApplyConfiguration `json:""`
 }
 
 // ProbeSpecApplyConfiguration constructs a declarative configuration of the ProbeSpec type for use with

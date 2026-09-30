@@ -28,7 +28,6 @@ func TestSortKeysEmptyMap(t *testing.T) {
 }
 
 func TestSortKeys(t *testing.T) {
-
 	intKeys := SortedKeys(map[int]any{
 		-10: 6,
 		0:   "",

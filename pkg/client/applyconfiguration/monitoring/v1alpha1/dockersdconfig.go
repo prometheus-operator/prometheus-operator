@@ -34,7 +34,7 @@ type DockerSDConfigApplyConfiguration struct {
 	// host defines the address of the docker daemon.
 	Host *string `json:"host,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	v1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the Docker daemon.
 	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must

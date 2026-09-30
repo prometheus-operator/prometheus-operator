@@ -866,9 +866,7 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 }
 
 func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-
 	for i, config := range sc.Spec.EC2SDConfigs {
-
 		if config.AccessKey != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -948,7 +946,6 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 
 	return nil
@@ -1368,7 +1365,6 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 	return nil
 }

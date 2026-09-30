@@ -21,7 +21,7 @@ package v1
 //
 // ThanosRulerWebSpec defines the configuration of the ThanosRuler web server.
 type ThanosRulerWebSpecApplyConfiguration struct {
-	WebConfigFileFieldsApplyConfiguration `json:",inline"`
+	WebConfigFileFieldsApplyConfiguration `json:""`
 }
 
 // ThanosRulerWebSpecApplyConfiguration constructs a declarative configuration of the ThanosRulerWebSpec type for use with

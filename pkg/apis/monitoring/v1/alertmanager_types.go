@@ -41,6 +41,7 @@ const (
 // +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 // +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
+// +metrics:conditions:path=.status.conditions,resourceType=alertmanager
 
 // The `Alertmanager` custom resource definition (CRD) defines a desired [Alertmanager](https://prometheus.io/docs/alerting) setup to run in a Kubernetes cluster. It allows to specify many options such as the number of replicas, persistent storage and many more.
 //
@@ -335,6 +336,20 @@ type AlertmanagerSpec struct {
 	// clusterPeerTimeout defines the timeout for cluster peering.
 	// +optional
 	ClusterPeerTimeout GoDuration `json:"clusterPeerTimeout,omitempty"`
+	// clusterPeerName defines the name that this Alertmanager instance uses to
+	// advertise itself to other cluster peers (the `--cluster.peer-name` flag,
+	// available since Alertmanager v0.30.0).
+	//
+	// If not set, the operator defaults to the pod's name (`$(POD_NAME)`),
+	// which is injected via the Kubernetes downward API. Setting this field
+	// lets you override that default with either a literal value or a string
+	// referencing environment variables that are already available in the
+	// Alertmanager container (for example `$(POD_NAME).$(NAMESPACE)`).
+	//
+	/// It requires Alertmanager >= 0.30.0.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	ClusterPeerName *string `json:"clusterPeerName,omitempty"`
 	// portName defines the port's name for the pods and governing service.
 	// Defaults to `web`.
 	// +kubebuilder:default:="web"
@@ -697,12 +712,26 @@ type GlobalSMTPConfig struct {
 }
 
 // GlobalTelegramConfig configures global Telegram parameters.
+// +kubebuilder:validation:XValidation:rule="!has(self.botToken) || !has(self.botTokenFile)",message="botToken and botTokenFile are mutually exclusive."
 type GlobalTelegramConfig struct {
 	// apiURL defines he default Telegram API URL.
 	//
 	// It requires Alertmanager >= v0.24.0.
 	// +optional
 	APIURL *URL `json:"apiURL,omitempty"`
+
+	// botToken represents the bot token configuration for Telegram.
+	// It is mutually exclusive with `botTokenFile`.
+	// It requires Alertmanager >= v0.31.0.
+	// +optional
+	BotToken *v1.SecretKeySelector `json:"botToken,omitempty"`
+
+	// botTokenFile defines the file to read the Telegram bot token from.
+	// It is mutually exclusive with `botToken`.
+	// It requires Alertmanager >= v0.31.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	BotTokenFile *string `json:"botTokenFile,omitempty"`
 }
 
 // GlobalJiraConfig configures global Jira parameters.

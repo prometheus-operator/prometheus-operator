@@ -35,7 +35,7 @@ type PrometheusAgentSpecApplyConfiguration struct {
 	//
 	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
 	Mode                                        *monitoringv1alpha1.PrometheusAgentMode `json:"mode,omitempty"`
-	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	v1.CommonPrometheusFieldsApplyConfiguration `json:""`
 }
 
 // PrometheusAgentSpecApplyConfiguration constructs a declarative configuration of the PrometheusAgentSpec type for use with

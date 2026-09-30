@@ -32,11 +32,39 @@ import (
 )
 
 // ThanosRulerInformer provides access to a shared informer and lister for
-// ThanosRulers.
+// ThanosRulers. Prefer using the type-safe variant (see [TypedThanosRulerInformer]).
 type ThanosRulerInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.ThanosRulerLister
 }
+
+// TypedThanosRulerInformer provides access to a shared informer and lister for
+// ThanosRulers, including the type-safe TypedInformer variant.
+// It is a superset of ThanosRulerInformer.
+type TypedThanosRulerInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ThanosRulerIndexInformer
+	Lister() monitoringv1.ThanosRulerLister
+}
+
+// ThanosRulerIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ThanosRulerIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.ThanosRuler]
+
+// ThanosRulerHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for ThanosRuler.
+type ThanosRulerHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.ThanosRuler]
+
+// ThanosRulerDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for ThanosRuler.
+type ThanosRulerDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.ThanosRuler]
+
+// ThanosRulerFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for ThanosRuler.
+type ThanosRulerFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.ThanosRuler]
+
+// ThanosRulerIndexers is a specialization of [cache.TypedIndexers] for ThanosRuler.
+type ThanosRulerIndexers = cache.TypedIndexers[*apismonitoringv1.ThanosRuler]
+
+// DeletedThanosRuler is a specialization of [cache.DeletedObject] for ThanosRuler.
+type DeletedThanosRuler = cache.DeletedObject[*apismonitoringv1.ThanosRuler]
 
 type thanosRulerInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type thanosRulerInformer struct {
 // NewThanosRulerInformer constructs a new informer for ThanosRuler type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedThanosRulerInformer]).
 func NewThanosRulerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewThanosRulerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedThanosRulerInformer constructs a new informer for ThanosRuler type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedThanosRulerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ThanosRulerIndexers) ThanosRulerIndexInformer {
+	return NewTypedThanosRulerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredThanosRulerInformer constructs a new informer for ThanosRuler type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredThanosRulerInformer]).
 func NewFilteredThanosRulerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewThanosRulerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedThanosRulerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredThanosRulerInformer constructs a new informer for ThanosRuler type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredThanosRulerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ThanosRulerIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ThanosRulerIndexInformer {
+	return NewTypedThanosRulerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewThanosRulerInformerWithOptions constructs a new informer for ThanosRuler type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedThanosRulerInformerWithOptions]).
 func NewThanosRulerInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedThanosRulerInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedThanosRulerInformerWithOptions constructs a new informer for ThanosRuler type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedThanosRulerInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) ThanosRulerIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "thanosrulers"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ThanosRuler](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewThanosRulerInformerWithOptions(client versioned.Interface, namespace str
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *thanosRulerInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewThanosRulerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedThanosRulerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *thanosRulerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.ThanosRuler{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *thanosRulerInformer) TypedInformer() ThanosRulerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ThanosRuler](f.factory.InformerFor(&apismonitoringv1.ThanosRuler{}, f.defaultInformer))
 }
 
 func (f *thanosRulerInformer) Lister() monitoringv1.ThanosRulerLister {
 	return monitoringv1.NewThanosRulerLister(f.Informer().GetIndexer())
+}
+
+// ToTypedThanosRulerInformer converts an untyped informer into a TypedThanosRulerInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ThanosRuler. If that is not the case, calling type-safe methods of the returned
+// TypedThanosRulerInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedThanosRulerInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedThanosRulerInformer(informer ThanosRulerInformer) TypedThanosRulerInformer {
+	if informer, ok := informer.(TypedThanosRulerInformer); ok {
+		return informer
+	}
+	return &thanosRulerTypedInformerAdapter{informer}
+}
+
+type thanosRulerTypedInformerAdapter struct {
+	ThanosRulerInformer
+}
+
+func (a *thanosRulerTypedInformerAdapter) TypedInformer() ThanosRulerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ThanosRuler](a.Informer())
+}
+
+// ToThanosRulerIndexInformer converts an untyped informer into a ThanosRulerIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ThanosRuler. If that is not the case, calling type-safe methods of the returned
+// ThanosRulerIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ThanosRulerIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToThanosRulerIndexInformer(informer cache.SharedIndexInformer) ThanosRulerIndexInformer {
+	if informer, ok := informer.(ThanosRulerIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ThanosRuler](informer)
 }

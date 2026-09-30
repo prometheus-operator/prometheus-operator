@@ -26,7 +26,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.93.1
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -45,7 +45,17 @@ rules:
 - apiGroups:
   - monitoring.coreos.com
   resources:
+  - alertmanagers/finalizers
+  - prometheusagents/finalizers
+  - prometheuses/finalizers
+  - thanosrulers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
   - alertmanagers/status
+  - alertmanagerconfigs/status
   - podmonitors/status
   - probes/status
   - prometheuses/status
@@ -106,7 +116,6 @@ rules:
   - pods
   verbs:
   - list
-  - delete
 - apiGroups:
   - ""
   resources:
@@ -117,13 +126,6 @@ rules:
   - create
   - update
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -153,6 +155,13 @@ rules:
   - storageclasses
   verbs:
   - get
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -242,7 +251,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.93.1
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
   namespace: default
 ```
@@ -258,7 +267,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.93.1
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io

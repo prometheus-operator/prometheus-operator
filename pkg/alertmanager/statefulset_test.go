@@ -432,7 +432,6 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
-
 	tt := []struct {
 		scenario         string
 		version          string
@@ -478,7 +477,6 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
-
 	tt := []struct {
 		scenario                string
 		version                 string
@@ -672,18 +670,34 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecPeerName(t *testing.T) {
+	customPeer := "my-peer-name"
 	for _, tc := range []struct {
-		name        string
-		version     string
-		expPeerName bool
+		name           string
+		version        string
+		clusterPeer    *string
+		expPeerName    bool
+		expPeerNameArg string
 	}{
 		{
 			name:    "no peer name before 0.30.0",
 			version: "0.29.0",
 		}, {
-			name:        "peer name after 0.30.0",
-			version:     "0.30.0",
-			expPeerName: true,
+			name:           "peer name after 0.30.0",
+			version:        "0.30.0",
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
+		}, {
+			name:           "custom peer name overrides default",
+			version:        "0.30.0",
+			clusterPeer:    &customPeer,
+			expPeerName:    true,
+			expPeerNameArg: "--cluster.peer-name=" + customPeer,
+		}, {
+			name:           "empty custom peer name falls back to default",
+			version:        "0.30.0",
+			clusterPeer:    new(""),
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -693,9 +707,10 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 					Namespace: "monitoring",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas: new(int32(1)),
-					Image:    new(operator.DefaultAlertmanagerImage),
-					Version:  tc.version,
+					Replicas:        new(int32(1)),
+					Image:           new(operator.DefaultAlertmanagerImage),
+					Version:         tc.version,
+					ClusterPeerName: tc.clusterPeer,
 				},
 			}
 
@@ -703,9 +718,9 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 			require.NoError(t, err)
 
 			amArgs := statefulSet.Template.Spec.Containers[0].Args
-			expectedArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
+			defaultArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
 			if tc.expPeerName {
-				require.Contains(t, amArgs, expectedArg)
+				require.Contains(t, amArgs, tc.expPeerNameArg)
 				var envVarFound bool
 				for _, envVar := range statefulSet.Template.Spec.Containers[0].Env {
 					if envVar.Name == operator.PodNameEnvVar {
@@ -715,7 +730,7 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 				}
 				require.True(t, envVarFound)
 			} else {
-				require.NotContains(t, amArgs, expectedArg)
+				require.NotContains(t, amArgs, defaultArg)
 			}
 		})
 	}
@@ -1005,6 +1020,117 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestDiscardZeroDurations(t *testing.T) {
+	replicas := int32(1)
+
+	tests := []struct {
+		name          string
+		spec          monitoringv1.AlertmanagerSpec
+		expectIgnored []string
+	}{
+		{
+			name: "empty retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+			},
+		},
+		{
+			name: "positive retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "48h",
+			},
+		},
+		{
+			name: "zero retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0",
+			},
+			expectIgnored: []string{"retention (zero value not supported)"},
+		},
+		{
+			name: "zero retention in seconds",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0s",
+			},
+			expectIgnored: []string{"retention (zero value not supported)"},
+		},
+		{
+			name: "zero cluster gossip interval",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:              &replicas,
+				ClusterGossipInterval: "0s",
+			},
+			expectIgnored: []string{"clusterGossipInterval (zero value not supported)"},
+		},
+		{
+			name: "zero cluster pushpull interval",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:                &replicas,
+				ClusterPushpullInterval: "0m",
+			},
+			expectIgnored: []string{"clusterPushpullInterval (zero value not supported)"},
+		},
+		{
+			name: "zero cluster peer timeout",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:           &replicas,
+				ClusterPeerTimeout: "0",
+			},
+			expectIgnored: []string{"clusterPeerTimeout (zero value not supported)"},
+		},
+		{
+			name: "multiple zero durations",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:                &replicas,
+				Retention:               "0",
+				ClusterPushpullInterval: "0s",
+			},
+			expectIgnored: []string{
+				"retention (zero value not supported)",
+				"clusterPushpullInterval (zero value not supported)",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			am := &monitoringv1.Alertmanager{Spec: test.spec}
+
+			ignored := discardZeroDurations(am)
+			require.Equal(t, test.expectIgnored, ignored)
+
+			for _, ignoredField := range test.expectIgnored {
+				switch {
+				case strings.HasPrefix(ignoredField, "retention "):
+					require.Empty(t, am.Spec.Retention)
+				case strings.HasPrefix(ignoredField, "clusterGossipInterval "):
+					require.Empty(t, am.Spec.ClusterGossipInterval)
+				case strings.HasPrefix(ignoredField, "clusterPushpullInterval "):
+					require.Empty(t, am.Spec.ClusterPushpullInterval)
+				case strings.HasPrefix(ignoredField, "clusterPeerTimeout "):
+					require.Empty(t, am.Spec.ClusterPeerTimeout)
+				default:
+					t.Fatalf("unexpected ignored field %q", ignoredField)
+				}
+			}
+		})
+	}
+}
+
+func TestIgnoredFieldsMessage(t *testing.T) {
+	require.Equal(
+		t,
+		"The following fields were ignored: retention (zero value not supported), clusterGossipInterval (zero value not supported)",
+		ignoredFieldsMessage([]string{
+			"retention (zero value not supported)",
+			"clusterGossipInterval (zero value not supported)",
+		}),
+	)
+}
+
 func TestAdditionalConfigMap(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
@@ -1267,7 +1393,6 @@ func TestConfigReloader(t *testing.T) {
 			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
 		}
 	}
-
 }
 
 func TestAutomountServiceAccountToken(t *testing.T) {
