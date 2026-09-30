@@ -790,7 +790,6 @@ type HTTPHeader struct {
 	// secrets defines values of the HTTP header retrieving from a secret.
 	// +listType=map
 	// +listMapKey=name
-	// +kubebuilder:validation:MinItems=1
 	// +required
 	Secrets []v1.SecretKeySelector `json:"secrets,omitempty"`
 }

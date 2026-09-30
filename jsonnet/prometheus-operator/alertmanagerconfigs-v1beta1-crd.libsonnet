@@ -295,7 +295,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -1321,7 +1320,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -2067,7 +2065,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -2876,7 +2873,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -3702,7 +3698,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -4529,7 +4524,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -5398,7 +5392,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -6340,7 +6333,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -7132,7 +7124,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -7986,7 +7977,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -8769,7 +8759,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -9505,7 +9494,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -10225,7 +10213,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',
@@ -11008,7 +10995,6 @@
                                         type: 'object',
                                         'x-kubernetes-map-type': 'atomic',
                                       },
-                                      minItems: 1,
                                       type: 'array',
                                       'x-kubernetes-list-map-keys': [
                                         'name',

@@ -463,7 +463,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -1605,7 +1604,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -2437,7 +2435,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -3340,7 +3337,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -4253,7 +4249,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -5178,7 +5173,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -6171,7 +6165,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -7229,7 +7222,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -8107,7 +8099,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -9067,7 +9058,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -9940,7 +9930,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -10755,7 +10744,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -11550,7 +11538,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
@@ -12435,7 +12422,6 @@ spec:
                                         - key
                                         type: object
                                         x-kubernetes-map-type: atomic
-                                      minItems: 1
                                       type: array
                                       x-kubernetes-list-map-keys:
                                       - name
