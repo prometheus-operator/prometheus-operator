@@ -354,6 +354,106 @@ func TestProxyCongfig(t *testing.T) {
 	}
 }
 
+func TestAddHTTPHeaders(t *testing.T) {
+	c := fake.NewClientset(
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "secret",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"tenant": []byte("tenant-a"),
+				"token":  []byte("token-a"),
+			},
+		},
+	)
+
+	for _, tc := range []struct {
+		name    string
+		ns      string
+		secrets []corev1.SecretKeySelector
+		want    []string
+		err     bool
+	}{
+		{
+			name: "all secrets found",
+			ns:   "ns1",
+			secrets: []corev1.SecretKeySelector{
+				{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "tenant",
+				},
+				{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "token",
+				},
+			},
+			want: []string{"tenant-a", "token-a"},
+		},
+		{
+			name: "second secret key not found",
+			ns:   "ns1",
+			secrets: []corev1.SecretKeySelector{
+				{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "tenant",
+				},
+				{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "missing",
+				},
+			},
+			err: true,
+		},
+		{
+			name: "secret in another namespace",
+			ns:   "ns2",
+			secrets: []corev1.SecretKeySelector{
+				{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "secret",
+					},
+					Key: "tenant",
+				},
+			},
+			err: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			headers := []monitoringv1.HTTPHeader{
+				{
+					Name:    "X-Scope-OrgID",
+					Secrets: tc.secrets,
+				},
+			}
+
+			err := store.AddHTTPHeaders(context.Background(), tc.ns, headers)
+			if tc.err {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+
+			for i, sel := range tc.secrets {
+				b, err := store.ForNamespace(tc.ns).GetSecretKey(sel)
+				require.NoError(t, err)
+				require.Equal(t, tc.want[i], string(b))
+			}
+		})
+	}
+}
+
 func TestAddTLSConfig(t *testing.T) {
 	c := fake.NewClientset(
 		&corev1.ConfigMap{

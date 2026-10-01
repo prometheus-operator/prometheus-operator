@@ -645,6 +645,69 @@ func TestSelectServiceMonitors(t *testing.T) {
 			valid: true,
 		},
 		{
+			scenario: "valid HTTP headers",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "HTTP header reserved by Prometheus",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "authorization",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header with a missing secret key",
+			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
+				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "missing",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
 			scenario: "utf-8 metric relabeling config with prom2",
 			updateSpec: func(sm *monitoringv1.ServiceMonitorSpec) {
 				sm.Endpoints = append(sm.Endpoints, monitoringv1.Endpoint{
@@ -1231,6 +1294,69 @@ func TestSelectPodMonitors(t *testing.T) {
 				})
 			},
 			valid: true,
+		},
+		{
+			scenario: "valid HTTP headers",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: true,
+		},
+		{
+			scenario: "HTTP header reserved by Prometheus",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "authorization",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "key1",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
+		},
+		{
+			scenario: "HTTP header with a missing secret key",
+			updateSpec: func(pm *monitoringv1.PodMonitorSpec) {
+				pm.PodMetricsEndpoints = append(pm.PodMetricsEndpoints, monitoringv1.PodMetricsEndpoint{
+					HTTPHeaders: []monitoringv1.HTTPHeader{
+						{
+							Name: "X-Scope-OrgID",
+							Secrets: []corev1.SecretKeySelector{
+								{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "secret",
+									},
+									Key: "missing",
+								},
+							},
+						},
+					},
+				})
+			},
+			valid: false,
 		},
 		{
 			scenario: "utf-8 metric relabeling config with prom2",
