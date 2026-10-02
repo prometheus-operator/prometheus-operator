@@ -15,11 +15,15 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"text/template"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 // +kubebuilder:validation:Enum=TLS10;TLS11;TLS12;TLS13
@@ -77,11 +81,17 @@ type GRPCServerTLSConfig struct {
 
 // Validate semantically validates the given TLSConfig.
 func (c *TLSConfig) Validate() error {
+	return c.ValidateWithTemplateSupport(nil)
+}
+
+// ValidateWithTemplateSupport semantically validates the given TLSConfig
+// including the fields supporting template strings.
+func (c *TLSConfig) ValidateWithTemplateSupport(meta metav1.Object) error {
 	if c == nil {
 		return nil
 	}
 
-	if err := c.innerValidate(); err != nil {
+	if err := c.innerValidate(meta); err != nil {
 		return err
 	}
 
@@ -112,6 +122,9 @@ func (c *TLSConfig) Validate() error {
 	return nil
 }
 
+// TemplateString is a string that can support Go templates.
+type TemplateString string
+
 // SafeTLSConfig defines safe TLS configurations.
 // +k8s:openapi-gen=true
 type SafeTLSConfig struct {
@@ -128,8 +141,22 @@ type SafeTLSConfig struct {
 	KeySecret *v1.SecretKeySelector `json:"keySecret,omitempty"`
 
 	// serverName is used to verify the hostname for the targets.
+	//
+	// For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+	// field supports Go template syntax, with the following template
+	// variables:
+	//   - `.Name`, the name of the resource.
+	//   - `.Namespace`, the namespace of the resource.
+	//   - `.Labels`, a map of labels of the resource.
+	//   - `.Annotations`, a map of annotations of the resource.
+	//
+	// For instance:
+	// - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+	// - `{{ index .Labels "tls-server-name" }}`
+	//
+	// +kubebuilder:validation:MinLength=1
 	// +optional
-	ServerName *string `json:"serverName,omitempty"`
+	ServerName *TemplateString `json:"serverName,omitempty"`
 
 	// insecureSkipVerify defines how to disable target certificate validation.
 	// +optional
@@ -150,11 +177,16 @@ type SafeTLSConfig struct {
 
 // Validate semantically validates the given SafeTLSConfig.
 func (c *SafeTLSConfig) Validate() error {
+	return c.ValidateWithTemplateSupport(nil)
+}
+
+// ValidateWithTemplateSupport semantically validates the given SafeTLSConfig.
+func (c *SafeTLSConfig) ValidateWithTemplateSupport(meta metav1.Object) error {
 	if c == nil {
 		return nil
 	}
 
-	if err := c.innerValidate(); err != nil {
+	if err := c.innerValidate(meta); err != nil {
 		return err
 	}
 
@@ -169,7 +201,7 @@ func (c *SafeTLSConfig) Validate() error {
 	return nil
 }
 
-func (c *SafeTLSConfig) innerValidate() error {
+func (c *SafeTLSConfig) innerValidate(meta metav1.Object) error {
 	if c.CA != (SecretOrConfigMap{}) {
 		if err := c.CA.Validate(); err != nil {
 			return fmt.Errorf("ca %s: %w", c.CA.String(), err)
@@ -186,7 +218,52 @@ func (c *SafeTLSConfig) innerValidate() error {
 		return fmt.Errorf("maxVersion must more than or equal to minVersion")
 	}
 
+	if meta != nil {
+		if _, err := c.ServerName.Render(meta); err != nil {
+			return fmt.Errorf("serverName: %w", err)
+		}
+	} else {
+	}
+
 	return nil
+}
+
+func (t *TemplateString) Render(object metav1.Object) (string, error) {
+	if object == nil {
+		return "", errors.New("unexpected nil object")
+	}
+
+	if t == nil {
+		return "", nil
+	}
+
+	s := string(ptr.Deref(t, ""))
+	if s == "" || !strings.Contains(s, "{{") {
+		return s, nil
+	}
+
+	tmpl, err := template.New("").Parse(s)
+	if err != nil {
+		return "", fmt.Errorf("invalid template: %w", err)
+	}
+
+	data := struct {
+		Name        string
+		Namespace   string
+		Labels      map[string]string
+		Annotations map[string]string
+	}{
+		Name:        object.GetName(),
+		Namespace:   object.GetNamespace(),
+		Labels:      object.GetLabels(),
+		Annotations: object.GetAnnotations(),
+	}
+	var buf strings.Builder
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("invalid template: %w", err)
+	}
+
+	return buf.String(), nil
 }
 
 // TLSFilesConfig extends the TLS configuration with file parameters.

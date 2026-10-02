@@ -215,6 +215,10 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
 
+		if err := endpoint.TLSConfig.ValidateWithTemplateSupport(sm); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
 		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		if endpoint.BearerTokenSecret != nil && endpoint.BearerTokenSecret.Name != "" {
 			if _, err := rs.store.GetSecretKey(ctx, sm.GetNamespace(), *endpoint.BearerTokenSecret); err != nil {
@@ -365,6 +369,10 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfigWithProxy, pm.GetNamespace()); err != nil {
 			return fmt.Errorf("%w: %w", epErr, err)
 		}
+
+		if err := endpoint.TLSConfig.ValidateWithTemplateSupport(pm); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
 	}
 
 	if err := validateScrapeClass(rs.p, pm.Spec.ScrapeClassName); err != nil {
@@ -451,6 +459,10 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, probe.GetNamespace(), probe.Spec.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	if err := probe.Spec.TLSConfig.ValidateWithTemplateSupport(probe); err != nil {
 		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
@@ -588,6 +600,10 @@ func (rs *ResourceSelector) checkScrapeConfig(ctx context.Context, sc *monitorin
 	}
 
 	if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), sc.Spec.TLSConfig); err != nil {
+		return fmt.Errorf("tlsConfig: %w", err)
+	}
+
+	if err := sc.Spec.TLSConfig.ValidateWithTemplateSupport(sc); err != nil {
 		return fmt.Errorf("tlsConfig: %w", err)
 	}
 
