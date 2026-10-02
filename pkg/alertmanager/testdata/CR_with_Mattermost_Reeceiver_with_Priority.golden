@@ -10,4 +10,8 @@ receivers:
 - name: mynamespace/myamc/test
   mattermost_configs:
   - webhook_url: https://mattermost.example.com
+    priority:
+      priority: urgent
+      requested_ack: true
+      persistent_notifications: true
 templates: []
