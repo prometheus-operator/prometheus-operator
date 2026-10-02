@@ -287,12 +287,13 @@ type nodeAddress struct {
 	ipAddress  string
 	name       string
 	uid        types.UID
+	zone       string
 	ipv4       bool
 	ready      bool
 }
 
 func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
-	return discoveryv1.Endpoint{
+	ep := discoveryv1.Endpoint{
 		Addresses: []string{na.ipAddress},
 		Conditions: discoveryv1.EndpointConditions{
 			Ready: new(true),
@@ -305,6 +306,12 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 			APIVersion: na.apiVersion,
 		},
 	}
+
+	if na.zone != "" {
+		ep.Zone = new(na.zone)
+	}
+
+	return ep
 }
 
 func (na *nodeAddress) v1EndpointAddress() corev1.EndpointAddress {
@@ -366,6 +373,7 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 				name:       n.Name,
 				uid:        n.UID,
 				apiVersion: n.APIVersion,
+				zone:       n.Labels[corev1.LabelTopologyZone],
 				ipv4:       ipv4,
 				ready:      nodeReadyConditionKnown(n),
 			}
