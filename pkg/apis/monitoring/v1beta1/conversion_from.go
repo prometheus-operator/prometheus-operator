@@ -492,6 +492,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		Message:      in.Message,
 		URL:          in.URL,
 		URLTitle:     in.URLTitle,
+		TTL:          in.TTL,
 		Device:       in.Device,
 		Sound:        in.Sound,
 		Priority:     in.Priority,
