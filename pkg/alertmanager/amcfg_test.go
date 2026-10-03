@@ -9515,7 +9515,7 @@ func TestSanitizeRoute(t *testing.T) {
 		},
 		{
 			name:           "Test route with labels supported version",
-			againstVersion: labelsNotAllowed,
+			againstVersion: labelsAllowed,
 			in: &route{
 				Receiver: "test",
 				Match: map[string]string{
