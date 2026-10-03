@@ -3601,7 +3601,7 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 
 	if !labelsAllowed && checkNotEmptyMap(r.Labels) {
 		msg := "'labels' in route is supported in Alertmanager >= 0.34.0 only - dropping config"
-		withLogger.Warn(msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
+		withLogger.Warn(msg, "labels", fmt.Sprint(r.Labels))
 		r.Labels = nil
 	}
 
