@@ -3575,6 +3575,7 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	muteTimeIntervalsAllowed := matchersV2Allowed
 	activeTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	labelsAllowed := amVersion.GTE(semver.MustParse("0.34.0"))
 	withLogger := logger.With("receiver", r.Receiver)
 
 	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
@@ -3596,6 +3597,12 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		msg := "active time intervals in route is supported in Alertmanager >= 0.24.0 only - dropping config"
 		withLogger.Warn(msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
 		r.ActiveTimeIntervals = nil
+	}
+
+	if !labelsAllowed && checkNotEmptyMap(r.Labels) {
+		msg := "'labels' in route is supported in Alertmanager >= 0.34.0 only - dropping config"
+		withLogger.Warn(msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
+		r.Labels = nil
 	}
 
 	if r.GroupWait != "" {
