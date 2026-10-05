@@ -720,6 +720,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClassicHistograms(valu
 	return b
 }
 
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.ExtraScrapeMetrics = &value
+	return b
+}
+
 // WithMinReadySeconds sets the MinReadySeconds field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MinReadySeconds field is set to the value of the last call.
