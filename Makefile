@@ -201,6 +201,12 @@ image-builder-version: .github/env ## Update Go builder version in Dockerfiles.
 		cmd/prometheus-config-reloader/Dockerfile && rm cmd/prometheus-config-reloader/Dockerfile.bak
 	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		cmd/admission-webhook/Dockerfile && rm cmd/admission-webhook/Dockerfile.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
+		Dockerfile.distroless && rm Dockerfile.distroless.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
+		cmd/prometheus-config-reloader/Dockerfile.distroless && rm cmd/prometheus-config-reloader/Dockerfile.distroless.bak
+	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
+		cmd/admission-webhook/Dockerfile.distroless && rm cmd/admission-webhook/Dockerfile.distroless.bak
 
 .PHONY: image
 image: GOOS := linux ## Set GOOS to linux for building docker images.
@@ -217,6 +223,22 @@ prometheus-config-reloader-image: ## Build the prometheus-config-reloader contai
 .PHONY: admission-webhook-image
 admission-webhook-image: ## Build the admission-webhook container image.
 	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+
+.PHONY: distroless-image
+distroless-image: GOOS := linux ## Set GOOS to linux for building distroless docker images.
+distroless-image: operator-distroless-image prometheus-config-reloader-distroless-image admission-webhook-distroless-image
+
+.PHONY: operator-distroless-image
+operator-distroless-image: ## Build the distroless operator container image.
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG)-distroless -f Dockerfile.distroless .
+
+.PHONY: prometheus-config-reloader-distroless-image
+prometheus-config-reloader-distroless-image: ## Build the distroless prometheus-config-reloader container image.
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG)-distroless -f cmd/prometheus-config-reloader/Dockerfile.distroless .
+
+.PHONY: admission-webhook-distroless-image
+admission-webhook-distroless-image: ## Build the distroless admission-webhook container image.
+	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG)-distroless -f cmd/admission-webhook/Dockerfile.distroless .
 
 .PHONY: update-go-deps
 update-go-deps: ## Update Go dependencies.
