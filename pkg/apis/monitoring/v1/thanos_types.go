@@ -120,8 +120,7 @@ type ThanosRulerSpec struct {
 
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
-	//nolint:kubeapilinter
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	NodeSelector NodeSelector `json:"nodeSelector,omitempty"`
 
 	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
 	// +optional

@@ -276,7 +276,7 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// resources defines the resources requests and limits of the 'prometheus' container.
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 	// nodeSelector defines on which Nodes the Pods are scheduled.
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	NodeSelector *monitoringv1.NodeSelector `json:"nodeSelector,omitempty"`
 	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
 	SchedulerName *string `json:"schedulerName,omitempty"`
 	// serviceAccountName is the name of the ServiceAccount to use to run the
@@ -1014,17 +1014,11 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithResources(value corev1.Re
 	return b
 }
 
-// WithNodeSelector puts the entries into the NodeSelector field in the declarative configuration
-// and returns the receiver, so that objects can be build by chaining "With" function invocations.
-// If called multiple times, the entries provided by each call will be put on the NodeSelector field,
-// overwriting an existing map entries in NodeSelector field with the same key.
-func (b *CommonPrometheusFieldsApplyConfiguration) WithNodeSelector(entries map[string]string) *CommonPrometheusFieldsApplyConfiguration {
-	if b.NodeSelector == nil && len(entries) > 0 {
-		b.NodeSelector = make(map[string]string, len(entries))
-	}
-	for k, v := range entries {
-		b.NodeSelector[k] = v
-	}
+// WithNodeSelector sets the NodeSelector field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the NodeSelector field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithNodeSelector(value monitoringv1.NodeSelector) *CommonPrometheusFieldsApplyConfiguration {
+	b.NodeSelector = &value
 	return b
 }
 
