@@ -5922,6 +5922,204 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 	}
 }
 
+func TestServiceMonitorEndpointHTTPHeaders(t *testing.T) {
+	for _, tc := range []struct {
+		version string
+		golden  string
+	}{
+		{
+			version: "v2.54.0",
+			golden:  "ServiceMonitorEndpointHTTPHeaders_v2.54.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			golden:  "ServiceMonitorEndpointHTTPHeaders_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			serviceMonitor := monitoringv1.ServiceMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testservicemonitor1",
+					Namespace: "default",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.ServiceMonitorSpec{
+					Endpoints: []monitoringv1.Endpoint{
+						{
+							Port:     "web",
+							Interval: "30s",
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "X-Scope-OrgID",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "tenant",
+										},
+									},
+								},
+								{
+									Name: "X-Custom-Header",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-1",
+										},
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-2",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": &serviceMonitor,
+				},
+				nil,
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(
+					&corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "http-headers",
+							Namespace: "default",
+						},
+						Data: map[string][]byte{
+							"tenant":   []byte("tenant-a"),
+							"custom-1": []byte("value-1"),
+							"custom-2": []byte("value-2"),
+						},
+					},
+				),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestPodMonitorEndpointHTTPHeaders(t *testing.T) {
+	for _, tc := range []struct {
+		version string
+		golden  string
+	}{
+		{
+			version: "v2.54.0",
+			golden:  "PodMonitorEndpointHTTPHeaders_v2.54.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			golden:  "PodMonitorEndpointHTTPHeaders_v2.55.0.golden",
+		},
+	} {
+		t.Run(tc.version, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			podMonitor := monitoringv1.PodMonitor{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "testpodmonitor1",
+					Namespace: "pod-monitor-ns",
+					Labels: map[string]string{
+						"group": "group1",
+					},
+				},
+				Spec: monitoringv1.PodMonitorSpec{
+					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+						{
+							Port:     new("web"),
+							Interval: "30s",
+							HTTPHeaders: []monitoringv1.HTTPHeader{
+								{
+									Name: "X-Scope-OrgID",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "tenant",
+										},
+									},
+								},
+								{
+									Name: "X-Custom-Header",
+									Secrets: []corev1.SecretKeySelector{
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-1",
+										},
+										{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "http-headers",
+											},
+											Key: "custom-2",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				map[string]*monitoringv1.PodMonitor{
+					"testpodmonitor1": &podMonitor,
+				},
+				nil,
+				nil,
+				assets.NewTestStoreBuilder(
+					&corev1.Secret{
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "http-headers",
+							Namespace: "pod-monitor-ns",
+						},
+						Data: map[string][]byte{
+							"tenant":   []byte("tenant-a"),
+							"custom-1": []byte("value-1"),
+							"custom-2": []byte("value-2"),
+						},
+					},
+				),
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestRuntimeConfig(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario string

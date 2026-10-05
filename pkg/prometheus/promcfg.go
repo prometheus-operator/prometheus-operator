@@ -946,6 +946,34 @@ func (cg *ConfigGenerator) addHTTPConfigToYAML(
 	return cg.addTLStoYaml(cfg, store, mergeSafeTLSConfigWithScrapeClass(httpConfig.TLSConfig, scrapeClass))
 }
 
+// addHTTPHeadersToYAML adds the custom HTTP headers to the scrape
+// configuration.
+func (cg *ConfigGenerator) addHTTPHeadersToYAML(
+	cfg yaml.MapSlice,
+	store assets.StoreGetter,
+	headers []monitoringv1.HTTPHeader,
+) yaml.MapSlice {
+	if len(headers) == 0 {
+		return cfg
+	}
+
+	httpHeaders := yaml.MapSlice{}
+	for _, header := range headers {
+		secrets := make([]string, 0, len(header.Secrets))
+		for _, sel := range header.Secrets {
+			value, _ := store.GetSecretKey(sel)
+			secrets = append(secrets, string(value))
+		}
+
+		httpHeaders = append(httpHeaders, yaml.MapItem{
+			Key:   header.Name,
+			Value: yaml.MapSlice{{Key: "secrets", Value: secrets}},
+		})
+	}
+
+	return cg.WithMinimumVersion("2.55.0").AppendMapItem(cfg, "http_headers", httpHeaders)
+}
+
 func (cg *ConfigGenerator) addTLStoYaml(
 	cfg yaml.MapSlice,
 	store assets.StoreGetter,
@@ -1517,6 +1545,8 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	cfg = cg.addHTTPConfigToYAML(cfg, s, &ep.HTTPConfig, scrapeClass)
 
+	cfg = cg.addHTTPHeadersToYAML(cfg, s, ep.HTTPHeaders)
+
 	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 	if ep.BearerTokenSecret != nil && ep.BearerTokenSecret.Name != "" {
 		cg.logger.Debug("'bearerTokenSecret' is deprecated, use 'authorization' instead.")
@@ -2029,6 +2059,8 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	if ep.EnableHTTP2 != nil {
 		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *ep.EnableHTTP2)
 	}
+
+	cfg = cg.addHTTPHeadersToYAML(cfg, s, ep.HTTPHeaders)
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, ep.ProxyConfig)
 

@@ -182,6 +182,28 @@ func (hc *HTTPConfig) Validate() error {
 	return nil
 }
 
+// HTTPHeader defines a custom HTTP header sent by the client with each
+// request.
+type HTTPHeader struct {
+	// name defines the name of the HTTP header.
+	//
+	// The name is case-insensitive and it can't be one of the headers managed
+	// by Prometheus itself (e.g. `Authorization`, `Host` or `User-Agent`).
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +required
+	Name string `json:"name"`
+
+	// secrets defines the keys of Secrets containing the values of the HTTP
+	// header. The secrets need to be in the same namespace as the custom
+	// resource and readable by the Prometheus Operator.
+	//
+	// +kubebuilder:validation:MinItems=1
+	// +listType=atomic
+	// +required
+	Secrets []v1.SecretKeySelector `json:"secrets"`
+}
+
 // HTTPConfigWithTLSFiles defines HTTP configuration + TLS configuration
 // (from secret/configmap references as well as files).
 type HTTPConfigWithTLSFiles struct {
