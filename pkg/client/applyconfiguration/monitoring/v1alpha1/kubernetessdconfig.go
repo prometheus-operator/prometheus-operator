@@ -40,8 +40,9 @@ type KubernetesSDConfigApplyConfiguration struct {
 	// namespaces defines the namespace discovery. If omitted, Prometheus discovers targets across all namespaces.
 	Namespaces *NamespaceDiscoveryApplyConfiguration `json:"namespaces,omitempty"`
 	// attachMetadata defines the metadata to attach to discovered targets.
-	// It requires Prometheus >= v2.35.0 when using the `Pod` role and
-	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
+	// It requires Prometheus >= v2.35.0 when using the `Pod` role,
+	// Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and
+	// Prometheus >= v3.6.0 for `Service` and `Ingress` roles.
 	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 	// selectors defines the selector to select objects.
 	// It requires Prometheus >= v2.17.0

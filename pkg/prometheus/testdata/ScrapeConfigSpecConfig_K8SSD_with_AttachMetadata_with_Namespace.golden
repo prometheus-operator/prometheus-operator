@@ -10,6 +10,7 @@ scrape_configs:
   - role: pod
     attach_metadata:
       node: true
+      namespace: true
   relabel_configs:
   - source_labels:
     - job
