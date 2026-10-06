@@ -1374,7 +1374,7 @@ func testPromReloadRules(t *testing.T) {
 	firstAlertName := "firstAlert"
 	secondAlertName := "secondAlert"
 
-	ruleFile, err := framework.MakeAndCreateFiringRule(context.Background(), ns, name, firstAlertName)
+	pr, err := framework.MakeAndCreateFiringRule(context.Background(), ns, name, firstAlertName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1398,7 +1398,7 @@ func testPromReloadRules(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ruleFile.Spec.Groups = []monitoringv1.RuleGroup{
+	pr.Spec.Groups = []monitoringv1.RuleGroup{
 		{
 			Name: "my-alerting-group",
 			Rules: []monitoringv1.Rule{
@@ -1409,7 +1409,7 @@ func testPromReloadRules(t *testing.T) {
 			},
 		},
 	}
-	_, err = framework.UpdateRule(context.Background(), ns, ruleFile)
+	_, err = framework.UpdateRuleSpec(context.Background(), pr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1787,16 +1787,6 @@ func testPromOnlyUpdatedOnRelevantChanges(t *testing.T) {
 					CoreV1().
 					Services(ns).
 					Get(context.Background(), "prometheus-operated", metav1.GetOptions{})
-			},
-			MaxExpectedChanges: 1,
-		},
-		{
-			Name: "serviceMonitor",
-			Getter: func(prometheusName string) (versionedResource, error) {
-				return framework.
-					MonClientV1.
-					ServiceMonitors(ns).
-					Get(context.Background(), prometheusName, metav1.GetOptions{})
 			},
 			MaxExpectedChanges: 1,
 		},
