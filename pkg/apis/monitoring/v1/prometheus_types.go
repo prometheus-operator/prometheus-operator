@@ -2005,6 +2005,15 @@ type Sigv4 struct {
 	//
 	// +optional
 	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"` // nolint:kubeapilinter
+	// serviceName defines the name of the AWS service to sign requests for.
+	// If not specified, the default value is `aps` for Amazon Managed Service
+	// for Prometheus (AMP) or `s3` for S3-compatible remote write.
+	// It requires Prometheus >= v3.5.0.
+	// It is currently not supported by Alertmanager and Thanos.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	ServiceName string `json:"serviceName,omitempty"`
 }
 
 // AzureAD defines the configuration for remote write's azuread parameters.

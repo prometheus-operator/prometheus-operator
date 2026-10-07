@@ -715,6 +715,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(sigv4Cfg, "use_fips_sts_endpoint", *sigv4.UseFIPSSTSEndpoint)
 	}
 
+	if sigv4.ServiceName != "" {
+		sigv4Cfg = cg.WithMinimumVersion("3.5.0").AppendMapItem(sigv4Cfg, "service_name", sigv4.ServiceName)
+	}
+
 	return cg.WithKeyVals("component", strings.Split(assetStoreKey, "/")[0]).AppendMapItem(cfg, "sigv4", sigv4Cfg)
 }
 
