@@ -3007,6 +3007,78 @@ templates: []
 	require.NoError(t, err)
 }
 
+func testAlertmanagerConfigRouteLabels(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	amName := "amconfigroutelabels"
+	alertmanager := framework.MakeBasicAlertmanager(ns, amName, 1)
+	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
+
+	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amcfg-route-labels",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "webhook",
+				Matchers: []monitoringv1alpha1.Matcher{{
+					Name:  "team",
+					Value: "ops",
+				}},
+				Labels: []monitoringv1alpha1.KeyValue{
+					{Key: "env", Value: "production"},
+				},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "webhook",
+			}},
+		},
+	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
+		if err != nil {
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
+			return false, nil
+		}
+
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		require.NoError(t, err)
+
+		// Check if the labels are present in the generated config
+		if !strings.Contains(uncompressed, "labels:") {
+			lastErr = fmt.Errorf("generated config does not contain 'labels' field, got:\n%s", uncompressed)
+			return false, nil
+		}
+
+		if !strings.Contains(uncompressed, "env: production") {
+			lastErr = fmt.Errorf("generated config does not contain expected label 'env: production', got:\n%s", uncompressed)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "waiting for generated alertmanager configuration: %v: %v", err, lastErr)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName)
+	require.NoError(t, err)
+}
+
 func testAlertManagerServiceName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
