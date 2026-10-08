@@ -1401,3 +1401,184 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on rocketchat config - valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - valid URLs",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://rocketchat.api.url")),
+									IconURL:  new("{{ .labels.url }}"),
+									ImageURL: new("{{ .labels.url }}"),
+									ThumbURL: new("{{ .labels.url }}"),
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url }}"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid API URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid icon URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									IconURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid image URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ImageURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid thumb URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ThumbURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid action URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
