@@ -10842,6 +10842,33 @@
                     pattern: '^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$',
                     type: 'string',
                   },
+                  labels: {
+                    description: 'labels defines the list of labels that will be attached to the alerts matching this route.\nThey can be inherited by child routes and can be overridden by child routes.\nThe values support template expressions.',
+                    items: {
+                      description: 'KeyValue defines a (key, value) tuple.',
+                      properties: {
+                        key: {
+                          description: 'key defines the key of the tuple.\nThis is the identifier or name part of the key-value pair.',
+                          minLength: 1,
+                          type: 'string',
+                        },
+                        value: {
+                          description: 'value defines the value of the tuple.\nThis is the data or content associated with the key.',
+                          type: 'string',
+                        },
+                      },
+                      required: [
+                        'key',
+                        'value',
+                      ],
+                      type: 'object',
+                    },
+                    type: 'array',
+                    'x-kubernetes-list-map-keys': [
+                      'key',
+                    ],
+                    'x-kubernetes-list-type': 'map',
+                  },
                   matchers: {
                     description: "matchers defines the list of matchers that the alert's labels should match. For the first\nlevel route, the operator removes any existing equality and regexp\nmatcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,\nunless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.",
                     items: {
