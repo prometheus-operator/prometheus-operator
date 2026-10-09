@@ -23,14 +23,27 @@ import (
 
 // RuleApplyConfiguration represents a declarative configuration of the Rule type for use
 // with apply.
+//
+// Rule describes an alerting or recording rule
+// See Prometheus documentation: [alerting](https://www.prometheus.io/docs/prometheus/latest/configuration/alerting_rules/) or [recording](https://www.prometheus.io/docs/prometheus/latest/configuration/recording_rules/#recording-rules) rule
 type RuleApplyConfiguration struct {
-	Record        *string                        `json:"record,omitempty"`
-	Alert         *string                        `json:"alert,omitempty"`
-	Expr          *intstr.IntOrString            `json:"expr,omitempty"`
-	For           *monitoringv1.Duration         `json:"for,omitempty"`
+	// record defines the name of the time series to output to. Must be a valid metric name.
+	// Only one of `record` and `alert` must be set.
+	Record *string `json:"record,omitempty"`
+	// alert defines the name of the alert. Must be a valid label value.
+	// Only one of `record` and `alert` must be set.
+	Alert *string `json:"alert,omitempty"`
+	// expr defines the PromQL expression to evaluate.
+	Expr *intstr.IntOrString `json:"expr,omitempty"`
+	// for defines how alerts are considered firing once they have been returned for this long.
+	For *monitoringv1.Duration `json:"for,omitempty"`
+	// keep_firing_for defines how long an alert will continue firing after the condition that triggered it has cleared.
 	KeepFiringFor *monitoringv1.NonEmptyDuration `json:"keep_firing_for,omitempty"`
-	Labels        map[string]string              `json:"labels,omitempty"`
-	Annotations   map[string]string              `json:"annotations,omitempty"`
+	// labels defines labels to add or overwrite.
+	Labels map[string]string `json:"labels,omitempty"`
+	// annotations defines annotations to add to each alert.
+	// Only valid for alerting rules.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // RuleApplyConfiguration constructs a declarative configuration of the Rule type for use with

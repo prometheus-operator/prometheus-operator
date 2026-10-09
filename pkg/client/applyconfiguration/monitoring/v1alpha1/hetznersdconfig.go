@@ -18,24 +18,43 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 // HetznerSDConfigApplyConfiguration represents a declarative configuration of the HetznerSDConfig type for use
 // with apply.
+//
+// HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.
+// This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 type HetznerSDConfigApplyConfiguration struct {
-	Role                             *string                                 `json:"role,omitempty"`
-	BasicAuth                        *v1.BasicAuthApplyConfiguration         `json:"basicAuth,omitempty"`
-	Authorization                    *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	OAuth2                           *v1.OAuth2ApplyConfiguration            `json:"oauth2,omitempty"`
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
-	FollowRedirects                  *bool                               `json:"followRedirects,omitempty"`
-	EnableHTTP2                      *bool                               `json:"enableHTTP2,omitempty"`
-	TLSConfig                        *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
-	Port                             *int32                              `json:"port,omitempty"`
-	RefreshInterval                  *monitoringv1.Duration              `json:"refreshInterval,omitempty"`
-	LabelSelector                    *string                             `json:"labelSelector,omitempty"`
+	// role defines the Hetzner role of entities that should be discovered.
+	Role *monitoringv1alpha1.HetznerRole `json:"role,omitempty"`
+	// basicAuth defines information to use on every scrape request.
+	BasicAuth *v1.BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
+	// authorization defines the header configuration to authenticate against the Hetzner API.
+	// Cannot be set at the same time as `oauth2`.
+	Authorization *v1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// oauth2 defines the configuration to use on every scrape request.
+	OAuth2 *v1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	v1.ProxyConfigApplyConfiguration `json:""`
+	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
+	FollowRedirects *bool `json:"followRedirects,omitempty"`
+	// enableHTTP2 defines whether to enable HTTP2.
+	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
+	// tlsConfig defines the TLS configuration to connect to the Hetzner API.
+	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
+	// port defines the port to scrape metrics from. If using the public IP address, this must
+	Port *int32 `json:"port,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *monitoringv1.Duration `json:"refreshInterval,omitempty"`
+	// labelSelector defines the label selector used to filter the servers when fetching them from the API.
+	// It requires Prometheus >= v3.5.0.
+	LabelSelector *string `json:"labelSelector,omitempty"`
 }
 
 // HetznerSDConfigApplyConfiguration constructs a declarative configuration of the HetznerSDConfig type for use with
@@ -47,7 +66,7 @@ func HetznerSDConfig() *HetznerSDConfigApplyConfiguration {
 // WithRole sets the Role field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Role field is set to the value of the last call.
-func (b *HetznerSDConfigApplyConfiguration) WithRole(value string) *HetznerSDConfigApplyConfiguration {
+func (b *HetznerSDConfigApplyConfiguration) WithRole(value monitoringv1alpha1.HetznerRole) *HetznerSDConfigApplyConfiguration {
 	b.Role = &value
 	return b
 }

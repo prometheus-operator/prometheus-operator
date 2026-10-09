@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -50,6 +51,7 @@ const (
 	DefaultPortName        = "web"
 	DefaultLogFileVolume   = "log-file"
 	DefaultLogDirectory    = "/var/log/prometheus"
+	DefaultRetention       = "24h"
 
 	// DefaultTerminationGracePeriodSeconds defines how long Kubernetes should
 	// wait before killing Prometheus on pod termination.
@@ -72,6 +74,23 @@ var (
 	ProbeTimeoutSeconds int32 = 3
 	LabelPrometheusName       = "prometheus-name"
 )
+
+// RetentionTimeOrDefault returns the configured time-based retention or the
+// default retention when none of time, size and percentage are configured.
+func RetentionTimeOrDefault(retention monitoringv1.Duration, retentionSize monitoringv1.ByteSize, retentionPercentage *resource.Quantity) monitoringv1.Duration {
+	if retention == "" && retentionSize == "" && !RetentionPercentageEnabled(retentionPercentage) {
+		return monitoringv1.Duration(DefaultRetention)
+	}
+
+	return retention
+}
+
+// RetentionPercentageEnabled returns whether the given percentage-based
+// retention is configured. A zero percentage means that percentage-based
+// retention is disabled.
+func RetentionPercentageEnabled(retentionPercentage *resource.Quantity) bool {
+	return retentionPercentage != nil && !retentionPercentage.IsZero()
+}
 
 // LabelSelectorForStatefulSets returns a label selector which selects
 // statefulsets deployed with the server or agent mode.
@@ -107,6 +126,39 @@ func shardsNumber(
 	}
 
 	return *cpf.Shards
+}
+
+// UnbalancedTopologyShardingMessage returns true and a warning message when the
+// resource uses topology sharding with a number of shards that isn't a multiple
+// of the number of topology zones. In that case, shard indices wrap around and
+// some targets end up being scraped by more than one shard, resulting in
+// duplicated samples. It returns false and an empty string otherwise.
+//
+// Callers are expected to only invoke it when the PrometheusTopologySharding
+// feature gate is enabled.
+func UnbalancedTopologyShardingMessage(p monitoringv1.PrometheusInterface) (bool, string) {
+	ss := p.GetCommonPrometheusFields().ShardingStrategy
+	if ss == nil ||
+		ss.Mode == nil ||
+		*ss.Mode != monitoringv1.TopologyShardingStrategyMode ||
+		ss.Topology == nil {
+		return false, ""
+	}
+
+	numZones := int32(len(ss.Topology.Values))
+	if numZones == 0 {
+		return false, ""
+	}
+
+	shards := shardsNumber(p)
+	if shards%numZones == 0 {
+		return false, ""
+	}
+
+	return true, fmt.Sprintf(
+		"the number of shards (%d) isn't a multiple of the number of topology zones (%d); some targets will be scraped by more than one shard, resulting in duplicated samples",
+		shards, numZones,
+	)
 }
 
 // ReplicasNumberPtr returns a ptr to the normalized number of replicas.
@@ -398,7 +450,7 @@ func BuildConfigReloader(
 }
 
 func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
-	return ptr.To(
+	return new(
 		ptr.Deref(
 			p.GetCommonPrometheusFields().ReloadStrategy,
 			monitoringv1.HTTPReloadStrategyType,
@@ -407,7 +459,6 @@ func ShareProcessNamespace(p monitoringv1.PrometheusInterface) *bool {
 }
 
 func MakeK8sTopologySpreadConstraint(selectorLabels map[string]string, tscs []monitoringv1.TopologySpreadConstraint) []corev1.TopologySpreadConstraint {
-
 	coreTscs := make([]corev1.TopologySpreadConstraint, 0, len(tscs))
 
 	for _, tsc := range tscs {

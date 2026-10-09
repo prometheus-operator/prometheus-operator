@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -256,7 +255,6 @@ func (f *Framework) CreateOrUpdatePrometheusOperatorWithOpts(
 	ctx context.Context,
 	opts PrometheusOperatorOpts,
 ) ([]FinalizerFn, error) {
-
 	var finalizers []FinalizerFn
 
 	_, err := f.createOrUpdateServiceAccount(
@@ -791,7 +789,6 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 	namespace string,
 	image string,
 ) (*corev1.Service, []byte, error) {
-
 	certBytes, keyBytes, err := certutil.GenerateSelfSignedCertKey(
 		fmt.Sprintf("%s.%s.svc", admissionWebhookServiceName, namespace),
 		nil,
@@ -817,7 +814,7 @@ func (f *Framework) CreateOrUpdateAdmissionWebhookServer(
 		return nil, nil, err
 	}
 	if len(nodes) == 1 {
-		deploy.Spec.Replicas = ptr.To(int32(1))
+		deploy.Spec.Replicas = new(int32(1))
 		deploy.Spec.Template.Spec.Affinity = nil
 		deploy.Spec.Strategy = appsv1.DeploymentStrategy{}
 	}

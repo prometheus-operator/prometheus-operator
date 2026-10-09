@@ -18,16 +18,33 @@ package v1
 
 // PrometheusStatusApplyConfiguration represents a declarative configuration of the PrometheusStatus type for use
 // with apply.
+//
+// PrometheusStatus is the most recent observed status of the Prometheus cluster.
+// More info:
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 type PrometheusStatusApplyConfiguration struct {
-	Paused              *bool                           `json:"paused,omitempty"`
-	Replicas            *int32                          `json:"replicas,omitempty"`
-	UpdatedReplicas     *int32                          `json:"updatedReplicas,omitempty"`
-	AvailableReplicas   *int32                          `json:"availableReplicas,omitempty"`
-	UnavailableReplicas *int32                          `json:"unavailableReplicas,omitempty"`
-	Conditions          []ConditionApplyConfiguration   `json:"conditions,omitempty"`
-	ShardStatuses       []ShardStatusApplyConfiguration `json:"shardStatuses,omitempty"`
-	Shards              *int32                          `json:"shards,omitempty"`
-	Selector            *string                         `json:"selector,omitempty"`
+	// paused defines whether any actions on the underlying managed objects are
+	// being performed. Only delete actions will be performed.
+	Paused *bool `json:"paused,omitempty"`
+	// replicas defines the total number of non-terminated pods targeted by this Prometheus deployment
+	// (their labels match the selector).
+	Replicas *int32 `json:"replicas,omitempty"`
+	// updatedReplicas defines the total number of non-terminated pods targeted by this Prometheus deployment
+	// that have the desired version spec.
+	UpdatedReplicas *int32 `json:"updatedReplicas,omitempty"`
+	// availableReplicas defines the total number of available pods (ready for at least minReadySeconds)
+	// targeted by this Prometheus deployment.
+	AvailableReplicas *int32 `json:"availableReplicas,omitempty"`
+	// unavailableReplicas defines the total number of unavailable pods targeted by this Prometheus deployment.
+	UnavailableReplicas *int32 `json:"unavailableReplicas,omitempty"`
+	// conditions defines the current state of the Prometheus deployment.
+	Conditions []ConditionApplyConfiguration `json:"conditions,omitempty"`
+	// shardStatuses defines the list has one entry per shard. Each entry provides a summary of the shard status.
+	ShardStatuses []ShardStatusApplyConfiguration `json:"shardStatuses,omitempty"`
+	// shards defines the most recently observed number of shards.
+	Shards *int32 `json:"shards,omitempty"`
+	// selector used to match the pods targeted by this Prometheus resource.
+	Selector *string `json:"selector,omitempty"`
 }
 
 // PrometheusStatusApplyConfiguration constructs a declarative configuration of the PrometheusStatus type for use with

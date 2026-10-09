@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,144 +38,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 						},
 						{
 							Name: "same",
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate on opsgenie config - missing required fields",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
-								{
-									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
-										{},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate on slack config - valid action fields - invalid fields field",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							SlackConfigs: []monitoringv1beta1.SlackConfig{
-								{
-									Actions: []monitoringv1beta1.SlackAction{
-										{
-											Type: "a",
-											Text: "b",
-											URL:  "www.test.com",
-											Name: ptr.To("c"),
-											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
-												Text: "d",
-											},
-										},
-									},
-									Fields: []monitoringv1beta1.SlackField{
-										{},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate webhook config - missing required fields",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
-								{},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate wechat config - invalid URL",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
-								{
-									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate email config - missing to field",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							EmailConfigs: []monitoringv1beta1.EmailConfig{
-								{},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate email config - invalid smarthost",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							EmailConfigs: []monitoringv1beta1.EmailConfig{
-								{
-									To:        ptr.To("a"),
-									Smarthost: ptr.To("invalid"),
-								},
-							},
 						},
 					},
 				},
@@ -287,7 +149,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "user",
 									},
-									TokenFile: ptr.To("/path/token_file"),
+									TokenFile: new("/path/token_file"),
 								},
 							},
 						},
@@ -312,7 +174,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "user",
 									},
-									UserKeyFile: ptr.To("/path/user_key_file"),
+									UserKeyFile: new("/path/user_key_file"),
 								},
 							},
 						},
@@ -365,8 +227,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									HTML:      ptr.To(true),
-									Monospace: ptr.To(true),
+									HTML:      new(true),
+									Monospace: new(true),
 								},
 							},
 						},
@@ -395,7 +257,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									HTML: ptr.To(true),
+									HTML: new(true),
 									URL:  "http://%><invalid.com",
 								},
 							},
@@ -486,9 +348,9 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 								{
 									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
 										{
-											ID:       ptr.To("a"),
-											Name:     ptr.To("b"),
-											Username: ptr.To("c"),
+											ID:       new("a"),
+											Name:     new("b"),
+											Username: new("c"),
 											Type:     "user",
 										},
 									},
@@ -501,7 +363,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 											Type: "a",
 											Text: "b",
 											URL:  "https://www.test.com",
-											Name: ptr.To("c"),
+											Name: new("c"),
 											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
 												Text: "d",
 											},
@@ -517,7 +379,7 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
 								{
-									URL: ptr.To("https://www.test.com"),
+									URL: new("https://www.test.com"),
 									URLSecret: &monitoringv1beta1.SecretKeySelector{
 										Name: "creds",
 										Key:  "url",
@@ -531,8 +393,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 							},
 							EmailConfigs: []monitoringv1beta1.EmailConfig{
 								{
-									To:        ptr.To("a"),
-									Smarthost: ptr.To("b:8080"),
+									To:        new("a"),
+									Smarthost: new("b:8080"),
 									Headers: []monitoringv1beta1.KeyValue{
 										{
 											Key:   "c",
@@ -562,8 +424,8 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 										Name: "creds",
 										Key:  "token",
 									},
-									Retry:  ptr.To("10m"),
-									Expire: ptr.To("5m"),
+									Retry:  new("10m"),
+									Expire: new("5m"),
 								},
 							},
 						},
@@ -592,6 +454,937 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 		},
 	}
 
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidatePagerDutyAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "validate pagerduty config - url validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://%><invalid.com")),
+									ClientURL: new("http://test.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - client url validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL: new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - missing routing key and service key",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:       new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL: new("http://test.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - service key specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "validate pagerduty config - invalid link href",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									PagerDutyLinkConfigs: []monitoringv1beta1.PagerDutyLinkConfig{
+										{
+											Href: new("http://%><invalid.com"),
+											Text: new("this is a string"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate pagerduty config - invalid image href",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PagerDutyConfigs: []monitoringv1beta1.PagerDutyConfig{
+								{
+									URL:        new(monitoringv1beta1.URL("http://test.com")),
+									ClientURL:  new("http://test.com"),
+									ServiceKey: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									PagerDutyImageConfigs: []monitoringv1beta1.PagerDutyImageConfig{
+										{
+											Href: new("http://%><invalid.com"),
+											Src:  new("this is a string"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none - %s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateOpsGenieAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "validate opsgenie config - url validation failed",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "validate opsgenie config - url validation success",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("https://www.test.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on opsgenie config - missing required fields in responders",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on opsgenie config - responder with id",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
+										{Type: "team", ID: new("1234abcd")},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on opsgenie config - responder with name",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
+										{Type: "team", Name: new("respondername")},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on opsgenie config - responder with username",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							OpsGenieConfigs: []monitoringv1beta1.OpsGenieConfig{
+								{
+									Responders: []monitoringv1beta1.OpsGenieConfigResponder{
+										{Type: "team", Username: new("responderuser")},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none - %s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateSlackAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on slack config - all fields valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{Title: "a", Value: "b"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on slack config - valid action fields - invalid fields field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on slack config - invalid action fields missing type",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Text: "b",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{Title: "a", Value: "b"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on slack config - invalid action fields missing text",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											URL:  "www.test.com",
+											Name: new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{Title: "a", Value: "b"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on slack config - invalid action fields missing url and name",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type: "a",
+											Text: "b",
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{
+												Text: "d",
+											},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{Title: "a", Value: "b"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on slack config - invalid action fields missing text in confirm field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SlackConfigs: []monitoringv1beta1.SlackConfig{
+								{
+									Actions: []monitoringv1beta1.SlackAction{
+										{
+											Type:         "a",
+											Text:         "b",
+											URL:          "www.test.com",
+											Name:         new("c"),
+											ConfirmField: &monitoringv1beta1.SlackConfirmationField{},
+										},
+									},
+									Fields: []monitoringv1beta1.SlackField{
+										{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWebhookAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate webhook config - missing required fields",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate webhook config - url specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URL: new("https://webhook.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate webhook config - url secret specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URLSecret: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate webhook config - invalid url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WebhookConfigs: []monitoringv1beta1.WebhookConfig{
+								{
+									URL: new("://invalid"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWechatAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate wechat config - invalid URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							WeChatConfigs: []monitoringv1beta1.WeChatConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateEmailAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate email config - missing to field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - invalid smarthost",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("invalid"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - valid smarthost",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate email config - duplicate headers",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+									Headers: []monitoringv1beta1.KeyValue{
+										{Key: "Foo", Value: "bar"},
+										{Key: "Foo", Value: "bar"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate email config - non-duplicate headers",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							EmailConfigs: []monitoringv1beta1.EmailConfig{
+								{
+									To:        new("a"),
+									Smarthost: new("smtpserver:587"),
+									Headers: []monitoringv1beta1.KeyValue{
+										{Key: "Foo1", Value: "bar"},
+										{Key: "Foo2", Value: "bar"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateSNSAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate SNSConfigs - valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									PhoneNumber: new("+13324653687"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate SNSConfigs - invalid no required field",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									ApiURL: new("http://sns.api.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate SNSConfigs - invalid URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							SNSConfigs: []monitoringv1beta1.SNSConfig{
+								{
+									PhoneNumber: new("+13324653687"),
+									ApiURL:      new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := ValidateAlertmanagerConfig(tc.in)

@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,7 +58,6 @@ var (
 )
 
 func makeStatefulSet(tr *monitoringv1.ThanosRuler, config Config, ruleConfigMapNames []string, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
-
 	if tr.Spec.Resources.Requests == nil {
 		tr.Spec.Resources.Requests = corev1.ResourceList{}
 	}
@@ -319,6 +318,22 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		if tls.CAFile != "" {
 			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
+
+		if tlsMinVersion := operator.TLSVersionForThanos(ptr.Deref(tls.MinVersion, "")); tlsMinVersion != "" && version.GTE(semver.MustParse("0.37.0")) {
+			trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-min-version", Value: tlsMinVersion})
+		}
+
+		if len(tls.CipherSuites) > 0 && version.GTE(semver.MustParse("0.42.0")) {
+			for _, cs := range tls.CipherSuites {
+				trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: cs})
+			}
+		}
+
+		if len(tls.Curves) > 0 && version.GTE(semver.MustParse("0.42.0")) {
+			for _, c := range tls.Curves {
+				trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: c})
+			}
+		}
 	}
 
 	if tr.Spec.ExternalPrefix != "" {
@@ -409,15 +424,17 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		maps.Copy(podLabels, tr.Spec.PodMetadata.Labels)
 		maps.Copy(podAnnotations, tr.Spec.PodMetadata.Annotations)
 	}
-	// In cases where an existing selector label is modified, or a new one is added, new sts cannot match existing pods.
-	// We should try to avoid removing such immutable fields whenever possible since doing
-	// so forces us to enter the 'recreate cycle' and can potentially lead to downtime.
+	// In cases where an existing selector label is modified, or a new one is
+	// added, new sts cannot match existing pods.
+	// We should try to avoid removing such immutable fields whenever possible
+	// since doing so forces us to enter the 'recreate cycle' and can
+	// potentially lead to downtime.
 	// The requirement to make a change here should be carefully evaluated.
-	selectorLabels := makeSelectorLabels(tr.Name)
+	podLabels = config.Labels.Merge(podLabels)
+	maps.Copy(podLabels, makeSelectorLabels(tr.Name))
+	selectorLabels := maps.Clone(podLabels)
 
-	finalLabels := config.Labels.Merge(podLabels)
-	maps.Copy(finalLabels, selectorLabels)
-
+	podLabels[operator.ApplicationVersionLabelKey] = version.String()
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "thanos-ruler"
 
 	storageVolName := volumeName(tr.Name)
@@ -439,7 +456,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},
-					Optional: ptr.To(true),
+					Optional: new(true),
 				},
 			},
 		})
@@ -464,8 +481,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			Ports:                    ports,
 			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &corev1.SecurityContext{
-				AllowPrivilegeEscalation: ptr.To(false),
-				ReadOnlyRootFilesystem:   ptr.To(true),
+				AllowPrivilegeEscalation: new(false),
+				ReadOnlyRootFilesystem:   new(true),
 				Capabilities: &corev1.Capabilities{
 					Drop: []corev1.Capability{"ALL"},
 				},
@@ -491,18 +508,19 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		PodManagementPolicy: appsv1.PodManagementPolicyType(podManagementPolicy),
 		UpdateStrategy:      operator.UpdateStrategyForStatefulSet(tr.Spec.UpdateStrategy),
 		Selector: &metav1.LabelSelector{
-			MatchLabels: finalLabels,
+			MatchLabels: selectorLabels,
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels:      finalLabels,
+				Labels:      podLabels,
 				Annotations: podAnnotations,
 			},
 			Spec: corev1.PodSpec{
 				NodeSelector:                  tr.Spec.NodeSelector,
+				SchedulerName:                 tr.Spec.SchedulerName,
 				PriorityClassName:             tr.Spec.PriorityClassName,
 				ServiceAccountName:            tr.Spec.ServiceAccountName,
-				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(tr.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
+				TerminationGracePeriodSeconds: new(ptr.Deref(tr.Spec.TerminationGracePeriodSeconds, defaultTerminationGracePeriodSeconds)),
 				Containers:                    containers,
 				InitContainers:                tr.Spec.InitContainers,
 				Volumes:                       trVolumes,

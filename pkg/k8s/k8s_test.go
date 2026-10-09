@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ func TestMergeMetadata_CreateOrUpdateSecret(t *testing.T) {
 			},
 		},
 		{
-			name: "overridden label amd annotation",
+			name: "overridden label and annotation",
 			expectedLabels: map[string]string{
 				"app.kubernetes.io/name": "kube-state-metrics",
 			},
@@ -73,6 +73,21 @@ func TestMergeMetadata_CreateOrUpdateSecret(t *testing.T) {
 			},
 			modifiedAnnotations: map[string]string{
 				"app.kubernetes.io/name": "overridden-value",
+			},
+		},
+		{
+			name: "labels and annotations with reserved prefix are dropped",
+			expectedLabels: map[string]string{
+				"app.kubernetes.io/name": "kube-state-metrics",
+			},
+			modifiedLabels: map[string]string{
+				"operator.prometheus.io/foo": "some value",
+			},
+			expectedAnnotations: map[string]string{
+				"app.kubernetes.io/name": "kube-state-metrics",
+			},
+			modifiedAnnotations: map[string]string{
+				"operator.prometheus.io/bar": "some value",
 			},
 		},
 	}
@@ -90,7 +105,7 @@ func TestMergeMetadata_CreateOrUpdateSecret(t *testing.T) {
 				},
 			}
 
-			sClient := fake.NewSimpleClientset(secret).CoreV1().Secrets(namespace)
+			sClient := fake.NewClientset(secret).CoreV1().Secrets(namespace)
 
 			modifiedSecret := secret.DeepCopy()
 			maps.Copy(modifiedSecret.Labels, tc.modifiedLabels)

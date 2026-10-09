@@ -29,3 +29,7 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(SHARD);|.+;.+
     action: keep
+storage:
+  tsdb:
+    retention:
+      time: 24h

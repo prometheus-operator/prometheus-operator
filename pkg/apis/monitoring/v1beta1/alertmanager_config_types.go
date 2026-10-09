@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"strings"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
-
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const (
@@ -64,6 +64,10 @@ type AlertmanagerConfig struct {
 	Status monitoringv1.ConfigResourceStatus `json:"status,omitempty,omitzero"`
 }
 
+func (l *AlertmanagerConfig) Bindings() []monitoringv1.WorkloadBinding {
+	return l.Status.Bindings
+}
+
 // AlertmanagerConfigList is a list of AlertmanagerConfig.
 // +k8s:openapi-gen=true
 type AlertmanagerConfigList struct {
@@ -79,9 +83,9 @@ type AlertmanagerConfigList struct {
 // By definition, the Alertmanager configuration only applies to alerts for which
 // the `namespace` label is equal to the namespace of the AlertmanagerConfig resource.
 type AlertmanagerConfigSpec struct {
-	// route defines the Alertmanager route definition for alerts matching the resource's
-	// namespace. If present, it will be added to the generated Alertmanager
-	// configuration as a first-level route.
+	// route defines the Alertmanager route definition for incoming alerts. It will be added to the
+	// generated Alertmanager configuration as a first-level route. The matching behavior of the
+	// route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
 	Route *Route `json:"route"`
 	// receivers defines the list of receivers.
@@ -123,8 +127,8 @@ type Route struct {
 	RepeatInterval *monitoringv1.NonEmptyDuration `json:"repeatInterval,omitempty"`
 	// matchers defines the list of matchers that the alert's labels should match. For the first
 	// level route, the operator removes any existing equality and regexp
-	// matcher on the `namespace` label and adds a `namespace: <object
-	// namespace>` matcher.
+	// matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+	// unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
 	// +optional
 	Matchers []Matcher `json:"matchers,omitempty"`
 	// continue defines the boolean indicating whether an alert should continue matching subsequent
@@ -469,6 +473,11 @@ type SlackConfig struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	MessageText *string `json:"messageText,omitempty"`
+	// updateMessage enables updating existing Slack messages instead of creating new ones
+	// when alert state changes. Please note that Webhook URLs do not support updates.
+	// It requires Alertmanager >= v0.32.0.
+	// +optional
+	UpdateMessage *bool `json:"updateMessage,omitempty"` // nolint:kubeapilinter
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -590,6 +599,13 @@ type WebhookConfig struct {
 	// It requires Alertmanager >= v0.28.0.
 	// +optional
 	Timeout *monitoringv1.Duration `json:"timeout,omitempty"`
+	// payload define custom payload to be sent to the webhook endpoint.
+	// This is an advanced configuration option that allows you
+	// to define a custom payload using Go templates.
+	// It requires Alertmanager >= v0.32.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	Payload *string `json:"payload,omitempty"`
 }
 
 // OpsGenieConfig configures notifications via OpsGenie.
@@ -888,6 +904,25 @@ type EmailConfig struct {
 	// It requires Alertmanager >= v0.31.0.
 	// +optional
 	ForceImplicitTLS *bool `json:"forceImplicitTLS,omitempty"` // nolint:kubeapilinter
+	// threading defines the threading configuration for email receiver.
+	// It requires Alertmanager >= v0.30.0.
+	// +optional
+	Threading *EmailThreadingConfig `json:"threading,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=Daily;None
+type ThreadByDateType string
+
+const (
+	ThreadByDateTypeDaily ThreadByDateType = "Daily"
+	ThreadByDateTypeNone  ThreadByDateType = "None"
+)
+
+type EmailThreadingConfig struct {
+	// threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+	// (None means group by alert group key, no date).
+	// +required
+	ThreadByDate ThreadByDateType `json:"threadByDate"`
 }
 
 // VictorOpsConfig configures notifications via VictorOps.
@@ -1079,6 +1114,13 @@ type SNSConfig struct {
 	// httpConfig defines the HTTP client configuration for SNS API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+	// alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+	// is set; set explicitly when configuring ca_bundle via shared AWS config.
+	//
+	// It requires Alertmanager >= 0.33.0.
+	// +optional
+	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"` // nolint:kubeapilinter
 }
 
 // TelegramConfig configures notifications via Telegram.

@@ -18,8 +18,12 @@ package v1
 
 // AzureWorkloadIdentityApplyConfiguration represents a declarative configuration of the AzureWorkloadIdentity type for use
 // with apply.
+//
+// AzureWorkloadIdentity defines the Azure Workload Identity authentication configuration.
 type AzureWorkloadIdentityApplyConfiguration struct {
+	// clientId is the clientID of the Azure Active Directory application.
 	ClientID *string `json:"clientId,omitempty"`
+	// tenantId is the tenant ID of the Azure Active Directory application.
 	TenantID *string `json:"tenantId,omitempty"`
 }
 

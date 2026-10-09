@@ -17,3 +17,8 @@ updates:
     directory: /
     schedule:
       interval: daily
+    groups:
+      github-actions-deps:
+        applies-to: version-updates
+        patterns:
+          - "*"

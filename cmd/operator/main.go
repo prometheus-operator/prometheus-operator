@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,13 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	_ "time/tzdata" // Embed timezone information which is required by the Alertmanager controller.
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
@@ -42,7 +44,6 @@ import (
 	"k8s.io/client-go/rest"
 	k8sflag "k8s.io/component-base/cli/flag"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 
 	crd "github.com/prometheus-operator/prometheus-operator/example"
 	"github.com/prometheus-operator/prometheus-operator/internal/goruntime"
@@ -130,7 +131,7 @@ var (
 	kubeletSyncPeriod    time.Duration
 	kubeletHTTPMetrics   bool
 
-	featureGates = k8sflag.NewMapStringBool(ptr.To(map[string]bool{}))
+	featureGates = k8sflag.NewMapStringBool(new(map[string]bool{}))
 )
 
 func parseFlags(fs *flag.FlagSet) {
@@ -168,6 +169,7 @@ func parseFlags(fs *flag.FlagSet) {
 	fs.StringVar(&cfg.PrometheusDefaultBaseImage, "prometheus-default-base-image", operator.DefaultPrometheusBaseImage, "Prometheus default base image (path without tag/version)")
 	fs.StringVar(&cfg.ThanosDefaultBaseImage, "thanos-default-base-image", operator.DefaultThanosBaseImage, "Thanos default base image (path without tag/version)")
 	fs.StringVar(&cfg.ControllerID, "controller-id", "", "Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an `operator.prometheus.io/controller-id` annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.")
+	fs.Var(&cfg.RepairPolicy, "repair-policy-for-statefulsets", "Policy to use when a StatefulSet rollout is stuck. Possible values: 'none' (default), 'evict' or 'delete'.")
 
 	fs.Var(cfg.Namespaces.AllowList, "namespaces", "Namespaces to scope the interaction of the Prometheus Operator and the apiserver (allow list). This is mutually exclusive with --deny-namespaces.")
 	fs.Var(cfg.Namespaces.DenyList, "deny-namespaces", "Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.")
@@ -290,7 +292,6 @@ func start() int {
 		"watch_referenced_objects_in_all_namespaces", cfg.WatchObjectRefsInAllNamespaces,
 		"controller_id", cfg.ControllerID,
 		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
-	goruntime.SetMaxProcs(logger)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
@@ -432,6 +433,16 @@ func start() int {
 		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithEndpointSlice())
 	}
 
+	// PodTopologyLabelsAdmission (KEP-4742) is enabled by default in K8s >= 1.35.
+	// It injects topology.kubernetes.io/zone as a pod label, removing the need
+	// for attach_metadata.node=true in topology sharding configurations.
+	podTopologyLabelsSupported := cfg.KubernetesVersion.GTE(semver.MustParse("1.35.0"))
+	logger.Info("Kubernetes API capabilities", "pod_topology_labels", podTopologyLabelsSupported)
+	if podTopologyLabelsSupported {
+		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithPodTopologyLabels())
+		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithPodTopologyLabels())
+	}
+
 	prometheusSupported, err := checkPrerequisites(
 		ctx,
 		logger,
@@ -475,8 +486,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promControllerOptions = append(promControllerOptions, prometheuscontroller.WithConfigResourceStatus())
 		}
 
 		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, promControllerOptions...)
@@ -555,8 +564,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithConfigResourceStatus())
 		}
 
 		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, promAgentControllerOptions...)
@@ -596,8 +603,17 @@ func start() int {
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
 		if cfg.Gates.Enabled(operator.StatusForConfigurationResourcesFeature) {
-			// TODO: check permissions when implementing the AlertmanagerConfig status subresource.
-			alertmanagerControllerOptions = append(alertmanagerControllerOptions, alertmanagercontroller.WithConfigResourceStatus())
+			if !checkStatusSubresourcePermissions(
+				ctx,
+				logger,
+				kclient,
+				[]schema.GroupVersionResource{
+					monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
+				},
+			) {
+				cancel()
+				return 1
+			}
 		}
 
 		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, alertmanagerControllerOptions...)
@@ -648,8 +664,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			thanosControllerOptions = append(thanosControllerOptions, thanoscontroller.WithConfigResourceStatus())
 		}
 
 		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, thanosControllerOptions...)
@@ -730,7 +744,7 @@ func start() int {
 
 	// Setup the web server.
 	mux := http.NewServeMux()
-	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation)
+	admit := admission.New(logger.With("component", "admissionwebhook"), model.LegacyValidation, parser.Options{})
 	admit.Register(mux)
 
 	r.MustRegister(cfg.Gates)

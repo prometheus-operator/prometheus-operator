@@ -1,0 +1,15 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  sns_configs:
+  - api_url: https://sns.us-east-2.amazonaws.com
+    topic_arn: test-topicARN
+    use_aws_http_client: true
+templates: []

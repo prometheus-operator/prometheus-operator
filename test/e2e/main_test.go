@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -253,6 +253,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMStatusScale":                           testAlertmanagerStatusScale,
 		"AMServiceName":                           testAlertManagerServiceName,
 		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
+		"AMZeroDuration":                          testAlertmanagerZeroDuration,
 	}
 
 	for name, f := range testFuncs {
@@ -275,6 +276,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromAdditionalScrapeConfig":                testPromAdditionalScrapeConfig,
 		"PromAdditionalAlertManagerConfig":          testPromAdditionalAlertManagerConfig,
 		"PromReloadRules":                           testPromReloadRules,
+		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
 		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,
@@ -293,6 +295,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromArbitraryFSAcc":                        testPromArbitraryFSAcc,
 		"PromTLSConfigViaSecret":                    testPromTLSConfigViaSecret,
 		"Thanos":                                    testThanos,
+		"ThanosSidecarDelayedCompaction":            testThanosSidecarDelayedCompaction,
 		"PromStaticProbe":                           testPromStaticProbe,
 		"PromSecurePodMonitor":                      testPromSecurePodMonitor,
 		"PromSharedResourcesReconciliation":         testPromSharedResourcesReconciliation,
@@ -323,7 +326,6 @@ func testAllNSPrometheus(t *testing.T) {
 		"PrometheusReconciliationOnSecretChanges":   testPrometheusReconciliationOnSecretChanges,
 		"PrometheusUTF8MetricsSupport":              testPrometheusUTF8MetricsSupport,
 		"PrometheusUTF8LabelSupport":                testPrometheusUTF8LabelSupport,
-		"StuckStatefulSetRollout":                   testStuckStatefulSetRollout,
 		"PromScaleUpWithoutLabels":                  testPromScaleUpWithoutLabels,
 	}
 
@@ -398,6 +400,18 @@ func TestPromInstanceNs(t *testing.T) {
 	}
 }
 
+// TestRepairPolicy verifies that the operator can repair broken statefulsets when needed.
+func TestRepairPolicy(t *testing.T) {
+	skipPrometheusTests(t)
+	testFuncs := map[string]func(t *testing.T){
+		"RepairPolicy": testRepairPolicy,
+	}
+
+	for name, f := range testFuncs {
+		t.Run(name, f)
+	}
+}
+
 // TestAlertmanagerInstanceNs tests prometheus operator in different scenarios when --alertmanager-instance-namespace is given.
 func TestAlertmanagerInstanceNs(t *testing.T) {
 	skipAlertmanagerTests(t)
@@ -433,35 +447,49 @@ const (
 func TestGatedFeatures(t *testing.T) {
 	skipFeatureGatedTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"CreatePrometheusAgentDaemonSet":                       testCreatePrometheusAgentDaemonSet,
-		"PromAgentDaemonSetResourceUpdate":                     testPromAgentDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceUpdate":            testPromAgentReconcileDaemonSetResourceUpdate,
-		"PromAgentReconcileDaemonSetResourceDelete":            testPromAgentReconcileDaemonSetResourceDelete,
-		"PrometheusAgentDaemonSetSelectPodMonitor":             testPrometheusAgentDaemonSetSelectPodMonitor,
-		"PrometheusRetentionPolicies":                          testPrometheusRetentionPolicies,
-		"FinalizerWhenStatusForConfigResourcesEnabled":         testFinalizerWhenStatusForConfigResourcesEnabled,
-		"PrometheusAgentDaemonSetCELValidations":               testPrometheusAgentDaemonSetCELValidations,
-		"ServiceMonitorStatusSubresource":                      testServiceMonitorStatusSubresource,
-		"ServiceMonitorStatusWithMultipleWorkloads":            testServiceMonitorStatusWithMultipleWorkloads,
-		"GarbageCollectionOfServiceMonitorBinding":             testGarbageCollectionOfServiceMonitorBinding,
-		"RmServiceMonitorBindingDuringWorkloadDelete":          testRmServiceMonitorBindingDuringWorkloadDelete,
-		"PodMonitorStatusSubresource":                          testPodMonitorStatusSubresource,
-		"GarbageCollectionOfPodMonitorBinding":                 testGarbageCollectionOfPodMonitorBinding,
-		"RmPodMonitorBindingDuringWorkloadDelete":              testRmPodMonitorBindingDuringWorkloadDelete,
-		"ProbeStatusSubresource":                               testProbeStatusSubresource,
-		"GarbageCollectionOfProbeBinding":                      testGarbageCollectionOfProbeBinding,
-		"RmProbeBindingDuringWorkloadDelete":                   testRmProbeBindingDuringWorkloadDelete,
-		"ScrapeConfigStatusSubresource":                        testScrapeConfigStatusSubresource,
-		"GarbageCollectionOfScrapeConfigBinding":               testGarbageCollectionOfScrapeConfigBinding,
-		"RmScrapeConfigBindingDuringWorkloadDelete":            testRmScrapeConfigBindingDuringWorkloadDelete,
-		"PrometheusRuleStatusSubresource":                      testPrometheusRuleStatusSubresource,
-		"FinalizerForPromAgentWhenStatusForConfigResEnabled":   testFinalizerForPromAgentWhenStatusForConfigResEnabled,
-		"GarbageCollectionOfPrometheusRuleBinding":             testGarbageCollectionOfPrometheusRuleBinding,
-		"RmPrometheusRuleBindingDuringWorkloadDelete":          testRmPrometheusRuleBindingDuringWorkloadDelete,
-		"FinalizerForThanosRulerWhenStatusForConfigResEnabled": testFinalizerForThanosRulerWhenStatusForConfigResEnabled,
-		"PrometheusRuleStatusSubresourceForThanosRuler":        testPrometheusRuleStatusSubresourceForThanosRuler,
-		"GarbageCollectionOfPromRuleBindingForThanosRuler":     testGarbageCollectionOfPromRuleBindingForThanosRuler,
-		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler": testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"CreatePrometheusAgentDaemonSet":                             testCreatePrometheusAgentDaemonSet,
+		"PromAgentDaemonSetResourceUpdate":                           testPromAgentDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceUpdate":                  testPromAgentReconcileDaemonSetResourceUpdate,
+		"PromAgentReconcileDaemonSetResourceDelete":                  testPromAgentReconcileDaemonSetResourceDelete,
+		"PrometheusAgentDaemonSetSelectPodMonitor":                   testPrometheusAgentDaemonSetSelectPodMonitor,
+		"PrometheusRetentionPolicies":                                testPrometheusRetentionPolicies,
+		"PrometheusTargetDistributionOnResharding":                   testPrometheusTargetDistributionOnResharding,
+		"FinalizerWhenStatusForConfigResourcesEnabled":               testFinalizerWhenStatusForConfigResourcesEnabled,
+		"ShardingStrategyCELValidations":                             testPrometheusShardingStrategyCELValidations,
+		"PrometheusAgentDaemonSetCELValidations":                     testPrometheusAgentDaemonSetCELValidations,
+		"ServiceMonitorStatusSubresource":                            testServiceMonitorStatusSubresource,
+		"ServiceMonitorStatusSubresourceForPrometheusAgent":          testServiceMonitorStatusSubresourceForPrometheusAgent,
+		"ServiceMonitorStatusWithMultipleWorkloads":                  testServiceMonitorStatusWithMultipleWorkloads,
+		"ServiceMonitorStatusWithMultiplePrometheusAgents":           testServiceMonitorStatusWithMultiplePrometheusAgents,
+		"GarbageCollectionOfServiceMonitorBinding":                   testGarbageCollectionOfServiceMonitorBinding,
+		"GarbageCollectionOfServiceMonitorBindingForPrometheusAgent": testGarbageCollectionOfServiceMonitorBindingForPrometheusAgent,
+		"RmServiceMonitorBindingDuringWorkloadDelete":                testRmServiceMonitorBindingDuringWorkloadDelete,
+		"RmServiceMonitorBindingDuringPrometheusAgentDelete":         testRmServiceMonitorBindingDuringPrometheusAgentDelete,
+		"PodMonitorStatusSubresource":                                testPodMonitorStatusSubresource,
+		"PodMonitorStatusSubresourceForPrometheusAgent":              testPodMonitorStatusSubresourceForPrometheusAgent,
+		"GarbageCollectionOfPodMonitorBinding":                       testGarbageCollectionOfPodMonitorBinding,
+		"GarbageCollectionOfPodMonitorBindingForPrometheusAgent":     testGarbageCollectionOfPodMonitorBindingForPrometheusAgent,
+		"RmPodMonitorBindingDuringWorkloadDelete":                    testRmPodMonitorBindingDuringWorkloadDelete,
+		"RmPodMonitorBindingDuringPrometheusAgentDelete":             testRmPodMonitorBindingDuringPrometheusAgentDelete,
+		"ProbeStatusSubresource":                                     testProbeStatusSubresource,
+		"GarbageCollectionOfProbeBinding":                            testGarbageCollectionOfProbeBinding,
+		"RmProbeBindingDuringWorkloadDelete":                         testRmProbeBindingDuringWorkloadDelete,
+		"ScrapeConfigStatusSubresource":                              testScrapeConfigStatusSubresource,
+		"GarbageCollectionOfScrapeConfigBinding":                     testGarbageCollectionOfScrapeConfigBinding,
+		"RmScrapeConfigBindingDuringWorkloadDelete":                  testRmScrapeConfigBindingDuringWorkloadDelete,
+		"PrometheusRuleStatusSubresource":                            testPrometheusRuleStatusSubresource,
+		"FinalizerForPromAgentWhenStatusForConfigResEnabled":         testFinalizerForPromAgentWhenStatusForConfigResEnabled,
+		"GarbageCollectionOfPrometheusRuleBinding":                   testGarbageCollectionOfPrometheusRuleBinding,
+		"RmPrometheusRuleBindingDuringWorkloadDelete":                testRmPrometheusRuleBindingDuringWorkloadDelete,
+		"FinalizerForThanosRulerWhenStatusForConfigResEnabled":       testFinalizerForThanosRulerWhenStatusForConfigResEnabled,
+		"PrometheusRuleStatusSubresourceForThanosRuler":              testPrometheusRuleStatusSubresourceForThanosRuler,
+		"GarbageCollectionOfPromRuleBindingForThanosRuler":           testGarbageCollectionOfPromRuleBindingForThanosRuler,
+		"RmPromeRuleBindingDuringWorkloadDeleteForThanosRuler":       testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler,
+		"AlertmanagerConfigStatusSubresource":                        testAlertmanagerConfigStatusSubresource,
+		"FinalizerForAlertmanagerWhenStatusForConfigResEnabled":      testFinalizerForAlertmanagerWhenStatusForConfigResEnabled,
+		"GarbageCollectionOfAlertmanagerConfigBinding":               testGarbageCollectionOfAlertmanagerConfigBinding,
+		"RmAlertmanagerConfigBindingDuringWorkloadDelete":            testRmAlertmanagerConfigBindingDuringWorkloadDelete,
+		"PrometheusTopologySharding":                                 testPrometheusTopologySharding,
 	}
 
 	for name, f := range testFuncs {

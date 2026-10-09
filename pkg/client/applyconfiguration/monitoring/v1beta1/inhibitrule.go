@@ -18,10 +18,22 @@ package v1beta1
 
 // InhibitRuleApplyConfiguration represents a declarative configuration of the InhibitRule type for use
 // with apply.
+//
+// InhibitRule defines an inhibition rule that allows to mute alerts when other
+// alerts are already firing.
+// See https://prometheus.io/docs/alerting/latest/configuration/#inhibit_rule
 type InhibitRuleApplyConfiguration struct {
+	// targetMatch defines matchers that have to be fulfilled in the alerts to be muted.
+	// The operator enforces that the alert matches the resource's namespace.
+	// When these conditions are met, matching alerts will be inhibited (silenced).
 	TargetMatch []MatcherApplyConfiguration `json:"targetMatch,omitempty"`
+	// sourceMatch defines matchers for which one or more alerts have to exist for the inhibition
+	// to take effect. The operator enforces that the alert matches the resource's namespace.
+	// These are the "trigger" alerts that cause other alerts to be inhibited.
 	SourceMatch []MatcherApplyConfiguration `json:"sourceMatch,omitempty"`
-	Equal       []string                    `json:"equal,omitempty"`
+	// equal defines labels that must have an equal value in the source and target alert
+	// for the inhibition to take effect. This ensures related alerts are properly grouped.
+	Equal []string `json:"equal,omitempty"`
 }
 
 // InhibitRuleApplyConfiguration constructs a declarative configuration of the InhibitRule type for use with

@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -95,7 +94,7 @@ func TestMergeMetadata_CreateOrUpdateService(t *testing.T) {
 				Status: corev1.ServiceStatus{},
 			}
 
-			svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
+			svcClient := fake.NewClientset(service).CoreV1().Services(namespace)
 
 			modifiedSvc := service.DeepCopy()
 			maps.Copy(modifiedSvc.Labels, tc.modifiedLabels)
@@ -183,7 +182,7 @@ func TestMergeMetadata_CreateOrUpdateEndpoints(t *testing.T) {
 				},
 			}
 
-			endpointsClient := fake.NewSimpleClientset(endpoints).CoreV1().Endpoints(namespace)
+			endpointsClient := fake.NewClientset(endpoints).CoreV1().Endpoints(namespace)
 
 			modifiedEndpoints := endpoints.DeepCopy()
 			maps.Copy(modifiedEndpoints.Labels, tc.modifiedLabels)
@@ -241,7 +240,7 @@ func TestCreateOrUpdateImmutableFields(t *testing.T) {
 			Status: corev1.ServiceStatus{},
 		}
 
-		svcClient := fake.NewSimpleClientset(service).CoreV1().Services(namespace)
+		svcClient := fake.NewClientset(service).CoreV1().Services(namespace)
 
 		modifiedSvc := &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
@@ -374,7 +373,7 @@ func TestEnsureCustomGoverningService(t *testing.T) {
 			p := makeBarebonesPrometheus(name, ns)
 			p.Spec.ServiceName = &serviceName
 
-			clientSet := fake.NewSimpleClientset(&tc.service)
+			clientSet := fake.NewClientset(&tc.service)
 			svcClient := clientSet.CoreV1().Services(ns)
 
 			err := EnsureCustomGoverningService(context.Background(), p.Namespace, *p.Spec.ServiceName, svcClient, tc.selectorLabels)
@@ -396,7 +395,7 @@ func makeBarebonesPrometheus(name, ns string) *monitoringv1.Prometheus {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
-				Replicas: ptr.To(int32(1)),
+				Replicas: new(int32(1)),
 			},
 		},
 	}

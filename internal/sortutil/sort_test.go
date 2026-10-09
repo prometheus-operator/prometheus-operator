@@ -1,4 +1,4 @@
-// Copyright 2024 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ func TestSortKeysEmptyMap(t *testing.T) {
 }
 
 func TestSortKeys(t *testing.T) {
-
 	intKeys := SortedKeys(map[int]any{
 		-10: 6,
 		0:   "",

@@ -22,17 +22,44 @@ import (
 
 // SNSConfigApplyConfiguration represents a declarative configuration of the SNSConfig type for use
 // with apply.
+//
+// SNSConfig configures notifications via AWS SNS.
+// See https://prometheus.io/docs/alerting/latest/configuration/#sns_configs
 type SNSConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	ApiURL       *string                       `json:"apiURL,omitempty"`
-	Sigv4        *v1.Sigv4ApplyConfiguration   `json:"sigv4,omitempty"`
-	TopicARN     *string                       `json:"topicARN,omitempty"`
-	Subject      *string                       `json:"subject,omitempty"`
-	PhoneNumber  *string                       `json:"phoneNumber,omitempty"`
-	TargetARN    *string                       `json:"targetARN,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	Attributes   map[string]string             `json:"attributes,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiURL defines the SNS API URL, e.g. https://sns.us-east-2.amazonaws.com.
+	// If not specified, the SNS API URL from the SNS SDK will be used.
+	ApiURL *string `json:"apiURL,omitempty"`
+	// sigv4 configures AWS's Signature Verification 4 signing process to sign requests.
+	// This includes AWS credentials and region configuration for authentication.
+	Sigv4 *v1.Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
+	// topicARN defines the SNS topic ARN, e.g. arn:aws:sns:us-east-2:698519295917:My-Topic.
+	// If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
+	TopicARN *string `json:"topicARN,omitempty"`
+	// subject defines the subject line when the message is delivered to email endpoints.
+	// This field is only used when sending to email subscribers of an SNS topic.
+	Subject *string `json:"subject,omitempty"`
+	// phoneNumber defines the phone number if message is delivered via SMS in E.164 format.
+	// If you don't specify this value, you must specify a value for the TopicARN or TargetARN.
+	PhoneNumber *string `json:"phoneNumber,omitempty"`
+	// targetARN defines the mobile platform endpoint ARN if message is delivered via mobile notifications.
+	// If you don't specify this value, you must specify a value for the TopicARN or PhoneNumber.
+	TargetARN *string `json:"targetARN,omitempty"`
+	// message defines the message content of the SNS notification.
+	// This is the actual notification text that will be sent to subscribers.
+	Message *string `json:"message,omitempty"`
+	// attributes defines SNS message attributes as key-value pairs.
+	// These provide additional metadata that can be used for message filtering and routing.
+	Attributes map[string]string `json:"attributes,omitempty"`
+	// httpConfig defines the HTTP client configuration for SNS API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+	// alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+	// is set; set explicitly when configuring ca_bundle via shared AWS config.
+	//
+	// It requires Alertmanager >= 0.33.0.
+	UseAWSHTTPClient *bool `json:"useAWSHTTPClient,omitempty"`
 }
 
 // SNSConfigApplyConfiguration constructs a declarative configuration of the SNSConfig type for use with
@@ -124,5 +151,13 @@ func (b *SNSConfigApplyConfiguration) WithAttributes(entries map[string]string) 
 // If called multiple times, the HTTPConfig field is set to the value of the last call.
 func (b *SNSConfigApplyConfiguration) WithHTTPConfig(value *HTTPConfigApplyConfiguration) *SNSConfigApplyConfiguration {
 	b.HTTPConfig = value
+	return b
+}
+
+// WithUseAWSHTTPClient sets the UseAWSHTTPClient field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the UseAWSHTTPClient field is set to the value of the last call.
+func (b *SNSConfigApplyConfiguration) WithUseAWSHTTPClient(value bool) *SNSConfigApplyConfiguration {
+	b.UseAWSHTTPClient = &value
 	return b
 }

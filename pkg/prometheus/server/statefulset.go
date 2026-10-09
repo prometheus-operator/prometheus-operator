@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,10 +33,24 @@ import (
 )
 
 const (
-	defaultRetention                     = "24h"
 	prometheusMode                       = "server"
 	governingServiceName                 = "prometheus-operated"
 	thanosSupportedVersionHTTPClientFlag = "0.24.0"
+
+	// Minimum Prometheus and Thanos versions supporting coordinated (delayed)
+	// compaction, which lets Prometheus keep local compaction enabled while the
+	// Thanos sidecar uploads blocks to object storage.
+	// Thanos < v0.42.0 rejects the resulting flags due to a sidecar validation bug.
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	// ref: https://github.com/thanos-io/thanos/pull/8688
+	minVersionPrometheusDelayedCompaction = "3.9.0"
+	minVersionThanosDelayedCompaction     = "0.42.0"
+
+	// thanosShipperMetaFileName is the name of the meta file the Thanos sidecar
+	// shipper writes in the TSDB directory. Prometheus reads it through
+	// --storage.tsdb.delay-compact-file.path to only compact blocks that have
+	// already been uploaded.
+	thanosShipperMetaFileName = "thanos.shipper.json"
 )
 
 func makeStatefulSet(
@@ -217,7 +231,12 @@ func makeStatefulSetSpec(
 
 	var additionalContainers, operatorInitContainers []corev1.Container
 
-	thanosContainer, thanosVolumes, err := createThanosContainer(p, c)
+	compactionMode, err := compactionModeFor(p, cg.Version())
+	if err != nil {
+		return nil, err
+	}
+
+	thanosContainer, thanosVolumes, err := createThanosContainer(p, c, compactionMode)
 	if err != nil {
 		return nil, err
 	}
@@ -227,13 +246,26 @@ func makeStatefulSetSpec(
 		volumes = append(volumes, thanosVolumes...)
 	}
 
-	if compactionDisabled(p) {
+	switch compactionMode {
+	case compactionModeDisabled:
+		// Disable local compaction so the Thanos sidecar can safely upload
+		// uncompacted blocks to object storage.
 		thanosBlockDuration := "2h"
 		if p.Spec.Thanos != nil {
 			thanosBlockDuration = operator.StringValOrDefault(string(p.Spec.Thanos.BlockDuration), thanosBlockDuration)
 		}
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.max-block-duration", Value: thanosBlockDuration})
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "storage.tsdb.min-block-duration", Value: thanosBlockDuration})
+
+	case compactionModeDelayed:
+		// Keep local compaction enabled and let Prometheus coordinate with the
+		// Thanos sidecar through the shipper meta file: Prometheus only compacts
+		// level-1 blocks that have already been uploaded.
+		// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+		promArgs = append(promArgs, monitoringv1.Argument{
+			Name:  "storage.tsdb.delay-compact-file.path",
+			Value: filepath.Join(prompkg.StorageDir, thanosShipperMetaFileName),
+		})
 	}
 
 	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/6829
@@ -241,8 +273,12 @@ func makeStatefulSetSpec(
 	//   1. Prometheus >= v2.55.0
 	//   2. Thanos sidecar configured for uploading blocks to object storage
 	//   3. out-of-order window is > 0
+	// This is required in both the disabled and delayed compaction modes:
+	// --storage.tsdb.delay-compact-file.path only delays level-1 compaction, so
+	// overlapping out-of-order blocks could still be vertically compacted before
+	// the sidecar uploads them.
 	if cpf.TSDB != nil && cpf.TSDB.OutOfOrderTimeWindow != nil &&
-		compactionDisabled(p) &&
+		compactionMode != compactionModeDefault &&
 		cg.WithMinimumVersion("2.55.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "no-storage.tsdb.allow-overlapping-compaction"})
 	}
@@ -260,6 +296,14 @@ func makeStatefulSetSpec(
 		}
 	}
 
+	topologyZone := cg.TopologyZoneForShard(shard)
+	reloaderOpts := []operator.ReloaderOption{
+		operator.Shard(shard),
+		operator.Zone(topologyZone),
+	}
+	if topologyZone != "" {
+		reloaderOpts = append(reloaderOpts, operator.InzoneShard(new(cg.InzoneShardForShard(shard))))
+	}
 	operatorInitContainers = append(operatorInitContainers,
 		prompkg.BuildConfigReloader(
 			p,
@@ -267,7 +311,7 @@ func makeStatefulSetSpec(
 			true,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
+			reloaderOpts...,
 		),
 	)
 
@@ -302,8 +346,8 @@ func makeStatefulSetSpec(
 			Resources:                cpf.Resources,
 			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &corev1.SecurityContext{
-				ReadOnlyRootFilesystem:   ptr.To(true),
-				AllowPrivilegeEscalation: ptr.To(false),
+				ReadOnlyRootFilesystem:   new(true),
+				AllowPrivilegeEscalation: new(false),
 				Capabilities: &corev1.Capabilities{
 					Drop: []corev1.Capability{"ALL"},
 				},
@@ -315,8 +359,7 @@ func makeStatefulSetSpec(
 			false,
 			configReloaderVolumeMounts,
 			watchedDirectories,
-			operator.Shard(shard),
-			operator.WebConfigFile(configReloaderWebConfigFile),
+			append(reloaderOpts, operator.WebConfigFile(configReloaderWebConfigFile))...,
 		),
 	}, additionalContainers...)
 
@@ -351,10 +394,11 @@ func makeStatefulSetSpec(
 				InitContainers:                initContainers,
 				SecurityContext:               cpf.SecurityContext,
 				ServiceAccountName:            cpf.ServiceAccountName,
-				AutomountServiceAccountToken:  ptr.To(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
-				NodeSelector:                  cpf.NodeSelector,
+				AutomountServiceAccountToken:  new(ptr.Deref(cpf.AutomountServiceAccountToken, true)),
+				NodeSelector:                  cg.NodeSelectorWithTopologyZone(shard),
+				SchedulerName:                 cpf.SchedulerName,
 				PriorityClassName:             cpf.PriorityClassName,
-				TerminationGracePeriodSeconds: ptr.To(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
+				TerminationGracePeriodSeconds: new(ptr.Deref(cpf.TerminationGracePeriodSeconds, prompkg.DefaultTerminationGracePeriodSeconds)),
 				Volumes:                       volumes,
 				Tolerations:                   cpf.Tolerations,
 				Affinity:                      cpf.Affinity,
@@ -387,17 +431,21 @@ func buildServerArgs(cg *prompkg.ConfigGenerator, p *monitoringv1.Prometheus) []
 	if cg.WithMaximumVersion("2.7.0").IsCompatible() {
 		retentionTimeFlagName = "storage.tsdb.retention"
 		if p.Spec.Retention == "" {
-			retentionTimeFlagValue = defaultRetention
+			retentionTimeFlagValue = prompkg.DefaultRetention
 		}
-	} else if p.Spec.Retention == "" && p.Spec.RetentionSize == "" {
-		retentionTimeFlagValue = defaultRetention
+	} else {
+		// The command-line flags are only used by Prometheus < v3.11.0 which
+		// doesn't support percentage-based retention, hence it shouldn't
+		// prevent the default time-based retention from being applied.
+		retentionTimeFlagValue = string(prompkg.RetentionTimeOrDefault(p.Spec.Retention, p.Spec.RetentionSize, nil))
 	}
 
-	if retentionTimeFlagValue != "" {
+	// Starting with Prometheus v3.11.0, retention settings are populated in the configuration file.
+	if retentionTimeFlagValue != "" && cg.Version().LT(semver.MustParse("3.11.0")) {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: retentionTimeFlagName, Value: retentionTimeFlagValue})
 	}
 
-	if p.Spec.RetentionSize != "" {
+	if p.Spec.RetentionSize != "" && cg.Version().LT(semver.MustParse("3.11.0")) {
 		retentionSizeFlag := monitoringv1.Argument{Name: "storage.tsdb.retention.size", Value: string(p.Spec.RetentionSize)}
 		promArgs = cg.WithMinimumVersion("2.7.0").AppendCommandlineArgument(promArgs, retentionSizeFlag)
 	}
@@ -471,7 +519,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, vo
 					LocalObjectReference: corev1.LocalObjectReference{
 						Name: name,
 					},
-					Optional: ptr.To(true),
+					Optional: new(true),
 				},
 			},
 		})
@@ -493,7 +541,7 @@ func appendServerVolumes(p *monitoringv1.Prometheus, volumes []corev1.Volume, vo
 	return volumes, volumeMounts
 }
 
-func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev1.Container, []corev1.Volume, error) {
+func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compaction compactionMode) (*corev1.Container, []corev1.Volume, error) {
 	if p.Spec.Thanos == nil {
 		return nil, nil, nil
 	}
@@ -526,6 +574,11 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		httpBindAddress = "127.0.0.1"
 	}
 
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
+
 	thanosArgs := []monitoringv1.Argument{
 		{Name: "prometheus.url", Value: fmt.Sprintf("%s://%s:9090%s", cpf.PrometheusURIScheme(), c.LocalHost, path.Clean(cpf.WebRoutePrefix()))},
 		{Name: "grpc-address", Value: fmt.Sprintf("%s:10901", grpcBindAddress)},
@@ -543,6 +596,22 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		if tls.CAFile != "" {
 			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-client-ca", Value: tls.CAFile})
 		}
+
+		if tlsMinVersion := operator.TLSVersionForThanos(ptr.Deref(tls.MinVersion, "")); tlsMinVersion != "" && thanosVersion.GTE(semver.MustParse("0.37.0")) {
+			thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-min-version", Value: tlsMinVersion})
+		}
+
+		if len(tls.CipherSuites) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
+			for _, cs := range tls.CipherSuites {
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-ciphers", Value: cs})
+			}
+		}
+
+		if len(tls.Curves) > 0 && thanosVersion.GTE(semver.MustParse("0.42.0")) {
+			for _, c := range tls.Curves {
+				thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "grpc-server-tls-curves", Value: c})
+			}
+		}
 	}
 
 	container = &corev1.Container{
@@ -551,8 +620,8 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 		ImagePullPolicy:          cpf.ImagePullPolicy,
 		TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 		SecurityContext: &corev1.SecurityContext{
-			AllowPrivilegeEscalation: ptr.To(false),
-			ReadOnlyRootFilesystem:   ptr.To(true),
+			AllowPrivilegeEscalation: new(false),
+			ReadOnlyRootFilesystem:   new(true),
 			Capabilities: &corev1.Capabilities{
 				Drop: []corev1.Capability{"ALL"},
 			},
@@ -600,6 +669,19 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 				SubPath:   prompkg.SubPathForStorage(cpf.Storage),
 			},
 		)
+
+		// When compaction stays enabled on Prometheus, coordinate uploads with
+		// it through the shipper meta file: pin the meta file name that
+		// Prometheus reads via --storage.tsdb.delay-compact-file.path and allow
+		// the shipper to upload blocks even though min/max block durations
+		// differ (compaction is enabled).
+		// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+		if compaction == compactionModeDelayed {
+			thanosArgs = append(thanosArgs,
+				monitoringv1.Argument{Name: "shipper.meta-file-name", Value: thanosShipperMetaFileName},
+				monitoringv1.Argument{Name: "shipper.ignore-unequal-block-size"},
+			)
+		}
 	}
 
 	if thanos.TracingConfig != nil || len(thanos.TracingConfigFile) > 0 {
@@ -633,11 +715,6 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config) (*corev
 
 	if thanos.ReadyTimeout != "" {
 		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "prometheus.ready_timeout", Value: string(thanos.ReadyTimeout)})
-	}
-
-	thanosVersion, err := semver.ParseTolerant(ptr.Deref(thanos.Version, operator.DefaultThanosVersion))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to parse Thanos version: %w", err)
 	}
 
 	if thanos.GetConfigTimeout != "" && thanosVersion.GTE(semver.MustParse("0.29.0")) {
@@ -703,12 +780,57 @@ func queryLogFileVolume(queryLogFile string) (corev1.Volume, bool) {
 	}, true
 }
 
-func compactionDisabled(p *monitoringv1.Prometheus) bool {
-	// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/
-	// we have to turn off compaction of Prometheus if export to object
-	// storage is configured to avoid races during uploads.
-	return p.Spec.DisableCompaction ||
-		(p.Spec.Thanos != nil &&
-			(p.Spec.Thanos.ObjectStorageConfig != nil ||
-				p.Spec.Thanos.ObjectStorageConfigFile != nil))
+// compactionMode describes how the operator configures local compaction for a
+// Prometheus instance when the Thanos sidecar uploads blocks to object storage.
+type compactionMode int
+
+const (
+	// compactionModeDefault lets Prometheus manage local compaction as usual.
+	// Used when blocks are not uploaded to object storage.
+	compactionModeDefault compactionMode = iota
+
+	// compactionModeDisabled turns off local compaction (min-block-duration ==
+	// max-block-duration) so the Thanos sidecar can safely upload uncompacted
+	// blocks to object storage, as recommended by
+	// https://thanos.io/components/sidecar.md/.
+	compactionModeDisabled
+
+	// compactionModeDelayed keeps local compaction enabled and coordinates
+	// uploads with the Thanos sidecar through the shipper meta file, so that
+	// Prometheus only compacts blocks that have already been uploaded.
+	// ref: https://github.com/prometheus-operator/prometheus-operator/issues/8266
+	compactionModeDelayed
+)
+
+// compactionModeFor returns how local compaction must be configured given the
+// Thanos sidecar object-storage setup and the Prometheus and Thanos versions.
+//
+// Delayed compaction requires Prometheus >= v3.9.0
+// (--storage.tsdb.delay-compact-file.path) and Thanos >= v0.42.0
+// (--shipper.meta-file-name and --shipper.ignore-unequal-block-size); otherwise
+// compaction is disabled while uploading to object storage.
+func compactionModeFor(p *monitoringv1.Prometheus, promVersion semver.Version) (compactionMode, error) {
+	// An explicit request to disable compaction always wins.
+	if p.Spec.DisableCompaction {
+		return compactionModeDisabled, nil
+	}
+
+	// Compaction only needs special handling when the sidecar uploads blocks to
+	// object storage.
+	if p.Spec.Thanos == nil ||
+		(p.Spec.Thanos.ObjectStorageConfig == nil && p.Spec.Thanos.ObjectStorageConfigFile == nil) {
+		return compactionModeDefault, nil
+	}
+
+	thanosVersion, err := semver.ParseTolerant(ptr.Deref(p.Spec.Thanos.Version, operator.DefaultThanosVersion))
+	if err != nil {
+		return compactionModeDefault, fmt.Errorf("failed to parse Thanos version: %w", err)
+	}
+
+	if promVersion.GTE(semver.MustParse(minVersionPrometheusDelayedCompaction)) &&
+		thanosVersion.GTE(semver.MustParse(minVersionThanosDelayedCompaction)) {
+		return compactionModeDelayed, nil
+	}
+
+	return compactionModeDisabled, nil
 }

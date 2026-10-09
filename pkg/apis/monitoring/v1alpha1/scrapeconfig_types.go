@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
 package v1alpha1
 
 import (
-	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 const (
@@ -32,7 +33,7 @@ const (
 type Target string
 
 // SDFile represents a file used for service discovery
-// +kubebuilder:validation:Pattern=`^[^*]*(\*[^/]*)?\.(json|yml|yaml|JSON|YML|YAML)$`
+// +kubebuilder:validation:Pattern="^[^*]*(\\*[^/]*)?\\.(json|yml|yaml|JSON|YML|YAML)$"
 type SDFile string
 
 // NamespaceDiscovery is the configuration for discovering
@@ -43,6 +44,7 @@ type NamespaceDiscovery struct {
 	IncludeOwnNamespace *bool `json:"ownNamespace,omitempty"` // nolint:kubeapilinter
 	// names defines a list of namespaces where to watch for resources.
 	// If empty and `ownNamespace` isn't true, Prometheus watches for resources in all namespaces.
+	// +kubebuilder:validation:items:MinLength=1
 	// +listType=set
 	// +optional
 	Names []string `json:"names,omitempty"`
@@ -73,8 +75,8 @@ type Filter struct {
 	Values []string `json:"values"`
 }
 
-// +listType:=map
-// +listMapKey:=name
+// +listType=map
+// +listMapKey=name
 type Filters []Filter
 
 // +kubebuilder:validation:Enum=Pod;Endpoints;Ingress;Service;Node;EndpointSlice
@@ -163,6 +165,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ScrapeConfigSpec struct {
 	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
 	//
@@ -292,7 +295,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	HonorLabels *bool `json:"honorLabels,omitempty"` // nolint:kubeapilinter
 	// params defines optional HTTP URL parameters
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Params map[string][]string `json:"params,omitempty"`
@@ -322,23 +325,28 @@ type ScrapeConfigSpec struct {
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 	// sampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will be accepted.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`
+	LabelValueLengthLimit *int64 `json:"labelValueLengthLimit,omitempty"`
 	// bodySizeLimit defines a per-scrape limit on the size of the uncompressed
 	// response body that will be accepted by Prometheus. Targets responding with
 	// a body larger than this many bytes will cause the scrape to fail.
@@ -354,8 +362,9 @@ type ScrapeConfigSpec struct {
 	//
 	// It requires Prometheus >= v2.47.0.
 	//
+	// +kubebuilder:validation:Minimum=0
 	// +optional
-	KeepDroppedTargets *uint64 `json:"keepDroppedTargets,omitempty"`
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
 	// +kubebuilder:validation:MinItems=1
 	// +optional
@@ -391,7 +400,7 @@ type StaticConfig struct {
 	// +required
 	Targets []Target `json:"targets"`
 	// labels defines labels assigned to all metrics scraped from the targets.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	Labels map[string]string `json:"labels,omitempty"`
@@ -540,12 +549,14 @@ type ConsulSDConfig struct {
 	// +optional
 	Scheme *v1.Scheme `json:"scheme,omitempty"`
 	// services defines a list of services for which targets are retrieved. If omitted, all services are scraped.
-	// +listType:=set
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	Services []string `json:"services,omitempty"`
 	// tags defines an optional list of tags used to filter nodes for a given service. Services must contain all tags in the list.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `ServiceTags` selector instead.
-	// +listType:=set
+	// +kubebuilder:validation:items:MinLength=1
+	// +listType=set
 	// +optional
 	Tags []string `json:"tags,omitempty"`
 	// tagSeparator defines the string by which Consul tags are joined into the tag label.
@@ -555,16 +566,22 @@ type ConsulSDConfig struct {
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// nodeMeta defines the node metadata key/value pairs to filter nodes for a given service.
 	// Starting with Consul 1.14, it is recommended to use `filter` with the `NodeMeta` selector instead.
-	// +mapType:=atomic
+	// +mapType=atomic
 	// +optional
 	//nolint:kubeapilinter
 	NodeMeta map[string]string `json:"nodeMeta,omitempty"`
 	// filter defines the filter expression used to filter the catalog results.
-	// See https://www.consul.io/api-docs/catalog#list-services
+	// See https://developer.hashicorp.com/consul/api-docs/catalog#filtering
 	// It requires Prometheus >= 3.0.0.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Filter *string `json:"filter,omitempty"`
+	// healthFilter defines the filter expression used to filter the health results.
+	// See https://developer.hashicorp.com/consul/api-docs/health#filtering
+	// It requires Prometheus >= 3.11.2.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	HealthFilter *string `json:"healthFilter,omitempty"`
 	// allowStale Consul results (see https://www.consul.io/api/features/consistency.html). Will reduce load on Consul.
 	// If unset, Prometheus uses its default value.
 	// +optional
@@ -695,13 +712,14 @@ type EC2SDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
-// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK
+// +kubebuilder:validation:Enum=OAuth;ManagedIdentity;SDK;WorkloadIdentity
 type AuthenticationMethodType string
 
 const (
-	AuthMethodTypeOAuth           AuthenticationMethodType = "OAuth"
-	AuthMethodTypeManagedIdentity AuthenticationMethodType = "ManagedIdentity"
-	AuthMethodTypeSDK             AuthenticationMethodType = "SDK"
+	AuthMethodTypeOAuth            AuthenticationMethodType = "OAuth"
+	AuthMethodTypeManagedIdentity  AuthenticationMethodType = "ManagedIdentity"
+	AuthMethodTypeSDK              AuthenticationMethodType = "SDK"
+	AuthMethodTypeWorkloadIdentity AuthenticationMethodType = "WorkloadIdentity"
 )
 
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
@@ -769,7 +787,7 @@ type AzureSDConfig struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
-	// tlsConfig defies the TLS configuration applying to the target HTTP endpoint.
+	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
 }
@@ -826,6 +844,16 @@ const (
 	OpenStackRoleInstance     OpenStackRole = "Instance"
 	OpenStackRoleHypervisor   OpenStackRole = "Hypervisor"
 	OpenStackRoleLoadBalancer OpenStackRole = "LoadBalancer"
+)
+
+// OpenStackAvailability defines the availability of the endpoint to connect to.
+// +kubebuilder:validation:Enum=Public;Admin;Internal
+type OpenStackAvailability string
+
+const (
+	OpenStackAvailabilityPublic   OpenStackAvailability = "Public"
+	OpenStackAvailabilityAdmin    OpenStackAvailability = "Admin"
+	OpenStackAvailabilityInternal OpenStackAvailability = "Internal"
 )
 
 // OpenStackSDConfig allow retrieving scrape targets from OpenStack Nova instances.
@@ -889,6 +917,7 @@ type OpenStackSDConfig struct {
 	// +optional
 	ApplicationCredentialName *string `json:"applicationCredentialName,omitempty"`
 	// applicationCredentialId defines the OpenStack applicationCredentialId.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	ApplicationCredentialID *string `json:"applicationCredentialId,omitempty"`
 	// applicationCredentialSecret defines the required field if using an application
@@ -910,9 +939,8 @@ type OpenStackSDConfig struct {
 	// +optional
 	Port *int32 `json:"port,omitempty"`
 	// availability defines the availability of the endpoint to connect to.
-	// +kubebuilder:validation:Enum=Public;public;Admin;admin;Internal;internal
 	// +optional
-	Availability *string `json:"availability,omitempty"`
+	Availability *OpenStackAvailability `json:"availability,omitempty"`
 	// tlsConfig defines the TLS configuration applying to the target HTTP endpoint.
 	// +optional
 	TLSConfig *v1.SafeTLSConfig `json:"tlsConfig,omitempty"`
@@ -1039,7 +1067,6 @@ type EurekaSDConfig struct {
 // +k8s:openapi-gen=true
 type DockerSDConfig struct {
 	// host defines the address of the docker daemon.
-	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
 	// +required
 	Host string `json:"host"`
@@ -1089,15 +1116,23 @@ type DockerSDConfig struct {
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 }
 
+// HetznerRole defines the Hetzner role of entities that should be discovered.
+// +kubebuilder:validation:Enum=Hcloud;Robot
+type HetznerRole string
+
+const (
+	HetznerRoleHcloud HetznerRole = "Hcloud"
+	HetznerRoleRobot  HetznerRole = "Robot"
+)
+
 // HetznerSDConfig allow retrieving scrape targets from Hetzner Cloud API and Robot API.
 // This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 // +k8s:openapi-gen=true
 type HetznerSDConfig struct {
 	// role defines the Hetzner role of entities that should be discovered.
-	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
 	// +required
-	Role string `json:"role"`
+	Role HetznerRole `json:"role"`
 	// basicAuth defines information to use on every scrape request.
 	// +optional
 	BasicAuth *v1.BasicAuth `json:"basicAuth,omitempty"`
@@ -1146,6 +1181,7 @@ type NomadSDConfig struct {
 	AllowStale *bool `json:"allowStale,omitempty"` // nolint:kubeapilinter
 	// namespace defines the Nomad namespace to query for service discovery.
 	// When specified, only resources within this namespace will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Namespace *string `json:"namespace,omitempty"`
 	// refreshInterval defines the time after which the provided names are refreshed.
@@ -1154,6 +1190,7 @@ type NomadSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// region defines the Nomad region to query for service discovery.
 	// When specified, only resources within this region will be discovered.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	Region *string `json:"region,omitempty"`
 	// server defines the Nomad server address to connect to for service discovery.
@@ -1162,6 +1199,7 @@ type NomadSDConfig struct {
 	Server URL `json:"server"`
 	// tagSeparator defines the separator used to join multiple tags.
 	// This determines how Nomad service tags are concatenated into Prometheus labels.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	TagSeparator *string `json:"tagSeparator,omitempty"`
 	// basicAuth defines information to use on every scrape request.
@@ -1229,6 +1267,16 @@ type OVHCloudSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
+// DockerSwarmRole defines the role of Docker Swarm targets to retrieve.
+// +kubebuilder:validation:Enum=Services;Tasks;Nodes
+type DockerSwarmRole string
+
+const (
+	DockerSwarmRoleServices DockerSwarmRole = "Services"
+	DockerSwarmRoleTasks    DockerSwarmRole = "Tasks"
+	DockerSwarmRoleNodes    DockerSwarmRole = "Nodes"
+)
+
 // DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
 // +k8s:openapi-gen=true
@@ -1238,9 +1286,8 @@ type DockerSwarmSDConfig struct {
 	// +required
 	Host string `json:"host"`
 	// role of the targets to retrieve. Must be `Services`, `Tasks`, or `Nodes`.
-	// +kubebuilder:validation:Enum=Services;Tasks;Nodes
 	// +required
-	Role string `json:"role"`
+	Role DockerSwarmRole `json:"role"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// tasks and services that don't have published ports.
 	// +kubebuilder:validation:Minimum=0
@@ -1374,7 +1421,6 @@ type PuppetDBSDConfig struct {
 
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
 type LightSailSDConfig struct {
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
@@ -1387,6 +1433,7 @@ type LightSailSDConfig struct {
 	// +optional
 	SecretKey *corev1.SecretKeySelector `json:"secretKey,omitempty"`
 	// roleARN defines the AWS Role ARN, an alternative to using AWS API keys.
+	// +kubebuilder:validation:MinLength=1
 	// +optional
 	RoleARN *string `json:"roleARN,omitempty"`
 	// endpoint defines the custom endpoint to be used.
@@ -1437,7 +1484,9 @@ const (
 
 // ScalewaySDConfig configurations allow retrieving scrape targets from Scaleway instances and baremetal services.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scaleway_sd_config
-// TODO: Need to document that we will not be supporting the `_file` fields.
+//
+// Note: The `_file` variants of credential fields (e.g. `secret_key_file`)
+// from the Prometheus configuration are not supported. Use Kubernetes secrets via `secretKey` instead.
 type ScalewaySDConfig struct {
 	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1

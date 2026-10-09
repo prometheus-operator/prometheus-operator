@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -365,32 +365,33 @@ func convertSlackActionsTo(in []SlackAction) []v1alpha1.SlackAction {
 
 func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 	return v1alpha1.SlackConfig{
-		SendResolved: in.SendResolved,
-		APIURL:       convertSecretKeySelectorTo(in.APIURL),
+		SendResolved:  in.SendResolved,
+		APIURL:        convertSecretKeySelectorTo(in.APIURL),
 		AppToken:     convertSecretKeySelectorTo(in.AppToken),
 		AppURL:       (*v1alpha1.URL)(in.AppURL),
-		Channel:      in.Channel,
-		Username:     in.Username,
-		Color:        in.Color,
-		Title:        in.Title,
-		TitleLink:    in.TitleLink,
-		Pretext:      in.Pretext,
-		Text:         in.Text,
-		Fields:       convertSlackFieldsTo(in.Fields),
-		ShortFields:  in.ShortFields,
-		Footer:       in.Footer,
-		Fallback:     in.Fallback,
-		CallbackID:   in.CallbackID,
-		IconEmoji:    in.IconEmoji,
-		IconURL:      in.IconURL,
-		ImageURL:     in.ImageURL,
-		ThumbURL:     in.ThumbURL,
-		LinkNames:    in.LinkNames,
-		MrkdwnIn:     in.MrkdwnIn,
-		Actions:      convertSlackActionsTo(in.Actions),
-		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
-		Timeout:      in.Timeout,
-		MessageText:  in.MessageText,
+		Channel:       in.Channel,
+		Username:      in.Username,
+		Color:         in.Color,
+		Title:         in.Title,
+		TitleLink:     in.TitleLink,
+		Pretext:       in.Pretext,
+		Text:          in.Text,
+		Fields:        convertSlackFieldsTo(in.Fields),
+		ShortFields:   in.ShortFields,
+		Footer:        in.Footer,
+		Fallback:      in.Fallback,
+		CallbackID:    in.CallbackID,
+		IconEmoji:     in.IconEmoji,
+		IconURL:       in.IconURL,
+		ImageURL:      in.ImageURL,
+		ThumbURL:      in.ThumbURL,
+		LinkNames:     in.LinkNames,
+		MrkdwnIn:      in.MrkdwnIn,
+		Actions:       convertSlackActionsTo(in.Actions),
+		HTTPConfig:    convertHTTPConfigTo(in.HTTPConfig),
+		Timeout:       in.Timeout,
+		MessageText:   in.MessageText,
+		UpdateMessage: in.UpdateMessage,
 	}
 }
 
@@ -412,6 +413,7 @@ func convertWebhookConfigTo(in WebhookConfig) v1alpha1.WebhookConfig {
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
 		Timeout:      in.Timeout,
+		Payload:      in.Payload,
 	}
 }
 
@@ -448,6 +450,17 @@ func convertEmailConfigTo(in EmailConfig) v1alpha1.EmailConfig {
 		RequireTLS:       in.RequireTLS,
 		TLSConfig:        in.TLSConfig,
 		ForceImplicitTLS: in.ForceImplicitTLS,
+		Threading:        convertEmailThreadingConfigTo(in.Threading),
+	}
+}
+
+func convertEmailThreadingConfigTo(in *EmailThreadingConfig) *v1alpha1.EmailThreadingConfig {
+	if in == nil {
+		return nil
+	}
+
+	return &v1alpha1.EmailThreadingConfig{
+		ThreadByDate: v1alpha1.ThreadByDateType(in.ThreadByDate),
 	}
 }
 
@@ -477,6 +490,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 		Message:      in.Message,
 		URL:          in.URL,
 		URLTitle:     in.URLTitle,
+		TTL:          in.TTL,
 		Device:       in.Device,
 		Sound:        in.Sound,
 		Priority:     in.Priority,
@@ -490,16 +504,17 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 
 func convertSNSConfigTo(in SNSConfig) v1alpha1.SNSConfig {
 	return v1alpha1.SNSConfig{
-		SendResolved: in.SendResolved,
-		ApiURL:       in.ApiURL,
-		Sigv4:        in.Sigv4,
-		TopicARN:     in.TopicARN,
-		Subject:      in.Subject,
-		PhoneNumber:  in.PhoneNumber,
-		TargetARN:    in.TargetARN,
-		Message:      in.Message,
-		Attributes:   in.Attributes,
-		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
+		SendResolved:     in.SendResolved,
+		ApiURL:           in.ApiURL,
+		Sigv4:            in.Sigv4,
+		TopicARN:         in.TopicARN,
+		Subject:          in.Subject,
+		PhoneNumber:      in.PhoneNumber,
+		TargetARN:        in.TargetARN,
+		Message:          in.Message,
+		Attributes:       in.Attributes,
+		HTTPConfig:       convertHTTPConfigTo(in.HTTPConfig),
+		UseAWSHTTPClient: in.UseAWSHTTPClient,
 	}
 }
 

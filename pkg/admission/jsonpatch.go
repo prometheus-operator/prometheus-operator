@@ -1,4 +1,4 @@
-// Copyright 2019 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,5 +49,4 @@ func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val any) {
 	*patches = append(*patches,
 		fmt.Sprintf(`{"op": "replace","path": "/spec/groups/%d/rules/%d/%s/%s","value": "%v"}`,
 			gi, ri, typ, key, val))
-
 }

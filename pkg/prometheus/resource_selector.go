@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net"
 	"net/url"
 	"slices"
@@ -470,6 +471,9 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 	}
 
 	if probe.Spec.Targets.StaticConfig != nil {
+		if err := rs.validateStaticConfigLabels(probe.Spec.Targets.StaticConfig.Labels); err != nil {
+			return fmt.Errorf("targets.staticConfig.labels: %w", err)
+		}
 		if err := rs.ValidateRelabelConfigs(probe.Spec.Targets.StaticConfig.RelabelConfigs); err != nil {
 			return fmt.Errorf("targets.staticConfig.relabelConfigs: %w", err)
 		}
@@ -489,6 +493,17 @@ func (rs *ResourceSelector) checkProbe(ctx context.Context, probe *monitoringv1.
 		return fmt.Errorf("%q url specified in proberSpec is invalid, it should be of the format `hostname` or `hostname:port`: %w", probe.Spec.ProberSpec.URL, err)
 	}
 
+	return nil
+}
+
+func (rs *ResourceSelector) validateStaticConfigLabels(labels map[string]string) error {
+	keys := slices.Collect(maps.Keys(labels))
+	slices.Sort(keys)
+	for _, labelName := range keys {
+		if !isValidLabelName(labelName, rs.version) {
+			return fmt.Errorf("invalid label %q", labelName)
+		}
+	}
 	return nil
 }
 
@@ -770,11 +785,19 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 			return fmt.Errorf("field `config.Filter` is only supported for Prometheus version >= 3.0.0")
 		}
 
+		if config.HealthFilter != nil && rs.version.LT(semver.MustParse("3.11.2")) {
+			return fmt.Errorf("field `config.HealthFilter` is only supported for Prometheus version >= 3.11.2")
+		}
+
 		if err := rs.store.AddBasicAuth(ctx, sc.GetNamespace(), config.BasicAuth); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
+		}
+
+		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
 
@@ -843,9 +866,7 @@ func (rs *ResourceSelector) validateDNSSDConfigs(sc *monitoringv1alpha1.ScrapeCo
 }
 
 func (rs *ResourceSelector) validateEC2SDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-
 	for i, config := range sc.Spec.EC2SDConfigs {
-
 		if config.AccessKey != nil {
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.AccessKey); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
@@ -877,12 +898,16 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 			return fmt.Errorf("[%d]: SDK authentication is only supported from Prometheus version 2.52.0", i)
 		}
 
+		if authMethod == "WorkloadIdentity" && rs.version.LT(semver.MustParse("3.11.0")) {
+			return fmt.Errorf("[%d]: WorkloadIdentity authentication is only supported from Prometheus version 3.11.0", i)
+		}
+
 		if config.ResourceGroup != nil && rs.version.LT(semver.MustParse("2.35.0")) {
 			return fmt.Errorf("[%d]: ResourceGroup is only supported from Prometheus version >= 2.35.0", i)
 		}
 
 		// Since Prometheus uses default authentication method as "OAuth"
-		if authMethod == "ManagedIdentity" || authMethod == "SDK" {
+		if authMethod == "ManagedIdentity" || authMethod == "SDK" || authMethod == "WorkloadIdentity" {
 			continue
 		}
 
@@ -921,7 +946,6 @@ func (rs *ResourceSelector) validateAzureSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddSafeAuthorizationCredentials(ctx, sc.GetNamespace(), config.Authorization); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 
 	return nil
@@ -942,6 +966,10 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 			if _, err := rs.store.GetSecretKey(ctx, sc.GetNamespace(), *config.ApplicationCredentialSecret); err != nil {
 				return fmt.Errorf("[%d]: %w", i, err)
 			}
+		}
+
+		if err := rs.store.AddSafeTLSConfig(ctx, sc.GetNamespace(), config.TLSConfig); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 	return nil
@@ -1309,10 +1337,8 @@ func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *m
 
 func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeConfig) error {
 	for i, config := range sc.Spec.StaticConfigs {
-		for labelName := range config.Labels {
-			if !isValidLabelName(labelName, rs.version) {
-				return fmt.Errorf("[%d]: invalid label in map %s", i, labelName)
-			}
+		if err := rs.validateStaticConfigLabels(config.Labels); err != nil {
+			return fmt.Errorf("[%d]: %w", i, err)
 		}
 	}
 
@@ -1339,7 +1365,6 @@ func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *moni
 		if err := rs.store.AddOAuth2(ctx, sc.GetNamespace(), config.OAuth2); err != nil {
 			return fmt.Errorf("[%d]: %w", i, err)
 		}
-
 	}
 	return nil
 }

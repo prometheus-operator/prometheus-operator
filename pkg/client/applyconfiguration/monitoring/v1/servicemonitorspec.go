@@ -24,27 +24,95 @@ import (
 
 // ServiceMonitorSpecApplyConfiguration represents a declarative configuration of the ServiceMonitorSpec type for use
 // with apply.
+//
+// ServiceMonitorSpec defines the specification parameters for a ServiceMonitor.
 type ServiceMonitorSpecApplyConfiguration struct {
-	JobLabel                                *string                                 `json:"jobLabel,omitempty"`
-	TargetLabels                            []string                                `json:"targetLabels,omitempty"`
-	PodTargetLabels                         []string                                `json:"podTargetLabels,omitempty"`
-	Endpoints                               []EndpointApplyConfiguration            `json:"endpoints,omitempty"`
-	Selector                                *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
-	SelectorMechanism                       *monitoringv1.SelectorMechanism         `json:"selectorMechanism,omitempty"`
-	NamespaceSelector                       *NamespaceSelectorApplyConfiguration    `json:"namespaceSelector,omitempty"`
-	SampleLimit                             *uint64                                 `json:"sampleLimit,omitempty"`
-	ScrapeProtocols                         []monitoringv1.ScrapeProtocol           `json:"scrapeProtocols,omitempty"`
-	FallbackScrapeProtocol                  *monitoringv1.ScrapeProtocol            `json:"fallbackScrapeProtocol,omitempty"`
-	TargetLimit                             *uint64                                 `json:"targetLimit,omitempty"`
-	LabelLimit                              *uint64                                 `json:"labelLimit,omitempty"`
-	LabelNameLengthLimit                    *uint64                                 `json:"labelNameLengthLimit,omitempty"`
-	LabelValueLengthLimit                   *uint64                                 `json:"labelValueLengthLimit,omitempty"`
-	NativeHistogramConfigApplyConfiguration `json:",inline"`
-	KeepDroppedTargets                      *uint64                            `json:"keepDroppedTargets,omitempty"`
-	AttachMetadata                          *AttachMetadataApplyConfiguration  `json:"attachMetadata,omitempty"`
-	ScrapeClassName                         *string                            `json:"scrapeClass,omitempty"`
-	BodySizeLimit                           *monitoringv1.ByteSize             `json:"bodySizeLimit,omitempty"`
-	ServiceDiscoveryRole                    *monitoringv1.ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
+	// jobLabel selects the label from the associated Kubernetes `Service`
+	// object which will be used as the `job` label for all metrics.
+	//
+	// For example if `jobLabel` is set to `foo` and the Kubernetes `Service`
+	// object is labeled with `foo: bar`, then Prometheus adds the `job="bar"`
+	// label to all ingested metrics.
+	//
+	// If the value of this field is empty or if the label doesn't exist for
+	// the given Service, the `job` label of the metrics defaults to the name
+	// of the associated Kubernetes `Service`.
+	JobLabel *string `json:"jobLabel,omitempty"`
+	// targetLabels defines the labels which are transferred from the
+	// associated Kubernetes `Service` object onto the ingested metrics.
+	TargetLabels []string `json:"targetLabels,omitempty"`
+	// podTargetLabels defines the labels which are transferred from the
+	// associated Kubernetes `Pod` object onto the ingested metrics.
+	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
+	// endpoints defines the list of endpoints part of this ServiceMonitor.
+	// Defines how to scrape metrics from Kubernetes [Endpoints](https://kubernetes.io/docs/concepts/services-networking/service/#endpoints) objects.
+	// In most cases, an Endpoints object is backed by a Kubernetes [Service](https://kubernetes.io/docs/concepts/services-networking/service/) object with the same name and labels.
+	Endpoints []EndpointApplyConfiguration `json:"endpoints,omitempty"`
+	// selector defines the label selector to select the Kubernetes `Endpoints` objects to scrape metrics from.
+	Selector *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
+	// selectorMechanism defines the mechanism used to select the endpoints to scrape.
+	// By default, the selection process relies on relabel configurations to filter the discovered targets.
+	// Alternatively, you can opt in for role selectors, which may offer better efficiency in large clusters.
+	// Which strategy is best for your use case needs to be carefully evaluated.
+	//
+	// It requires Prometheus >= v2.17.0.
+	SelectorMechanism *monitoringv1.SelectorMechanism `json:"selectorMechanism,omitempty"`
+	// namespaceSelector defines in which namespace(s) Prometheus should discover the services.
+	// By default, the services are discovered in the same namespace as the `ServiceMonitor` object but it is possible to select pods across different/all namespaces.
+	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
+	// sampleLimit defines a per-scrape limit on the number of scraped samples
+	// that will be accepted.
+	SampleLimit *int64 `json:"sampleLimit,omitempty"`
+	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
+	// protocols supported by Prometheus in order of preference (from most to least preferred).
+	//
+	// If unset, Prometheus uses its default value.
+	//
+	// It requires Prometheus >= v2.49.0.
+	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
+	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
+	//
+	// It requires Prometheus >= v3.0.0.
+	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// targetLimit defines a limit on the number of scraped targets that will
+	// be accepted.
+	TargetLimit *int64 `json:"targetLimit,omitempty"`
+	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelLimit *int64 `json:"labelLimit,omitempty"`
+	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
+	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
+	//
+	// It requires Prometheus >= v2.27.0.
+	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
+	NativeHistogramConfigApplyConfiguration `json:""`
+	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
+	// that will be kept in memory. 0 means no limit.
+	//
+	// It requires Prometheus >= v2.47.0.
+	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
+	// attachMetadata defines additional metadata which is added to the
+	// discovered targets.
+	//
+	// It requires Prometheus >= v2.37.0.
+	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
+	// scrapeClass defines the scrape class to apply.
+	ScrapeClassName *string `json:"scrapeClass,omitempty"`
+	// bodySizeLimit when defined, bodySizeLimit specifies a job level limit on the size
+	// of uncompressed response body that will be accepted by Prometheus.
+	//
+	// It requires Prometheus >= v2.28.0.
+	BodySizeLimit *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
+	// serviceDiscoveryRole defines the service discovery role used to discover targets.
+	//
+	// If set, the value should be either "Endpoints" or "EndpointSlice".
+	// Otherwise it defaults to the value defined in the
+	// Prometheus/PrometheusAgent resource.
+	ServiceDiscoveryRole *monitoringv1.ServiceDiscoveryRole `json:"serviceDiscoveryRole,omitempty"`
 }
 
 // ServiceMonitorSpecApplyConfiguration constructs a declarative configuration of the ServiceMonitorSpec type for use with
@@ -121,7 +189,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithNamespaceSelector(value *Name
 // WithSampleLimit sets the SampleLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the SampleLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithSampleLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.SampleLimit = &value
 	return b
 }
@@ -147,7 +215,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value 
 // WithTargetLimit sets the TargetLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TargetLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.TargetLimit = &value
 	return b
 }
@@ -155,7 +223,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithTargetLimit(value uint64) *Se
 // WithLabelLimit sets the LabelLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelLimit = &value
 	return b
 }
@@ -163,7 +231,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelLimit(value uint64) *Ser
 // WithLabelNameLengthLimit sets the LabelNameLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelNameLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelNameLengthLimit = &value
 	return b
 }
@@ -171,7 +239,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithLabelNameLengthLimit(value ui
 // WithLabelValueLengthLimit sets the LabelValueLengthLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LabelValueLengthLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithLabelValueLengthLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.LabelValueLengthLimit = &value
 	return b
 }
@@ -195,7 +263,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeClassicHistograms(value
 // WithNativeHistogramBucketLimit sets the NativeHistogramBucketLimit field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the NativeHistogramBucketLimit field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithNativeHistogramBucketLimit(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.NativeHistogramConfigApplyConfiguration.NativeHistogramBucketLimit = &value
 	return b
 }
@@ -219,7 +287,7 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithConvertClassicHistogramsToNHC
 // WithKeepDroppedTargets sets the KeepDroppedTargets field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the KeepDroppedTargets field is set to the value of the last call.
-func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value uint64) *ServiceMonitorSpecApplyConfiguration {
+func (b *ServiceMonitorSpecApplyConfiguration) WithKeepDroppedTargets(value int64) *ServiceMonitorSpecApplyConfiguration {
 	b.KeepDroppedTargets = &value
 	return b
 }

@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -432,7 +432,6 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
-
 	tt := []struct {
 		scenario         string
 		version          string
@@ -447,14 +446,14 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 		scenario: "no timeout for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: new(uint32(50)),
 		},
 		expectTimeoutArg: false,
 	}, {
 		scenario: "timeout arg set if specified",
 		version:  operator.DefaultAlertmanagerVersion,
 		web: &monitoringv1.AlertmanagerWebSpec{
-			Timeout: toPtr(uint32(50)),
+			Timeout: new(uint32(50)),
 		},
 		expectTimeoutArg: true,
 	}}
@@ -462,7 +461,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
@@ -478,7 +477,6 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 }
 
 func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
-
 	tt := []struct {
 		scenario                string
 		version                 string
@@ -493,7 +491,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		scenario: "no get-concurrency for old version",
 		version:  "0.16.9",
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: new(uint32(50)),
 		},
 		expectGetConcurrencyArg: false,
 	}, {
@@ -501,7 +499,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 		version:  operator.DefaultAlertmanagerVersion,
 
 		web: &monitoringv1.AlertmanagerWebSpec{
-			GetConcurrency: toPtr(uint32(50)),
+			GetConcurrency: new(uint32(50)),
 		},
 		expectGetConcurrencyArg: true,
 	}}
@@ -509,7 +507,7 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
@@ -540,14 +538,14 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 			scenario: "no maxSilencesfor old version",
 			version:  "0.27.9",
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(int32(50)),
+				MaxSilences: new(int32(50)),
 			},
 			expectMaxSilencesArg: false,
 		}, {
 			scenario: "maxSilencesfor arg set if specified",
 			version:  operator.DefaultAlertmanagerVersion,
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxSilences: toPtr(int32(50)),
+				MaxSilences: new(int32(50)),
 			},
 			expectMaxSilencesArg: true,
 		},
@@ -556,7 +554,7 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
@@ -587,14 +585,14 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 			scenario: "no maxPerSilenceBytes old version",
 			version:  "0.27.9",
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+				MaxPerSilenceBytes: new(monitoringv1.ByteSize("5MB")),
 			},
 			expectMaxPerSilenceBytesArg: false,
 		}, {
 			scenario: "maxPerSilenceBytes arg set if specified",
 			version:  operator.DefaultAlertmanagerVersion,
 			limits: &monitoringv1.AlertmanagerLimitsSpec{
-				MaxPerSilenceBytes: toPtr(monitoringv1.ByteSize("5MB")),
+				MaxPerSilenceBytes: new(monitoringv1.ByteSize("5MB")),
 			},
 			expectMaxPerSilenceBytesArg: true,
 		},
@@ -603,7 +601,7 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 	for _, ts := range tt {
 		t.Run(ts.scenario, func(t *testing.T) {
 			a := monitoringv1.Alertmanager{}
-			a.Spec.Replicas = toPtr(int32(1))
+			a.Spec.Replicas = new(int32(1))
 
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
@@ -669,6 +667,73 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	// Expected: --cluster.peer=alertmanager-<name>-0.<serviceName>.<namespace>.svc.<clusterDomain>.:9094
 	expectedArg := "--cluster.peer=alertmanager-alertmanager-0.alertmanager-operated.monitoring.svc.custom.cluster.:9094"
 	require.True(t, slices.Contains(amArgs, expectedArg), "Cluster peer argument %v was not found in %v.", expectedArg, amArgs)
+}
+
+func TestMakeStatefulSetSpecPeerName(t *testing.T) {
+	customPeer := "my-peer-name"
+	for _, tc := range []struct {
+		name           string
+		version        string
+		clusterPeer    *string
+		expPeerName    bool
+		expPeerNameArg string
+	}{
+		{
+			name:    "no peer name before 0.30.0",
+			version: "0.29.0",
+		}, {
+			name:           "peer name after 0.30.0",
+			version:        "0.30.0",
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
+		}, {
+			name:           "custom peer name overrides default",
+			version:        "0.30.0",
+			clusterPeer:    &customPeer,
+			expPeerName:    true,
+			expPeerNameArg: "--cluster.peer-name=" + customPeer,
+		}, {
+			name:           "empty custom peer name falls back to default",
+			version:        "0.30.0",
+			clusterPeer:    new(""),
+			expPeerName:    true,
+			expPeerNameArg: fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "alertmanager",
+					Namespace: "monitoring",
+				},
+				Spec: monitoringv1.AlertmanagerSpec{
+					Replicas:        new(int32(1)),
+					Image:           new(operator.DefaultAlertmanagerImage),
+					Version:         tc.version,
+					ClusterPeerName: tc.clusterPeer,
+				},
+			}
+
+			statefulSet, err := makeStatefulSetSpec(nil, &a, Config{}, &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			amArgs := statefulSet.Template.Spec.Containers[0].Args
+			defaultArg := fmt.Sprintf("--cluster.peer-name=$(%s)", operator.PodNameEnvVar)
+			if tc.expPeerName {
+				require.Contains(t, amArgs, tc.expPeerNameArg)
+				var envVarFound bool
+				for _, envVar := range statefulSet.Template.Spec.Containers[0].Env {
+					if envVar.Name == operator.PodNameEnvVar {
+						envVarFound = true
+						break
+					}
+				}
+				require.True(t, envVarFound)
+			} else {
+				require.NotContains(t, amArgs, defaultArg)
+			}
+		})
+	}
 }
 
 func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
@@ -955,6 +1020,117 @@ func TestRetention(t *testing.T) {
 	}
 }
 
+func TestDiscardZeroDurations(t *testing.T) {
+	replicas := int32(1)
+
+	tests := []struct {
+		name          string
+		spec          monitoringv1.AlertmanagerSpec
+		expectIgnored []string
+	}{
+		{
+			name: "empty retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+			},
+		},
+		{
+			name: "positive retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "48h",
+			},
+		},
+		{
+			name: "zero retention",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0",
+			},
+			expectIgnored: []string{"retention (zero value not supported)"},
+		},
+		{
+			name: "zero retention in seconds",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:  &replicas,
+				Retention: "0s",
+			},
+			expectIgnored: []string{"retention (zero value not supported)"},
+		},
+		{
+			name: "zero cluster gossip interval",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:              &replicas,
+				ClusterGossipInterval: "0s",
+			},
+			expectIgnored: []string{"clusterGossipInterval (zero value not supported)"},
+		},
+		{
+			name: "zero cluster pushpull interval",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:                &replicas,
+				ClusterPushpullInterval: "0m",
+			},
+			expectIgnored: []string{"clusterPushpullInterval (zero value not supported)"},
+		},
+		{
+			name: "zero cluster peer timeout",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:           &replicas,
+				ClusterPeerTimeout: "0",
+			},
+			expectIgnored: []string{"clusterPeerTimeout (zero value not supported)"},
+		},
+		{
+			name: "multiple zero durations",
+			spec: monitoringv1.AlertmanagerSpec{
+				Replicas:                &replicas,
+				Retention:               "0",
+				ClusterPushpullInterval: "0s",
+			},
+			expectIgnored: []string{
+				"retention (zero value not supported)",
+				"clusterPushpullInterval (zero value not supported)",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			am := &monitoringv1.Alertmanager{Spec: test.spec}
+
+			ignored := discardZeroDurations(am)
+			require.Equal(t, test.expectIgnored, ignored)
+
+			for _, ignoredField := range test.expectIgnored {
+				switch {
+				case strings.HasPrefix(ignoredField, "retention "):
+					require.Empty(t, am.Spec.Retention)
+				case strings.HasPrefix(ignoredField, "clusterGossipInterval "):
+					require.Empty(t, am.Spec.ClusterGossipInterval)
+				case strings.HasPrefix(ignoredField, "clusterPushpullInterval "):
+					require.Empty(t, am.Spec.ClusterPushpullInterval)
+				case strings.HasPrefix(ignoredField, "clusterPeerTimeout "):
+					require.Empty(t, am.Spec.ClusterPeerTimeout)
+				default:
+					t.Fatalf("unexpected ignored field %q", ignoredField)
+				}
+			}
+		})
+	}
+}
+
+func TestIgnoredFieldsMessage(t *testing.T) {
+	require.Equal(
+		t,
+		"The following fields were ignored: retention (zero value not supported), clusterGossipInterval (zero value not supported)",
+		ignoredFieldsMessage([]string{
+			"retention (zero value not supported)",
+			"clusterGossipInterval (zero value not supported)",
+		}),
+	)
+}
+
 func TestAdditionalConfigMap(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
@@ -1073,7 +1249,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a := monitoringv1.Alertmanager{}
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
-	a.Spec.Replicas = ptr.To(int32(3))
+	a.Spec.Replicas = new(int32(3))
 
 	// assert defaults to zero if nil
 	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
@@ -1081,7 +1257,7 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
-	a.Spec.MinReadySeconds = ptr.To(int32(5))
+	a.Spec.MinReadySeconds = new(int32(5))
 	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
@@ -1129,6 +1305,7 @@ func TestPodTemplateConfig(t *testing.T) {
 		},
 	}
 	imagePullPolicy := corev1.PullAlways
+	schedulerName := "my-scheduler"
 	hostUsers := true
 	hostNetwork := false
 
@@ -1144,7 +1321,8 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostAliases:        hostAliases,
 			ImagePullSecrets:   imagePullSecrets,
 			ImagePullPolicy:    imagePullPolicy,
-			HostUsers:          ptr.To(true),
+			SchedulerName:      schedulerName,
+			HostUsers:          new(true),
 			HostNetwork:        hostNetwork,
 		},
 	}, defaultTestConfig, "", &operator.ShardedSecret{})
@@ -1156,6 +1334,7 @@ func TestPodTemplateConfig(t *testing.T) {
 	require.Equal(t, *sset.Spec.Template.Spec.SecurityContext, securityContext, "expected security context  to match, want %v, got %v", securityContext, *sset.Spec.Template.Spec.SecurityContext)
 	require.Equal(t, sset.Spec.Template.Spec.PriorityClassName, priorityClassName, "expected priority class name to match, want %s, got %s", priorityClassName, sset.Spec.Template.Spec.PriorityClassName)
 	require.Equal(t, sset.Spec.Template.Spec.ServiceAccountName, serviceAccountName, "expected service account name to match, want %s, got %s", serviceAccountName, sset.Spec.Template.Spec.ServiceAccountName)
+	require.Equal(t, sset.Spec.Template.Spec.SchedulerName, schedulerName, "expected scheduler name to match, want %s, got %s", schedulerName, sset.Spec.Template.Spec.SchedulerName)
 	require.Equal(t, len(sset.Spec.Template.Spec.HostAliases), len(hostAliases), "expected length of host aliases to match, want %d, got %d", len(hostAliases), len(sset.Spec.Template.Spec.HostAliases))
 	require.Equal(t, sset.Spec.Template.Spec.ImagePullSecrets, imagePullSecrets, "expected image pull secrets to match, want %s, got %s", imagePullSecrets, sset.Spec.Template.Spec.ImagePullSecrets)
 	require.Equal(t, *sset.Spec.Template.Spec.HostUsers, hostUsers, "expected host users to match, want %s, got %s", hostUsers, sset.Spec.Template.Spec.HostUsers)
@@ -1214,7 +1393,6 @@ func TestConfigReloader(t *testing.T) {
 			require.Equal(t, expectedArgsConfigReloader, c.Args, "expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
 		}
 	}
-
 }
 
 func TestAutomountServiceAccountToken(t *testing.T) {
@@ -1259,7 +1437,7 @@ func TestClusterLabel(t *testing.T) {
 					Namespace: "monitoring",
 				},
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas: toPtr(int32(1)),
+					Replicas: new(int32(1)),
 					Version:  ts.version,
 				},
 			}
@@ -1389,10 +1567,6 @@ func containsString(sub string) func(string) bool {
 	}
 }
 
-func toPtr[T any](t T) *T {
-	return &t
-}
-
 func TestEnableFeatures(t *testing.T) {
 	tt := []struct {
 		name             string
@@ -1425,7 +1599,7 @@ func TestEnableFeatures(t *testing.T) {
 			statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
 					Version:        test.version,
-					Replicas:       toPtr(int32(1)),
+					Replicas:       new(int32(1)),
 					EnableFeatures: test.features,
 				},
 			}, defaultTestConfig, &operator.ShardedSecret{})
@@ -1450,7 +1624,7 @@ func TestValidateAdditionalArgs(t *testing.T) {
 
 	statefulSpec, err := makeStatefulSetSpec(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{
-			Replicas:       toPtr(int32(1)),
+			Replicas:       new(int32(1)),
 			AdditionalArgs: additionalArgs,
 		},
 	}, defaultTestConfig, &operator.ShardedSecret{})
@@ -1474,7 +1648,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 				Options: []monitoringv1.PodDNSConfigOption{
 					{
 						Name:  "ndots",
-						Value: ptr.To("5"),
+						Value: new("5"),
 					},
 				},
 			},
@@ -1490,7 +1664,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 			Options: []corev1.PodDNSConfigOption{
 				{
 					Name:  "ndots",
-					Value: ptr.To("5"),
+					Value: new("5"),
 				},
 			},
 		}, sset.Spec.Template.Spec.DNSConfig, "expected dns configuration to match")
@@ -1522,8 +1696,8 @@ func TestStatefulSetEnableServiceLinks(t *testing.T) {
 		enableServiceLinks    *bool
 		expectedEnableService *bool
 	}{
-		{enableServiceLinks: ptr.To(false), expectedEnableService: ptr.To(false)},
-		{enableServiceLinks: ptr.To(true), expectedEnableService: ptr.To(true)},
+		{enableServiceLinks: new(false), expectedEnableService: new(false)},
+		{enableServiceLinks: new(true), expectedEnableService: new(true)},
 		{enableServiceLinks: nil, expectedEnableService: nil},
 	}
 
@@ -1597,13 +1771,13 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 			updateStrategy: &monitoringv1.StatefulSetUpdateStrategy{
 				Type: monitoringv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 			exp: appsv1.StatefulSetUpdateStrategy{
 				Type: appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &appsv1.RollingUpdateStatefulSetStrategy{
-					MaxUnavailable: ptr.To(intstr.FromInt(1)),
+					MaxUnavailable: new(intstr.FromInt(1)),
 				},
 			},
 		},
@@ -1649,17 +1823,17 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 		},
 		{
 			version:         "v0.29.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			expNotContains:  "dispatch.start-delay",
 		},
 		{
 			version:         "v0.30.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			expContains:     "--dispatch.start-delay=60s",
 		},
 		{
 			version:         "v0.30.0",
-			minReadySeconds: ptr.To(int32(60)),
+			minReadySeconds: new(int32(60)),
 			additionalArgs:  []monitoringv1.Argument{{Name: "dispatch.start-delay", Value: "10s"}},
 			expContains:     "--dispatch.start-delay=10s",
 		},
@@ -1667,7 +1841,7 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			a := monitoringv1.Alertmanager{
 				Spec: monitoringv1.AlertmanagerSpec{
-					Replicas:        ptr.To(int32(1)),
+					Replicas:        new(int32(1)),
 					Version:         tc.version,
 					MinReadySeconds: tc.minReadySeconds,
 					AdditionalArgs:  tc.additionalArgs,

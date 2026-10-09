@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -44,7 +43,6 @@ type namespaceGroupKind struct {
 // excludeConfig - list of ObjectReference to be excluded while enforcing adding namespace label
 // prometheusRuleLabeler - whether this should apply for Prometheus or Thanos rules.
 func New(enforcedNsLabel string, excludeConfig []monitoringv1.ObjectReference, prometheusRuleLabeler bool) *Labeler {
-
 	if enforcedNsLabel == "" {
 		return &Labeler{} // no-op labeler
 	}
@@ -99,7 +97,6 @@ func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjec
 // EnforceNamespaceLabel - adds(or modifies) namespace label to promRule labels with specified namespace
 // and also adds namespace label to all the metrics used in promRule.
 func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error {
-
 	if l.enforcedNsLabel == "" || l.IsExcluded(rule.TypeMeta, rule.ObjectMeta) {
 		return nil
 	}
@@ -115,7 +112,7 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 			rule.Spec.Groups[gi].Rules[ri].Labels[l.enforcedNsLabel] = rule.Namespace
 
 			expr := r.Expr.String()
-			parsedExpr, err := parser.ParseExpr(expr)
+			parsedExpr, err := parser.NewParser(parser.Options{}).ParseExpr(expr)
 			if err != nil {
 				return fmt.Errorf("failed to parse promql expression: %w", err)
 			}
@@ -137,7 +134,6 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 
 // GetRelabelingConfigs - append the namespace enforcement relabeling rule.
 func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []monitoringv1.RelabelConfig) []monitoringv1.RelabelConfig {
-
 	if l.IsExcluded(monitorTypeMeta, monitorObjectMeta) {
 		return rc
 	}
@@ -147,7 +143,7 @@ func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorO
 	return append(rc,
 		monitoringv1.RelabelConfig{
 			TargetLabel: l.GetEnforcedNamespaceLabel(),
-			Replacement: ptr.To(monitorObjectMeta.GetNamespace()),
+			Replacement: new(monitorObjectMeta.GetNamespace()),
 		},
 	)
 }

@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,16 @@ const (
 	// DeprecatedFieldsInUseReason is used in status conditions to indicate that
 	// the resource uses deprecated fields.
 	DeprecatedFieldsInUseReason = "DeprecatedFieldsInUse"
+
+	// IgnoredFieldsReason is used in status conditions to indicate that one or
+	// more spec fields were ignored because their values aren't supported.
+	IgnoredFieldsReason = "IgnoredFields"
+
+	// UnbalancedTopologyShardingReason is used in status conditions to indicate
+	// that topology sharding is configured with a number of shards that isn't a
+	// multiple of the number of topology zones. In that case, some targets are
+	// scraped by more than one shard, which results in duplicated samples.
+	UnbalancedTopologyShardingReason = "UnbalancedTopologySharding"
 )
 
 // StatusGetter represents a workload resource implementing the interface
@@ -75,6 +85,7 @@ func StatusPoller(ctx context.Context, sr StatusReconciler) {
 				replicas := resource.ExpectedReplicas()
 				if replicas != resource.GetUpdatedReplicas() || replicas != resource.GetAvailableReplicas() {
 					sr.RefreshStatusFor(resource)
+					return
 				}
 
 				for _, cond := range resource.GetConditions() {

@@ -22,9 +22,13 @@ import (
 
 // TimeRangeApplyConfiguration represents a declarative configuration of the TimeRange type for use
 // with apply.
+//
+// TimeRange defines a start and end time in 24hr format
 type TimeRangeApplyConfiguration struct {
+	// startTime defines the start time in 24hr format.
 	StartTime *monitoringv1alpha1.Time `json:"startTime,omitempty"`
-	EndTime   *monitoringv1alpha1.Time `json:"endTime,omitempty"`
+	// endTime defines the end time in 24hr format.
+	EndTime *monitoringv1alpha1.Time `json:"endTime,omitempty"`
 }
 
 // TimeRangeApplyConfiguration constructs a declarative configuration of the TimeRange type for use with

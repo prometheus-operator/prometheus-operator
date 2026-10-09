@@ -23,13 +23,26 @@ import (
 
 // ConditionApplyConfiguration represents a declarative configuration of the Condition type for use
 // with apply.
+//
+// Condition represents the state of the resources associated with the
+// Prometheus, Alertmanager or ThanosRuler resource.
 type ConditionApplyConfiguration struct {
-	Type               *monitoringv1.ConditionType   `json:"type,omitempty"`
-	Status             *monitoringv1.ConditionStatus `json:"status,omitempty"`
-	LastTransitionTime *metav1.Time                  `json:"lastTransitionTime,omitempty"`
-	Reason             *string                       `json:"reason,omitempty"`
-	Message            *string                       `json:"message,omitempty"`
-	ObservedGeneration *int64                        `json:"observedGeneration,omitempty"`
+	// type of the condition being reported.
+	Type *monitoringv1.ConditionType `json:"type,omitempty"`
+	// status of the condition.
+	Status *monitoringv1.ConditionStatus `json:"status,omitempty"`
+	// lastTransitionTime is the time of the last update to the current status property.
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	// reason for the condition's last transition.
+	Reason *string `json:"reason,omitempty"`
+	// message defines human-readable message indicating details for the condition's last transition.
+	Message *string `json:"message,omitempty"`
+	// observedGeneration defines the .metadata.generation that the
+	// condition was set based upon. For instance, if `.metadata.generation` is
+	// currently 12, but the `.status.conditions[].observedGeneration` is 9, the
+	// condition is out of date with respect to the current state of the
+	// instance.
+	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
 
 // ConditionApplyConfiguration constructs a declarative configuration of the Condition type for use with

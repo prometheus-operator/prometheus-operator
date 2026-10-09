@@ -1,4 +1,4 @@
-// Copyright 2024 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package goruntime
+package operator
 
 import (
-	"fmt"
-	"log/slog"
-	"strings"
-
-	"go.uber.org/automaxprocs/maxprocs"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
-func SetMaxProcs(logger *slog.Logger) {
-	l := func(format string, a ...any) {
-		logger.Info(fmt.Sprintf(strings.TrimPrefix(format, "maxprocs: "), a...))
+// TLSVersionForThanos translates TLSVersion values to values supported by
+// Thanos. If the value isn't supported, it returns an empty string.
+func TLSVersionForThanos(v monitoringv1.TLSVersion) string {
+	switch v {
+	case monitoringv1.TLSVersion10:
+		return "1.0"
+	case monitoringv1.TLSVersion11:
+		return "1.1"
+	case monitoringv1.TLSVersion12:
+		return "1.2"
+	case monitoringv1.TLSVersion13:
+		return "1.3"
 	}
 
-	if _, err := maxprocs.Set(maxprocs.Logger(l)); err != nil {
-		logger.Warn("Failed to set GOMAXPROCS automatically", "err", err)
-	}
+	return ""
 }

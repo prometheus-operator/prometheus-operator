@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ func (f *Framework) PatchThanosRuler(ctx context.Context, name, ns string, spec 
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -114,7 +114,7 @@ func (f *Framework) UpdateThanosRulerReplicasAndWaitUntilReady(ctx context.Conte
 		name,
 		ns,
 		monitoringv1.ThanosRulerSpec{
-			Replicas: ptr.To(replicas),
+			Replicas: new(replicas),
 		},
 	)
 }

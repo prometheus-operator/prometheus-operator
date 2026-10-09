@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -345,7 +345,6 @@ func (rr *ResourceReconciler) hasStateChanged(old, cur metav1.Object) bool {
 			"object", KeyForObject(cur),
 		)
 		return true
-
 	}
 	if !reflect.DeepEqual(old.GetAnnotations(), cur.GetAnnotations()) {
 		rr.logger.Debug("different annotations",
@@ -371,7 +370,9 @@ func (rr *ResourceReconciler) objectKey(obj any) (string, bool) {
 	return k, true
 }
 
-func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
+// FindOwner returns the resource owning the given object.
+// For example it can return the Prometheus resource owning a StatefulSet.
+func (rr *ResourceReconciler) FindOwner(obj metav1.Object) metav1.Object {
 	for _, or := range obj.GetOwnerReferences() {
 		if !ptr.Deref(or.Controller, false) {
 			continue
@@ -394,6 +395,7 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 		o, err := meta.Accessor(owner)
 		if err != nil {
 			rr.logger.Error("failed to get owner meta", "err", err, "gvk", owner.GetObjectKind().GroupVersionKind().String(), "namespace", obj.GetNamespace(), "name", obj.GetName(), "kind", rr.resourceKind)
+			return nil
 		}
 
 		return o
@@ -405,7 +407,6 @@ func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
 
 // OnAdd implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnAdd(obj any, _ bool) {
-
 	switch v := obj.(type) {
 	case *appsv1.DaemonSet:
 		rr.onDaemonSetAdd(v)
@@ -467,11 +468,19 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	if !k8s.HasStatusCleanupFinalizer(mCur) && rr.DeletionInProgress(mCur) {
+	deletionInProgress := rr.DeletionInProgress(mCur)
+
+	if !k8s.HasStatusCleanupFinalizer(mCur) && deletionInProgress {
 		return
 	}
 
-	if !rr.hasStateChanged(mOld, mCur) {
+	// The object is being deleted and still carries the status cleanup
+	// finalizer: always reconcile it, even if its generation, labels and
+	// annotations haven't changed, so that the controller can run its
+	// deletion logic (e.g. removing the finalizer). We can't rely on
+	// comparing the old and current deletion timestamps here because the
+	// informer may have missed the update event that set it.
+	if !deletionInProgress && !rr.hasStateChanged(mOld, mCur) {
 		return
 	}
 
@@ -513,7 +522,7 @@ func (rr *ResourceReconciler) OnDelete(obj any) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
-	obj := rr.resolve(ss)
+	obj := rr.FindOwner(ss)
 	if obj == nil {
 		return
 	}
@@ -525,7 +534,7 @@ func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
 }
 
 func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
-	obj := rr.resolve(ds)
+	obj := rr.FindOwner(ds)
 	if obj == nil {
 		return
 	}
@@ -546,7 +555,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 		return
 	}
 
-	obj := rr.resolve(cur)
+	obj := rr.FindOwner(cur)
 	if obj == nil {
 		return
 	}
@@ -576,7 +585,7 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 		return
 	}
 
-	obj := rr.resolve(cur)
+	obj := rr.FindOwner(cur)
 	if obj == nil {
 		return
 	}
@@ -595,7 +604,7 @@ func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
-	obj := rr.resolve(ss)
+	obj := rr.FindOwner(ss)
 	if obj == nil {
 		return
 	}
@@ -607,7 +616,7 @@ func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
 }
 
 func (rr *ResourceReconciler) onDaemonSetDelete(ds *appsv1.DaemonSet) {
-	obj := rr.resolve(ds)
+	obj := rr.FindOwner(ds)
 	if obj == nil {
 		return
 	}

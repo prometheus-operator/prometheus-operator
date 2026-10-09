@@ -1,5 +1,5 @@
 ---
-weight: 212
+weight: 213
 toc: true
 title: Troubleshooting
 menu:
@@ -286,12 +286,12 @@ If the `--controller-id` flag is not set, the operator will try to reconcile all
 
 The following table illustrates the behavior based on whether the `--controller-id` flag is set and whether the `operator.prometheus.io/controller-id` annotation is present on the resources:
 
-| Operator started with with the `--controller-id` flag | Resource with the `operator.prometheus.io/controller-id` annotation | Behavior                                                                            |
-|-------------------------------------------------------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| Yes                                                   | Yes                                                                 | The operator reconciles the resource only if the annotation value matches the flag. |
-| Yes                                                   | No                                                                  | The operator does not reconcile the resource                                        |
-| No                                                    | Yes                                                                 | The operator does not reconcile the resource.                                       |
-| No                                                    | No                                                                  | The operator reconciles the resource.                                               |
+| Operator started with the `--controller-id` flag | Resource with the `operator.prometheus.io/controller-id` annotation | Behavior                                                                            |
+|--------------------------------------------------|---------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| Yes                                              | Yes                                                                 | The operator reconciles the resource only if the annotation value matches the flag. |
+| Yes                                              | No                                                                  | The operator does not reconcile the resource                                        |
+| No                                               | Yes                                                                 | The operator does not reconcile the resource.                                       |
+| No                                               | No                                                                  | The operator reconciles the resource.                                               |
 
 ### Configuring Prometheus/PrometheusAgent for Mimir and Grafana Cloud
 
@@ -353,6 +353,32 @@ spec:
     - regex: prometheus_replica
       action: LabelDrop
 ```
+
+### StatefulSet rollout stuck after a bad update
+
+When a StatefulSet update results in a broken pod (e.g. due to a misconfigured image or invalid configuration), the rollout can get stuck. As described in the [Kubernetes documentation](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#forced-rollback), the StatefulSet controller won't roll back to the previous revision automatically when using the `RollingUpdate` strategy. The broken pod stays in a non-ready state with a revision that doesn't match either the current or the desired update revision, and the rollout stalls.
+
+In this situation, the Prometheus Operator can be configured to automatically repair the stuck StatefulSet by evicting or deleting the broken pod. This is controlled via the `--repair-policy-for-statefulsets` CLI argument:
+
+- `none` (default): the operator does not attempt any automatic repair. You must manually intervene to delete or evict the stuck pod.
+- `evict`: the operator evicts the stuck pod using the [Eviction API](https://kubernetes.io/docs/concepts/scheduling-eviction/api-eviction/). This respects PodDisruptionBudgets and is the safer option.
+- `delete`: the operator deletes the stuck pod directly, bypassing PodDisruptionBudgets. Use this when eviction is blocked (e.g. by a PodDisruptionBudget that cannot be satisfied).
+
+The operator repairs at most one pod per reconciliation loop, iterating pods in reverse ordinal order. Only pods whose revision matches neither the current nor the desired update revision are considered for repair. Pods already being deleted are skipped.
+
+To enable automatic repair, start the operator with the desired policy, for example:
+
+```
+--repair-policy-for-statefulsets=evict
+```
+
+If you prefer to handle the repair manually, identify the stuck pod and delete it:
+
+```sh
+kubectl delete pod -n <namespace> <pod-name>
+```
+
+After deleting the pod, the StatefulSet controller will recreate it with the current revision. If the underlying issue (e.g. bad image or broken config) has been fixed, the rollout will proceed normally.
 
 ### High CPU usage by the Prometheus Operator
 

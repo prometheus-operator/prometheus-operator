@@ -19,6 +19,13 @@ package v1
 // ExemplarsApplyConfiguration represents a declarative configuration of the Exemplars type for use
 // with apply.
 type ExemplarsApplyConfiguration struct {
+	// maxSize defines the maximum number of exemplars stored in memory for all series.
+	//
+	// exemplar-storage itself must be enabled using the `spec.enableFeature`
+	// option for exemplars to be scraped in the first place.
+	//
+	// If not set, Prometheus uses its default value. A value of zero or less
+	// than zero disables the storage.
 	MaxSize *int64 `json:"maxSize,omitempty"`
 }
 

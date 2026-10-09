@@ -75,3 +75,7 @@ scrape_configs:
     replacement: tenant2
   - target_label: namespace
     replacement: default
+storage:
+  tsdb:
+    retention:
+      time: 24h

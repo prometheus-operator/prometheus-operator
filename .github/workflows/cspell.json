@@ -424,6 +424,14 @@
     "FIPSSTS",
     "checkmark",
     "STARTTLS",
-    "MLKEM"
+    "MLKEM",
+    "slashexx",
+    "Errorf",
+    "prompkg",
+    "nutmos",
+    "nattapong",
+    "AWSHTTP",
+    "nodev",
+    "nosuid"
   ]
 }

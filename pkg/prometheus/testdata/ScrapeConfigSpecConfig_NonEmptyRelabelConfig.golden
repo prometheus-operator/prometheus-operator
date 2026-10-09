@@ -16,3 +16,7 @@ scrape_configs:
     regex: (.+)(?::d+)
     replacement: $1:9537
     action: replace
+storage:
+  tsdb:
+    retention:
+      time: 24h

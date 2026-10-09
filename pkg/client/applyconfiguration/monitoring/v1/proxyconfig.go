@@ -23,10 +23,23 @@ import (
 // ProxyConfigApplyConfiguration represents a declarative configuration of the ProxyConfig type for use
 // with apply.
 type ProxyConfigApplyConfiguration struct {
-	ProxyURL             *string                               `json:"proxyUrl,omitempty"`
-	NoProxy              *string                               `json:"noProxy,omitempty"`
-	ProxyFromEnvironment *bool                                 `json:"proxyFromEnvironment,omitempty"`
-	ProxyConnectHeader   map[string][]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
+	// proxyUrl defines the HTTP proxy server to use.
+	ProxyURL *string `json:"proxyUrl,omitempty"`
+	// noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
+	// that should be excluded from proxying. IP and domain names can
+	// contain port numbers.
+	//
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+	NoProxy *string `json:"noProxy,omitempty"`
+	// proxyFromEnvironment defines whether to use the proxy configuration defined by environment variables (HTTP_PROXY, HTTPS_PROXY, and NO_PROXY).
+	//
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+	ProxyFromEnvironment *bool `json:"proxyFromEnvironment,omitempty"`
+	// proxyConnectHeader optionally specifies headers to send to
+	// proxies during CONNECT requests.
+	//
+	// It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
+	ProxyConnectHeader map[string][]corev1.SecretKeySelector `json:"proxyConnectHeader,omitempty"`
 }
 
 // ProxyConfigApplyConfiguration constructs a declarative configuration of the ProxyConfig type for use with

@@ -10,6 +10,7 @@ local defaults = {
     requests: { cpu: '', memory: '' },
   },
   enableReloaderProbes: false,
+  repairPolicy: '',  // can be 'none' (default), 'delete' or 'evict'
   goGC: '30',
   port: 8080,
   resources: {
@@ -78,49 +79,87 @@ function(params) {
       labels: po.config.commonLabels,
     },
     rules: [
+             // The operator needs the patch permission on the workload
+             // resources to add/remove its finalizer.
              {
                apiGroups: ['monitoring.coreos.com'],
                resources: [
                  'alertmanagers',
                  'alertmanagers/finalizers',
-                 'alertmanagers/status',
-                 'alertmanagerconfigs',
-                 'prometheuses',
-                 'prometheuses/finalizers',
-                 'prometheuses/status',
                  'prometheusagents',
                  'prometheusagents/finalizers',
-                 'prometheusagents/status',
+                 'prometheuses',
+                 'prometheuses/finalizers',
                  'thanosrulers',
                  'thanosrulers/finalizers',
-                 'thanosrulers/status',
-                 'scrapeconfigs',
-                 'scrapeconfigs/status',
-                 'servicemonitors',
-                 'servicemonitors/status',
-                 'podmonitors',
-                 'podmonitors/status',
-                 'probes',
-                 'probes/status',
-                 'prometheusrules',
-                 'prometheusrules/status',
                ],
-               verbs: ['*'],
+               verbs: ['patch'],
+             },
+             // The operator needs update the permission on the workload's
+             // finalizers when the OwnerReferencesPermissionEnforcement
+             // admission controller is enabled (it is disabled in vanilla
+             // Kubernetes but enabled for some distributions, e.g. OpenShift).
+             // See https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#ownerreferencespermissionenforcement.
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
+                 'alertmanagers/finalizers',
+                 'prometheusagents/finalizers',
+                 'prometheuses/finalizers',
+                 'thanosrulers/finalizers',
+               ],
+               verbs: ['update'],
+             },
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
+                 'alertmanagers/status',
+                 'alertmanagerconfigs/status',
+                 'podmonitors/status',
+                 'probes/status',
+                 'prometheuses/status',
+                 'prometheusagents/status',
+                 'prometheusrules/status',
+                 'scrapeconfigs/status',
+                 'servicemonitors/status',
+                 'thanosrulers/status',
+               ],
+               verbs: ['create', 'update', 'patch', 'delete'],
+             },
+             // The operator needs read permissions on all monitoring
+             // resources.
+             {
+               apiGroups: ['monitoring.coreos.com'],
+               resources: [
+                 'alertmanagers',
+                 'alertmanagerconfigs',
+                 'podmonitors',
+                 'probes',
+                 'prometheusagents',
+                 'prometheuses',
+                 'prometheusrules',
+                 'servicemonitors',
+                 'scrapeconfigs',
+                 'thanosrulers',
+               ],
+               verbs: ['get', 'list', 'watch'],
              },
              {
                apiGroups: ['apps'],
                resources: ['statefulsets'],
-               verbs: ['*'],
+               verbs: ['get', 'list', 'watch', 'create', 'update', 'patch', 'delete'],
              },
              {
                apiGroups: [''],
                resources: ['configmaps', 'secrets'],
-               verbs: ['*'],
+               verbs: ['get', 'list', 'watch', 'create', 'update', 'delete'],
              },
+             // The operator needs the 'list' permission on pods to reconcile
+             // the status of workload resources.
              {
                apiGroups: [''],
                resources: ['pods'],
-               verbs: ['list', 'delete'],
+               verbs: ['list'],
              },
              {
                apiGroups: [''],
@@ -132,30 +171,41 @@ function(params) {
              },
              {
                apiGroups: [''],
-               resources: ['nodes'],
-               verbs: ['list', 'watch'],
-             },
-             {
-               apiGroups: [''],
                resources: ['namespaces'],
                verbs: ['get', 'list', 'watch'],
              },
+             // The operator emits events during reconciliations.
              {
                apiGroups: ['events.k8s.io'],
                resources: ['events'],
                verbs: ['patch', 'create'],
              },
+             // TODO: remove?
              {
                apiGroups: ['networking.k8s.io'],
                resources: ['ingresses'],
                verbs: ['get', 'list', 'watch'],
              },
+             // The operator needs to validate that a storage class exists
+             // during workload reconciliation.
              {
                apiGroups: ['storage.k8s.io'],
                resources: ['storageclasses'],
                verbs: ['get'],
              },
            ] + (
+             if po.config.kubeletEndpointsEnabled || po.config.kubeletEndpointSliceEnabled then
+               // The kubelet controller needs the read permissions on the Node resources.
+               [
+                 {
+                   apiGroups: [''],
+                   resources: ['nodes'],
+                   verbs: ['list', 'watch'],
+                 },
+               ]
+             else
+               []
+           ) + (
              if po.config.kubeletEndpointsEnabled then
                [
                  {
@@ -182,11 +232,35 @@ function(params) {
                ]
              else
                []
+           )
+           + (
+             if po.config.repairPolicy == 'evict' then
+               [
+                 {
+                   apiGroups: [''],
+                   resources: [
+                     'pods/eviction',
+                   ],
+                   verbs: ['create'],
+                 },
+               ]
+             else if po.config.repairPolicy == 'delete' then
+               [
+                 // The operator needs the 'delete' permission on pods to
+                 // repair broken StatefulSet rollouts.
+                 {
+                   apiGroups: [''],
+                   resources: ['pods'],
+                   verbs: ['delete'],
+                 },
+               ]
+             else
+               []
            ),
   },
 
   deployment:
-    local reloaderResourceArg(arg, value) =
+    local optionalArg(arg, value) =
       if value != '' then [arg + '=' + value] else [];
     local enableReloaderProbesArg(value) =
       if value == true then ['--enable-config-reloader-probes=true'] else [];
@@ -202,11 +276,12 @@ function(params) {
             ] +
             [std.format('--kubelet-endpoints=%s', po.config.kubeletEndpointsEnabled)] +
             [std.format('--kubelet-endpointslice=%s', po.config.kubeletEndpointSliceEnabled)] +
-            reloaderResourceArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
-            reloaderResourceArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
-            reloaderResourceArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
-            reloaderResourceArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory) +
-            enableReloaderProbesArg(po.config.enableReloaderProbes),
+            optionalArg('--config-reloader-cpu-limit', po.config.configReloaderResources.limits.cpu) +
+            optionalArg('--config-reloader-memory-limit', po.config.configReloaderResources.limits.memory) +
+            optionalArg('--config-reloader-cpu-request', po.config.configReloaderResources.requests.cpu) +
+            optionalArg('--config-reloader-memory-request', po.config.configReloaderResources.requests.memory) +
+            enableReloaderProbesArg(po.config.enableReloaderProbes) +
+            optionalArg('--repair-policy-for-statefulsets', po.config.repairPolicy),
       ports: [{
         containerPort: po.config.port,
         name: 'http',

@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
@@ -276,7 +275,7 @@ func testTRMinReadySeconds(t *testing.T) {
 	kubeClient := framework.KubeClient
 
 	thanosRuler := framework.MakeBasicThanosRuler("test-thanos", 1, "http://test.example.com")
-	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(5))
+	thanosRuler.Spec.MinReadySeconds = new(int32(5))
 	thanosRuler, err := framework.CreateThanosRulerAndWaitUntilReady(context.Background(), ns, thanosRuler)
 	require.NoError(t, err)
 
@@ -284,7 +283,7 @@ func testTRMinReadySeconds(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(5), trSS.Spec.MinReadySeconds)
 
-	thanosRuler.Spec.MinReadySeconds = ptr.To(int32(10))
+	thanosRuler.Spec.MinReadySeconds = new(int32(10))
 	_, err = framework.PatchThanosRulerAndWaitUntilReady(context.Background(), thanosRuler.Name, ns, thanosRuler.Spec)
 	require.NoError(t, err)
 
@@ -473,7 +472,7 @@ func testTRCheckStorageClass(t *testing.T) {
 			Storage: &monitoringv1.StorageSpec{
 				VolumeClaimTemplate: monitoringv1.EmbeddedPersistentVolumeClaim{
 					Spec: corev1.PersistentVolumeClaimSpec{
-						StorageClassName: ptr.To("unknown-storage-class"),
+						StorageClassName: new("unknown-storage-class"),
 						Resources: corev1.VolumeResourceRequirements{
 							Requests: corev1.ResourceList{
 								corev1.ResourceStorage: resource.MustParse("200Mi"),
@@ -575,9 +574,9 @@ func testThanosRulerStateless(t *testing.T) {
 	// remote-write receiver for Thanos ruler.
 	prometheus := framework.MakeBasicPrometheus(ns, name, name, 1)
 	prometheus.Spec.EnableRemoteWriteReceiver = true
-	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
-	// Ensure that the Promehteus resource selects no rule.
+	// Ensure that Prometheus does not evaluate rules; only Thanos Ruler should.
 	prometheus.Spec.RuleSelector = nil
+	prometheus, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, prometheus)
 	require.NoError(t, err)
 
 	promSVC := framework.MakePrometheusService(prometheus.Name, name, corev1.ServiceTypeClusterIP)
@@ -605,7 +604,7 @@ func testThanosRulerStateless(t *testing.T) {
 	thanos.Spec.EvaluationInterval = "1s"
 	thanos.Spec.RemoteWrite = []monitoringv1.RemoteWriteSpec{
 		{
-			URL: fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port),
+			URL: monitoringv1.URL(fmt.Sprintf("http://%s.%s.svc:%d/api/v1/write", promSVC.Name, ns, promSVC.Spec.Ports[0].Port)),
 			// Ensure that samples are sent ASAP to the remote write receiver.
 			QueueConfig: &monitoringv1.QueueConfig{
 				MaxSamplesPerSend: 1,

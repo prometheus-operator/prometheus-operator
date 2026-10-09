@@ -18,10 +18,24 @@ package v1beta1
 
 // SlackConfirmationFieldApplyConfiguration represents a declarative configuration of the SlackConfirmationField type for use
 // with apply.
+//
+// SlackConfirmationField protect users from destructive actions or
+// particularly distinguished decisions by asking them to confirm their button
+// click one more time.
+// See https://api.slack.com/docs/interactive-message-field-guide#confirmation_fields
+// for more information.
 type SlackConfirmationFieldApplyConfiguration struct {
-	Text        *string `json:"text,omitempty"`
-	Title       *string `json:"title,omitempty"`
-	OkText      *string `json:"okText,omitempty"`
+	// text defines the main message displayed in the confirmation dialog.
+	// This should be a clear question or statement asking the user to confirm their action.
+	Text *string `json:"text,omitempty"`
+	// title defines the title text displayed at the top of the confirmation dialog.
+	// When not specified, a default title will be used.
+	Title *string `json:"title,omitempty"`
+	// okText defines the label for the confirmation button in the dialog.
+	// When not specified, defaults to "Okay". This button proceeds with the action.
+	OkText *string `json:"okText,omitempty"`
+	// dismissText defines the label for the cancel button in the dialog.
+	// When not specified, defaults to "Cancel". This button cancels the action.
 	DismissText *string `json:"dismissText,omitempty"`
 }
 

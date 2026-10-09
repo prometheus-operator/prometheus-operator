@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,14 +22,14 @@ import (
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
-	DefaultAlertmanagerVersion = "v0.31.1"
+	DefaultAlertmanagerVersion = "v0.34.0"
 	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager.
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager.
 	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 
 	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector.
-	DefaultThanosVersion = "v0.41.0"
+	DefaultThanosVersion = "v0.42.4"
 	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
 	// storage collector.
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
@@ -89,7 +89,13 @@ var (
 		"v3.4.0",
 		"v3.4.1",
 		"v3.4.2",
+		// The v3.5 is a long-term support release.
 		"v3.5.0",
+		"v3.5.1",
+		"v3.5.2",
+		"v3.5.3",
+		"v3.5.4",
+		"v3.5.5",
 		"v3.6.0",
 		"v3.7.0",
 		"v3.7.1",
@@ -100,6 +106,18 @@ var (
 		"v3.9.0",
 		"v3.9.1",
 		"v3.10.0",
+		"v3.11.0",
+		"v3.11.1",
+		"v3.11.2",
+		"v3.11.3",
+		"v3.12.0",
+		// The v3.13 is a long-term support release.
+		"v3.13.0",
+		"v3.13.1",
+		"v3.13.2",
+		"v3.13.3",
+		"v3.13.4",
+		"v3.14.0",
 	}
 )
 

@@ -86,6 +86,28 @@ For the full list of supported fields and service discoveries, check the [API do
 If you have an interest in another service discovery mechanism or you see something missing in the implementation, please
 [open an issue](https://github.com/prometheus-operator/prometheus-operator/issues).
 
+## `kubernetes_sd`
+
+`kubernetes_sd` discovers scrape targets from the Kubernetes API. The `role` field selects what kind of object to discover; valid values are `Node`, `Pod`, `Service`, `Endpoints`, `EndpointSlice` and `Ingress`. Note that the value is capitalized.
+
+When Prometheus runs inside the cluster, which is the usual case with prometheus-operator, the API server address and credentials are discovered automatically, so a minimal configuration only needs a `role`. For example, to discover the cluster nodes:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: kubernetes-sd
+  namespace: my-namespace
+  labels:
+    prometheus: system-monitoring-prometheus
+    app.kubernetes.io/name: scrape-config-example
+spec:
+  kubernetesSDConfigs:
+    - role: Node
+```
+
+`role` is the only required field. Use `namespaces.names` to restrict discovery to specific namespaces and `selectors` to filter the discovered objects. As with a Prometheus `kubernetes_sd_config`, discovered targets normally need `relabelings` to derive the scrape address and target labels from the discovery metadata. See the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.KubernetesSDConfig) for the full list of fields.
+
 ## `static_config`
 
 For example, to scrape the target located at `http://prometheus.demo.do.prometheus.io:9090`, use the following:

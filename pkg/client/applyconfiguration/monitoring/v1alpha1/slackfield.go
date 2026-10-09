@@ -18,10 +18,22 @@ package v1alpha1
 
 // SlackFieldApplyConfiguration represents a declarative configuration of the SlackField type for use
 // with apply.
+//
+// SlackField configures a single Slack field that is sent with each notification.
+// Each field must contain a title, value, and optionally, a boolean value to indicate if the field
+// is short enough to be displayed next to other fields designated as short.
+// See https://api.slack.com/docs/message-attachments#fields for more information.
 type SlackFieldApplyConfiguration struct {
+	// title defines the label or header text displayed for this field.
+	// This appears as bold text above the field value in the Slack message.
 	Title *string `json:"title,omitempty"`
+	// value defines the content or data displayed for this field.
+	// This appears below the title and can contain plain text or Slack markdown.
 	Value *string `json:"value,omitempty"`
-	Short *bool   `json:"short,omitempty"`
+	// short determines whether this field can be displayed alongside other short fields.
+	// When true, Slack may display this field side by side with other short fields.
+	// When false or not specified, the field takes the full width of the message.
+	Short *bool `json:"short,omitempty"`
 }
 
 // SlackFieldApplyConfiguration constructs a declarative configuration of the SlackField type for use with

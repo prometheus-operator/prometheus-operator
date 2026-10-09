@@ -1,0 +1,13 @@
+receivers:
+- name: ""
+  webhook_configs:
+  - url: http://example.com/webhook
+    payload:
+      foo: bar
+      foo1:
+      - bar2
+      - bar3
+      foo2:
+        foo21: bar21
+        foo22: bar22
+templates: []

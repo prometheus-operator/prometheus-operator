@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,7 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -235,15 +234,11 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 		return nil, fmt.Errorf("alertmanager %v/%v failed to become available: %w", a.Namespace, a.Name, err)
 	}
 
-	// Check that all pods report the expected number of peers.
-	isAMHTTPS := a.Spec.Web != nil && a.Spec.Web.TLSConfig != nil
-
 	for i := range replicas {
-		name := fmt.Sprintf("alertmanager-%v-%v", a.Name, strconv.Itoa(i))
-		if err := f.WaitForAlertmanagerPodInitialized(ctx, a.Namespace, name, replicas, a.Spec.ForceEnableClusterMode, isAMHTTPS); err != nil {
+		if err := f.WaitForAlertmanagerClusterReady(ctx, a, i); err != nil {
 			return nil, fmt.Errorf(
-				"failed to wait for an Alertmanager cluster (%s) with %d instances to become ready: %w",
-				name, replicas, err,
+				"%s/%s: alertmanager pod at ordinal %d: %w",
+				a.Namespace, a.Name, i, err,
 			)
 		}
 	}
@@ -285,7 +280,7 @@ func (f *Framework) PatchAlertmanager(ctx context.Context, name, ns string, spec
 		types.ApplyPatchType,
 		b,
 		metav1.PatchOptions{
-			Force:        ptr.To(true),
+			Force:        new(true),
 			FieldManager: "e2e-test",
 		},
 	)
@@ -303,7 +298,7 @@ func (f *Framework) UpdateAlertmanagerReplicasAndWaitUntilReady(ctx context.Cont
 		name,
 		ns,
 		monitoringv1.AlertmanagerSpec{
-			Replicas: ptr.To(replicas),
+			Replicas: new(replicas),
 		},
 	)
 }
@@ -364,46 +359,52 @@ func (f *Framework) DeleteAlertmanagerAndWaitUntilGone(ctx context.Context, ns, 
 	return nil
 }
 
-func (f *Framework) WaitForAlertmanagerPodInitialized(ctx context.Context, ns, name string, amountPeers int, forceEnableClusterMode, https bool) error {
-	var pollError error
-	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+// WaitForAlertmanagerClusterReady waits until the pod at the given ordinal
+// reports that the cluster status is Ready and all expected peers have joined
+// the cluster.
+func (f *Framework) WaitForAlertmanagerClusterReady(ctx context.Context, am *monitoringv1.Alertmanager, ordinal int) error {
+	var (
+		pollError error
+		replicas  = 1
+	)
+	if am.Spec.Replicas != nil {
+		replicas = int(*am.Spec.Replicas)
+	}
 
-		amStatus, err := f.GetAlertmanagerPodStatus(ctx, ns, name, https)
+	err := wait.PollUntilContextTimeout(ctx, time.Second, time.Minute*5, false, func(ctx context.Context) (bool, error) {
+		amStatus, err := f.GetAlertmanagerPodStatus(ctx, am.Namespace, fmt.Sprintf("alertmanager-%s-%d", am.Name, ordinal), am.Spec.Web != nil && am.Spec.Web.TLSConfig != nil)
 		if err != nil {
 			pollError = fmt.Errorf("failed to query Alertmanager: %s", err)
 			return false, nil
 		}
 
-		isAlertmanagerInClusterMode := amountPeers > 1 || forceEnableClusterMode
-		if !isAlertmanagerInClusterMode {
+		if replicas <= 1 && !am.Spec.ForceEnableClusterMode {
 			return true, nil
 		}
 
 		if amStatus.Cluster == nil {
-			pollError = fmt.Errorf("do not have a cluster status")
+			pollError = errors.New("no cluster status")
 			return false, nil
 		}
 
 		if *amStatus.Cluster.Status != "ready" {
-			pollError = fmt.Errorf("failed to get cluster status, expected ready, got %s", *amStatus.Cluster.Status)
+			pollError = fmt.Errorf("expected cluster status to be ready, got %s", *amStatus.Cluster.Status)
 			return false, nil
 		}
 
-		if len(amStatus.Cluster.Peers) != amountPeers {
-
+		if len(amStatus.Cluster.Peers) != replicas {
 			var addrs = make([]string, len(amStatus.Cluster.Peers))
 			for i := range amStatus.Cluster.Peers {
 				addrs[i] = *amStatus.Cluster.Peers[i].Name
 			}
-			pollError = fmt.Errorf("failed to get correct amount of peers, expected %d, got %d, addresses %v", amountPeers, len(amStatus.Cluster.Peers), addrs)
+			pollError = fmt.Errorf("expected %d peers, got %d, addresses %v", replicas, len(amStatus.Cluster.Peers), addrs)
 			return false, nil
-
 		}
+
 		return true, nil
 	})
-
 	if err != nil {
-		return fmt.Errorf("failed to wait for initialized alertmanager cluster: %v: %v", err, pollError)
+		return fmt.Errorf("failed to wait for cluster ready: %w: %w", err, pollError)
 	}
 
 	return nil
@@ -508,7 +509,7 @@ func (f *Framework) WaitForAlertmanagerFiringAlert(ctx context.Context, ns, svcN
 		}
 
 		for _, alert := range alerts {
-			if alert.Labels["alertname"] == alertName && alert.Status.State != ptr.To("firing") {
+			if alert.Labels["alertname"] == alertName && alert.Status.State != new("firing") {
 				return true, nil
 			}
 		}

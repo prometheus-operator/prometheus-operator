@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    controller-gen.kubebuilder.io/version: v0.22.0
+    operator.prometheus.io/version: 0.94.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -445,7 +445,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -599,7 +601,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -654,7 +658,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -760,7 +766,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -832,7 +838,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -887,7 +895,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -1154,6 +1164,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -1168,7 +1194,9 @@ spec:
                                       data to use for the targets.
                                     properties:
                                       key:
-                                        description: The key to select.
+                                        description: |-
+                                          The key to select from the ConfigMap's Data field.
+                                          Keys in the BinaryData field are not currently propagated to container env vars.
                                         type: string
                                       name:
                                         default: ""
@@ -1222,7 +1250,9 @@ spec:
                                       data to use for the targets.
                                     properties:
                                       key:
-                                        description: The key to select.
+                                        description: |-
+                                          The key to select from the ConfigMap's Data field.
+                                          Keys in the BinaryData field are not currently propagated to container env vars.
                                         type: string
                                       name:
                                         default: ""
@@ -1502,7 +1532,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -1656,7 +1688,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -1711,7 +1745,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -1817,7 +1853,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -1889,7 +1925,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -1944,7 +1982,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -2269,7 +2309,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -2423,7 +2465,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -2478,7 +2522,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -2584,7 +2630,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -2656,7 +2702,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -2711,7 +2759,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -3107,7 +3157,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -3261,7 +3313,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -3316,7 +3370,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -3422,7 +3478,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -3494,7 +3550,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -3549,7 +3607,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -3955,7 +4015,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -4109,7 +4171,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -4164,7 +4228,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -4270,7 +4336,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -4342,7 +4408,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -4397,7 +4465,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -4815,7 +4885,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -4969,7 +5041,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -5024,7 +5098,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -5130,7 +5206,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -5202,7 +5278,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -5257,7 +5335,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -5743,7 +5823,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -5897,7 +5979,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -5952,7 +6036,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -6058,7 +6144,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -6130,7 +6216,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -6185,7 +6273,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -6770,7 +6860,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -6924,7 +7016,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -6979,7 +7073,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -7085,7 +7181,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -7157,7 +7253,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -7212,7 +7310,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -7390,6 +7490,12 @@ spec:
                             description: titleLink defines the URL that the title
                               will link to when clicked.
                             type: string
+                          updateMessage:
+                            description: |-
+                              updateMessage enables updating existing Slack messages instead of creating new ones
+                              when alert state changes. Please note that Webhook URLs do not support updates.
+                              It requires Alertmanager >= v0.32.0.
+                            type: boolean
                           username:
                             description: username defines the slack bot user name.
                             minLength: 1
@@ -7577,7 +7683,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -7731,7 +7839,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -7786,7 +7896,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -7892,7 +8004,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -7964,7 +8076,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -8019,7 +8133,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -8169,6 +8285,12 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              externalId:
+                                description: |-
+                                  externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+                                  It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
+                                minLength: 1
+                                type: string
                               profile:
                                 description: profile defines the named AWS profile
                                   used to authenticate.
@@ -8213,6 +8335,10 @@ spec:
                                   It requires Prometheus >= v2.54.0.
                                 type: boolean
                             type: object
+                            x-kubernetes-validations:
+                            - message: externalId can only be used when roleArn is
+                                specified
+                              rule: '!has(self.externalId) || has(self.roleArn)'
                           subject:
                             description: |-
                               subject defines the subject line when the message is delivered to email endpoints.
@@ -8231,6 +8357,14 @@ spec:
                               If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
                             minLength: 1
                             type: string
+                          useAWSHTTPClient:
+                            description: |-
+                              useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+                              alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+                              is set; set explicitly when configuring ca_bundle via shared AWS config.
+
+                              It requires Alertmanager >= 0.33.0.
+                            type: boolean
                         type: object
                       type: array
                       x-kubernetes-list-type: atomic
@@ -8454,7 +8588,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -8608,7 +8744,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -8663,7 +8801,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -8769,7 +8909,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -8841,7 +8981,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -8896,7 +9038,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -9262,7 +9406,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -9416,7 +9562,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -9471,7 +9619,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -9577,7 +9727,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -9649,7 +9799,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -9704,7 +9856,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -10012,7 +10166,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -10166,7 +10322,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -10221,7 +10379,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -10327,7 +10487,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -10399,7 +10559,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -10454,7 +10616,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -10742,7 +10906,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -10896,7 +11062,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -10951,7 +11119,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -11057,7 +11227,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -11129,7 +11299,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -11184,7 +11356,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -11294,6 +11468,14 @@ spec:
                             format: int32
                             minimum: 0
                             type: integer
+                          payload:
+                            description: |-
+                              payload define custom payload to be sent to the webhook endpoint.
+                              This is an advanced configuration option that allows you
+                              to define a custom payload using Go templates.
+                              It requires Alertmanager >= v0.32.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -11554,7 +11736,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -11708,7 +11892,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -11763,7 +11949,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -11869,7 +12057,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -11941,7 +12129,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -11996,7 +12186,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -12682,7 +12874,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -12836,7 +13030,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -12891,7 +13087,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -12997,7 +13195,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -13069,7 +13267,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -13124,7 +13324,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -13375,6 +13577,22 @@ spec:
                               This provides a fallback for email clients that don't support HTML.
                             minLength: 1
                             type: string
+                          threading:
+                            description: |-
+                              threading defines the threading configuration for email receiver.
+                              It requires Alertmanager >= v0.30.0.
+                            properties:
+                              threadByDate:
+                                description: |-
+                                  threadByDate defines what granularity of current date to thread by. Accepted values: Daily, None.
+                                  (None means group by alert group key, no date).
+                                enum:
+                                - Daily
+                                - None
+                                type: string
+                            required:
+                            - threadByDate
+                            type: object
                           tlsConfig:
                             description: |-
                               tlsConfig defines the TLS configuration for SMTP connections.
@@ -13389,7 +13607,9 @@ spec:
                                       data to use for the targets.
                                     properties:
                                       key:
-                                        description: The key to select.
+                                        description: |-
+                                          The key to select from the ConfigMap's Data field.
+                                          Keys in the BinaryData field are not currently propagated to container env vars.
                                         type: string
                                       name:
                                         default: ""
@@ -13443,7 +13663,9 @@ spec:
                                       data to use for the targets.
                                     properties:
                                       key:
-                                        description: The key to select.
+                                        description: |-
+                                          The key to select from the ConfigMap's Data field.
+                                          Keys in the BinaryData field are not currently propagated to container env vars.
                                         type: string
                                       name:
                                         default: ""
@@ -13715,7 +13937,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -13869,7 +14093,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -13924,7 +14150,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -14030,7 +14258,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -14102,7 +14330,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -14157,7 +14387,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -14474,7 +14706,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -14628,7 +14862,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -14683,7 +14919,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -14789,7 +15027,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -14861,7 +15099,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -14916,7 +15156,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -15296,7 +15538,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -15450,7 +15694,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -15505,7 +15751,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -15611,7 +15859,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -15683,7 +15931,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -15738,7 +15988,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -16130,7 +16382,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -16284,7 +16538,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -16339,7 +16595,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -16445,7 +16703,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -16517,7 +16775,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -16572,7 +16832,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -16968,7 +17230,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -17122,7 +17386,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -17177,7 +17443,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -17283,7 +17551,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -17355,7 +17623,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -17410,7 +17680,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -17870,7 +18142,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -18024,7 +18298,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -18079,7 +18355,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -18185,7 +18463,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -18257,7 +18535,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -18312,7 +18592,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -18875,7 +19157,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -19029,7 +19313,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -19084,7 +19370,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -19190,7 +19478,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -19262,7 +19550,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -19317,7 +19607,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -19495,6 +19787,12 @@ spec:
                             description: titleLink defines the URL that the title
                               will link to when clicked.
                             type: string
+                          updateMessage:
+                            description: |-
+                              updateMessage enables updating existing Slack messages instead of creating new ones
+                              when alert state changes. Please note that Webhook URLs do not support updates.
+                              It requires Alertmanager >= v0.32.0.
+                            type: boolean
                           username:
                             description: username defines the slack bot user name.
                             minLength: 1
@@ -19674,7 +19972,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -19828,7 +20128,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -19883,7 +20185,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -19989,7 +20293,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -20061,7 +20365,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -20116,7 +20422,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -20266,6 +20574,12 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              externalId:
+                                description: |-
+                                  externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
+                                  It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
+                                minLength: 1
+                                type: string
                               profile:
                                 description: profile defines the named AWS profile
                                   used to authenticate.
@@ -20310,6 +20624,10 @@ spec:
                                   It requires Prometheus >= v2.54.0.
                                 type: boolean
                             type: object
+                            x-kubernetes-validations:
+                            - message: externalId can only be used when roleArn is
+                                specified
+                              rule: '!has(self.externalId) || has(self.roleArn)'
                           subject:
                             description: |-
                               subject defines the subject line when the message is delivered to email endpoints.
@@ -20328,6 +20646,14 @@ spec:
                               If you don't specify this value, you must specify a value for the PhoneNumber or TargetARN.
                             minLength: 1
                             type: string
+                          useAWSHTTPClient:
+                            description: |-
+                              useAWSHTTPClient forces the AWS SDK's BuildableClient instead of
+                              alertmanager's tracing-wrapped HTTP client. Auto-enabled when AWS_CA_BUNDLE
+                              is set; set explicitly when configuring ca_bundle via shared AWS config.
+
+                              It requires Alertmanager >= 0.33.0.
+                            type: boolean
                         type: object
                       type: array
                     telegramConfigs:
@@ -20536,7 +20862,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -20690,7 +21018,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -20745,7 +21075,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -20851,7 +21183,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -20923,7 +21255,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -20978,7 +21312,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -21329,7 +21665,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -21483,7 +21821,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -21538,7 +21878,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -21644,7 +21986,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -21716,7 +22058,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -21771,7 +22115,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -22073,7 +22419,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -22227,7 +22575,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -22282,7 +22632,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -22388,7 +22740,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -22460,7 +22812,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -22515,7 +22869,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -22795,7 +23151,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -22949,7 +23307,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -23004,7 +23364,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -23110,7 +23472,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -23182,7 +23544,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -23237,7 +23601,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -23347,6 +23713,14 @@ spec:
                             format: int32
                             minimum: 0
                             type: integer
+                          payload:
+                            description: |-
+                              payload define custom payload to be sent to the webhook endpoint.
+                              This is an advanced configuration option that allows you
+                              to define a custom payload using Go templates.
+                              It requires Alertmanager >= v0.32.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -23585,7 +23959,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -23739,7 +24115,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -23794,7 +24172,9 @@ spec:
                                               containing data to use for the targets.
                                             properties:
                                               key:
-                                                description: The key to select.
+                                                description: |-
+                                                  The key to select from the ConfigMap's Data field.
+                                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                                 type: string
                                               name:
                                                 default: ""
@@ -23900,7 +24280,7 @@ spec:
                                   tokenUrl:
                                     description: tokenUrl defines the URL to fetch
                                       the token from.
-                                    minLength: 1
+                                    pattern: ^(http|https)://.+$
                                     type: string
                                 required:
                                 - clientId
@@ -23972,7 +24352,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -24027,7 +24409,9 @@ spec:
                                           containing data to use for the targets.
                                         properties:
                                           key:
-                                            description: The key to select.
+                                            description: |-
+                                              The key to select from the ConfigMap's Data field.
+                                              Keys in the BinaryData field are not currently propagated to container env vars.
                                             type: string
                                           name:
                                             default: ""
@@ -24172,9 +24556,9 @@ spec:
                 type: array
               route:
                 description: |-
-                  route defines the Alertmanager route definition for alerts matching the resource's
-                  namespace. If present, it will be added to the generated Alertmanager
-                  configuration as a first-level route.
+                  route defines the Alertmanager route definition for incoming alerts. It will be added to the
+                  generated Alertmanager configuration as a first-level route. The matching behavior of the
+                  route depends on the Alertmanager's AlertmanagerConfigMatcherStrategyType.
                 properties:
                   activeTimeIntervals:
                     description: activeTimeIntervals is a list of TimeInterval names
@@ -24215,8 +24599,8 @@ spec:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
                       level route, the operator removes any existing equality and regexp
-                      matcher on the `namespace` label and adds a `namespace: <object
-                      namespace>` matcher.
+                      matcher on the `namespace` label and adds a `namespace: <object namespace>` matcher,
+                      unless configured otherwise in Alertmanager's AlertmanagerConfigMatcherStrategyType.
                     items:
                       description: Matcher defines how to match on alert's labels.
                       properties:

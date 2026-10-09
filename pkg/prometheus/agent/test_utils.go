@@ -1,4 +1,4 @@
-// Copyright 2023 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ func testCorrectArgs(t *testing.T, actualArgs []string, actualContainers []corev
 		"--reload-url=https://localhost:9090/-/reload",
 		"--config-file=/etc/prometheus/config/prometheus.yaml.gz",
 		"--config-envsubst-file=/etc/prometheus/config_out/prometheus.env.yaml",
+		"--watched-dir=/etc/prometheus/config",
 	}
 	for _, c := range actualContainers {
 		if c.Name == "config-reloader" {
@@ -203,12 +204,12 @@ func createTestCasesForTestAutomountServiceAccountToken() []testcaseForTestAutom
 		},
 		{
 			name:                         "automountServiceAccountToken set to true",
-			automountServiceAccountToken: ptr.To(true),
+			automountServiceAccountToken: new(true),
 			expectedValue:                true,
 		},
 		{
 			name:                         "automountServiceAccountToken set to false",
-			automountServiceAccountToken: ptr.To(false),
+			automountServiceAccountToken: new(false),
 			expectedValue:                false,
 		},
 	}
@@ -239,7 +240,7 @@ func createTestCasesForTestStartupProbeTimeoutSeconds() []testcaseForTestStartup
 			expectedStartupFailureThreshold: 60,
 		},
 		{
-			maximumStartupDurationSeconds:   ptr.To(int32(600)),
+			maximumStartupDurationSeconds:   new(int32(600)),
 			expectedStartupPeriodSeconds:    60,
 			expectedStartupFailureThreshold: 10,
 		},

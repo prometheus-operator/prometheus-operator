@@ -23,9 +23,18 @@ import (
 
 // FileSDConfigApplyConfiguration represents a declarative configuration of the FileSDConfig type for use
 // with apply.
+//
+// FileSDConfig defines a Prometheus file service discovery configuration
+// See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config
 type FileSDConfigApplyConfiguration struct {
-	Files           []monitoringv1alpha1.SDFile `json:"files,omitempty"`
-	RefreshInterval *v1.Duration                `json:"refreshInterval,omitempty"`
+	// files defines the list of files to be used for file discovery. Recommendation: use absolute paths. While relative paths work, the
+	// prometheus-operator project makes no guarantees about the working directory where the configuration file is
+	// stored.
+	// Files must be mounted using Prometheus.ConfigMaps or Prometheus.Secrets.
+	Files []monitoringv1alpha1.SDFile `json:"files,omitempty"`
+	// refreshInterval defines the time after which the provided names are refreshed.
+	// If not set, Prometheus uses its default value.
+	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 }
 
 // FileSDConfigApplyConfiguration constructs a declarative configuration of the FileSDConfig type for use with

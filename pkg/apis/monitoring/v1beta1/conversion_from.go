@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -369,32 +369,33 @@ func convertSlackActionsFrom(in []v1alpha1.SlackAction) []SlackAction {
 
 func convertSlackConfigFrom(in v1alpha1.SlackConfig) SlackConfig {
 	return SlackConfig{
-		SendResolved: in.SendResolved,
-		APIURL:       convertSecretKeySelectorFrom(in.APIURL),
+		SendResolved:  in.SendResolved,
+		APIURL:        convertSecretKeySelectorFrom(in.APIURL),
 		AppToken:     convertSecretKeySelectorFrom(in.AppToken),
 		AppURL:       (*URL)(in.AppURL),
-		Channel:      in.Channel,
-		Username:     in.Username,
-		Color:        in.Color,
-		Title:        in.Title,
-		TitleLink:    in.TitleLink,
-		Pretext:      in.Pretext,
-		Text:         in.Text,
-		Fields:       convertSlackFieldsFrom(in.Fields),
-		ShortFields:  in.ShortFields,
-		Footer:       in.Footer,
-		Fallback:     in.Fallback,
-		CallbackID:   in.CallbackID,
-		IconEmoji:    in.IconEmoji,
-		IconURL:      in.IconURL,
-		ImageURL:     in.ImageURL,
-		ThumbURL:     in.ThumbURL,
-		LinkNames:    in.LinkNames,
-		MrkdwnIn:     in.MrkdwnIn,
-		Actions:      convertSlackActionsFrom(in.Actions),
-		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
-		Timeout:      in.Timeout,
-		MessageText:  in.MessageText,
+		Channel:       in.Channel,
+		Username:      in.Username,
+		Color:         in.Color,
+		Title:         in.Title,
+		TitleLink:     in.TitleLink,
+		Pretext:       in.Pretext,
+		Text:          in.Text,
+		Fields:        convertSlackFieldsFrom(in.Fields),
+		ShortFields:   in.ShortFields,
+		Footer:        in.Footer,
+		Fallback:      in.Fallback,
+		CallbackID:    in.CallbackID,
+		IconEmoji:     in.IconEmoji,
+		IconURL:       in.IconURL,
+		ImageURL:      in.ImageURL,
+		ThumbURL:      in.ThumbURL,
+		LinkNames:     in.LinkNames,
+		MrkdwnIn:      in.MrkdwnIn,
+		Actions:       convertSlackActionsFrom(in.Actions),
+		HTTPConfig:    convertHTTPConfigFrom(in.HTTPConfig),
+		Timeout:       in.Timeout,
+		MessageText:   in.MessageText,
+		UpdateMessage: in.UpdateMessage,
 	}
 }
 
@@ -416,6 +417,7 @@ func convertWebhookConfigFrom(in v1alpha1.WebhookConfig) WebhookConfig {
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 		MaxAlerts:    in.MaxAlerts,
 		Timeout:      in.Timeout,
+		Payload:      in.Payload,
 	}
 }
 
@@ -452,6 +454,17 @@ func convertEmailConfigFrom(in v1alpha1.EmailConfig) EmailConfig {
 		RequireTLS:       in.RequireTLS,
 		TLSConfig:        in.TLSConfig,
 		ForceImplicitTLS: in.ForceImplicitTLS,
+		Threading:        convertEmailThreadingConfigFrom(in.Threading),
+	}
+}
+
+func convertEmailThreadingConfigFrom(in *v1alpha1.EmailThreadingConfig) *EmailThreadingConfig {
+	if in == nil {
+		return nil
+	}
+
+	return &EmailThreadingConfig{
+		ThreadByDate: ThreadByDateType(in.ThreadByDate),
 	}
 }
 
@@ -481,6 +494,7 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 		Message:      in.Message,
 		URL:          in.URL,
 		URLTitle:     in.URLTitle,
+		TTL:          in.TTL,
 		Device:       in.Device,
 		Sound:        in.Sound,
 		Priority:     in.Priority,
@@ -494,16 +508,17 @@ func convertPushoverConfigFrom(in v1alpha1.PushoverConfig) PushoverConfig {
 
 func convertSNSConfigFrom(in v1alpha1.SNSConfig) SNSConfig {
 	return SNSConfig{
-		SendResolved: in.SendResolved,
-		ApiURL:       in.ApiURL,
-		Sigv4:        in.Sigv4,
-		TopicARN:     in.TopicARN,
-		Subject:      in.Subject,
-		PhoneNumber:  in.PhoneNumber,
-		TargetARN:    in.TargetARN,
-		Message:      in.Message,
-		Attributes:   in.Attributes,
-		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
+		SendResolved:     in.SendResolved,
+		ApiURL:           in.ApiURL,
+		Sigv4:            in.Sigv4,
+		TopicARN:         in.TopicARN,
+		Subject:          in.Subject,
+		PhoneNumber:      in.PhoneNumber,
+		TargetARN:        in.TargetARN,
+		Message:          in.Message,
+		Attributes:       in.Attributes,
+		HTTPConfig:       convertHTTPConfigFrom(in.HTTPConfig),
+		UseAWSHTTPClient: in.UseAWSHTTPClient,
 	}
 }
 

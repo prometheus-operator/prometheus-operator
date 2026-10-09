@@ -7,6 +7,14 @@ ifeq ($(GOARCH),arm)
 else
 	ARCH=$(GOARCH)
 endif
+SHELLCHECK_ARCH=$(GOARCH)
+ifeq ($(GOARCH),amd64)
+	SHELLCHECK_ARCH=x86_64
+else ifeq ($(GOARCH),arm64)
+	SHELLCHECK_ARCH=aarch64
+else ifeq ($(GOARCH),arm)
+	SHELLCHECK_ARCH=armv6hf
+endif
 GODEBUG :=
 
 CONTAINER_CLI ?= docker
@@ -52,7 +60,8 @@ GOLANGCILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-lint
 MDOX_BINARY=$(TOOLS_BIN_DIR)/mdox
 API_DOC_GEN_BINARY=$(TOOLS_BIN_DIR)/gen-crd-api-reference-docs
 GOLANGCIKUBEAPILINTER_BINARY=$(TOOLS_BIN_DIR)/golangci-kube-api-linter
-TOOLING=$(CONTROLLER_GEN_BINARY) $(GOBINDATA_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY)
+METRICS_GEN_BINARY=$(TOOLS_BIN_DIR)/metrics-gen
+TOOLING=$(CONTROLLER_GEN_BINARY) $(JB_BINARY) $(GOJSONTOYAML_BINARY) $(JSONNET_BINARY) $(JSONNETFMT_BINARY) $(SHELLCHECK_BINARY) $(PROMLINTER_BINARY) $(PROMTOOL_BINARY) $(GOLANGCILINTER_BINARY) $(MDOX_BINARY) $(API_DOC_GEN_BINARY) $(GOLANGCIKUBEAPILINTER_BINARY) $(METRICS_GEN_BINARY)
 
 K8S_GEN_BINARIES:=informer-gen lister-gen client-gen applyconfiguration-gen
 K8S_GEN_ARGS:=--go-header-file $(shell pwd)/.header --v=1 --logtostderr
@@ -185,7 +194,7 @@ k8s-gen: $(DEEPCOPY_TARGETS) k8s-client-gen ## Generate code containing DeepCopy
 
 .PHONY: image-builder-version
 image-builder-version: .github/env ## Update Go builder version in Dockerfiles.
-	@echo $(GO_VERSION)
+	@echo ">> Updating Dockerfiles to use Go builder version $(GO_VERSION)"
 	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
 		Dockerfile && rm Dockerfile.bak
 	sed -i.bak "s/ARG GOLANG_BUILDER=.*/ARG GOLANG_BUILDER=$(GO_VERSION)/" \
@@ -216,7 +225,7 @@ update-go-deps: ## Update Go dependencies.
 	done
 	(cd pkg/client && go get -u ./...)
 	(cd pkg/apis/monitoring && go get -u ./...)
-	@echo "Don't forget to run 'make tidy'"
+	@echo ">> Don't forget to run 'make tidy'"
 
 ##############
 ##@ Generating
@@ -230,7 +239,7 @@ tidy: ## Tidy Go modules.
 	cd scripts && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
-generate: k8s-gen generate-crds bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version ## Generate all files (CRDs, client-go libraries, docs, etc.).
+generate: k8s-gen generate-crds generate-metrics bundle.yaml example/mixin/alerts.yaml example/thanos/thanos.yaml example/admission-webhook example/alertmanager-crd-conversion generate-docs image-builder-version ## Generate all files (CRDs, client-go libraries, docs, etc.).
 
 # For now, the v1beta1 CRDs aren't part of the default bundle because they
 # require to deploy/run the conversion webhook.
@@ -246,14 +255,17 @@ generate-crds: $(CONTROLLER_GEN_BINARY) $(GOJSONTOYAML_BINARY) $(TYPES_V1_TARGET
 	echo "// Code generated using 'make generate-crds'. DO NOT EDIT." > $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 	echo "{spec+: {versions+: $$($(GOJSONTOYAML_BINARY) -yamltojson < example/prometheus-operator-crd-full/monitoring.coreos.com_alertmanagerconfigs.yaml | jq '.spec.versions | map(select(.name == "v1beta1"))')}}" | $(JSONNETFMT_BINARY) - >> $(PWD)/jsonnet/prometheus-operator/alertmanagerconfigs-v1beta1-crd.libsonnet
 
+.PHONY: generate-metrics
+generate-metrics: $(METRICS_GEN_BINARY) .header ## Generate Prometheus condition collector code from API markers.
+	$(METRICS_GEN_BINARY) -metric-namespace prometheus_operator -go-header-file $(shell pwd)/.header -api-dir=./pkg/apis/monitoring -out-dir=./pkg/metrics -module=$(GO_PKG)
+
 .PHONY: generate-tls-certs
 generate-tls-certs: ## Generate TLS certificates for testing.
 	mkdir -p $(CERTS_DIR) && \
 	(cd scripts && GOOS=$(OS) GOARCH=$(GOARCH) go run -v ./certs/.)
 
 .PHONY: generate-docs
-generate-docs: ## Generate operator documentation.
-	find Documentation -type f
+generate-docs: $(shell find Documentation -type f) ## Generate operator documentation.
 
 bundle.yaml: generate-crds $(shell find example/rbac/prometheus-operator/*.yaml -type f) ## Generate bundle.yaml.
 	scripts/generate-bundle.sh
@@ -295,10 +307,10 @@ FULLY_GENERATED_DOCS = Documentation/api-reference/api.md Documentation/getting-
 Documentation/platform/operator.md: operator ## Format operator documentation.
 	$(MDOX_BINARY) fmt $@
 
-Documentation/getting-started/compatibility.md: pkg/operator/defaults.go ## Format compatibility documentation.
+Documentation/getting-started/compatibility.md: operator ## Format compatibility documentation.
 	$(MDOX_BINARY) fmt $@
 
-Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) ## Generate API reference documentation.
+Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) $(TYPES_V1BETA1_TARGET) $(API_DOC_GEN_BINARY) ## Generate API reference documentation.
 	GODEBUG=$(GODEBUG) $(API_DOC_GEN_BINARY) -api-dir "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/" -config "$(PWD)/scripts/docs/config.json" -template-dir "$(PWD)/scripts/docs/templates" -out-file "$(PWD)/Documentation/api-reference/api.md"
 
 ##############
@@ -306,7 +318,7 @@ Documentation/api-reference/api.md: $(TYPES_V1_TARGET) $(TYPES_V1ALPHA1_TARGET) 
 ##############
 
 .PHONY: format
-format: go-fmt jsonnet-fmt check-license shellcheck docs ## Format all files.
+format: go-fmt jsonnet-fmt fix-license shellcheck docs ## Format all files.
 
 .PHONY: go-fmt
 go-fmt: ## Run go fmt against code.
@@ -318,7 +330,13 @@ jsonnet-fmt: $(JSONNETFMT_BINARY)
 
 .PHONY: check-license
 check-license: ## Check license headers.
-	./scripts/check_license.sh
+	@echo ">> checking license header"
+	cd scripts && go run ./check-license/ -check -root ..
+
+.PHONY: fix-license
+fix-license: ## Fix missing or non-compliant license headers.
+	@echo ">> adding license header where it's missing"
+	cd scripts && go run ./check-license/ -fix -root ..
 
 .PHONY: shellcheck
 shellcheck: $(SHELLCHECK_BINARY) ## Run shellcheck on shell scripts.
@@ -329,8 +347,7 @@ check-metrics: $(PROMLINTER_BINARY) ## Lint Prometheus metrics.
 	$(PROMLINTER_BINARY) lint .
 
 .PHONY: check
-check: ## Run all checks.
-	check-golang check-api
+check: check-golang check-api ## Run all checks.
 
 .PHONY: check-golang
 check-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint checks.
@@ -341,12 +358,11 @@ check-api: $(GOLANGCIKUBEAPILINTER_BINARY) ## Run golangci-kube-api-linter check
 	cd pkg/apis/monitoring && $(GOLANGCIKUBEAPILINTER_BINARY) run -v --config $(ROOT_DIR)/.golangci-kal.yml
 
 .PHONY: fix
-fix: ## Fix all auto-fixable issues.
-	fix-golang fix-api
+fix: fix-golang fix-api ## Fix all auto-fixable issues.
 
 .PHONY: fix-golang
 fix-golang: $(GOLANGCILINTER_BINARY) ## Run golangci-lint to fix issues.
-	$(GOLANGCILINTER_BINARY) run --fix
+	$(GOLANGCILINTER_BINARY) run --fix -v
 
 .PHONY: fix-api
 fix-api: $(GOLANGCIKUBEAPILINTER_BINARY) ## Run golangci-kube-api-linter to fix issues on API types.
@@ -370,8 +386,7 @@ check-docs: $(MDOX_BINARY) ## Check documentation formatting and links.
 ###########
 
 .PHONY: test
-test: ## Run all tests (unit, long, and e2e).
-	test-unit test-long test-e2e
+test: test-unit test-long test-e2e ## Run all tests (unit, long, and e2e).
 
 .PHONY: test-unit
 test-unit: test-prometheus-goldenfiles ## Run unit tests (short mode).
@@ -451,12 +466,12 @@ $(TOOLS_BIN_DIR): ## Create tools binary directory.
 	mkdir -p $(TOOLS_BIN_DIR)
 
 $(TOOLING): $(TOOLS_BIN_DIR) ## Install required tools and binaries.
-	@echo Installing tools from scripts/tools.go
+	@echo ">> Installing tools from scripts/tools.go"
 	@cat scripts/tools.go | grep _ | awk -F'"' '{print $$2}' | GOBIN=$(TOOLS_BIN_DIR) xargs -tI % go install -mod=readonly -modfile=scripts/go.mod %
 	@GOBIN=$(TOOLS_BIN_DIR) go install $(GO_PKG)/cmd/po-docgen
 	@GOBIN=$(TOOLS_BIN_DIR) $(GOLANGCILINTER_BINARY) custom
-	@echo Downloading shellcheck
-	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).x86_64.tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
+	@echo ">> Downloading shellcheck"
+	@cd $(TOOLS_BIN_DIR) && wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.$(GOOS).$(SHELLCHECK_ARCH).tar.xz" | tar -xJv --strip=1 shellcheck-stable/shellcheck
 
 # generate k8s generator variable and target,
 # i.e. if $(1)=informer-gen:

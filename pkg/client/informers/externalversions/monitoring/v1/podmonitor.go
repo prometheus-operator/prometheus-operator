@@ -26,16 +26,45 @@ import (
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 )
 
 // PodMonitorInformer provides access to a shared informer and lister for
-// PodMonitors.
+// PodMonitors. Prefer using the type-safe variant (see [TypedPodMonitorInformer]).
 type PodMonitorInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.PodMonitorLister
 }
+
+// TypedPodMonitorInformer provides access to a shared informer and lister for
+// PodMonitors, including the type-safe TypedInformer variant.
+// It is a superset of PodMonitorInformer.
+type TypedPodMonitorInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() PodMonitorIndexInformer
+	Lister() monitoringv1.PodMonitorLister
+}
+
+// PodMonitorIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type PodMonitorIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.PodMonitor]
+
+// PodMonitorHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for PodMonitor.
+type PodMonitorHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.PodMonitor]
+
+// PodMonitorDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for PodMonitor.
+type PodMonitorDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.PodMonitor]
+
+// PodMonitorFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for PodMonitor.
+type PodMonitorFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.PodMonitor]
+
+// PodMonitorIndexers is a specialization of [cache.TypedIndexers] for PodMonitor.
+type PodMonitorIndexers = cache.TypedIndexers[*apismonitoringv1.PodMonitor]
+
+// DeletedPodMonitor is a specialization of [cache.DeletedObject] for PodMonitor.
+type DeletedPodMonitor = cache.DeletedObject[*apismonitoringv1.PodMonitor]
 
 type podMonitorInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -46,55 +75,132 @@ type podMonitorInformer struct {
 // NewPodMonitorInformer constructs a new informer for PodMonitor type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPodMonitorInformer]).
 func NewPodMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredPodMonitorInformer(client, namespace, resyncPeriod, indexers, nil)
+	return NewPodMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedPodMonitorInformer constructs a new informer for PodMonitor type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPodMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PodMonitorIndexers) PodMonitorIndexInformer {
+	return NewTypedPodMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredPodMonitorInformer constructs a new informer for PodMonitor type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredPodMonitorInformer]).
 func NewFilteredPodMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+	return NewTypedPodMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredPodMonitorInformer constructs a new informer for PodMonitor type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredPodMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers PodMonitorIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) PodMonitorIndexInformer {
+	return NewTypedPodMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
+}
+
+// NewPodMonitorInformerWithOptions constructs a new informer for PodMonitor type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedPodMonitorInformerWithOptions]).
+func NewPodMonitorInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedPodMonitorInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedPodMonitorInformerWithOptions constructs a new informer for PodMonitor type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedPodMonitorInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) PodMonitorIndexInformer {
+	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "podmonitors"}
+	identifier := options.InformerName.WithResource(gvr)
+	tweakListOptions := options.TweakListOptions
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PodMonitor](cache.NewSharedIndexInformerWithOptions(
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
+			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().PodMonitors(namespace).List(context.Background(), options)
+				return client.MonitoringV1().PodMonitors(namespace).List(context.Background(), opts)
 			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().PodMonitors(namespace).Watch(context.Background(), options)
+				return client.MonitoringV1().PodMonitors(namespace).Watch(context.Background(), opts)
 			},
-			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+			ListWithContextFunc: func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().PodMonitors(namespace).List(ctx, options)
+				return client.MonitoringV1().PodMonitors(namespace).List(ctx, opts)
 			},
-			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+			WatchFuncWithContext: func(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().PodMonitors(namespace).Watch(ctx, options)
+				return client.MonitoringV1().PodMonitors(namespace).Watch(ctx, opts)
 			},
-		},
+		}, client),
 		&apismonitoringv1.PodMonitor{},
-		resyncPeriod,
-		indexers,
-	)
+		cache.SharedIndexInformerOptions{
+			ResyncPeriod: options.ResyncPeriod,
+			Indexers:     options.Indexers,
+			Identifier:   identifier,
+		},
+	))
 }
 
 func (f *podMonitorInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredPodMonitorInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewTypedPodMonitorInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *podMonitorInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.PodMonitor{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *podMonitorInformer) TypedInformer() PodMonitorIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PodMonitor](f.factory.InformerFor(&apismonitoringv1.PodMonitor{}, f.defaultInformer))
 }
 
 func (f *podMonitorInformer) Lister() monitoringv1.PodMonitorLister {
 	return monitoringv1.NewPodMonitorLister(f.Informer().GetIndexer())
+}
+
+// ToTypedPodMonitorInformer converts an untyped informer into a TypedPodMonitorInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PodMonitor. If that is not the case, calling type-safe methods of the returned
+// TypedPodMonitorInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedPodMonitorInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedPodMonitorInformer(informer PodMonitorInformer) TypedPodMonitorInformer {
+	if informer, ok := informer.(TypedPodMonitorInformer); ok {
+		return informer
+	}
+	return &podMonitorTypedInformerAdapter{informer}
+}
+
+type podMonitorTypedInformerAdapter struct {
+	PodMonitorInformer
+}
+
+func (a *podMonitorTypedInformerAdapter) TypedInformer() PodMonitorIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PodMonitor](a.Informer())
+}
+
+// ToPodMonitorIndexInformer converts an untyped informer into a PodMonitorIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *PodMonitor. If that is not the case, calling type-safe methods of the returned
+// PodMonitorIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a PodMonitorIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToPodMonitorIndexInformer(informer cache.SharedIndexInformer) PodMonitorIndexInformer {
+	if informer, ok := informer.(PodMonitorIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.PodMonitor](informer)
 }

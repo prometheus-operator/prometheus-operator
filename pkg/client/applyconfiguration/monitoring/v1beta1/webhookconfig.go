@@ -22,13 +22,34 @@ import (
 
 // WebhookConfigApplyConfiguration represents a declarative configuration of the WebhookConfig type for use
 // with apply.
+//
+// WebhookConfig configures notifications via a generic receiver supporting the webhook payload.
+// See https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
 type WebhookConfigApplyConfiguration struct {
-	SendResolved *bool                                `json:"sendResolved,omitempty"`
-	URL          *string                              `json:"url,omitempty"`
-	URLSecret    *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration        `json:"httpConfig,omitempty"`
-	MaxAlerts    *int32                               `json:"maxAlerts,omitempty"`
-	Timeout      *v1.Duration                         `json:"timeout,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// url defines the URL to send HTTP POST requests to.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	URL *string `json:"url,omitempty"`
+	// urlSecret defines the secret's key that contains the webhook URL to send HTTP requests to.
+	// urlSecret takes precedence over url. One of urlSecret and url should be defined.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	URLSecret *SecretKeySelectorApplyConfiguration `json:"urlSecret,omitempty"`
+	// httpConfig defines the HTTP client configuration for webhook requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// maxAlerts defines the maximum number of alerts to be sent per webhook message.
+	// When 0, all alerts are included in the webhook payload.
+	MaxAlerts *int32 `json:"maxAlerts,omitempty"`
+	// timeout defines the maximum time to wait for a webhook request to complete,
+	// before failing the request and allowing it to be retried.
+	// It requires Alertmanager >= v0.28.0.
+	Timeout *v1.Duration `json:"timeout,omitempty"`
+	// payload define custom payload to be sent to the webhook endpoint.
+	// This is an advanced configuration option that allows you
+	// to define a custom payload using Go templates.
+	// It requires Alertmanager >= v0.32.0.
+	Payload *string `json:"payload,omitempty"`
 }
 
 // WebhookConfigApplyConfiguration constructs a declarative configuration of the WebhookConfig type for use with
@@ -82,5 +103,13 @@ func (b *WebhookConfigApplyConfiguration) WithMaxAlerts(value int32) *WebhookCon
 // If called multiple times, the Timeout field is set to the value of the last call.
 func (b *WebhookConfigApplyConfiguration) WithTimeout(value v1.Duration) *WebhookConfigApplyConfiguration {
 	b.Timeout = &value
+	return b
+}
+
+// WithPayload sets the Payload field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Payload field is set to the value of the last call.
+func (b *WebhookConfigApplyConfiguration) WithPayload(value string) *WebhookConfigApplyConfiguration {
+	b.Payload = &value
 	return b
 }

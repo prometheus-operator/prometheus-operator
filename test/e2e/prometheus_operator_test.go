@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,8 @@ func testPrometheusOperatorMetrics(t *testing.T, namespace string) {
 		"prometheus_operator_managed_resources",
 		"prometheus_operator_spec_replicas",
 		"prometheus_operator_spec_shards",
+
+		"prometheus_operator_prometheus_status_condition",
 	}
 
 	name := "test"

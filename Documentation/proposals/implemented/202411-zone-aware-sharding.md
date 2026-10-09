@@ -166,7 +166,7 @@ for Prometheus in case it is not already allowed to read node objects.
 ### API changes
 
 > [!NOTE]
-> This proposal is mutually exclusive to [DaemonSet mode](202405-agent-daemonset.md),
+> This proposal is mutually exclusive to [DaemonSet mode](../accepted/202405-agent-daemonset.md),
 > as Prometheus always scrapes a single node in that case.
 > Defining a `shardingStrategy` when `DaemonSet mode` is active, should lead to
 > a reconciliation error.
@@ -312,6 +312,11 @@ we would get the following output for `shard_index == 2`:
 >   - attach_metadata:
 >       node: true
 > ```
+>
+> An alternative with Kubernetes >= 1.35 is to leverage the [Node Topology
+> Labels via Downward
+> API](https://github.com/kubernetes/enhancements/blob/master/keps/sig-node/4742-node-topology-downward-api/README.md)
+> feature which allows to inject pass node topology information to the pods.
 
 ### Prometheus instance zone assignment
 

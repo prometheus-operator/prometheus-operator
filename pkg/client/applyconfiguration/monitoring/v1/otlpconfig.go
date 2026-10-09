@@ -22,14 +22,54 @@ import (
 
 // OTLPConfigApplyConfiguration represents a declarative configuration of the OTLPConfig type for use
 // with apply.
+//
+// OTLPConfig is the configuration for writing to the OTLP endpoint.
 type OTLPConfigApplyConfiguration struct {
-	PromoteAllResourceAttributes      *bool                                   `json:"promoteAllResourceAttributes,omitempty"`
-	IgnoreResourceAttributes          []string                                `json:"ignoreResourceAttributes,omitempty"`
-	PromoteResourceAttributes         []string                                `json:"promoteResourceAttributes,omitempty"`
-	TranslationStrategy               *monitoringv1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
-	KeepIdentifyingResourceAttributes *bool                                   `json:"keepIdentifyingResourceAttributes,omitempty"`
-	ConvertHistogramsToNHCB           *bool                                   `json:"convertHistogramsToNHCB,omitempty"`
-	PromoteScopeMetadata              *bool                                   `json:"promoteScopeMetadata,omitempty"`
+	// promoteAllResourceAttributes promotes all resource attributes to metric labels except the ones defined in `ignoreResourceAttributes`.
+	//
+	// Cannot be true when `promoteResourceAttributes` is defined.
+	// It requires Prometheus >= v3.5.0.
+	PromoteAllResourceAttributes *bool `json:"promoteAllResourceAttributes,omitempty"`
+	// ignoreResourceAttributes defines the list of OpenTelemetry resource attributes to ignore when `promoteAllResourceAttributes` is true.
+	//
+	// It requires `promoteAllResourceAttributes` to be true.
+	// It requires Prometheus >= v3.5.0.
+	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
+	// promoteResourceAttributes defines the list of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
+	// Cannot be defined when `promoteAllResourceAttributes` is true.
+	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
+	// translationStrategy defines how the OTLP receiver endpoint translates the incoming metrics.
+	//
+	// It requires Prometheus >= v3.0.0.
+	TranslationStrategy *monitoringv1.TranslationStrategyOption `json:"translationStrategy,omitempty"`
+	// keepIdentifyingResourceAttributes enables adding `service.name`, `service.namespace` and `service.instance.id`
+	// resource attributes to the `target_info` metric, on top of converting them into the `instance` and `job` labels.
+	//
+	// It requires Prometheus >= v3.1.0.
+	KeepIdentifyingResourceAttributes *bool `json:"keepIdentifyingResourceAttributes,omitempty"`
+	// convertHistogramsToNHCB defines optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+	// It requires Prometheus >= v3.4.0.
+	ConvertHistogramsToNHCB *bool `json:"convertHistogramsToNHCB,omitempty"`
+	// promoteScopeMetadata controls whether to promote OpenTelemetry scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+	// As per the OpenTelemetry specification, the aforementioned scope metadata should be identifying, i.e. made into metric labels.
+	// It requires Prometheus >= v3.6.0.
+	PromoteScopeMetadata *bool `json:"promoteScopeMetadata,omitempty"`
+	// labelNameUnderscoreSanitization controls whether to enable prepending of 'key_' to labels starting with '_'.
+	// Reserved labels starting with '__' are not modified.
+	// This is only relevant when translation_strategy uses underscore escaping (e.g., "UnderscoreEscapingWithSuffixes" or "UnderscoreEscapingWithoutSuffixes").
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	LabelNameUnderscoreSanitization *bool `json:"labelNameUnderscoreSanitization,omitempty"`
+	// labelNamePreserveMultipleUnderscores enables preserving of multiple consecutive underscores in label names when translation_strategy uses
+	// underscore escaping.
+	// When true (default), multiple consecutive underscores are preserved during label name sanitization.
+	//
+	// Notice: This one has no impact if `nameEscapingScheme` is `AllowUTF8`.
+	//
+	// It requires Prometheus >= v3.8.0.
+	LabelNamePreserveMultipleUnderscores *bool `json:"labelNamePreserveMultipleUnderscores,omitempty"`
 }
 
 // OTLPConfigApplyConfiguration constructs a declarative configuration of the OTLPConfig type for use with
@@ -95,5 +135,21 @@ func (b *OTLPConfigApplyConfiguration) WithConvertHistogramsToNHCB(value bool) *
 // If called multiple times, the PromoteScopeMetadata field is set to the value of the last call.
 func (b *OTLPConfigApplyConfiguration) WithPromoteScopeMetadata(value bool) *OTLPConfigApplyConfiguration {
 	b.PromoteScopeMetadata = &value
+	return b
+}
+
+// WithLabelNameUnderscoreSanitization sets the LabelNameUnderscoreSanitization field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNameUnderscoreSanitization field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithLabelNameUnderscoreSanitization(value bool) *OTLPConfigApplyConfiguration {
+	b.LabelNameUnderscoreSanitization = &value
+	return b
+}
+
+// WithLabelNamePreserveMultipleUnderscores sets the LabelNamePreserveMultipleUnderscores field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LabelNamePreserveMultipleUnderscores field is set to the value of the last call.
+func (b *OTLPConfigApplyConfiguration) WithLabelNamePreserveMultipleUnderscores(value bool) *OTLPConfigApplyConfiguration {
+	b.LabelNamePreserveMultipleUnderscores = &value
 	return b
 }

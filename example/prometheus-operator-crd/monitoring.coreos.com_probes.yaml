@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
-    operator.prometheus.io/version: 0.89.0
+    controller-gen.kubebuilder.io/version: v0.22.0
+    operator.prometheus.io/version: 0.94.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -225,24 +225,28 @@ spec:
 
                   It requires Prometheus >= v2.47.0.
                 format: int64
+                minimum: 0
                 type: integer
               labelLimit:
                 description: |-
                   labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               labelNameLengthLimit:
                 description: |-
                   labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               labelValueLengthLimit:
                 description: |-
                   labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
                   Only valid in Prometheus versions 2.27.0 and newer.
                 format: int64
+                minimum: 0
                 type: integer
               metricRelabelings:
                 description: metricRelabelings defines the RelabelConfig to apply
@@ -293,6 +297,7 @@ spec:
 
                         Only applicable when the action is `HashMod`.
                       format: int64
+                      minimum: 0
                       type: integer
                     regex:
                       description: regex defines the regular expression against which
@@ -344,6 +349,7 @@ spec:
                   buckets will be merged to stay within the limit.
                   It requires Prometheus >= v2.45.0.
                 format: int64
+                minimum: 0
                 type: integer
               nativeHistogramMinBucketFactor:
                 anyOf:
@@ -373,7 +379,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""
@@ -523,7 +531,9 @@ spec:
                               data to use for the targets.
                             properties:
                               key:
-                                description: The key to select.
+                                description: |-
+                                  The key to select from the ConfigMap's Data field.
+                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                 type: string
                               name:
                                 default: ""
@@ -577,7 +587,9 @@ spec:
                               data to use for the targets.
                             properties:
                               key:
-                                description: The key to select.
+                                description: |-
+                                  The key to select from the ConfigMap's Data field.
+                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                 type: string
                               name:
                                 default: ""
@@ -680,7 +692,7 @@ spec:
                     type: object
                   tokenUrl:
                     description: tokenUrl defines the URL to fetch the token from.
-                    minLength: 1
+                    pattern: ^(http|https)://.+$
                     type: string
                 required:
                 - clientId
@@ -803,6 +815,7 @@ spec:
                 description: sampleLimit defines per-scrape limit on number of scraped
                   samples that will be accepted.
                 format: int64
+                minimum: 0
                 type: integer
               scrapeClass:
                 description: scrapeClass defines the scrape class to apply.
@@ -857,6 +870,7 @@ spec:
                 description: targetLimit defines a limit on the number of scraped
                   targets that will be accepted.
                 format: int64
+                minimum: 0
                 type: integer
               targets:
                 description: targets defines a set of static or dynamically discovered
@@ -939,6 +953,7 @@ spec:
 
                                 Only applicable when the action is `HashMod`.
                               format: int64
+                              minimum: 0
                               type: integer
                             regex:
                               description: regex defines the regular expression against
@@ -1089,6 +1104,7 @@ spec:
 
                                 Only applicable when the action is `HashMod`.
                               format: int64
+                              minimum: 0
                               type: integer
                             regex:
                               description: regex defines the regular expression against
@@ -1147,7 +1163,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""
@@ -1201,7 +1219,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""

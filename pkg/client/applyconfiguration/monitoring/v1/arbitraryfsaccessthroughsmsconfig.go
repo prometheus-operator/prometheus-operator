@@ -18,7 +18,20 @@ package v1
 
 // ArbitraryFSAccessThroughSMsConfigApplyConfiguration represents a declarative configuration of the ArbitraryFSAccessThroughSMsConfig type for use
 // with apply.
+//
+// ArbitraryFSAccessThroughSMsConfig enables users to configure, whether
+// a service monitor selected by the Prometheus instance is allowed to use
+// arbitrary files on the file system of the Prometheus container. This is the case
+// when e.g. a service monitor specifies a BearerTokenFile in an endpoint. A
+// malicious user could create a service monitor selecting arbitrary secret files
+// in the Prometheus container. Those secrets would then be sent with a scrape
+// request by Prometheus to a malicious target. Denying the above would prevent the
+// attack, users can instead use the BearerTokenSecret field.
 type ArbitraryFSAccessThroughSMsConfigApplyConfiguration struct {
+	// deny prevents service monitors from accessing arbitrary files on the file system.
+	// When true, service monitors cannot use file-based configurations like BearerTokenFile
+	// that could potentially access sensitive files. When false (default), such access is allowed.
+	// Setting this to true enhances security by preventing potential credential theft attacks.
 	Deny *bool `json:"deny,omitempty"`
 }
 

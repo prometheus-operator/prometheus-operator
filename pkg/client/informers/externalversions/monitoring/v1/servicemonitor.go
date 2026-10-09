@@ -26,16 +26,45 @@ import (
 	versioned "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
 )
 
 // ServiceMonitorInformer provides access to a shared informer and lister for
-// ServiceMonitors.
+// ServiceMonitors. Prefer using the type-safe variant (see [TypedServiceMonitorInformer]).
 type ServiceMonitorInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.ServiceMonitorLister
 }
+
+// TypedServiceMonitorInformer provides access to a shared informer and lister for
+// ServiceMonitors, including the type-safe TypedInformer variant.
+// It is a superset of ServiceMonitorInformer.
+type TypedServiceMonitorInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() ServiceMonitorIndexInformer
+	Lister() monitoringv1.ServiceMonitorLister
+}
+
+// ServiceMonitorIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type ServiceMonitorIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.ServiceMonitor]
+
+// ServiceMonitorHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for ServiceMonitor.
+type ServiceMonitorHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.ServiceMonitor]
+
+// ServiceMonitorDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for ServiceMonitor.
+type ServiceMonitorDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.ServiceMonitor]
+
+// ServiceMonitorFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for ServiceMonitor.
+type ServiceMonitorFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.ServiceMonitor]
+
+// ServiceMonitorIndexers is a specialization of [cache.TypedIndexers] for ServiceMonitor.
+type ServiceMonitorIndexers = cache.TypedIndexers[*apismonitoringv1.ServiceMonitor]
+
+// DeletedServiceMonitor is a specialization of [cache.DeletedObject] for ServiceMonitor.
+type DeletedServiceMonitor = cache.DeletedObject[*apismonitoringv1.ServiceMonitor]
 
 type serviceMonitorInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -46,55 +75,132 @@ type serviceMonitorInformer struct {
 // NewServiceMonitorInformer constructs a new informer for ServiceMonitor type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedServiceMonitorInformer]).
 func NewServiceMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredServiceMonitorInformer(client, namespace, resyncPeriod, indexers, nil)
+	return NewServiceMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedServiceMonitorInformer constructs a new informer for ServiceMonitor type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedServiceMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ServiceMonitorIndexers) ServiceMonitorIndexInformer {
+	return NewTypedServiceMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredServiceMonitorInformer constructs a new informer for ServiceMonitor type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredServiceMonitorInformer]).
 func NewFilteredServiceMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
-			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+	return NewTypedServiceMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredServiceMonitorInformer constructs a new informer for ServiceMonitor type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredServiceMonitorInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers ServiceMonitorIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) ServiceMonitorIndexInformer {
+	return NewTypedServiceMonitorInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
+}
+
+// NewServiceMonitorInformerWithOptions constructs a new informer for ServiceMonitor type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedServiceMonitorInformerWithOptions]).
+func NewServiceMonitorInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedServiceMonitorInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedServiceMonitorInformerWithOptions constructs a new informer for ServiceMonitor type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedServiceMonitorInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) ServiceMonitorIndexInformer {
+	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "servicemonitors"}
+	identifier := options.InformerName.WithResource(gvr)
+	tweakListOptions := options.TweakListOptions
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ServiceMonitor](cache.NewSharedIndexInformerWithOptions(
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
+			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().ServiceMonitors(namespace).List(context.Background(), options)
+				return client.MonitoringV1().ServiceMonitors(namespace).List(context.Background(), opts)
 			},
-			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().ServiceMonitors(namespace).Watch(context.Background(), options)
+				return client.MonitoringV1().ServiceMonitors(namespace).Watch(context.Background(), opts)
 			},
-			ListWithContextFunc: func(ctx context.Context, options metav1.ListOptions) (runtime.Object, error) {
+			ListWithContextFunc: func(ctx context.Context, opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().ServiceMonitors(namespace).List(ctx, options)
+				return client.MonitoringV1().ServiceMonitors(namespace).List(ctx, opts)
 			},
-			WatchFuncWithContext: func(ctx context.Context, options metav1.ListOptions) (watch.Interface, error) {
+			WatchFuncWithContext: func(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
-					tweakListOptions(&options)
+					tweakListOptions(&opts)
 				}
-				return client.MonitoringV1().ServiceMonitors(namespace).Watch(ctx, options)
+				return client.MonitoringV1().ServiceMonitors(namespace).Watch(ctx, opts)
 			},
-		},
+		}, client),
 		&apismonitoringv1.ServiceMonitor{},
-		resyncPeriod,
-		indexers,
-	)
+		cache.SharedIndexInformerOptions{
+			ResyncPeriod: options.ResyncPeriod,
+			Indexers:     options.Indexers,
+			Identifier:   identifier,
+		},
+	))
 }
 
 func (f *serviceMonitorInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredServiceMonitorInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+	return NewTypedServiceMonitorInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *serviceMonitorInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.ServiceMonitor{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *serviceMonitorInformer) TypedInformer() ServiceMonitorIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ServiceMonitor](f.factory.InformerFor(&apismonitoringv1.ServiceMonitor{}, f.defaultInformer))
 }
 
 func (f *serviceMonitorInformer) Lister() monitoringv1.ServiceMonitorLister {
 	return monitoringv1.NewServiceMonitorLister(f.Informer().GetIndexer())
+}
+
+// ToTypedServiceMonitorInformer converts an untyped informer into a TypedServiceMonitorInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ServiceMonitor. If that is not the case, calling type-safe methods of the returned
+// TypedServiceMonitorInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedServiceMonitorInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedServiceMonitorInformer(informer ServiceMonitorInformer) TypedServiceMonitorInformer {
+	if informer, ok := informer.(TypedServiceMonitorInformer); ok {
+		return informer
+	}
+	return &serviceMonitorTypedInformerAdapter{informer}
+}
+
+type serviceMonitorTypedInformerAdapter struct {
+	ServiceMonitorInformer
+}
+
+func (a *serviceMonitorTypedInformerAdapter) TypedInformer() ServiceMonitorIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ServiceMonitor](a.Informer())
+}
+
+// ToServiceMonitorIndexInformer converts an untyped informer into a ServiceMonitorIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *ServiceMonitor. If that is not the case, calling type-safe methods of the returned
+// ServiceMonitorIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a ServiceMonitorIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToServiceMonitorIndexInformer(informer cache.SharedIndexInformer) ServiceMonitorIndexInformer {
+	if informer, ok := informer.(ServiceMonitorIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.ServiceMonitor](informer)
 }

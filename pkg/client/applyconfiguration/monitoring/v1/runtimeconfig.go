@@ -18,7 +18,11 @@ package v1
 
 // RuntimeConfigApplyConfiguration represents a declarative configuration of the RuntimeConfig type for use
 // with apply.
+//
+// RuntimeConfig configures the values for the process behavior.
 type RuntimeConfigApplyConfiguration struct {
+	// goGC defines the Go garbage collection target percentage. Lowering this number may increase the CPU usage.
+	// See: https://tip.golang.org/doc/gc-guide#GOGC
 	GoGC *int32 `json:"goGC,omitempty"`
 }
 

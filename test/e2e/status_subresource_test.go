@@ -1,4 +1,4 @@
-// Copyright 2022 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
@@ -143,6 +144,93 @@ func testServiceMonitorStatusSubresource(t *testing.T) {
 	require.Equal(t, ts, cond.LastTransitionTime.String())
 }
 
+// testServiceMonitorStatusSubresourceForPrometheusAgent validates ServiceMonitor status updates upon PrometheusAgent selection.
+func testServiceMonitorStatusSubresourceForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "servicemonitor-status-agent-test"
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first ServiceMonitor to check that the operator only updates the binding when needed.
+	sm1 := framework.MakeBasicServiceMonitor("smon1")
+	sm1.Labels["group"] = name
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEmpty(t, ts)
+
+	// Create a second ServiceMonitor to check that the operator updates the binding when the condition changes.
+	sm2 := framework.MakeBasicServiceMonitor("smon2")
+	sm2.Labels["group"] = name
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// A label update doesn't change the ServiceMonitor's status.
+	sm1.Labels["test"] = "test"
+	sm1, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm1, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Reference a non-existing Secret to make the second ServiceMonitor invalid.
+	sm2.Spec.Endpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	sm2, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm2, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second ServiceMonitor should change to Accepted=False.
+	sm2, err = framework.WaitForServiceMonitorCondition(ctx, sm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sm2.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, operator.InvalidConfiguration, cond.Reason)
+	require.NotEmpty(t, cond.Message)
+	require.Equal(t, sm2.Generation, cond.ObservedGeneration)
+
+	// The first ServiceMonitor should remain unchanged.
+	sm1, err = framework.WaitForServiceMonitorCondition(ctx, sm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
 // testGarbageCollectionOfServiceMonitorBinding validates that the operator removes the reference to the Prometheus resource when the ServiceMonitor isn't selected anymore by the workload.
 func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	t.Parallel()
@@ -180,6 +268,44 @@ func testGarbageCollectionOfServiceMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testGarbageCollectionOfServiceMonitorBindingForPrometheusAgent validates that deselecting a ServiceMonitor removes its PrometheusAgent workload binding.
+func testGarbageCollectionOfServiceMonitorBindingForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "smon-agent-binding-cleanup-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	sm.Labels = map[string]string{}
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Update(ctx, sm, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
@@ -225,6 +351,52 @@ func testServiceMonitorStatusWithMultipleWorkloads(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testServiceMonitorStatusWithMultiplePrometheusAgents validates ServiceMonitor status updates with multiple PrometheusAgent resources.
+func testServiceMonitorStatusWithMultiplePrometheusAgents(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "servicemonitor-status-multiple-agents"
+	p1 := framework.MakeBasicPrometheusAgent(ns, "agent1", name, 1)
+	p1, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p1)
+	require.NoError(t, err)
+
+	p2 := framework.MakeBasicPrometheusAgent(ns, "agent2", name, 1)
+	p2.Spec.ArbitraryFSAccessThroughSMs.Deny = true
+	p2, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p2)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm.Spec.Endpoints[0].BearerTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// The ServiceMonitor should be accepted by the first PrometheusAgent resource.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p1, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The ServiceMonitor should be rejected by the second PrometheusAgent resource because it wants to access the service account token file.
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p2, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+
+	// The first PrometheusAgent binding should remain present and accepted.
+	_, err = framework.WaitForServiceMonitorCondition(ctx, sm, p1, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testRmServiceMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource when workload is deleted.
 func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	t.Parallel()
@@ -260,6 +432,43 @@ func testRmServiceMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmServiceMonitorBindingDuringPrometheusAgentDelete validates that deleting a PrometheusAgent removes its binding from the ServiceMonitor status.
+func testRmServiceMonitorBindingDuringPrometheusAgentDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "agent-delete-smon-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sm := framework.MakeBasicServiceMonitor(name)
+	sm, err = framework.MonClientV1.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sm, err = framework.WaitForServiceMonitorCondition(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForServiceMonitorWorkloadBindingCleanup(ctx, sm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
@@ -340,6 +549,93 @@ func testPodMonitorStatusSubresource(t *testing.T) {
 	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1.PrometheusName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
 	require.NoError(t, err)
 	binding, err = framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1.PrometheusName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
+// testPodMonitorStatusSubresourceForPrometheusAgent validates PodMonitor status updates upon PrometheusAgent selection.
+func testPodMonitorStatusSubresourceForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "podmonitor-status-agent-test"
+
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first PodMonitor to check that the operator only updates the binding when needed.
+	pm1 := framework.MakeBasicPodMonitor("pmon1")
+	pm1.Labels["group"] = name
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEmpty(t, ts)
+
+	// Create a second PodMonitor to check that the operator updates the binding when the condition changes.
+	pm2 := framework.MakeBasicPodMonitor("pmon2")
+	pm2.Labels["group"] = name
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// A label update doesn't change the PodMonitor's status.
+	pm1.Labels["test"] = "test"
+	pm1, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm1, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Reference a non-existing Secret to make the second PodMonitor invalid.
+	pm2.Spec.PodMetricsEndpoints[0].BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	pm2, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm2, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second PodMonitor should change to Accepted=False.
+	pm2, err = framework.WaitForPodMonitorCondition(ctx, pm2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pm2.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, operator.InvalidConfiguration, cond.Reason)
+	require.NotEmpty(t, cond.Message)
+	require.Equal(t, pm2.Generation, cond.ObservedGeneration)
+
+	// The first PodMonitor should remain unchanged.
+	pm1, err = framework.WaitForPodMonitorCondition(ctx, pm1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(pm1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
 	require.NoError(t, err)
 	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
 	require.NoError(t, err)
@@ -482,6 +778,44 @@ func testGarbageCollectionOfPodMonitorBinding(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testGarbageCollectionOfPodMonitorBindingForPrometheusAgent validates that deselecting a PodMonitor removes its PrometheusAgent workload binding.
+func testGarbageCollectionOfPodMonitorBindingForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "pmon-agent-binding-cleanup-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	pm.Labels = map[string]string{}
+	pm, err = framework.MonClientV1.PodMonitors(ns).Update(ctx, pm, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testRmPodMonitorBindingDuringWorkloadDelete validates that the operator removes the reference to the Prometheus resource from PodMonitor's status when workload is deleted.
 func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	t.Parallel()
@@ -517,6 +851,43 @@ func testRmPodMonitorBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1.PrometheusName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmPodMonitorBindingDuringPrometheusAgentDelete validates that deleting a PrometheusAgent removes its binding from the PodMonitor status.
+func testRmPodMonitorBindingDuringPrometheusAgentDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "agent-delete-pmon-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	pm := framework.MakeBasicPodMonitor(name)
+	pm, err = framework.MonClientV1.PodMonitors(ns).Create(ctx, pm, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	pm, err = framework.WaitForPodMonitorCondition(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForPodMonitorWorkloadBindingCleanup(ctx, pm, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
 	require.NoError(t, err)
 }
 
@@ -1303,4 +1674,216 @@ func testRmPromeRuleBindingDuringWorkloadDeleteForThanosRuler(t *testing.T) {
 
 	_, err = framework.WaitForRuleWorkloadBindingCleanup(ctx, pr, tr, monitoringv1.ThanosRulerName, 1*time.Minute)
 	require.NoError(t, err)
+}
+
+// testAlertmanagerConfigStatusSubresource validates AlertmanagerConfig status updates upon Alertmanager selection.
+func testAlertmanagerConfigStatusSubresource(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-subresource-test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	// Create an AlertmanagerConfig with valid configuration
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
+
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait for the AlertmanagerConfig to be accepted by the Alertmanager
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	binding, err := framework.GetWorkloadBinding(alc.Status.Bindings, am, monitoringv1.AlertmanagerName)
+	require.NoError(t, err, "Binding for Alertmanager should exist")
+	require.Equal(t, am.Name, binding.Name)
+	require.Equal(t, am.Namespace, binding.Namespace)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEqual(t, "", ts)
+
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(alc.Status.Bindings, am, monitoringv1.AlertmanagerName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
+// testFinalizerForAlertmanagerWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for Alertmanager when StatusForConfigurationResourcesFeature is enabled.
+func testFinalizerForAlertmanagerWhenStatusForConfigResEnabled(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-status-cleanup-finalizer-test"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	finalizers := am.GetFinalizers()
+	require.NotEmpty(t, finalizers)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+}
+
+// testGarbageCollectionOfAlertmanagerConfigBinding validates that the operator removes the reference to the
+// Alertmanager resource when the AlertmanagerConfig isn't selected anymore.
+func testGarbageCollectionOfAlertmanagerConfigBinding(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-binding-cleanup"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// Remove the label so that the AlertmanagerConfig isn't selected anymore.
+	alc.Labels = map[string]string{}
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Update(ctx, alc, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx, alc, am, monitoringv1.AlertmanagerName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmAlertmanagerConfigBindingDuringWorkloadDelete validates that the operator removes the reference to the
+// Alertmanager resource when the workload is deleted.
+func testRmAlertmanagerConfigBindingDuringWorkloadDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "am-cfg-status-binding-workload-delete"
+
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+
+	am, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	alc := makeBasicAlertmanagerConfig(ns, "amcfg1", name)
+	alc, err = framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(ctx, alc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	alc, err = framework.WaitForAlertmanagerConfigCondition(ctx, alc, am, monitoringv1.AlertmanagerName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 3*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForAlertmanagerConfigWorkloadBindingCleanup(ctx, alc, am, monitoringv1.AlertmanagerName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// makeBasicAlertmanagerConfig returns an AlertmanagerConfig with a valid
+// configuration, labeled so that it can be selected by the Alertmanager
+// identified by group.
+func makeBasicAlertmanagerConfig(ns, name, group string) *monitoringv1alpha1.AlertmanagerConfig {
+	return &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: ns,
+			Labels: map[string]string{
+				"group": group,
+			},
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "default",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{
+				{
+					Name: "default",
+					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{
+						{
+							URL: new("http://test.url"),
+						},
+					},
+				},
+			},
+		},
+	}
 }

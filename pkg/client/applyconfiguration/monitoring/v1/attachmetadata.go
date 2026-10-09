@@ -19,6 +19,15 @@ package v1
 // AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
+	// node when set to true, Prometheus attaches node metadata to the discovered
+	// targets.
+	//
+	// The Prometheus service account must have the `list` and `watch`
+	// permissions on the `Nodes` objects.
+	//
+	// Node metadata labels are not automatically added to scraped metrics. They are
+	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
+	// with relabeling configuration.
 	Node *bool `json:"node,omitempty"`
 }
 

@@ -23,18 +23,42 @@ import (
 
 // WeChatConfigApplyConfiguration represents a declarative configuration of the WeChatConfig type for use
 // with apply.
+//
+// WeChatConfig configures notifications via WeChat.
+// See https://prometheus.io/docs/alerting/latest/configuration/#wechat_config
 type WeChatConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	APISecret    *v1.SecretKeySelector         `json:"apiSecret,omitempty"`
-	APIURL       *monitoringv1alpha1.URL       `json:"apiURL,omitempty"`
-	CorpID       *string                       `json:"corpID,omitempty"`
-	AgentID      *string                       `json:"agentID,omitempty"`
-	ToUser       *string                       `json:"toUser,omitempty"`
-	ToParty      *string                       `json:"toParty,omitempty"`
-	ToTag        *string                       `json:"toTag,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	MessageType  *string                       `json:"messageType,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// apiSecret defines the secret's key that contains the WeChat API key.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	APISecret *v1.SecretKeySelector `json:"apiSecret,omitempty"`
+	// apiURL defines the WeChat API URL.
+	// When not specified, defaults to the standard WeChat Work API endpoint.
+	APIURL *monitoringv1alpha1.URL `json:"apiURL,omitempty"`
+	// corpID defines the corp id for authentication.
+	// This is the unique identifier for your WeChat Work organization.
+	CorpID *string `json:"corpID,omitempty"`
+	// agentID defines the application agent ID within WeChat Work.
+	// This identifies which WeChat Work application will send the notifications.
+	AgentID *string `json:"agentID,omitempty"`
+	// toUser defines the target user(s) to receive the notification.
+	// Can be a single user ID or multiple user IDs separated by '|'.
+	ToUser *string `json:"toUser,omitempty"`
+	// toParty defines the target department(s) to receive the notification.
+	// Can be a single department ID or multiple department IDs separated by '|'.
+	ToParty *string `json:"toParty,omitempty"`
+	// toTag defines the target tag(s) to receive the notification.
+	// Can be a single tag ID or multiple tag IDs separated by '|'.
+	ToTag *string `json:"toTag,omitempty"`
+	// message defines the API request data as defined by the WeChat API.
+	// This contains the actual notification content to be sent.
+	Message *string `json:"message,omitempty"`
+	// messageType defines the type of message to send.
+	// Valid values include "text", "markdown", and other WeChat Work supported message types.
+	MessageType *string `json:"messageType,omitempty"`
+	// httpConfig defines the HTTP client configuration for WeChat API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // WeChatConfigApplyConfiguration constructs a declarative configuration of the WeChatConfig type for use with

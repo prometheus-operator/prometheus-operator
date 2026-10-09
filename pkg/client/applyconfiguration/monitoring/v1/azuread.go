@@ -18,13 +18,33 @@ package v1
 
 // AzureADApplyConfiguration represents a declarative configuration of the AzureAD type for use
 // with apply.
+//
+// AzureAD defines the configuration for remote write's azuread parameters.
 type AzureADApplyConfiguration struct {
-	Cloud            *string                                  `json:"cloud,omitempty"`
-	ManagedIdentity  *ManagedIdentityApplyConfiguration       `json:"managedIdentity,omitempty"`
-	OAuth            *AzureOAuthApplyConfiguration            `json:"oauth,omitempty"`
-	SDK              *AzureSDKApplyConfiguration              `json:"sdk,omitempty"`
+	// cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.
+	Cloud *string `json:"cloud,omitempty"`
+	// managedIdentity defines the Azure User-assigned Managed identity.
+	// Cannot be set at the same time as `oauth`, `sdk` or `workloadIdentity`.
+	ManagedIdentity *ManagedIdentityApplyConfiguration `json:"managedIdentity,omitempty"`
+	// oauth defines the oauth config that is being used to authenticate.
+	// Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
+	//
+	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
+	OAuth *AzureOAuthApplyConfiguration `json:"oauth,omitempty"`
+	// sdk defines the Azure SDK config that is being used to authenticate.
+	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication
+	// Cannot be set at the same time as `oauth`, `managedIdentity` or `workloadIdentity`.
+	//
+	// It requires Prometheus >= v2.52.0 or Thanos >= v0.36.0.
+	SDK *AzureSDKApplyConfiguration `json:"sdk,omitempty"`
+	// workloadIdentity defines the Azure Workload Identity authentication.
+	// Cannot be set at the same time as `oauth`, `managedIdentity`, or `sdk`.
+	//
+	// It requires Prometheus >= 3.7.0. Currently not supported by Thanos.
 	WorkloadIdentity *AzureWorkloadIdentityApplyConfiguration `json:"workloadIdentity,omitempty"`
-	Scope            *string                                  `json:"scope,omitempty"`
+	// scope is the custom OAuth 2.0 scope to request when acquiring tokens.
+	// It requires Prometheus >= 3.9.0. Currently not supported by Thanos.
+	Scope *string `json:"scope,omitempty"`
 }
 
 // AzureADApplyConfiguration constructs a declarative configuration of the AzureAD type for use with

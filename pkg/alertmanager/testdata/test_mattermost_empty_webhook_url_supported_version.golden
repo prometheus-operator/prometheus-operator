@@ -1,0 +1,7 @@
+global:
+  mattermost_webhook_url: //www.test.com
+receivers:
+- name: ""
+  mattermost_configs:
+  - text: test text
+templates: []

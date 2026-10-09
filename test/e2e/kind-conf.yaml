@@ -8,22 +8,32 @@ name: kind
 # tests because the configuration changes are propagated faster to the
 # containers.
 #
+# Workers are assigned to fictitious availability zones (zone-a and zone-b) for
+# sharding topology tests. Note that the control plane node isn't schedulable
+# by default.
+#
 # While we apply the same settings to all nodes, there's a current limitation
 # with Kind that kubelet configuration is cluster-wide so only the first patch
 # is applied in fact. See https://github.com/kubernetes-sigs/kind/issues/3849
 # for details.
 nodes:
 - role: control-plane
+  labels:
+    topology.kubernetes.io/zone: zone-a
   kubeadmConfigPatches:
   - |
     kind: KubeletConfiguration
     syncFrequency: 10s
 - role: worker
+  labels:
+    topology.kubernetes.io/zone: zone-a
   kubeadmConfigPatches:
   - |
     kind: KubeletConfiguration
     syncFrequency: 10s
 - role: worker
+  labels:
+    topology.kubernetes.io/zone: zone-b
   kubeadmConfigPatches:
   - |
     kind: KubeletConfiguration

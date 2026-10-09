@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
@@ -27,10 +28,10 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 	}
 
 	if err := gc.HTTPConfigWithProxy.Validate(); err != nil {
-		return fmt.Errorf("httpConfig: %w", err)
+		return fmt.Errorf("'httpConfig': %w", err)
 	}
 
-	if err := validatingTelegramConfig(gc.TelegramConfig); err != nil {
+	if err := validateGlobalTelegramConfig(gc.TelegramConfig); err != nil {
 		return fmt.Errorf("telegram: %w", err)
 	}
 
@@ -51,19 +52,23 @@ func ValidateAlertmanagerGlobalConfig(gc *monitoringv1.AlertmanagerGlobalConfig)
 	}
 
 	if err := validateGlobalWeChatConfig(gc.WeChatConfig); err != nil {
-		return fmt.Errorf("wechatConfig: %w", err)
+		return fmt.Errorf("'wechat': %w", err)
 	}
 
 	return nil
 }
 
-func validatingTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+func validateGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
 	if tc == nil {
 		return nil
 	}
 
+	if tc.BotToken != nil && tc.BotTokenFile != nil {
+		return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
+	}
+
 	if err := validation.ValidateURLPtr((*string)(tc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
@@ -75,7 +80,7 @@ func validateGlobalJiraConfig(jc *monitoringv1.GlobalJiraConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(jc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
@@ -87,7 +92,7 @@ func validateGlobalVictorOpsConfig(vc *monitoringv1.GlobalVictorOpsConfig) error
 	}
 
 	if err := validation.ValidateURLPtr((*string)(vc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
@@ -99,7 +104,7 @@ func validateGlobalRocketChatConfig(rc *monitoringv1.GlobalRocketChatConfig) err
 	}
 
 	if err := validation.ValidateURLPtr((*string)(rc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
@@ -111,7 +116,7 @@ func validateGlobalWebexConfig(wc *monitoringv1.GlobalWebexConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil
@@ -123,7 +128,7 @@ func validateGlobalWeChatConfig(wc *monitoringv1.GlobalWeChatConfig) error {
 	}
 
 	if err := validation.ValidateURLPtr((*string)(wc.APIURL)); err != nil {
-		return fmt.Errorf("invalid apiURL: %w", err)
+		return fmt.Errorf("invalid 'apiURL': %w", err)
 	}
 
 	return nil

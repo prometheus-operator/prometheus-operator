@@ -1,0 +1,14 @@
+receivers:
+- name: ""
+  mattermost_configs:
+  - webhook_url: http://mattermost.example.com/hooks/xxx
+    text: test
+    icon_url: https://example.com/icon.png
+    attachments:
+    - author_link: https://example.com/author
+      author_icon: https://example.com/author-icon.png
+      title_link: https://example.com/title
+      thumb_url: https://example.com/thumb.png
+      footer_icon: https://example.com/footer-icon.png
+      image_url: https://example.com/image.png
+templates: []

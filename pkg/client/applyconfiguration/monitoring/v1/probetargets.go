@@ -18,9 +18,20 @@ package v1
 
 // ProbeTargetsApplyConfiguration represents a declarative configuration of the ProbeTargets type for use
 // with apply.
+//
+// ProbeTargets defines how to discover the probed targets.
+// One of the `staticConfig` or `ingress` must be defined.
+// If both are defined, `staticConfig` takes precedence.
 type ProbeTargetsApplyConfiguration struct {
+	// staticConfig defines the static list of targets to probe and the
+	// relabeling configuration.
+	// If `ingress` is also defined, `staticConfig` takes precedence.
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#static_config.
 	StaticConfig *ProbeTargetStaticConfigApplyConfiguration `json:"staticConfig,omitempty"`
-	Ingress      *ProbeTargetIngressApplyConfiguration      `json:"ingress,omitempty"`
+	// ingress defines the Ingress objects to probe and the relabeling
+	// configuration.
+	// If `staticConfig` is also defined, `staticConfig` takes precedence.
+	Ingress *ProbeTargetIngressApplyConfiguration `json:"ingress,omitempty"`
 }
 
 // ProbeTargetsApplyConfiguration constructs a declarative configuration of the ProbeTargets type for use with

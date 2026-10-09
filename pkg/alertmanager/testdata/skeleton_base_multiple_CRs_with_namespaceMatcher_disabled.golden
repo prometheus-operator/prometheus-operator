@@ -1,0 +1,22 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: ns1/amc1/test
+    group_by:
+    - job
+    continue: true
+  - receiver: ns2/amc1/test2
+    group_by:
+    - job
+    continue: true
+  - receiver: ns2/amc2/test2
+    group_by:
+    - job
+    - instance
+    continue: true
+receivers:
+- name: "null"
+- name: ns1/amc1/test
+- name: ns2/amc1/test2
+- name: ns2/amc2/test2
+templates: []

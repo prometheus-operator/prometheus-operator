@@ -91,3 +91,7 @@ scrape_configs:
     target_label: ns-key
     regex: my-job-pod-.+
     action: drop
+storage:
+  tsdb:
+    retention:
+      time: 24h

@@ -1,4 +1,4 @@
-// Copyright 2021 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -253,4 +253,31 @@ func TestCreateConfigReloaderForDaemonSet(t *testing.T) {
 		Name:  ShardEnvVar,
 		Value: strconv.Itoa(0),
 	})
+}
+
+func TestCreateConfigReloaderWithZone(t *testing.T) {
+	for _, tc := range []struct {
+		zone        string
+		expectEnVar bool
+	}{
+		{zone: "zone-a", expectEnVar: true},
+		{zone: "", expectEnVar: false},
+	} {
+		t.Run(tc.zone, func(t *testing.T) {
+			container := CreateConfigReloader(
+				"config-reloader",
+				ReloaderConfig(reloaderConfig),
+				Zone(tc.zone),
+			)
+
+			var found bool
+			for _, env := range container.Env {
+				if env.Name == TopologyZoneEnvVar {
+					assert.Equal(t, tc.zone, env.Value)
+					found = true
+				}
+			}
+			assert.Equal(t, tc.expectEnVar, found)
+		})
+	}
 }

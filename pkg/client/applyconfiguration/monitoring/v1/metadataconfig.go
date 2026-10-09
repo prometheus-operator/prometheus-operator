@@ -22,10 +22,19 @@ import (
 
 // MetadataConfigApplyConfiguration represents a declarative configuration of the MetadataConfig type for use
 // with apply.
+//
+// MetadataConfig configures the sending of series metadata to the remote storage.
 type MetadataConfigApplyConfiguration struct {
-	Send              *bool                  `json:"send,omitempty"`
-	SendInterval      *monitoringv1.Duration `json:"sendInterval,omitempty"`
-	MaxSamplesPerSend *int32                 `json:"maxSamplesPerSend,omitempty"`
+	// send defines whether metric metadata is sent to the remote storage or not.
+	//
+	// The setting is ignored when Remote Write message's version 2.0 is used.
+	Send *bool `json:"send,omitempty"`
+	// sendInterval defines how frequently metric metadata is sent to the remote storage.
+	SendInterval *monitoringv1.Duration `json:"sendInterval,omitempty"`
+	// maxSamplesPerSend defines the maximum number of metadata samples per send.
+	//
+	// It requires Prometheus >= v2.29.0.
+	MaxSamplesPerSend *int32 `json:"maxSamplesPerSend,omitempty"`
 }
 
 // MetadataConfigApplyConfiguration constructs a declarative configuration of the MetadataConfig type for use with

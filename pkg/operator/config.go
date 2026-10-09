@@ -1,4 +1,4 @@
-// Copyright 2020 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,6 +68,9 @@ type Config struct {
 	// Controller id for pod ownership.
 	ControllerID string
 
+	// Repair policy
+	RepairPolicy RepairPolicy
+
 	// Event recorder factory.
 	EventRecorderFactory EventRecorderFactory
 
@@ -101,11 +104,11 @@ func DefaultConfig(cpu, memory string) Config {
 			},
 			PrometheusTopologyShardingFeature: FeatureGate{
 				description: "Enables the zone aware sharding for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			PrometheusShardRetentionPolicyFeature: FeatureGate{
 				description: "Enables shard retention policy for Prometheus",
-				enabled:     false,
+				enabled:     true,
 			},
 			StatusForConfigurationResourcesFeature: FeatureGate{
 				description: "Updates the status subresource for configuration resources",
@@ -116,6 +119,7 @@ func DefaultConfig(cpu, memory string) Config {
 				enabled:     false,
 			},
 		},
+		RepairPolicy: NoneRepairPolicy,
 	}
 }
 
@@ -233,8 +237,11 @@ func (m *Map) Set(value string) error {
 	}
 
 	for pair := range strings.SplitSeq(value, ",") {
-		pair := strings.Split(pair, "=")
-		(*m)[pair[0]] = pair[1]
+		k, v, ok := strings.Cut(pair, "=")
+		if !ok {
+			return fmt.Errorf("invalid key=value pair: %q", pair)
+		}
+		(*m)[k] = v
 	}
 
 	return nil

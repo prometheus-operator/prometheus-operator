@@ -1,4 +1,4 @@
-// Copyright 2019 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 
 func MakeSecretWithCert(ns, name string, keyList []string,
 	dataList [][]byte) *corev1.Secret {
-
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
 		Type:       corev1.SecretType("Opaque"),

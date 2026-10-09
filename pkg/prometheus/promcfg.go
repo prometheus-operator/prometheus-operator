@@ -1,4 +1,4 @@
-// Copyright 2016 The prometheus-operator Authors
+// Copyright The prometheus-operator Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/alecthomas/units"
@@ -34,6 +35,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -53,11 +55,21 @@ const (
 	kubernetesSDRolePod           = "pod"
 	kubernetesSDRoleIngress       = "ingress"
 
-	defaultPrometheusExternalLabelName = "prometheus"
-	defaultReplicaExternalLabelName    = "prometheus_replica"
+	defaultPrometheusExternalLabelName   = "prometheus"
+	defaultReplicaExternalLabelName      = "prometheus_replica"
+	defaultTopologyZoneExternalLabelName = "zone"
 
 	hashLabelNameForSharding          = "__tmp_hash"
 	hashLabelNameForDisablingSharding = "__tmp_disable_sharding"
+
+	topologyTmpLabel           = "__tmp_topology"
+	nodeZoneMetaLabel          = "__meta_kubernetes_node_label_topology_kubernetes_io_zone"
+	nodeZonePresentMetaLabel   = "__meta_kubernetes_node_labelpresent_topology_kubernetes_io_zone"
+	endpointSliceZoneMetaLabel = "__meta_kubernetes_endpointslice_endpoint_zone"
+	// podZoneMetaLabel and podZonePresentMetaLabel are the SD meta labels for the
+	// topology.kubernetes.io/zone pod label injected by PodTopologyLabelsAdmission (K8s >= 1.35).
+	podZoneMetaLabel        = "__meta_kubernetes_pod_label_topology_kubernetes_io_zone"
+	podZonePresentMetaLabel = "__meta_kubernetes_pod_labelpresent_topology_kubernetes_io_zone"
 )
 
 var invalidLabelCharRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -69,16 +81,18 @@ func sanitizeLabelName(name string) string {
 // ConfigGenerator knows how to generate a Prometheus configuration which is
 // compatible with a given Prometheus version.
 type ConfigGenerator struct {
-	logger                     *slog.Logger
-	version                    semver.Version
-	notCompatible              bool
-	prom                       monitoringv1.PrometheusInterface
-	endpointSliceSupported     bool // True when the cluster supports EndpointSlice.
-	scrapeClasses              map[string]monitoringv1.ScrapeClass
-	defaultScrapeClassName     string
-	daemonSet                  bool
-	prometheusTopologySharding bool
-	inlineTLSConfig            bool
+	logger                      *slog.Logger
+	version                     semver.Version
+	notCompatible               bool
+	prom                        monitoringv1.PrometheusInterface
+	endpointSliceSupported      bool // True when the cluster supports EndpointSlice.
+	scrapeClasses               map[string]monitoringv1.ScrapeClass
+	defaultScrapeClassName      string
+	daemonSet                   bool
+	prometheusTopologySharding  bool
+	prometheusRetentionPolicies bool
+	podTopologyLabelsSupported  bool
+	inlineTLSConfig             bool
 
 	bypassVersionCheck bool
 }
@@ -103,6 +117,23 @@ func WithPrometheusTopologySharding() ConfigGeneratorOption {
 	}
 }
 
+func WithPrometheusRetentionPolicies() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.prometheusRetentionPolicies = true
+	}
+}
+
+// WithPodTopologyLabelsSupport tells the config generator that the topology.kubernetes.io/zone label is injected as a pod label. In that case, the operator
+// no longer forces attach_metadata.node=true for topology sharding and instead
+// uses the pod label for zone detection.
+func WithPodTopologyLabelsSupport() ConfigGeneratorOption {
+	return func(cg *ConfigGenerator) {
+		cg.podTopologyLabelsSupported = true
+	}
+}
+
+// WithInlineTLSConfig is an API only used by
+// https://github.com/open-telemetry/opentelemetry-operator.
 func WithInlineTLSConfig() ConfigGeneratorOption {
 	return func(cg *ConfigGenerator) {
 		cg.inlineTLSConfig = true
@@ -244,17 +275,19 @@ func (cg *ConfigGenerator) Version() semver.Version {
 // logger.
 func (cg *ConfigGenerator) WithKeyVals(keyvals ...any) *ConfigGenerator {
 	return &ConfigGenerator{
-		logger:                     cg.logger.With(keyvals...),
-		version:                    cg.version,
-		notCompatible:              cg.notCompatible,
-		prom:                       cg.prom,
-		endpointSliceSupported:     cg.endpointSliceSupported,
-		scrapeClasses:              cg.scrapeClasses,
-		defaultScrapeClassName:     cg.defaultScrapeClassName,
-		daemonSet:                  cg.daemonSet,
-		prometheusTopologySharding: cg.prometheusTopologySharding,
-		inlineTLSConfig:            cg.inlineTLSConfig,
-		bypassVersionCheck:         cg.bypassVersionCheck,
+		logger:                      cg.logger.With(keyvals...),
+		version:                     cg.version,
+		notCompatible:               cg.notCompatible,
+		prom:                        cg.prom,
+		endpointSliceSupported:      cg.endpointSliceSupported,
+		scrapeClasses:               cg.scrapeClasses,
+		defaultScrapeClassName:      cg.defaultScrapeClassName,
+		daemonSet:                   cg.daemonSet,
+		prometheusTopologySharding:  cg.prometheusTopologySharding,
+		prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+		podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
+		inlineTLSConfig:             cg.inlineTLSConfig,
+		bypassVersionCheck:          cg.bypassVersionCheck,
 	}
 }
 
@@ -269,17 +302,19 @@ func (cg *ConfigGenerator) WithMinimumVersion(version string) *ConfigGenerator {
 
 	if cg.version.LT(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                     cg.logger.With("minimum_version", version),
-			version:                    cg.version,
-			notCompatible:              true,
-			prom:                       cg.prom,
-			endpointSliceSupported:     cg.endpointSliceSupported,
-			scrapeClasses:              cg.scrapeClasses,
-			defaultScrapeClassName:     cg.defaultScrapeClassName,
-			daemonSet:                  cg.daemonSet,
-			prometheusTopologySharding: cg.prometheusTopologySharding,
-			inlineTLSConfig:            cg.inlineTLSConfig,
-			bypassVersionCheck:         cg.bypassVersionCheck,
+			logger:                      cg.logger.With("minimum_version", version),
+			version:                     cg.version,
+			notCompatible:               true,
+			prom:                        cg.prom,
+			endpointSliceSupported:      cg.endpointSliceSupported,
+			scrapeClasses:               cg.scrapeClasses,
+			defaultScrapeClassName:      cg.defaultScrapeClassName,
+			daemonSet:                   cg.daemonSet,
+			prometheusTopologySharding:  cg.prometheusTopologySharding,
+			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
+			inlineTLSConfig:             cg.inlineTLSConfig,
+			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
 	}
 
@@ -297,17 +332,19 @@ func (cg *ConfigGenerator) WithMaximumVersion(version string) *ConfigGenerator {
 
 	if cg.version.GTE(semver.MustParse(version)) {
 		return &ConfigGenerator{
-			logger:                     cg.logger.With("maximum_version", version),
-			version:                    cg.version,
-			notCompatible:              true,
-			prom:                       cg.prom,
-			endpointSliceSupported:     cg.endpointSliceSupported,
-			scrapeClasses:              cg.scrapeClasses,
-			defaultScrapeClassName:     cg.defaultScrapeClassName,
-			daemonSet:                  cg.daemonSet,
-			prometheusTopologySharding: cg.prometheusTopologySharding,
-			inlineTLSConfig:            cg.inlineTLSConfig,
-			bypassVersionCheck:         cg.bypassVersionCheck,
+			logger:                      cg.logger.With("maximum_version", version),
+			version:                     cg.version,
+			notCompatible:               true,
+			prom:                        cg.prom,
+			endpointSliceSupported:      cg.endpointSliceSupported,
+			scrapeClasses:               cg.scrapeClasses,
+			defaultScrapeClassName:      cg.defaultScrapeClassName,
+			daemonSet:                   cg.daemonSet,
+			prometheusTopologySharding:  cg.prometheusTopologySharding,
+			prometheusRetentionPolicies: cg.prometheusRetentionPolicies,
+			podTopologyLabelsSupported:  cg.podTopologyLabelsSupported,
+			inlineTLSConfig:             cg.inlineTLSConfig,
+			bypassVersionCheck:          cg.bypassVersionCheck,
 		}
 	}
 
@@ -386,7 +423,7 @@ var (
 
 // AddLimitsToYAML appends the given limit key to the configuration if
 // supported by the Prometheus version.
-func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) AddLimitsToYAML(cfg yaml.MapSlice, k limitKey, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	finalLimit := cg.getLimit(limit, enforcedLimit)
 	if finalLimit == nil {
 		return cfg
@@ -670,6 +707,10 @@ func (cg *ConfigGenerator) addSigv4ToYaml(cfg yaml.MapSlice,
 		sigv4Cfg = append(sigv4Cfg, yaml.MapItem{Key: "role_arn", Value: sigv4.RoleArn})
 	}
 
+	if sigv4.ExternalID != "" {
+		sigv4Cfg = cg.WithMinimumVersion("3.11.0").AppendMapItem(sigv4Cfg, "external_id", sigv4.ExternalID)
+	}
+
 	if sigv4.UseFIPSSTSEndpoint != nil {
 		sigv4Cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(sigv4Cfg, "use_fips_sts_endpoint", *sigv4.UseFIPSSTSEndpoint)
 	}
@@ -749,6 +790,20 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		m[replicaExternalLabelName] = fmt.Sprintf("$(%s)", operator.PodNameEnvVar)
 	}
 
+	if cg.prometheusTopologySharding {
+		ss := cpf.ShardingStrategy
+		if ss != nil && ss.Mode != nil &&
+			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+			ss.Topology != nil {
+			// Default label name is "zone"; nil means use default.
+			// Empty string means skip.
+			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
+			if zoneExternalLabelName != "" {
+				m[zoneExternalLabelName] = fmt.Sprintf("$(%s)", operator.TopologyZoneEnvVar)
+			}
+		}
+	}
+
 	for k, v := range cpf.ExternalLabels {
 		if _, found := m[k]; found {
 			cg.logger.Warn("ignoring external label because it is a reserved key", "key", k)
@@ -805,7 +860,6 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	store assets.StoreGetter,
 	safetls *monitoringv1.SafeTLSConfig,
 ) yaml.MapSlice {
-
 	if safetls == nil {
 		return cfg
 	}
@@ -1000,7 +1054,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize, p.Spec.RetentionPercentage)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1037,12 +1091,32 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	return yaml.Marshal(cfg)
 }
 
-func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exemplars *monitoringv1.Exemplars) (yaml.MapSlice, error) {
+func (cg *ConfigGenerator) appendStorageSettingsConfig(
+	cfg yaml.MapSlice,
+	exemplars *monitoringv1.Exemplars,
+	retention monitoringv1.Duration,
+	retentionSize monitoringv1.ByteSize,
+	retentionPercentage *resource.Quantity,
+) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
+		tsdbSlice yaml.MapSlice
 		cgStorage = cg.WithMinimumVersion("2.29.0")
 		tsdb      = cg.prom.GetCommonPrometheusFields().TSDB
 	)
+
+	err := tsdb.Validate()
+	if err != nil {
+		return cfg, err
+	}
+
+	if err := validateRetentionPercentage(retentionPercentage); err != nil {
+		return cfg, err
+	}
+
+	if err := validateChunkEncodingCompatibility(cg.prom.GetCommonPrometheusFields()); err != nil {
+		return cfg, err
+	}
 
 	if exemplars != nil && exemplars.MaxSize != nil {
 		storage = cgStorage.AppendMapItem(storage, "exemplars", yaml.MapSlice{
@@ -1053,13 +1127,52 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(cfg yaml.MapSlice, exempl
 		})
 	}
 
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		storage = cg.WithMinimumVersion("2.39.0").AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			tsdbSlice = cg.WithMinimumVersion("2.39.0").AppendMapItem(tsdbSlice, "out_of_order_time_window", *tsdb.OutOfOrderTimeWindow)
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			tsdbSlice = cg.WithMinimumVersion("3.10.0").AppendMapItem(tsdbSlice, "stale_series_compaction_threshold", tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64())
+		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			tsdbSlice = cg.WithMinimumVersion("3.13.0").AppendMapItem(tsdbSlice, "chunk_encoding", yaml.MapSlice{
+				{Key: "floats", Value: strings.ToLower(string(*tsdb.ChunkEncoding.Floats))},
+			})
+		}
+	}
+
+	var (
+		retentionSlice yaml.MapSlice
+		cgRetention    = cg.WithMinimumVersion("3.11.0")
+	)
+
+	if cgRetention.IsCompatible() {
+		// Starting with v3.11.0, the time and size retention settings are read
+		// from the configuration file instead of the command-line arguments.
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize, retentionPercentage))
+		if retentionTime != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
+		}
+
+		if retentionSize != "" {
+			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
+		}
+	}
+
+	// Percentage-based retention has no command-line equivalent, hence it can't
+	// be supported by older Prometheus versions.
+	if retentionPercentage != nil {
+		retentionSlice = cgRetention.AppendMapItem(retentionSlice, "percentage", retentionPercentage.AsApproximateFloat64())
+	}
+
+	if len(retentionSlice) > 0 {
+		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
+	}
+
+	if len(tsdbSlice) > 0 {
+		storage = append(storage, yaml.MapItem{Key: "tsdb", Value: tsdbSlice})
 	}
 
 	if len(storage) == 0 {
@@ -1180,9 +1293,13 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
-	// Since metadata-wal-records is in the process of being deprecated as part of remote write v2 stabilization as described in issue.
-	// Also seems to be cause some increase in resource usage overall, will stop being automatically added on prometheus 3.4.0 onwards.
-	// For more context see https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// metadata-wal-records is in the process of being deprecated as part of
+	// remote write v2 stabilization: it causes some increase in resource usage
+	// overall. The feature used to be automatically enabled in older Prometheus
+	// versions but it isn't anymore since v3.4.0.
+	// For more context, see:
+	// https://github.com/prometheus-operator/prometheus-operator/issues/7889
+	// https://github.com/prometheus/prometheus/issues/16944.
 	for _, rw := range cpf.RemoteWrite {
 		if ptr.Deref(rw.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) == monitoringv1.RemoteWriteMessageVersion2_0 {
 			cg = cg.WithMinimumVersion("2.54.0")
@@ -1208,6 +1325,20 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 			efs[i] = string(cpf.EnableFeatures[i])
 		}
 		promArgs = cg.WithMinimumVersion("2.25.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: strings.Join(efs, ",")})
+	}
+
+	// Auto-enable xor2-encoding feature flag when chunk encoding is set to xor2.
+	if cpf.TSDB != nil && cpf.TSDB.ChunkEncoding != nil && cpf.TSDB.ChunkEncoding.Floats != nil && *cpf.TSDB.ChunkEncoding.Floats == monitoringv1.ChunkEncodingFloatsXor2 {
+		hasXOR2 := false
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "xor2-encoding" {
+				hasXOR2 = true
+				break
+			}
+		}
+		if !hasXOR2 {
+			promArgs = cg.WithMinimumVersion("3.13.0").AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "xor2-encoding"})
+		}
 	}
 
 	if cpf.ExternalURL != "" {
@@ -1353,6 +1484,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.35.0")
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.35.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -1414,7 +1546,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-
 		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
@@ -1550,7 +1681,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 
 	// DaemonSet mode doesn't support sharding.
 	if !cg.daemonSet {
-		relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
+		relabelings = cg.appendShardingRelabelingWithAddress(relabelings, shards)
 	}
 
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
@@ -1661,6 +1792,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	s := store.ForNamespace(m.Namespace)
 
 	cfg = cg.addProxyConfigtoYaml(cfg, s, m.Spec.ProberSpec.ProxyConfig)
+
+	cfg = cg.addHTTPConfigToYAML(cfg, s, &m.Spec.HTTPConfig, scrapeClass)
 
 	// As stated in the CRD documentation, if both StaticConfig and Ingress are
 	// defined, the former takes precedence which is why the first case statement
@@ -1804,10 +1937,8 @@ func (cg *ConfigGenerator) generateProbeConfig(
 		relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, m.Spec.Targets.Ingress.RelabelConfigs))...)
 	}
 
-	relabelings = appendShardingRelabelingForProbes(relabelings, shards)
+	relabelings = cg.appendShardingRelabelingForProbes(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
-
-	cfg = cg.addTLStoYaml(cfg, s, mergeSafeTLSConfigWithScrapeClass(m.Spec.TLSConfig, scrapeClass))
 
 	if m.Spec.BearerTokenSecret != nil { //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
 		b, err := s.GetSecretKey(*m.Spec.BearerTokenSecret) //nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
@@ -1855,6 +1986,9 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddTrackTimestampsStaleness(cfg, ep.TrackTimestampsStaleness)
 
 	attachMetaConfig := mergeAttachMetadataWithScrapeClass(m.Spec.AttachMetadata, scrapeClass, "2.37.0")
+	//TODO(simonpasquier): don't add node metadata if service discovery role ==
+	//EndpointSlice because it already carries topology zone information.
+	attachMetaConfig = cg.mergeAttachMetadataForTopology(attachMetaConfig, "2.37.0")
 
 	s := store.ForNamespace(m.Namespace)
 
@@ -2096,7 +2230,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	labeler := namespacelabeler.New(cpf.EnforcedNamespaceLabel, cpf.ExcludedFromEnforcement, false)
 	relabelings = append(relabelings, generateRelabelConfig(labeler.GetRelabelingConfigs(m.TypeMeta, m.ObjectMeta, ep.RelabelConfigs))...)
 
-	relabelings = appendShardingRelabelingWithAddress(relabelings, shards)
+	relabelings = cg.appendShardingRelabelingWithAddress(relabelings, shards)
 	cfg = append(cfg, yaml.MapItem{Key: "relabel_configs", Value: relabelings})
 
 	cfg = cg.AddLimitsToYAML(cfg, sampleLimitKey, m.Spec.SampleLimit, cpf.EnforcedSampleLimit)
@@ -2132,7 +2266,7 @@ func generateRunningFilter() yaml.MapSlice {
 	}
 }
 
-func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
+func (cg *ConfigGenerator) getLimit(user *int64, enforced *int64) *int64 {
 	if ptr.Deref(enforced, 0) == 0 {
 		return user
 	}
@@ -2152,12 +2286,12 @@ func (cg *ConfigGenerator) getLimit(user *uint64, enforced *uint64) *uint64 {
 	return enforced
 }
 
-func appendShardingRelabelingWithAddress(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return appendShardingRelabelingWithLabel(relabelings, shards, "__address__")
+func (cg *ConfigGenerator) appendShardingRelabelingWithAddress(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return cg.appendShardingRelabelingWithLabel(relabelings, shards, "__address__")
 }
 
-func appendShardingRelabelingForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
-	return appendShardingRelabelingWithLabel(relabelings, shards, "__param_target")
+func (cg *ConfigGenerator) appendShardingRelabelingForProbes(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
+	return cg.appendShardingRelabelingWithLabel(relabelings, shards, "__param_target")
 }
 
 func (cg *ConfigGenerator) appendShardingRelabelingWithAddressIfMissing(relabelings []yaml.MapSlice, shards int32) []yaml.MapSlice {
@@ -2169,10 +2303,94 @@ func (cg *ConfigGenerator) appendShardingRelabelingWithAddressIfMissing(relabeli
 			}
 		}
 	}
-	return appendShardingRelabelingWithAddress(relabelings, shards)
+	return cg.appendShardingRelabelingWithAddress(relabelings, shards)
 }
 
-func appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
+// generateInRangeShardPattern generates a regex pattern that matches shard IDs
+// that are in the valid range [0, shards-1].
+// This is used to drop all targets on inactive shards during scale-down operations.
+func generateInRangeShardPattern(shards int32) string {
+	// Enumerate all valid shard numbers from 0 to shards-1
+	var inRangeShards []string
+	for i := range shards {
+		inRangeShards = append(inRangeShards, strconv.Itoa(int(i)))
+	}
+
+	// Join with OR operator: e.g., for shards=2: "0|1"
+	return strings.Join(inRangeShards, "|")
+}
+
+func (cg *ConfigGenerator) appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32, shardLabel string) []yaml.MapSlice {
+	if cg.prometheusRetentionPolicies {
+		relabelings = append(relabelings,
+			// Capture the current SHARD environment variable value.
+			yaml.MapSlice{
+				{Key: "target_label", Value: "__tmp_current_shard"},
+				{Key: "replacement", Value: fmt.Sprintf("$(%s)", operator.ShardEnvVar)},
+				{Key: "action", Value: "replace"},
+			},
+			// Keep only targets where the current shard is in the active range [0, shards-1].
+			// This ensures inactive shards (after scale-down with Retain policy) scrape nothing.
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{"__tmp_current_shard"}},
+				{Key: "regex", Value: generateInRangeShardPattern(shards)},
+				{Key: "action", Value: "keep"},
+			},
+		)
+	}
+
+	modulus := shards
+	shardEnvVar := operator.ShardEnvVar
+	if cg.isTopologyShardingActive() {
+		modulus = cg.shardsPerZone(shards)
+		shardEnvVar = operator.InzoneShardEnvVar
+
+		// Step 1: populate __tmp_topology from endpointslice zone (no-op for pod role).
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{endpointSliceZoneMetaLabel, topologyTmpLabel}},
+				{Key: "target_label", Value: topologyTmpLabel},
+				{Key: "regex", Value: "(.+);"},
+				{Key: "replacement", Value: "$1"},
+				{Key: "action", Value: "replace"},
+			},
+		)
+
+		// Step 2: if __tmp_topology is still empty, use the pod topology label
+		// (K8s >= 1.35, PodTopologyLabelsAdmission) or the node label (older clusters,
+		// requires attach_metadata: {node: true}) as fallback.
+		if cg.podTopologyLabelsSupported {
+			relabelings = append(relabelings,
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{podZoneMetaLabel, podZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+			)
+		} else {
+			relabelings = append(relabelings,
+				yaml.MapSlice{
+					{Key: "source_labels", Value: []string{nodeZoneMetaLabel, nodeZonePresentMetaLabel, topologyTmpLabel}},
+					{Key: "target_label", Value: topologyTmpLabel},
+					{Key: "regex", Value: "(.+);true;"},
+					{Key: "replacement", Value: "$1"},
+					{Key: "action", Value: "replace"},
+				},
+			)
+		}
+
+		// Step 3: keep only targets in the assigned zone, unless __tmp_disable_sharding is set.
+		relabelings = append(relabelings,
+			yaml.MapSlice{
+				{Key: "source_labels", Value: []string{topologyTmpLabel, hashLabelNameForDisablingSharding}},
+				{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.TopologyZoneEnvVar)},
+				{Key: "action", Value: "keep"},
+			},
+		)
+	}
+
 	return append(relabelings,
 		// Store the "shardLabel" value into the __tmp_hash label unless the
 		// latter is already set.
@@ -2185,11 +2403,11 @@ func appendShardingRelabelingWithLabel(relabelings []yaml.MapSlice, shards int32
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding}},
 			{Key: "target_label", Value: hashLabelNameForSharding},
-			{Key: "modulus", Value: shards},
+			{Key: "modulus", Value: modulus},
 			{Key: "action", Value: "hashmod"},
 		}, yaml.MapSlice{
 			{Key: "source_labels", Value: []string{hashLabelNameForSharding, hashLabelNameForDisablingSharding}},
-			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", operator.ShardEnvVar)},
+			{Key: "regex", Value: fmt.Sprintf("$(%s);|.+;.+", shardEnvVar)},
 			{Key: "action", Value: "keep"},
 		})
 }
@@ -2216,7 +2434,7 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 		}
 
-		if c.Modulus != uint64(0) {
+		if c.Modulus != 0 {
 			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 		}
 
@@ -2727,7 +2945,7 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
 			}
 
-			if c.Modulus != uint64(0) {
+			if c.Modulus != 0 {
 				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
 			}
 
@@ -2878,7 +3096,13 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 		}
 
 		if spec.MetadataConfig != nil {
-			metadataConfig := append(yaml.MapSlice{}, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			var metadataConfig yaml.MapSlice
+			if ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
+				// Prometheus automatically turns off metadata sending when remote-write v2 is used.
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: false})
+			} else {
+				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+			}
 			if spec.MetadataConfig.SendInterval != "" {
 				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
 			}
@@ -2937,7 +3161,7 @@ func (cg *ConfigGenerator) appendEvaluationInterval(slice yaml.MapSlice, evaluat
 	return append(slice, yaml.MapItem{Key: "evaluation_interval", Value: evaluationInterval})
 }
 
-func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *uint64, enforcedLimit *uint64) yaml.MapSlice {
+func (cg *ConfigGenerator) appendGlobalLimits(slice yaml.MapSlice, limitKey string, limit *int64, enforcedLimit *int64) yaml.MapSlice {
 	if ptr.Deref(limit, 0) > 0 {
 		if ptr.Deref(enforcedLimit, 0) > 0 && *limit > *enforcedLimit {
 			cg.logger.Warn(fmt.Sprintf("%q is greater than the enforced limit, using enforced limit", limitKey), "limit", *limit, "enforced_limit", *enforcedLimit)
@@ -3025,7 +3249,6 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
@@ -3048,7 +3271,6 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
@@ -3071,7 +3293,6 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
@@ -3151,15 +3372,51 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// TSDB
 	tsdb := cpf.TSDB
-	if tsdb != nil && tsdb.OutOfOrderTimeWindow != nil {
-		var storage yaml.MapSlice
-		storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
-			{
-				Key:   "out_of_order_time_window",
-				Value: *tsdb.OutOfOrderTimeWindow,
-			},
-		})
-		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+
+	err = tsdb.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := validateChunkEncodingCompatibility(cpf); err != nil {
+		return nil, err
+	}
+
+	if tsdb != nil {
+		if tsdb.OutOfOrderTimeWindow != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "out_of_order_time_window",
+					Value: *tsdb.OutOfOrderTimeWindow,
+				},
+			})
+			cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.StaleSeriesCompactionThreshold != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key:   "stale_series_compaction_threshold",
+					Value: tsdb.StaleSeriesCompactionThreshold.AsApproximateFloat64(),
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "storage", storage)
+		}
+
+		if tsdb.ChunkEncoding != nil && tsdb.ChunkEncoding.Floats != nil {
+			var storage yaml.MapSlice
+			storage = cg.AppendMapItem(storage, "tsdb", yaml.MapSlice{
+				{
+					Key: "chunk_encoding",
+					Value: yaml.MapSlice{
+						{Key: "floats", Value: strings.ToLower(string(*tsdb.ChunkEncoding.Floats))},
+					},
+				},
+			})
+			cfg = cg.WithMinimumVersion("3.13.0").AppendMapItem(cfg, "storage", storage)
+		}
 	}
 
 	// Remote write config
@@ -3187,7 +3444,6 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-
 	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
@@ -3578,6 +3834,13 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
+			if config.HealthFilter != nil {
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "health_filter",
+					Value: config.HealthFilter,
+				})
+			}
+
 			if config.AllowStale != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "allow_stale",
@@ -3672,7 +3935,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -3741,6 +4003,11 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.AzureSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.AzureSDConfigs))
 		for i, config := range sc.Spec.AzureSDConfigs {
+			configs[i] = cg.addBasicAuthToYaml(configs[i], s, config.BasicAuth)
+			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
+			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
+
 			if config.Environment != nil {
 				configs[i] = []yaml.MapItem{
 					{
@@ -3994,7 +4261,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Availability != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "availability",
-					Value: config.Availability,
+					Value: strings.ToLower(string(*config.Availability)),
 				})
 			}
 
@@ -4210,7 +4477,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "docker_sd_configs",
@@ -4270,14 +4536,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.FollowRedirects,
 				})
 			}
-
 		}
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "linode_sd_configs",
 			Value: configs,
 		})
-
 	}
 
 	// HetznerSDConfig
@@ -4291,7 +4555,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.FollowRedirects != nil {
@@ -4426,7 +4690,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.Port != nil {
@@ -4456,7 +4720,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dockerswarm_sd_configs",
@@ -4564,7 +4827,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -4762,7 +5024,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	if len(sc.Spec.IonosSDConfigs) > 0 {
 		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
 		for i, config := range sc.Spec.IonosSDConfigs {
-			configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			if config.OAuth2 == nil {
+				configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+			}
+			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 			configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 
@@ -4905,6 +5170,18 @@ func (cg *ConfigGenerator) appendOTLPConfig(cfg yaml.MapSlice) (yaml.MapSlice, e
 		otlp = cg.WithMinimumVersion("3.6.0").AppendMapItem(otlp,
 			"promote_scope_metadata",
 			otlpConfig.PromoteScopeMetadata)
+	}
+
+	if otlpConfig.LabelNameUnderscoreSanitization != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_underscore_sanitization",
+			otlpConfig.LabelNameUnderscoreSanitization)
+	}
+
+	if otlpConfig.LabelNamePreserveMultipleUnderscores != nil {
+		otlp = cg.WithMinimumVersion("3.8.0").AppendMapItem(otlp,
+			"label_name_preserve_multiple_underscores",
+			otlpConfig.LabelNamePreserveMultipleUnderscores)
 	}
 
 	if len(otlp) == 0 {
@@ -5132,4 +5409,128 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendScrapeNativeHistograms(cfg)
 
 	return cfg
+}
+
+// TopologyZoneForShard returns the zone assigned to the shard index.
+// It returns an empty string if topology sharding isn't enabled.
+func (cg *ConfigGenerator) TopologyZoneForShard(shardIndex int32) string {
+	if !cg.isTopologyShardingActive() {
+		return ""
+	}
+
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	numZones := int32(len(ss.Topology.Values))
+	return ss.Topology.Values[shardIndex%numZones]
+}
+
+// NodeSelectorWithTopologyZone returns the pod's node selector for the given
+// shard index taking into account topology sharding if enabled.
+func (cg *ConfigGenerator) NodeSelectorWithTopologyZone(shardIndex int32) map[string]string {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	zone := cg.TopologyZoneForShard(shardIndex)
+	if zone == "" {
+		return cpf.NodeSelector
+	}
+
+	result := maps.Clone(cpf.NodeSelector)
+	if result == nil {
+		result = make(map[string]string)
+	}
+	result[corev1.LabelTopologyZone] = zone
+
+	return result
+}
+
+// isTopologyShardingActive returns true when the topology sharding feature gate
+// is enabled and the Prometheus resource is configured with mode=Topology.
+func (cg *ConfigGenerator) isTopologyShardingActive() bool {
+	if !cg.prometheusTopologySharding {
+		return false
+	}
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	return ss != nil &&
+		ss.Mode != nil &&
+		*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
+		ss.Topology != nil &&
+		len(ss.Topology.Values) > 0
+}
+
+// shardsPerZone returns max(1, floor(totalShards / numZones)).
+// Only call when isTopologyShardingActive() is true.
+func (cg *ConfigGenerator) shardsPerZone(totalShards int32) int32 {
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+
+	numZones := int32(len(ss.Topology.Values))
+	return max(totalShards/numZones, 1)
+}
+
+// InzoneShardForShard returns floor(shardIndex / numZones), which is the
+// position of the shard within its zone (0-indexed). Returns shardIndex
+// unmodified when topology sharding is not active.
+func (cg *ConfigGenerator) InzoneShardForShard(shardIndex int32) int32 {
+	if !cg.isTopologyShardingActive() {
+		return shardIndex
+	}
+
+	ss := cg.prom.GetCommonPrometheusFields().ShardingStrategy
+	numZones := int32(len(ss.Topology.Values))
+	return shardIndex / numZones
+}
+
+// mergeAttachMetadataForTopology returns amc unchanged when topology sharding is
+// not active, when podTopologyLabelsSupported is true (zone label is injected
+// directly onto pods), or when node metadata is already requested.
+// Otherwise it forces attach_metadata.node=true so that zone detection via node
+// labels is available.
+func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataConfig, minimumVersion string) *attachMetadataConfig {
+	if !cg.isTopologyShardingActive() {
+		return amc
+	}
+	if cg.podTopologyLabelsSupported {
+		return amc
+	}
+	if amc != nil && amc.node() {
+		return amc
+	}
+	return &attachMetadataConfig{
+		MinimumVersion: minimumVersion,
+		attachMetadata: &monitoringv1.AttachMetadata{
+			Node: new(true),
+		},
+	}
+}
+
+// validateRetentionPercentage validates that the percentage-based retention is
+// within the range supported by Prometheus.
+func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
+	if retentionPercentage == nil {
+		return nil
+	}
+
+	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
+		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
+	}
+
+	return nil
+}
+
+// validateChunkEncodingCompatibility validates that the chunk encoding settings
+// are compatible with the enabled feature flags.
+func validateChunkEncodingCompatibility(cpf monitoringv1.CommonPrometheusFields) error {
+	if cpf.TSDB == nil || cpf.TSDB.ChunkEncoding == nil || cpf.TSDB.ChunkEncoding.Floats == nil {
+		return nil
+	}
+
+	// Setting "Xor" is incompatible with --enable-feature=st-storage
+	// (XOR chunks do not store start timestamps).
+	if *cpf.TSDB.ChunkEncoding.Floats == monitoringv1.ChunkEncodingFloatsXor {
+		for _, f := range cpf.EnableFeatures {
+			if string(f) == "st-storage" {
+				return fmt.Errorf("chunk encoding \"Xor\" is incompatible with --enable-feature=st-storage (XOR chunks do not store start timestamps)")
+			}
+		}
+	}
+
+	return nil
 }

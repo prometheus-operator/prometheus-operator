@@ -23,25 +23,71 @@ import (
 
 // PushoverConfigApplyConfiguration represents a declarative configuration of the PushoverConfig type for use
 // with apply.
+//
+// PushoverConfig configures notifications via Pushover.
+// See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
 type PushoverConfigApplyConfiguration struct {
-	SendResolved *bool                         `json:"sendResolved,omitempty"`
-	UserKey      *v1.SecretKeySelector         `json:"userKey,omitempty"`
-	UserKeyFile  *string                       `json:"userKeyFile,omitempty"`
-	Token        *v1.SecretKeySelector         `json:"token,omitempty"`
-	TokenFile    *string                       `json:"tokenFile,omitempty"`
-	Title        *string                       `json:"title,omitempty"`
-	Message      *string                       `json:"message,omitempty"`
-	URL          *string                       `json:"url,omitempty"`
-	URLTitle     *string                       `json:"urlTitle,omitempty"`
-	TTL          *monitoringv1.Duration        `json:"ttl,omitempty"`
-	Device       *string                       `json:"device,omitempty"`
-	Sound        *string                       `json:"sound,omitempty"`
-	Priority     *string                       `json:"priority,omitempty"`
-	Retry        *string                       `json:"retry,omitempty"`
-	Expire       *string                       `json:"expire,omitempty"`
-	HTML         *bool                         `json:"html,omitempty"`
-	Monospace    *bool                         `json:"monospace,omitempty"`
-	HTTPConfig   *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
+	// sendResolved defines whether or not to notify about resolved alerts.
+	SendResolved *bool `json:"sendResolved,omitempty"`
+	// userKey defines the secret's key that contains the recipient user's user key.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// Either `userKey` or `userKeyFile` is required.
+	UserKey *v1.SecretKeySelector `json:"userKey,omitempty"`
+	// userKeyFile defines the user key file that contains the recipient user's user key.
+	// Either `userKey` or `userKeyFile` is required.
+	// It requires Alertmanager >= v0.26.0.
+	UserKeyFile *string `json:"userKeyFile,omitempty"`
+	// token defines the secret's key that contains the registered application's API token.
+	// See https://pushover.net/apps for application registration.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// Either `token` or `tokenFile` is required.
+	Token *v1.SecretKeySelector `json:"token,omitempty"`
+	// tokenFile defines the token file that contains the registered application's API token.
+	// See https://pushover.net/apps for application registration.
+	// Either `token` or `tokenFile` is required.
+	// It requires Alertmanager >= v0.26.0.
+	TokenFile *string `json:"tokenFile,omitempty"`
+	// title defines the notification title displayed in the Pushover message.
+	// This appears as the bold header text in the notification.
+	Title *string `json:"title,omitempty"`
+	// message defines the notification message content.
+	// This is the main body text of the Pushover notification.
+	Message *string `json:"message,omitempty"`
+	// url defines a supplementary URL shown alongside the message.
+	// This creates a clickable link within the Pushover notification.
+	URL *string `json:"url,omitempty"`
+	// urlTitle defines a title for the supplementary URL.
+	// If not specified, the raw URL is shown instead.
+	URLTitle *string `json:"urlTitle,omitempty"`
+	// ttl defines the time to live for the alert notification.
+	// This determines how long the notification remains active before expiring.
+	TTL *monitoringv1.Duration `json:"ttl,omitempty"`
+	// device defines the name of a specific device to send the notification to.
+	// If not specified, the notification is sent to all user's devices.
+	Device *string `json:"device,omitempty"`
+	// sound defines the name of one of the sounds supported by device clients.
+	// This overrides the user's default sound choice for this notification.
+	Sound *string `json:"sound,omitempty"`
+	// priority defines the notification priority level.
+	// See https://pushover.net/api#priority for valid values and behavior.
+	Priority *string `json:"priority,omitempty"`
+	// retry defines how often the Pushover servers will send the same notification to the user.
+	// Must be at least 30 seconds. Only applies to priority 2 notifications.
+	Retry *string `json:"retry,omitempty"`
+	// expire defines how long your notification will continue to be retried for,
+	// unless the user acknowledges the notification. Only applies to priority 2 notifications.
+	Expire *string `json:"expire,omitempty"`
+	// html defines whether notification message is HTML or plain text.
+	// When true, the message can include HTML formatting tags.
+	// html and monospace formatting are mutually exclusive.
+	HTML *bool `json:"html,omitempty"`
+	// monospace optional HTML/monospace formatting for the message, see https://pushover.net/api#html
+	// html and monospace formatting are mutually exclusive.
+	Monospace *bool `json:"monospace,omitempty"`
+	// httpConfig defines the HTTP client configuration for Pushover API requests.
+	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
 
 // PushoverConfigApplyConfiguration constructs a declarative configuration of the PushoverConfig type for use with
