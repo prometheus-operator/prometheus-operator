@@ -16,6 +16,7 @@ package admission
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -23,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -251,10 +253,39 @@ func (a *Admission) validatePrometheusRules(ar v1.AdmissionReview) *v1.Admission
 			a.logger.Info(m, "err", err)
 		}
 
-		return toAdmissionResponseFailure("Rules are not valid", prometheusRuleResource, errors)
+		response := toAdmissionResponseFailure("Rules are not valid", prometheusRuleResource, errors)
+		for i, err := range errors {
+			response.Result.Details.Causes[i].Field = prometheusRuleErrorField(promRule.Spec, err)
+		}
+		return response
 	}
 
 	return &v1.AdmissionResponse{Allowed: true}
+}
+
+// prometheusRuleErrorField locates rule errors without interpreting their messages.
+func prometheusRuleErrorField(spec monitoringv1.PrometheusRuleSpec, err error) string {
+	const groupsField = "spec.groups"
+	var ruleErr *rulefmt.Error
+	if !errors.As(err, &ruleErr) {
+		return groupsField
+	}
+
+	groupIndex := -1
+	for i, group := range spec.Groups {
+		if group.Name != ruleErr.Group {
+			continue
+		}
+		if groupIndex != -1 {
+			// Duplicate group names make the rule's location ambiguous.
+			return groupsField
+		}
+		groupIndex = i
+	}
+	if groupIndex == -1 || ruleErr.Rule < 1 || ruleErr.Rule > len(spec.Groups[groupIndex].Rules) {
+		return groupsField
+	}
+	return fmt.Sprintf("%s[%d].rules[%d]", groupsField, groupIndex, ruleErr.Rule-1)
 }
 
 func (a *Admission) validateAlertmanagerConfig(ar v1.AdmissionReview) *v1.AdmissionResponse {
