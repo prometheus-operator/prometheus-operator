@@ -37,6 +37,12 @@ type AlertmanagerGlobalConfigApplyConfiguration struct {
 	HTTPConfigWithProxy *HTTPConfigWithProxyApplyConfiguration `json:"httpConfig,omitempty"`
 	// slackApiUrl defines the default Slack API URL.
 	SlackAPIURL *corev1.SecretKeySelector `json:"slackApiUrl,omitempty"`
+	// slackAppToken defines the default Slack App Token.
+	// It requires Alertmanager >= v0.30.0.
+	SlackAppToken *corev1.SecretKeySelector `json:"slackAppToken,omitempty"`
+	// slackAppUrl defines the default URL for Slack App message posting API.
+	// It requires Alertmanager >= v0.30.0.
+	SlackAppURL *monitoringv1.URL `json:"slackAppUrl,omitempty"`
 	// opsGenieApiUrl defines the default OpsGenie API URL.
 	OpsGenieAPIURL *corev1.SecretKeySelector `json:"opsGenieApiUrl,omitempty"`
 	// opsGenieApiKey defines the default OpsGenie API Key.
@@ -94,6 +100,22 @@ func (b *AlertmanagerGlobalConfigApplyConfiguration) WithHTTPConfigWithProxy(val
 // If called multiple times, the SlackAPIURL field is set to the value of the last call.
 func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAPIURL(value corev1.SecretKeySelector) *AlertmanagerGlobalConfigApplyConfiguration {
 	b.SlackAPIURL = &value
+	return b
+}
+
+// WithSlackAppToken sets the SlackAppToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SlackAppToken field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAppToken(value corev1.SecretKeySelector) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.SlackAppToken = &value
+	return b
+}
+
+// WithSlackAppURL sets the SlackAppURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SlackAppURL field is set to the value of the last call.
+func (b *AlertmanagerGlobalConfigApplyConfiguration) WithSlackAppURL(value monitoringv1.URL) *AlertmanagerGlobalConfigApplyConfiguration {
+	b.SlackAppURL = &value
 	return b
 }
 
