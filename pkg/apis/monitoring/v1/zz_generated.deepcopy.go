@@ -3052,6 +3052,11 @@ func (in *RelabelConfig) DeepCopyInto(out *RelabelConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Regex != nil {
+		in, out := &in.Regex, &out.Regex
+		*out = new(string)
+		**out = **in
+	}
 	if in.Replacement != nil {
 		in, out := &in.Replacement, &out.Replacement
 		*out = new(string)
