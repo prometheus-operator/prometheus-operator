@@ -372,7 +372,7 @@ func TestValidateRelabelConfig(t *testing.T) {
 				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
 				TargetLabel:  "__port1",
 				Separator:    new(relabel.DefaultRelabelConfig.Separator),
-				Regex:        relabel.DefaultRelabelConfig.Regex.String(),
+				Regex:        ptr.To(relabel.DefaultRelabelConfig.Regex.String()),
 				Modulus:      int64(relabel.DefaultRelabelConfig.Modulus),
 				Replacement:  &relabel.DefaultRelabelConfig.Replacement,
 				Action:       "keepequal",
