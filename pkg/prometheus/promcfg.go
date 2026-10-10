@@ -2430,8 +2430,8 @@ func generateRelabelConfig(rc []monitoringv1.RelabelConfig) []yaml.MapSlice {
 			relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
 		}
 
-		if c.Regex != "" {
-			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+		if c.Regex != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: *c.Regex})
 		}
 
 		if c.Modulus != 0 {
@@ -2941,8 +2941,8 @@ func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWr
 				relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
 			}
 
-			if c.Regex != "" {
-				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+			if c.Regex != nil {
+				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: *c.Regex})
 			}
 
 			if c.Modulus != 0 {
