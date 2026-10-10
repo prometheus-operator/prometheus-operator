@@ -1175,6 +1175,142 @@ func TestValidateWechatAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestValidateTelegramAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate telegram config - missing chatID",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate telegram config - both botToken and botTokenFile specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotToken:     &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									BotTokenFile: new("/etc/secrets/bot-token"),
+									ChatID:       12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate telegram config - invalid apiURL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									ChatID:   12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test happy path telegram config - botToken specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("https://api.telegram.org")),
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									ChatID:   12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test happy path telegram config - botTokenFile specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotTokenFile: new("/etc/secrets/bot-token"),
+									ChatID:       12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
 func TestValidateEmailAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
