@@ -254,10 +254,10 @@ When the strategy is `OnNamespace` (the default), the controller prepends `names
 The controller resolves `silenceNamespaceSelector` through the shared `operator.SelectNamespacesFromCache` helper, the same path the Prometheus and ThanosRuler controllers use. The helper encodes the null-selector convention directly:
 
 ```go
-	// If the selector is nil, return the object's namespace.
-	if sel == nil {
-		return []string{obj.GetNamespace()}, nil
-	}
+// If the selector is nil, return the object's namespace.
+if sel == nil {
+	return []string{obj.GetNamespace()}, nil
+}
 ```
 
 so Silence inherits the operator-wide semantics rather than reimplementing them. This requires a namespace informer and `get`, `list` and `watch` on `namespaces`, matching the RBAC the operator already needs for `AlertmanagerConfig` and ServiceMonitor namespace selection.
