@@ -2223,7 +2223,7 @@ type RelabelConfig struct {
 
 	// regex defines the regular expression against which the extracted value is matched.
 	// +optional
-	Regex string `json:"regex,omitempty"`
+	Regex *string `json:"regex,omitempty"`
 
 	// modulus to take of the hash of the source label values.
 	//
