@@ -587,6 +587,9 @@ type Endpoint struct {
 	// If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
 	// If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
 	//
+	// Because it relies on Pod metadata, endpoints which aren't backed by Pods
+	// are never scraped when `targetPort` is used.
+	//
 	// +optional
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 

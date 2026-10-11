@@ -38,6 +38,13 @@ const (
 // * Target and metric relabeling.
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+//
+// The generated scrape configuration assumes that the selected services are
+// backed by Pods: endpoints without a Pod reference (for instance manually
+// managed Endpoints or EndpointSlices) can only be scraped when the endpoint
+// selects a service port with `port`, since `targetPort` relies on Pod
+// metadata. For targets that aren't Pods, consider using the `ScrapeConfig`
+// CRD instead.
 type ServiceMonitor struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
