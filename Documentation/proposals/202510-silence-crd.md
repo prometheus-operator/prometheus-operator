@@ -170,7 +170,7 @@ A dedicated `SilenceReconciler`, separate from the existing Alertmanager control
 3. For each target Alertmanager resource:
    - Looks up the existing silence by `.status.bindings[].silenceID` if present.
    - Creates or updates the silence via Alertmanager REST API v2.
-   - Writes the returned UUID to `.status.bindings[]`.
+   - Writes the returned UUID to `.status.bindings[]` — which is not always the UUID sent, see [Drift Detection](#drift-detection).
 4. On deletion: removes the finalizer (`monitoring.coreos.com/silence-cleanup`) after deleting the silence from every bound Alertmanager resource by `silenceID`. A 404 (e.g. silence already GC'd after retention) is treated as success so the finalizer is never stuck.
 5. Periodic reconcile on the informer resync, correcting any divergence (see [Drift Detection](#drift-detection)).
 
@@ -218,11 +218,26 @@ A silence can diverge from its resource while the controller is not looking: som
 Drift detection is not a separate mechanism. The informer resync re-enqueues every Silence on a timer (5 minutes, matching the Alertmanager controller) and the ordinary reconcile path corrects what it finds. For each binding:
 
 1. Fetch the silence by `.status.bindings[].silenceID`.
-2. If **missing (404)**, recreate it and record the new UUID. This covers both retention purges and an Alertmanager restarted without storage.
-3. If **present but different**, re-post it with the same ID. Alertmanager updates the existing silence rather than creating a second one, so the UUID is preserved.
+2. If **missing (404)**, create a new silence — posting with no ID — and record the returned UUID. The old UUID cannot be reused: a POST carrying an ID Alertmanager does not know is rejected with 404 rather than treated as a create. This covers both retention purges and an Alertmanager restarted without storage.
+3. If **present but different**, re-post it with the same ID, and record the UUID the response carries — which is not always the one sent. An expired silence reaches the controller through this branch, not as a 404: expiry leaves it readable until it is purged.
 4. If it **matches**, nothing is sent.
 
-Only the fields the controller sets are compared: matchers (after namespace injection), `startsAt`, `endsAt`, `comment` and `createdBy`. Server-owned fields — `status`, `updatedAt` — are ignored, since comparing them would report drift on every pass and produce a write loop.
+**Re-posting with the same ID does not always preserve it.** Alertmanager keeps the UUID only where the change cannot alter the historic view of silencing; otherwise it expires the existing silence and stores the replacement under a fresh UUID, leaving the original visible as history:
+
+| Drift                               | Outcome                             |
+|-------------------------------------|-------------------------------------|
+| `comment` or `createdBy` edited     | updated in place, UUID preserved    |
+| `endsAt` changed, silence active    | updated in place, UUID preserved    |
+| `startsAt` changed, silence pending | updated in place, UUID preserved    |
+| matchers edited                     | original expired, **new UUID**      |
+| silence expired early in the UI     | original left expired, **new UUID** |
+
+This has been Alertmanager's behaviour since [#796](https://github.com/prometheus/alertmanager/pull/796) (2017), so the controller is written for it rather than around it: **the UUID recorded in `.status.bindings[].silenceID` is always the one the POST returned, never the one it sent.** Correction then converges in a single pass whether or not the ID survived, and a binding never points at a silence Alertmanager has retired. Treating the sent ID as authoritative would do the opposite — the binding would track an expired silence, and every later resync would mint another replacement.
+
+Only the fields the controller sets are compared: matchers (after namespace injection), `endsAt`, `comment` and `createdBy`. Server-owned fields — `status`, `updatedAt` — are ignored, since comparing them would report drift on every pass and produce a write loop. Two further comparisons need care, because the obvious form of each is itself a write loop:
+
+* **`startsAt` is compared only while the silence is pending.** Alertmanager clamps a `startsAt` in the past to the moment it accepted the silence, and thereafter refuses to change `startsAt` on an active silence at all. As `startsAt` defaults to the resource's creation timestamp, the stored and declared values differ for almost every silence once it is active — so comparing them would report drift on every pass, and each correction would replace the silence and allocate a new UUID. Once a silence is active its start time is settled, and the controller stops comparing it.
+* **Matcher order is significant.** Alertmanager compares matchers as an ordered list, not a set, so the controller emits them in a stable order with the injected `namespace` matcher always in the same position. Reordering alone would be read as a matcher change and replace the silence.
 
 **The controller only touches silences it created.** Reconciliation is driven from Silence resources outward: it looks up the UUIDs recorded in its own status and never lists the Alertmanager's silences to decide what to act on. A silence created through the UI, `amtool` or any other client has no binding and is never examined, modified or deleted. Declarative management and ad-hoc silences therefore coexist on the same Alertmanager — which matters, because ad-hoc silencing during an incident is the workflow this feature is least likely to replace. Reaping unmanaged silences is a [non-goal](#non-goals).
 
@@ -320,7 +335,8 @@ The gate is necessary but not sufficient. Even when enabled, the controller perf
 * Unit tests for the reconcile loop, status updates, and finalizer handling.
 * E2e tests against a real Alertmanager: create a Silence → verify the silence appears in Alertmanager API with correct `silenceID` stored in status; delete the Silence → verify silence is removed from Alertmanager.
 * E2e test for namespace isolation: verify `namespace=<ns>` matcher is injected when `alertmanagerConfigMatcherStrategy: OnNamespace`.
-* E2e test for drift correction: modify a managed silence directly through the Alertmanager API → verify the next reconcile restores it under the same `silenceID`; delete it outright → verify it is recreated and the new UUID recorded.
+* E2e tests for drift correction, one per outcome: edit a managed silence's `comment` through the Alertmanager API → verify the next reconcile restores it under the same `silenceID`; edit its matchers → verify it is restored and the **new** `silenceID` recorded in the binding; expire it early → likewise a new `silenceID`; delete it outright → verify it is recreated and the new UUID recorded.
+* E2e test for reconcile stability: create a Silence leaving `startsAt` defaulted, let it reconcile several times → verify `silenceID` never changes and that no expired duplicates accumulate in Alertmanager.
 * E2e test for coexistence: create a silence directly through the Alertmanager API → verify the controller leaves it untouched across reconciles.
 * E2e test for failure reporting: point a Silence at an unreachable Alertmanager → verify `Accepted=False` with `AlertmanagerUnreachable`, and that it recovers once the Alertmanager is available.
 
