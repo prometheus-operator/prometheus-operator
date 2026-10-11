@@ -52,6 +52,22 @@ const (
 	OpenMetricsText1_0_0 ScrapeProtocol = "OpenMetricsText1.0.0"
 )
 
+// LogLevel represents the logging level for Prometheus.
+// Supported values are:
+// * `debug`
+// * `info`
+// * `warn`
+// * `error`
+// +kubebuilder:validation:Enum=debug;info;warn;error
+type LogLevel string
+
+const (
+	LogLevelDebug LogLevel = "debug"
+	LogLevelInfo  LogLevel = "info"
+	LogLevelWarn  LogLevel = "warn"
+	LogLevelError LogLevel = "error"
+)
+
 // RuntimeConfig configures the values for the process behavior.
 type RuntimeConfig struct {
 	// goGC defines the Go garbage collection target percentage. Lowering this number may increase the CPU usage.
@@ -59,6 +75,9 @@ type RuntimeConfig struct {
 	// +optional
 	// +kubebuilder:validation:Minimum=-1
 	GoGC *int32 `json:"goGC,omitempty"`
+	// logLevel defines the logging level for Prometheus.
+	// +optional
+	LogLevel *LogLevel `json:"logLevel,omitempty"`
 }
 
 // PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.

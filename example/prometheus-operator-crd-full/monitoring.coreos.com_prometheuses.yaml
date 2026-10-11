@@ -8651,6 +8651,14 @@ spec:
                     format: int32
                     minimum: -1
                     type: integer
+                  logLevel:
+                    description: logLevel defines the logging level for Prometheus.
+                    enum:
+                    - debug
+                    - info
+                    - warn
+                    - error
+                    type: string
                 type: object
               sampleLimit:
                 description: |-

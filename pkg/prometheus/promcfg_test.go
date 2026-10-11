@@ -5950,6 +5950,22 @@ func TestRuntimeConfig(t *testing.T) {
 			Version:  "v2.52.0",
 			Golden:   "RuntimeConfig_GoGC_Not_Set.golden",
 		},
+		{
+			Scenario: "Runtime LogLevel is set to debug",
+			Version:  "v3.15.0",
+			Runtime: &monitoringv1.RuntimeConfig{
+				LogLevel: new(monitoringv1.LogLevel("debug")),
+			},
+			Golden: "RuntimeConfig_LogLevelDebug.golden",
+		},
+		{
+			Scenario: "Runtime LogLevel is set to debug but unsupported Prometheus Version",
+			Version:  "v3.14.0",
+			Runtime: &monitoringv1.RuntimeConfig{
+				LogLevel: new(monitoringv1.LogLevel("debug")),
+			},
+			Golden: "RuntimeConfig_LogLevel_Not_Set.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
 			p := defaultPrometheus()

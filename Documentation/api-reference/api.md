@@ -12984,6 +12984,36 @@ string
 For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
 For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.LogLevel">LogLevel
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RuntimeConfig">RuntimeConfig</a>)
+</p>
+<div>
+<p>LogLevel represents the logging level for Prometheus.
+Supported values are:
+* <code>debug</code>
+* <code>info</code>
+* <code>warn</code>
+* <code>error</code></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;debug&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;error&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;info&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;warn&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
 </h3>
 <p>
@@ -19214,6 +19244,20 @@ int32
 <em>(Optional)</em>
 <p>goGC defines the Go garbage collection target percentage. Lowering this number may increase the CPU usage.
 See: <a href="https://tip.golang.org/doc/gc-guide#GOGC">https://tip.golang.org/doc/gc-guide#GOGC</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>logLevel</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>logLevel defines the logging level for Prometheus.</p>
 </td>
 </tr>
 </tbody>

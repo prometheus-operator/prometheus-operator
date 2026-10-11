@@ -3154,6 +3154,14 @@ func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
 		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "gogc", Value: *runtime.GoGC})
 	}
 
+	if runtime.LogLevel != nil {
+		if !cg.WithMinimumVersion("3.15.0").IsCompatible() {
+			cg.Warn("runtime.logLevel")
+			return slice
+		}
+		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "log_level", Value: *runtime.LogLevel})
+	}
+
 	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
 }
 

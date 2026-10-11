@@ -16,6 +16,10 @@
 
 package v1
 
+import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // RuntimeConfigApplyConfiguration represents a declarative configuration of the RuntimeConfig type for use
 // with apply.
 //
@@ -24,6 +28,8 @@ type RuntimeConfigApplyConfiguration struct {
 	// goGC defines the Go garbage collection target percentage. Lowering this number may increase the CPU usage.
 	// See: https://tip.golang.org/doc/gc-guide#GOGC
 	GoGC *int32 `json:"goGC,omitempty"`
+	// logLevel defines the logging level for Prometheus.
+	LogLevel *monitoringv1.LogLevel `json:"logLevel,omitempty"`
 }
 
 // RuntimeConfigApplyConfiguration constructs a declarative configuration of the RuntimeConfig type for use with
@@ -37,5 +43,13 @@ func RuntimeConfig() *RuntimeConfigApplyConfiguration {
 // If called multiple times, the GoGC field is set to the value of the last call.
 func (b *RuntimeConfigApplyConfiguration) WithGoGC(value int32) *RuntimeConfigApplyConfiguration {
 	b.GoGC = &value
+	return b
+}
+
+// WithLogLevel sets the LogLevel field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LogLevel field is set to the value of the last call.
+func (b *RuntimeConfigApplyConfiguration) WithLogLevel(value monitoringv1.LogLevel) *RuntimeConfigApplyConfiguration {
+	b.LogLevel = &value
 	return b
 }
