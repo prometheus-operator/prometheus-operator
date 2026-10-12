@@ -1356,7 +1356,7 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 
 	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
 
-	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
+	if cpf.LogLevel != "" && !cg.WithMinimumVersion("3.15.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
 	}
 
@@ -3149,18 +3149,27 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 }
 
 func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
-	runtime := cg.prom.GetCommonPrometheusFields().Runtime
-	if runtime == nil {
+	commonFields := cg.prom.GetCommonPrometheusFields()
+	runtime := commonFields.Runtime
+	logLevelIsSet := commonFields.LogLevel != ""
+	supportsLogLevelRuntime := cg.WithMinimumVersion("3.15.0").IsCompatible()
+	if runtime == nil && (!logLevelIsSet || !supportsLogLevelRuntime) {
 		return slice
 	}
 	if !cg.WithMinimumVersion("2.53.0").IsCompatible() {
-		cg.Warn("runtime")
+		if runtime != nil {
+			cg.Warn("runtime")
+		}
 		return slice
 	}
 
 	var runtimeSlice yaml.MapSlice
-	if runtime.GoGC != nil {
+	if runtime != nil && runtime.GoGC != nil {
 		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "gogc", Value: *runtime.GoGC})
+	}
+
+	if logLevelIsSet && supportsLogLevelRuntime {
+		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "log_level", Value: commonFields.LogLevel})
 	}
 
 	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
