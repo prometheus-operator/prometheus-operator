@@ -129,6 +129,7 @@ func TestGlobalSettings(t *testing.T) {
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
 		ScrapeFailureLogFile        *string
+		ExtraScrapeMetrics          *bool
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *int64
@@ -219,6 +220,22 @@ func TestGlobalSettings(t *testing.T) {
 			EvaluationInterval:   "30s",
 			ScrapeFailureLogFile: new("file.log"),
 			Golden:               "scrape_failure_log_file_unsupported_version.golden",
+		},
+		{
+			Scenario:           "extra_scrape_metrics",
+			Version:            "v3.10.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExtraScrapeMetrics: new(true),
+			Golden:             "extra_scrape_metrics.golden",
+		},
+		{
+			Scenario:           "extra_scrape_metrics_unsupported_version",
+			Version:            "v3.9.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExtraScrapeMetrics: new(true),
+			Golden:             "extra_scrape_metrics_unsupported_version.golden",
 		},
 		{
 			Scenario:           "valid global limits",
@@ -328,6 +345,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
 					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
+					ExtraScrapeMetrics:          tc.ExtraScrapeMetrics,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				RuleQueryOffset:    tc.RuleQueryOffset,

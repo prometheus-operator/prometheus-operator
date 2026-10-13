@@ -549,6 +549,12 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.5.0.
 	ScrapeClassicHistograms *bool `json:"scrapeClassicHistograms,omitempty"`
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v2.32.0.
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// minReadySeconds defines the minimum number of seconds for which a newly created Pod should be ready
 	// without any of its container crashing for it to be considered available.
 	//
@@ -1365,6 +1371,14 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeNativeHistograms(va
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithScrapeClassicHistograms(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.ScrapeClassicHistograms = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithExtraScrapeMetrics(value bool) *CommonPrometheusFieldsApplyConfiguration {
+	b.ExtraScrapeMetrics = &value
 	return b
 }
 
