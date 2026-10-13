@@ -1,8 +1,0 @@
-receiver: test
-match:
-  some: value
-matchers:
-- namespace=test-ns
-continue: true
-labels:
-  label1: value1
