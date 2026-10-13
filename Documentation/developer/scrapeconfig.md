@@ -108,6 +108,65 @@ spec:
 
 `role` is the only required field. Use `namespaces.names` to restrict discovery to specific namespaces and `selectors` to filter the discovered objects. As with a Prometheus `kubernetes_sd_config`, discovered targets normally need `relabelings` to derive the scrape address and target labels from the discovery metadata. See the [API documentation](https://prometheus-operator.dev/docs/api-reference/api/#monitoring.coreos.com/v1alpha1.KubernetesSDConfig) for the full list of fields.
 
+> **Note:** The Prometheus service account needs `get`, `list` and `watch` permissions on the discovered resources (for example `nodes`, `pods`, `services`, `endpoints` or `endpointslices`) in the discovered namespaces. See [Prometheus RBAC](https://prometheus-operator.dev/docs/platform/rbac/#prometheus-rbac) for details.
+
+### Example: scrape pods from specific namespaces
+
+The following `ScrapeConfig` discovers the pods labeled `app.kubernetes.io/component=backend` in the `team-a` and `team-b` namespaces, keeps only the container ports named `metrics` and adds `namespace` and `pod` labels to the scraped series:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: kubernetes-sd-pods
+  namespace: my-namespace
+  labels:
+    prometheus: system-monitoring-prometheus
+spec:
+  kubernetesSDConfigs:
+    - role: Pod
+      namespaces:
+        names:
+          - team-a
+          - team-b
+      selectors:
+        - role: Pod
+          label: app.kubernetes.io/component=backend
+  relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_container_port_name]
+      regex: metrics
+      action: keep
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+```
+
+With the `Pod` role, one target is created for each declared container port and the `__address__` label is already set to `<pod IP>:<container port>`, so no address rewriting is needed.
+
+### Example: scrape an exporter running on every node
+
+With the `Node` role, the target address defaults to the kubelet port of each node. The following `ScrapeConfig` rewrites the address to scrape a node exporter listening on port `9100` of the node's internal IP and uses the node name as the `instance` label:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: kubernetes-sd-node-exporter
+  namespace: my-namespace
+  labels:
+    prometheus: system-monitoring-prometheus
+spec:
+  kubernetesSDConfigs:
+    - role: Node
+  relabelings:
+    - sourceLabels: [__meta_kubernetes_node_address_InternalIP]
+      targetLabel: __address__
+      replacement: ${1}:9100
+    - sourceLabels: [__meta_kubernetes_node_name]
+      targetLabel: instance
+```
+
 ## `static_config`
 
 For example, to scrape the target located at `http://prometheus.demo.do.prometheus.io:9090`, use the following:
