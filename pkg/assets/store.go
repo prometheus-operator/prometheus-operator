@@ -325,7 +325,9 @@ func (s *StoreBuilder) GetConfigMapKey(ctx context.Context, namespace string, se
 }
 
 // GetSecretKey processes the given SecretKeySelector and returns the referenced data.
-func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel corev1.SecretKeySelector) (string, error) {
+// The optional validators are run against the retrieved value in order and the
+// first error encountered is returned.
+func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel corev1.SecretKeySelector, validators ...func(string) error) (string, error) {
 	if namespace == "" {
 		return "", errors.New("namespace cannot be empty")
 	}
@@ -358,7 +360,14 @@ func (s *StoreBuilder) GetSecretKey(ctx context.Context, namespace string, sel c
 		return "", fmt.Errorf("key %q in secret %q not found", sel.Key, sel.Name)
 	}
 
-	return string(secret.Data[sel.Key]), nil
+	value := string(secret.Data[sel.Key])
+	for _, validate := range validators {
+		if err := validate(value); err != nil {
+			return "", err
+		}
+	}
+
+	return value, nil
 }
 
 // ForNamespace returns a StoreGetter scoped to the given namespace.

@@ -486,8 +486,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promControllerOptions = append(promControllerOptions, prometheuscontroller.WithConfigResourceStatus())
 		}
 
 		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, promControllerOptions...)
@@ -566,8 +564,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithConfigResourceStatus())
 		}
 
 		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, promAgentControllerOptions...)
@@ -618,7 +614,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-			alertmanagerControllerOptions = append(alertmanagerControllerOptions, alertmanagercontroller.WithConfigResourceStatus())
 		}
 
 		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, alertmanagerControllerOptions...)
@@ -669,8 +664,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			thanosControllerOptions = append(thanosControllerOptions, thanoscontroller.WithConfigResourceStatus())
 		}
 
 		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, thanosControllerOptions...)

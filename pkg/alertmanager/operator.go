@@ -129,14 +129,6 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithConfigResourceStatus tells that the controller can manage the status of
-// configuration resources.
-func WithConfigResourceStatus() ControllerOption {
-	return func(o *Operator) {
-		o.configResourcesStatusEnabled = true
-	}
-}
-
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -191,7 +183,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
 		},
 
-		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -1388,18 +1381,18 @@ func checkPagerDutyConfigs(
 ) error {
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
-			return err
+			return fmt.Errorf("httpConfig: %w", err)
 		}
 
 		if config.RoutingKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("routingKey: %w", err)
 			}
 		}
 
 		if config.ServiceKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("serviceKey: %w", err)
 			}
 		}
 

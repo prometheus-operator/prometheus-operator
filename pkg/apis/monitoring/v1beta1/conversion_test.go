@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 )
 
@@ -60,6 +61,21 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 						To:        new("team@example.com"),
 						Threading: &v1alpha1.EmailThreadingConfig{ThreadByDate: v1alpha1.ThreadByDateTypeDaily},
 					}},
+				}},
+			},
+		},
+		{
+			name: "pushover with ttl",
+			v1beta1Spec: AlertmanagerConfigSpec{
+				Receivers: []Receiver{{
+					Name:            "pushover",
+					PushoverConfigs: []PushoverConfig{{TTL: new(monitoringv1.Duration("1h"))}},
+				}},
+			},
+			v1alpha1Spec: v1alpha1.AlertmanagerConfigSpec{
+				Receivers: []v1alpha1.Receiver{{
+					Name:            "pushover",
+					PushoverConfigs: []v1alpha1.PushoverConfig{{TTL: new(monitoringv1.Duration("1h"))}},
 				}},
 			},
 		},
