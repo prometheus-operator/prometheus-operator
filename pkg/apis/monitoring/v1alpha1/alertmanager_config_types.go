@@ -773,8 +773,8 @@ type HTTPConfig struct {
 	// +kubebuilder:validation:MinItems=1
 	// +listType=map
 	// +listMapKey=name
-    // +listType=map
-    // +listMapKey=name
+	// +listType=map
+	// +listMapKey=name
 	// +optional
 	HTTPHeaders []monitoringv1.HTTPHeader `json:"httpHeaders,omitempty"`
 }
