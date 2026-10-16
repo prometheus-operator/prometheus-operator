@@ -3256,7 +3256,8 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_WeChat_Receiver.golden",
 		},
 		{
-			name: "CR with Pushover Receiver",
+			name:      "CR with Pushover Receiver",
+			amVersion: &version26,
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
