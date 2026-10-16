@@ -4343,6 +4343,12 @@ Among other things, it allows to specify:
 * Authentication credentials to use.
 * Target and metric relabeling.</p>
 <p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
+<p>Service targets that aren&rsquo;t backed by Pods (for instance manually managed
+Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+the service port with <code>port</code> instead of <code>targetPort</code> and <code>filterRunning</code> is
+set to <code>false</code>. Manually created Pods have no such restriction.</p>
+<p>For targets that aren&rsquo;t backed by Pods, you can also consider using the
+<code>ScrapeConfig</code> CRD.</p>
 </div>
 <table>
 <thead>
@@ -11195,6 +11201,8 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 by the Service.
 If a name, it matches against <code>.spec.containers[].ports[].name</code> of the Pods.
 If a number, it matches against <code>.spec.containers[].ports[].containerPort</code> of the Pods.</p>
+<p>Because it relies on Pod metadata, endpoints which aren&rsquo;t backed by Pods
+are never scraped when <code>targetPort</code> is used.</p>
 </td>
 </tr>
 <tr>

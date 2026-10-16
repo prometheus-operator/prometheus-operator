@@ -28,7 +28,7 @@
         "name": "v1",
         "schema": {
           "openAPIV3Schema": {
-            "description": "The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.\nAmong other things, it allows to specify:\n* The services to scrape via label selectors.\n* The container ports to scrape.\n* Authentication credentials to use.\n* Target and metric relabeling.\n\n`Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.",
+            "description": "The `ServiceMonitor` custom resource definition (CRD) defines how `Prometheus` and `PrometheusAgent` can scrape metrics from a group of services.\nAmong other things, it allows to specify:\n* The services to scrape via label selectors.\n* The container ports to scrape.\n* Authentication credentials to use.\n* Target and metric relabeling.\n\n`Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.\n\nService targets that aren't backed by Pods (for instance manually managed\nEndpoints or EndpointSlices) can only be scraped when the endpoint selects\nthe service port with `port` instead of `targetPort` and `filterRunning` is\nset to `false`. Manually created Pods have no such restriction.\n\nFor targets that aren't backed by Pods, you can also consider using the\n`ScrapeConfig` CRD.",
             "properties": {
               "apiVersion": {
                 "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -739,7 +739,7 @@
                               "type": "string"
                             }
                           ],
-                          "description": "targetPort defines the name or number of a container port on Pods selected\nby the Service.\nIf a name, it matches against `.spec.containers[].ports[].name` of the Pods.\nIf a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.",
+                          "description": "targetPort defines the name or number of a container port on Pods selected\nby the Service.\nIf a name, it matches against `.spec.containers[].ports[].name` of the Pods.\nIf a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.\n\nBecause it relies on Pod metadata, endpoints which aren't backed by Pods\nare never scraped when `targetPort` is used.",
                           "x-kubernetes-int-or-string": true
                         },
                         "tlsConfig": {
