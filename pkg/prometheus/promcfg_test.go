@@ -6052,6 +6052,113 @@ func TestRuntimeConfig(t *testing.T) {
 	}
 }
 
+func TestBuildCommonPrometheusArgsLogLevel(t *testing.T) {
+	for _, tc := range []struct {
+		version      string
+		logLevelFlag bool
+	}{
+		{version: "v2.53.0", logLevelFlag: true},
+		{version: "v3.14.1", logLevelFlag: true},
+		{version: "v3.15.0", logLevelFlag: false},
+		{version: "v3.16.0", logLevelFlag: false},
+	} {
+		for _, logLevel := range []string{"", "debug", "info", "warn", "error"} {
+			t.Run(fmt.Sprintf("%s/logLevel=%s", tc.version, logLevel), func(t *testing.T) {
+				p := defaultPrometheus()
+				p.Spec.Version = tc.version
+				p.Spec.LogLevel = logLevel
+
+				cg := mustNewConfigGenerator(t, p)
+				var logLevelArgs []monitoringv1.Argument
+				for _, arg := range cg.BuildCommonPrometheusArgs() {
+					if arg.Name == "log.level" {
+						logLevelArgs = append(logLevelArgs, arg)
+					}
+				}
+
+				if tc.logLevelFlag && logLevel != "" {
+					require.Equal(t, []monitoringv1.Argument{{Name: "log.level", Value: logLevel}}, logLevelArgs)
+				} else {
+					require.Empty(t, logLevelArgs)
+				}
+			})
+		}
+	}
+}
+
+func TestLogLevelVersionSwitch(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario     string
+		Version      string
+		LogLevel     string
+		Golden       string
+		Runtime      *monitoringv1.RuntimeConfig
+		LogLevelFlag bool
+	}{
+		{
+			Scenario:     "before Prometheus 3.15.0 uses command line flag",
+			Version:      "v3.14.1",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Flag_Debug.golden",
+			LogLevelFlag: true,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 uses runtime config without runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Runtime_Debug.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 preserves other runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Runtime:      &monitoringv1.RuntimeConfig{GoGC: new(int32(25))},
+			Golden:       "LogLevel_Runtime_Debug_With_GoGC.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Info level is set explicitly",
+			Version:      "v3.15.0",
+			LogLevel:     "info",
+			Golden:       "LogLevel_Default_Info.golden",
+			LogLevelFlag: false,
+		},
+	} {
+		t.Run(tc.Scenario, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.Version
+			p.Spec.CommonPrometheusFields.LogLevel = tc.LogLevel
+			p.Spec.Runtime = tc.Runtime
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			hasLogLevelFlag := false
+			args := cg.BuildCommonPrometheusArgs()
+			for _, arg := range args {
+				if arg.Name == "log.level" && arg.Value == tc.LogLevel {
+					hasLogLevelFlag = true
+					break
+				}
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.LogLevelFlag, hasLogLevelFlag)
+			golden.Assert(t, string(cfg), tc.Golden)
+		})
+	}
+}
+
 func TestStorageSettingMaxExemplars(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario  string
