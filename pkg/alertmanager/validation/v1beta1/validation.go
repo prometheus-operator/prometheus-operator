@@ -638,6 +638,9 @@ func validateTimeIntervals(timeIntervals []monitoringv1beta1.TimeInterval) (map[
 		if err := ti.Validate(); err != nil {
 			return nil, fmt.Errorf("time interval[%d] is invalid: %w", i, err)
 		}
+		if _, found := timeIntervalNames[ti.Name]; found {
+			return nil, fmt.Errorf("time interval[%d]: %q time interval is not unique", i, ti.Name)
+		}
 		timeIntervalNames[ti.Name] = struct{}{}
 	}
 	return timeIntervalNames, nil

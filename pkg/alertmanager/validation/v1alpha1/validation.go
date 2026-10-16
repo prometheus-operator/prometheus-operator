@@ -638,6 +638,9 @@ func validateMuteTimeIntervals(muteTimeIntervals []monitoringv1alpha1.MuteTimeIn
 		if err := mti.Validate(); err != nil {
 			return nil, fmt.Errorf("mute time interval[%d] is invalid: %w", i, err)
 		}
+		if _, found := muteTimeIntervalNames[mti.Name]; found {
+			return nil, fmt.Errorf("mute time interval[%d]: %q mute time interval is not unique", i, mti.Name)
+		}
 		muteTimeIntervalNames[mti.Name] = struct{}{}
 	}
 	return muteTimeIntervalNames, nil
