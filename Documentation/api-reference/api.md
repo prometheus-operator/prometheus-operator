@@ -2005,6 +2005,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -11464,6 +11478,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.TLSConfig">
@@ -12356,6 +12384,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -12477,6 +12519,20 @@ bool
 <td>
 <em>(Optional)</em>
 <p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
 </td>
 </tr>
 <tr>
@@ -12663,6 +12719,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.TLSConfig">
@@ -12844,6 +12914,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.TLSConfig">
@@ -12964,6 +13048,63 @@ bool
 <td>
 <em>(Optional)</em>
 <p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.HTTPHeader">HTTPHeader
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.HTTPConfigWithoutTLS">HTTPConfigWithoutTLS</a>, <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">HTTPConfig</a>, <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">HTTPConfig</a>)
+</p>
+<div>
+<p>HTTPHeader defines a HTTP header configuration.
+See <a href="https://prometheus.io/docs/alerting/latest/configuration/#http_header">https://prometheus.io/docs/alerting/latest/configuration/#http_header</a></p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>name defines a HTTP header name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secrets</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+[]Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>secrets defines values of the HTTP header retrieving from a secret.</p>
 </td>
 </tr>
 </tbody>
@@ -14178,6 +14319,20 @@ bool
 </tr>
 <tr>
 <td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>tlsConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.SafeTLSConfig">
@@ -15081,6 +15236,20 @@ bool
 <td>
 <em>(Optional)</em>
 <p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
 </td>
 </tr>
 <tr>
@@ -29042,6 +29211,20 @@ bool
 <p>enableHttp2 can be used to disable HTTP2.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.HTTPSDConfig">HTTPSDConfig
@@ -39242,6 +39425,20 @@ bool
 <td>
 <em>(Optional)</em>
 <p>enableHttp2 can be used to disable HTTP2.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpHeaders</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.HTTPHeader">
+[]HTTPHeader
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>httpHeaders can be used to specify HTTP headers.</p>
 </td>
 </tr>
 </tbody>
