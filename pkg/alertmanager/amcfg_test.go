@@ -3311,6 +3311,8 @@ func TestGenerateConfig(t *testing.T) {
 								Retry:  new("5m"),
 								Expire: new("30s"),
 								HTML:   new(true),
+								Sound:  new("soundone"),
+								Device: new("deviceone"),
 							}},
 						}},
 					},

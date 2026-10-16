@@ -14,4 +14,6 @@ receivers:
     retry: 5m
     expire: 30s
     html: true
+    sound: soundone
+    device: deviceone
 templates: []

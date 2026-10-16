@@ -1736,10 +1736,6 @@ func checkPushoverConfigs(
 			return err
 		}
 
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return errors.New("html and monospace options are mutually exclusive")
-		}
-
 		if ptr.Deref(config.Expire, "") != "" {
 			if _, err := model.ParseDuration(*config.Expire); err != nil {
 				return err
@@ -1750,6 +1746,10 @@ func checkPushoverConfigs(
 			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
 			}
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
+			return fmt.Errorf(`device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
