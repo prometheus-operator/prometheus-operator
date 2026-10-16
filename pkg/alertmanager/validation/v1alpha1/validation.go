@@ -510,6 +510,11 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}
 
+		// Alertmanager refuses a Webex receiver without an authorization.
+		if conf.HTTPConfig == nil || conf.HTTPConfig.Authorization == nil {
+			return errors.New("'httpConfig.authorization' is required")
+		}
+
 		return nil
 	}
 
