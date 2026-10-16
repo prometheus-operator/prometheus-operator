@@ -5,6 +5,7 @@ global:
     prometheus_replica: $(POD_NAME)
     topology_zone: $(TOPOLOGY_ZONE)
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []
 storage:
   tsdb:
