@@ -1712,15 +1712,15 @@ func checkPushoverConfigs(
 	amVersion semver.Version,
 ) error {
 	checkSecret := func(secret *corev1.SecretKeySelector, name string) error {
-		if secret != nil {
-			s, err := store.GetSecretKey(ctx, namespace, *secret)
-			if err != nil {
-				return err
-			}
-			if s == "" {
-				return fmt.Errorf("%s secret is specified, but the value is an empty string", name)
-			}
+		if secret == nil {
+			return nil
 		}
+
+		_, err := store.GetSecretKey(ctx, namespace, *secret, validation.NotEmpty)
+		if err != nil {
+			return fmt.Errorf("'%s': %w", name, err)
+		}
+
 		return nil
 	}
 
@@ -1728,9 +1728,11 @@ func checkPushoverConfigs(
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
+
 		if err := checkSecret(config.UserKey, "userKey"); err != nil {
 			return err
 		}
+
 		if err := checkSecret(config.Token, "token"); err != nil {
 			return err
 		}
