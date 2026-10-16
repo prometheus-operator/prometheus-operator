@@ -34,13 +34,13 @@ import (
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
 //
-// Services without a Pod reference (for instance manually
-// managed Endpoints or EndpointSlices) can only be scraped when the endpoint
-// selects a service port with `port`, since `targetPort` relies on Pod
-// metadata. Manually created Pods (not managed by a controller) can still be
-// scraped, including Pods that aren't running when `filterRunning` is set to
-// `false`. For targets that aren't Pods, consider using the `ScrapeConfig`
-// CRD instead.
+// Service targets that aren't backed by Pods (for instance manually managed
+// Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+// the service port with `port` instead of `targetPort` and `filterRunning` is
+// set to `false`. Manually created Pods have no such restriction.
+//
+// For targets that aren't backed by Pods, you can also consider using the
+// `ScrapeConfig` CRD.
 type ServiceMonitorApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMetaApplyConfiguration `json:""`

@@ -4298,13 +4298,12 @@ Among other things, it allows to specify:
 * Authentication credentials to use.
 * Target and metric relabeling.</p>
 <p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
-<p>Services without a Pod reference (for instance manually
-managed Endpoints or EndpointSlices) can only be scraped when the endpoint
-selects a service port with <code>port</code>, since <code>targetPort</code> relies on Pod
-metadata. Manually created Pods (not managed by a controller) can still be
-scraped, including Pods that aren&rsquo;t running when <code>filterRunning</code> is set to
-<code>false</code>. For targets that aren&rsquo;t Pods, consider using the <code>ScrapeConfig</code>
-CRD instead.</p>
+<p>Service targets that aren&rsquo;t backed by Pods (for instance manually managed
+Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+the service port with <code>port</code> instead of <code>targetPort</code> and <code>filterRunning</code> is
+set to <code>false</code>. Manually created Pods have no such restriction.</p>
+<p>For targets that aren&rsquo;t backed by Pods, you can also consider using the
+<code>ScrapeConfig</code> CRD.</p>
 </div>
 <table>
 <thead>
