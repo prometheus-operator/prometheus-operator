@@ -611,7 +611,7 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 
 	for _, kv := range r.Labels {
 		if err := monitoringv1.LabelValueTemplate(kv.Value).Validate(); err != nil {
-			return fmt.Errorf("labels[%v]%v: %w", kv.Key, kv.Value, err)
+			return fmt.Errorf("labels[%v]: %w", kv.Key, err)
 		}
 	}
 
