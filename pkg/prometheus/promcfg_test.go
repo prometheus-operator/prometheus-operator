@@ -2410,6 +2410,64 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 	}
 }
 
+func TestSettingExtraScrapeMetricsInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus old version",
+			version: "v3.9.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus new version",
+			version: "v3.10.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testservicemonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							TargetLabels:       []string{"example", "env"},
+							ExtraScrapeMetrics: new(true),
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									HonorTimestamps: new(false),
+									Port:            "web",
+									Interval:        "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
 func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 	for _, tc := range []struct {
 		name                   string

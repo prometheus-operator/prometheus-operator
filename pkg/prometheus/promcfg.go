@@ -468,6 +468,17 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
+// addExtraScrapeMetrics adds the extra_scrape_metrics field into a scrape
+// configuration. Unlike the global setting, the per-scrape override is not
+// honored on Prometheus < v3.10.0, hence the version-gated warning.
+func (cg *ConfigGenerator) addExtraScrapeMetrics(cfg yaml.MapSlice, extraScrapeMetrics *bool) yaml.MapSlice {
+	if extraScrapeMetrics == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "extra_scrape_metrics", *extraScrapeMetrics)
+}
+
 // addScrapeProtocols adds the scrape_protocols field into the configuration.
 func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
@@ -1703,6 +1714,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -1780,6 +1792,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if cpf.EnforcedBodySizeLimit != "" {
@@ -2250,6 +2263,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -3534,6 +3548,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, sc.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
