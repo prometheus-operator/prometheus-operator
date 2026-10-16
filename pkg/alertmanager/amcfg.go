@@ -584,6 +584,14 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		}
 	}
 
+	var labels map[string]string
+	if l := len(in.Labels); cb.amVersion.GTE(semver.MustParse("0.34.0")) && l > 0 {
+		labels = make(map[string]string, l)
+		for _, kv := range in.Labels {
+			labels[kv.Key] = kv.Value
+		}
+	}
+
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
@@ -597,6 +605,7 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		Routes:              routes,
 		MuteTimeIntervals:   prefixedMuteTimeIntervals,
 		ActiveTimeIntervals: prefixedActiveTimeIntervals,
+		Labels:              labels,
 	}
 }
 

@@ -635,3 +635,65 @@ func TestValidateTracingConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestLabelValueTemplateValidate(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		tmpl LabelValueTemplate
+		err  bool
+	}{
+		{
+			name: "empty string",
+			tmpl: "",
+		},
+		{
+			name: "plain string without template",
+			tmpl: "critical",
+		},
+		{
+			name: "valid template expression",
+			tmpl: "{{ .Labels.severity }}",
+		},
+		{
+			name: "valid template with mixed text",
+			tmpl: "prefix-{{ .Labels.env }}-suffix",
+		},
+		{
+			name: "valid template with multiple expressions",
+			tmpl: "{{ .Labels.team }}/{{ .Labels.env }}",
+		},
+		{
+			name: "valid template accessing nested fields",
+			tmpl: "{{ .CommonAnnotations.summary }}",
+		},
+		{
+			name: "invalid template - unclosed action",
+			tmpl: "{{ .Labels.severity",
+			err:  true,
+		},
+		{
+			name: "invalid template - bad function",
+			tmpl: "{{ nonexistentFunc .Labels.severity }}",
+			err:  true,
+		},
+		{
+			name: "invalid template - unclosed action at end",
+			tmpl: "text {{ .Labels.foo",
+			err:  true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.tmpl.Validate()
+			if tc.err {
+				if err == nil {
+					t.Fatal("expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got: %s", err)
+			}
+		})
+	}
+}
