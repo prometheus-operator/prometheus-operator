@@ -110,39 +110,7 @@ spec:
 
 > **Note:** The Prometheus service account needs `get`, `list` and `watch` permissions on the discovered resources (for example `nodes`, `pods`, `services`, `endpoints` or `endpointslices`) in the discovered namespaces. See [Prometheus RBAC](https://prometheus-operator.dev/docs/platform/rbac/#prometheus-rbac) for details.
 
-### Example: scrape pods from specific namespaces
-
-The following `ScrapeConfig` discovers the pods labeled `app.kubernetes.io/component=backend` in the `team-a` and `team-b` namespaces, keeps only the container ports named `metrics` and adds `namespace` and `pod` labels to the scraped series:
-
-```yaml
-apiVersion: monitoring.coreos.com/v1alpha1
-kind: ScrapeConfig
-metadata:
-  name: kubernetes-sd-pods
-  namespace: my-namespace
-  labels:
-    prometheus: system-monitoring-prometheus
-spec:
-  kubernetesSDConfigs:
-    - role: Pod
-      namespaces:
-        names:
-          - team-a
-          - team-b
-      selectors:
-        - role: Pod
-          label: app.kubernetes.io/component=backend
-  relabelings:
-    - sourceLabels: [__meta_kubernetes_pod_container_port_name]
-      regex: metrics
-      action: keep
-    - sourceLabels: [__meta_kubernetes_namespace]
-      targetLabel: namespace
-    - sourceLabels: [__meta_kubernetes_pod_name]
-      targetLabel: pod
-```
-
-With the `Pod` role, one target is created for each declared container port and the `__address__` label is already set to `<pod IP>:<container port>`, so no address rewriting is needed.
+Prefer `ServiceMonitor`, `PodMonitor` or `Probe` when they cover your use case. `kubernetes_sd` is useful for cases these resources don't support, such as discovering nodes.
 
 ### Example: scrape an exporter running on every node
 
