@@ -99,7 +99,7 @@ type ThanosSpecApplyConfiguration struct {
 	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
 	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// logLevel for the Thanos sidecar.
-	LogLevel *string `json:"logLevel,omitempty"`
+	LogLevel *monitoringv1.LogLevel `json:"logLevel,omitempty"`
 	// logFormat for the Thanos sidecar.
 	LogFormat *string `json:"logFormat,omitempty"`
 	// minTime defines the start of time range limit served by the Thanos sidecar's StoreAPI.
@@ -257,7 +257,7 @@ func (b *ThanosSpecApplyConfiguration) WithGRPCServerTLSConfig(value *GRPCServer
 // WithLogLevel sets the LogLevel field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LogLevel field is set to the value of the last call.
-func (b *ThanosSpecApplyConfiguration) WithLogLevel(value string) *ThanosSpecApplyConfiguration {
+func (b *ThanosSpecApplyConfiguration) WithLogLevel(value monitoringv1.LogLevel) *ThanosSpecApplyConfiguration {
 	b.LogLevel = &value
 	return b
 }

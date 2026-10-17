@@ -405,7 +405,7 @@ func BuildConfigReloader(
 	reloaderOptions := []operator.ReloaderOption{
 		operator.ReloaderConfig(c.ReloaderConfig),
 		operator.LogFormat(cpf.LogFormat),
-		operator.LogLevel(cpf.LogLevel),
+		operator.LogLevel(string(cpf.LogLevel)),
 		operator.VolumeMounts(mounts),
 		operator.ConfigFile(path.Join(ConfDir, ConfigFilename)),
 		operator.ConfigEnvsubstFile(path.Join(ConfOutDir, ConfigEnvsubstFilename)),

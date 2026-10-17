@@ -5,6 +5,7 @@ global:
     prometheus_replica: $(POD_NAME)
     zone: $(TOPOLOGY_ZONE)
   evaluation_interval: 30s
+runtime: {}
 scrape_configs:
 - job_name: serviceMonitor/default/test/0
   honor_labels: false

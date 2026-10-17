@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -324,8 +325,8 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 		}
 	}
 
-	if configReloader.logLevel != "" && configReloader.logLevel != "info" {
-		args = append(args, fmt.Sprintf("--log-level=%s", configReloader.logLevel))
+	if configReloader.logLevel != "" {
+		args = append(args, fmt.Sprintf("--log-level=%s", strings.ToLower(configReloader.logLevel)))
 	}
 
 	if configReloader.logFormat != "" && configReloader.logFormat != "logfmt" {

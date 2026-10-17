@@ -52,6 +52,23 @@ const (
 	OpenMetricsText1_0_0 ScrapeProtocol = "OpenMetricsText1.0.0"
 )
 
+// LogLevel represents the level of logging emitted by a component.
+// Supported values are:
+// * `Debug`
+// * `Info`
+// * `Warn`
+// * `Error`
+// The lowercase variants (`debug`, `info`, `warn`, `error`) are also accepted.
+// +kubebuilder:validation:Enum="";debug;info;warn;error;Debug;Info;Warn;Error
+type LogLevel string
+
+const (
+	LogLevelDebug LogLevel = "Debug"
+	LogLevelInfo  LogLevel = "Info"
+	LogLevelWarn  LogLevel = "Warn"
+	LogLevelError LogLevel = "Error"
+)
+
 // RuntimeConfig configures the values for the process behavior.
 type RuntimeConfig struct {
 	// goGC defines the Go garbage collection target percentage. Lowering this number may increase the CPU usage.
@@ -320,9 +337,8 @@ type CommonPrometheusFields struct {
 	PrometheusExternalLabelName *string `json:"prometheusExternalLabelName,omitempty"`
 
 	// logLevel for Prometheus and the config-reloader sidecar.
-	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
-	LogLevel string `json:"logLevel,omitempty"`
+	LogLevel LogLevel `json:"logLevel,omitempty"`
 	// logFormat for Log level for Prometheus and the config-reloader sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional
@@ -1701,9 +1717,8 @@ type ThanosSpec struct {
 	GRPCServerTLSConfig *GRPCServerTLSConfig `json:"grpcServerTlsConfig,omitempty"`
 
 	// logLevel for the Thanos sidecar.
-	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
-	LogLevel string `json:"logLevel,omitempty"`
+	LogLevel LogLevel `json:"logLevel,omitempty"`
 	// logFormat for the Thanos sidecar.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional

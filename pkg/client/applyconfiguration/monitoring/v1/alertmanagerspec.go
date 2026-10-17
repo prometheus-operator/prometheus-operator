@@ -89,7 +89,7 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// receiver (effectively dropping alert notifications).
 	ConfigSecret *string `json:"configSecret,omitempty"`
 	// logLevel for Alertmanager to be configured with.
-	LogLevel *string `json:"logLevel,omitempty"`
+	LogLevel *monitoringv1.LogLevel `json:"logLevel,omitempty"`
 	// logFormat for Alertmanager to be configured with.
 	LogFormat *string `json:"logFormat,omitempty"`
 	// replicas defines the expected size of the alertmanager cluster. The controller will
@@ -424,7 +424,7 @@ func (b *AlertmanagerSpecApplyConfiguration) WithConfigSecret(value string) *Ale
 // WithLogLevel sets the LogLevel field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LogLevel field is set to the value of the last call.
-func (b *AlertmanagerSpecApplyConfiguration) WithLogLevel(value string) *AlertmanagerSpecApplyConfiguration {
+func (b *AlertmanagerSpecApplyConfiguration) WithLogLevel(value monitoringv1.LogLevel) *AlertmanagerSpecApplyConfiguration {
 	b.LogLevel = &value
 	return b
 }
