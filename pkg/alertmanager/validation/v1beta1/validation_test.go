@@ -1475,7 +1475,7 @@ func TestValidatePushoverAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate PushoverConfigs - html is true, no monospace",
+			name: "Test validate PushoverConfigs - html is true, no monospace",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -1518,7 +1518,7 @@ func TestValidatePushoverAlertmanagerConfig(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "Test fail to validate PushoverConfigs - html and monospace are both true",
