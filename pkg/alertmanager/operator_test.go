@@ -1465,6 +1465,160 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			version: &version29,
 			ok:      false,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-device-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKeyFile: new("/etc/pushover/user_key"),
+							TokenFile:   new("/etc/pushover/token"),
+							Device:      new("deviceone"),
+						}},
+					}},
+				},
+			},
+			version: &version26,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-device-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKeyFile: new("/etc/pushover/user_key"),
+							TokenFile:   new("/etc/pushover/token"),
+							Device:      new("deviceone"),
+						}},
+					}},
+				},
+			},
+			version: &version25,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-user-key-file-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKeyFile: new("/etc/pushover/user_key"),
+							Token: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						}},
+					}},
+				},
+			},
+			version: &version26,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-user-key-file-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKeyFile: new("/etc/pushover/user_key"),
+							Token: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+						}},
+					}},
+				},
+			},
+			version: &version25,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-token-file-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+							TokenFile: new("/etc/pushover/token"),
+						}},
+					}},
+				},
+			},
+			version: &version26,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "pushover-config-token-file-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						PushoverConfigs: []monitoringv1alpha1.PushoverConfig{{
+							UserKey: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "token",
+							},
+							TokenFile: new("/etc/pushover/token"),
+						}},
+					}},
+				},
+			},
+			version: &version25,
+			ok:      false,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
