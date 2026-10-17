@@ -572,8 +572,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -828,8 +841,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -1384,8 +1410,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -1665,8 +1704,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                     tokenRef:
@@ -2087,8 +2139,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -2326,8 +2391,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   type: object
@@ -2865,8 +2943,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -3104,8 +3195,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -3589,8 +3693,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -3837,8 +3954,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -4192,8 +4322,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   type: object
@@ -4650,8 +4793,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -4887,8 +5043,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -5452,8 +5621,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -5698,8 +5880,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -6159,8 +6354,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -6391,8 +6599,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                     url:
@@ -6792,8 +7013,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -7031,8 +7265,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -7541,8 +7788,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -7817,8 +8077,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -8276,8 +8549,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -8513,8 +8799,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -9012,8 +9311,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -9284,8 +9596,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   type: object
@@ -9674,8 +9999,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -9922,8 +10260,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   type: object
@@ -10520,8 +10871,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -10770,8 +11134,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                   required:
@@ -11099,8 +11476,21 @@ spec:
                         - TLS13
                         type: string
                       serverName:
-                        description: serverName is used to verify the hostname for
-                          the targets.
+                        description: |-
+                          serverName is used to verify the hostname for the targets.
+
+                          For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                          field supports Go template syntax, with the following template
+                          variables:
+                            - `.Name`, the name of the resource.
+                            - `.Namespace`, the namespace of the resource.
+                            - `.Labels`, a map of labels of the resource.
+                            - `.Annotations`, a map of annotations of the resource.
+
+                          For instance:
+                          - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                          - `{{ index .Labels "tls-server-name" }}`
+                        minLength: 1
                         type: string
                     type: object
                   tokenUrl:
@@ -11421,8 +11811,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                     userid:
@@ -12035,8 +12438,21 @@ spec:
                               - TLS13
                               type: string
                             serverName:
-                              description: serverName is used to verify the hostname
-                                for the targets.
+                              description: |-
+                                serverName is used to verify the hostname for the targets.
+
+                                For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                                field supports Go template syntax, with the following template
+                                variables:
+                                  - `.Name`, the name of the resource.
+                                  - `.Namespace`, the namespace of the resource.
+                                  - `.Labels`, a map of labels of the resource.
+                                  - `.Annotations`, a map of annotations of the resource.
+
+                                For instance:
+                                - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                                - `{{ index .Labels "tls-server-name" }}`
+                              minLength: 1
                               type: string
                           type: object
                         tokenUrl:
@@ -12280,8 +12696,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                     url:
@@ -12704,8 +13133,21 @@ spec:
                           - TLS13
                           type: string
                         serverName:
-                          description: serverName is used to verify the hostname for
-                            the targets.
+                          description: |-
+                            serverName is used to verify the hostname for the targets.
+
+                            For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                            field supports Go template syntax, with the following template
+                            variables:
+                              - `.Name`, the name of the resource.
+                              - `.Namespace`, the namespace of the resource.
+                              - `.Labels`, a map of labels of the resource.
+                              - `.Annotations`, a map of annotations of the resource.
+
+                            For instance:
+                            - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                            - `{{ index .Labels "tls-server-name" }}`
+                          minLength: 1
                           type: string
                       type: object
                     zone:
@@ -12986,8 +13428,21 @@ spec:
                     - TLS13
                     type: string
                   serverName:
-                    description: serverName is used to verify the hostname for the
-                      targets.
+                    description: |-
+                      serverName is used to verify the hostname for the targets.
+
+                      For ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources, the
+                      field supports Go template syntax, with the following template
+                      variables:
+                        - `.Name`, the name of the resource.
+                        - `.Namespace`, the namespace of the resource.
+                        - `.Labels`, a map of labels of the resource.
+                        - `.Annotations`, a map of annotations of the resource.
+
+                      For instance:
+                      - `{{ .Name }}.{{ .Namespace }}.svc.cluster.local.`
+                      - `{{ index .Labels "tls-server-name" }}`
+                    minLength: 1
                     type: string
                 type: object
               trackTimestampsStaleness:
