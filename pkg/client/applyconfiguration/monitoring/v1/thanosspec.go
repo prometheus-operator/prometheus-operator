@@ -76,6 +76,19 @@ type ThanosSpecApplyConfiguration struct {
 	//
 	// It has no effect if `listenLocal` is true.
 	HTTPListenLocal *bool `json:"httpListenLocal,omitempty"`
+	// serviceHTTPPort defines the port on which the governing service
+	// exposes the Thanos sidecar's HTTP endpoints (serving metrics, probes
+	// and more). The service port targets the container port named `http`
+	// (10902) of the `thanos-sidecar` container.
+	//
+	// If not defined, the governing service doesn't expose the Thanos
+	// sidecar's HTTP port.
+	//
+	// It only applies when the operator manages the governing service (e.g.
+	// `spec.serviceName` isn't defined). Note that the sidecar's HTTP
+	// endpoints aren't reachable through the service when `listenLocal` or
+	// `httpListenLocal` is true.
+	ServiceHTTPPort *int32 `json:"serviceHTTPPort,omitempty"`
 	// tracingConfig defines the tracing configuration for the Thanos sidecar.
 	//
 	// `tracingConfigFile` takes precedence over this field.
@@ -227,6 +240,14 @@ func (b *ThanosSpecApplyConfiguration) WithGRPCListenLocal(value bool) *ThanosSp
 // If called multiple times, the HTTPListenLocal field is set to the value of the last call.
 func (b *ThanosSpecApplyConfiguration) WithHTTPListenLocal(value bool) *ThanosSpecApplyConfiguration {
 	b.HTTPListenLocal = &value
+	return b
+}
+
+// WithServiceHTTPPort sets the ServiceHTTPPort field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ServiceHTTPPort field is set to the value of the last call.
+func (b *ThanosSpecApplyConfiguration) WithServiceHTTPPort(value int32) *ThanosSpecApplyConfiguration {
+	b.ServiceHTTPPort = &value
 	return b
 }
 
