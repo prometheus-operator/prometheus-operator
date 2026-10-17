@@ -4546,6 +4546,47 @@ func TestGenerateConfigMSTeamsV2Receiver(t *testing.T) {
 
 	testCases := []testCase{
 		{
+			name:      "CR with MSTeams Receiver with optional missing webhook secret",
+			amVersion: &version26,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsConfigs: []monitoringv1alpha1.MSTeamsConfig{
+									{
+										WebhookURL: corev1.SecretKeySelector{
+											Key:      "url",
+											Optional: ptr.To(true),
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "missing-ms-teams-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_MSTeams_Receiver_Optional_Missing_Secret.golden",
+		},
+		{
 			name:      "CR with MSTeamsV2 Receiver",
 			amVersion: &version28,
 			kclient: fake.NewClientset(
@@ -4989,6 +5030,47 @@ func TestGenerateConfigEmailReceiver(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []testCase{
+		{
+			name:      "CR with MSTeamsV2 Receiver with optional missing webhook secret",
+			amVersion: &version28,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								MSTeamsV2Configs: []monitoringv1alpha1.MSTeamsV2Config{
+									{
+										WebhookURL: &corev1.SecretKeySelector{
+											Key:      "url",
+											Optional: ptr.To(true),
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "missing-ms-teams-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_MSTeamsV2_Receiver_Optional_Missing_Secret.golden",
+		},
 		{
 			name:      "CR with EmailConfig with Required Fields specified at Receiver level",
 			amVersion: &version26,
