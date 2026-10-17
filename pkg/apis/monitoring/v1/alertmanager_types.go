@@ -202,8 +202,7 @@ type AlertmanagerSpec struct {
 	Paused bool `json:"paused,omitempty"` // nolint:kubeapilinter
 	// nodeSelector defines which Nodes the Pods are scheduled on.
 	// +optional
-	//nolint:kubeapilinter // standard Kubernetes node selector format
-	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	NodeSelector NodeSelector `json:"nodeSelector,omitempty"`
 	// schedulerName defines the scheduler to use for Pod scheduling. If not specified, the default scheduler is used.
 	// +optional
 	// +kubebuilder:validation:MinLength=1
