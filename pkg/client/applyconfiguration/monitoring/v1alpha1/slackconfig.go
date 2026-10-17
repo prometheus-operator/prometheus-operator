@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -33,6 +34,14 @@ type SlackConfigApplyConfiguration struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// appToken defines the secret's key that contains the Slack app token.
+	// The secret needs to be in the same namespace as the AlertmanagerConfig
+	// object and accessible by the Prometheus Operator.
+	// It requires Alertmanager >= v0.30.0.
+	AppToken *v1.SecretKeySelector `json:"appToken,omitempty"`
+	// appURL defines the URL used for Slack App message posting API.
+	// It requires Alertmanager >= v0.30.0.
+	AppURL *monitoringv1alpha1.URL `json:"appURL,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	Channel *string `json:"channel,omitempty"`
 	// username defines the slack bot user name.
@@ -111,6 +120,22 @@ func (b *SlackConfigApplyConfiguration) WithSendResolved(value bool) *SlackConfi
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *SlackConfigApplyConfiguration {
 	b.APIURL = &value
+	return b
+}
+
+// WithAppToken sets the AppToken field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AppToken field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithAppToken(value v1.SecretKeySelector) *SlackConfigApplyConfiguration {
+	b.AppToken = &value
+	return b
+}
+
+// WithAppURL sets the AppURL field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AppURL field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithAppURL(value monitoringv1alpha1.URL) *SlackConfigApplyConfiguration {
+	b.AppURL = &value
 	return b
 }
 
