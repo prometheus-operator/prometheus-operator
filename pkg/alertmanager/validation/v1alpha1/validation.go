@@ -416,7 +416,7 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
