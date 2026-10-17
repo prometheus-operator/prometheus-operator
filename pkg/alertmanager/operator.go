@@ -1636,6 +1636,18 @@ func checkWebexConfigs(
 			return err
 		}
 
+		if config.HTTPConfig != nil && config.HTTPConfig.Authorization != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.Authorization.Credentials, validation.NotEmpty); err != nil {
+				return fmt.Errorf("httpConfig.authorization: %w", err)
+			}
+		}
+
+		if config.HTTPConfig != nil && config.HTTPConfig.BearerTokenSecret != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.BearerTokenSecret, validation.NotEmpty); err != nil {
+				return fmt.Errorf("httpConfig.bearerTokenSecret: %w", err)
+			}
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
