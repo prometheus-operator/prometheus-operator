@@ -287,11 +287,11 @@ func start() int {
 		return 1
 	}
 
-	logger.Info("Starting Prometheus Operator", "version", version.Info(), "build_context", version.BuildContext(), "feature_gates", cfg.Gates.String())
+	logger.Info("Starting Prometheus Operator", "version", version.Info(), "buildContext", version.BuildContext(), "featureGates", cfg.Gates.String())
 	logger.Info("Operator's configuration",
-		"watch_referenced_objects_in_all_namespaces", cfg.WatchObjectRefsInAllNamespaces,
-		"controller_id", cfg.ControllerID,
-		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
+		"watchReferencedObjectsInAllNamespaces", cfg.WatchObjectRefsInAllNamespaces,
+		"controllerID", cfg.ControllerID,
+		"enableConfigReloaderProbes", cfg.ReloaderConfig.EnableProbes)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
 	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
@@ -342,7 +342,7 @@ func start() int {
 		cfg.KubernetesVersion = semver.MustParse("1.16.0")
 		logger.Warn("failed to parse Kubernetes version", "version", kubernetesVersion.String(), "err", err)
 	}
-	logger.Info("connection established", "kubernetes_version", cfg.KubernetesVersion.String())
+	logger.Info("connection established", "kubernetesVersion", cfg.KubernetesVersion.String())
 
 	var (
 		alertmanagerControllerOptions = []alertmanagercontroller.ControllerOption{}
@@ -437,7 +437,7 @@ func start() int {
 	// It injects topology.kubernetes.io/zone as a pod label, removing the need
 	// for attach_metadata.node=true in topology sharding configurations.
 	podTopologyLabelsSupported := cfg.KubernetesVersion.GTE(semver.MustParse("1.35.0"))
-	logger.Info("Kubernetes API capabilities", "pod_topology_labels", podTopologyLabelsSupported)
+	logger.Info("Kubernetes API capabilities", "podTopologyLabels", podTopologyLabelsSupported)
 	if podTopologyLabelsSupported {
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithPodTopologyLabels())
 		promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithPodTopologyLabels())
