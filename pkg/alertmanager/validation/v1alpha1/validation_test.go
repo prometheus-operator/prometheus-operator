@@ -52,6 +52,15 @@ func TestValidateWebexConfigsRequireAuthorization(t *testing.T) {
 			name:   "httpConfig with authorization",
 			config: monitoringv1alpha1.WebexConfig{RoomID: "room-1", HTTPConfig: withAuthorization},
 		},
+		{
+			name: "httpConfig with bearerTokenSecret",
+			config: monitoringv1alpha1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+				BearerTokenSecret: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
+					Key:                  "token",
+				},
+			}},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := validateWebexConfigs([]monitoringv1alpha1.WebexConfig{tc.config})
