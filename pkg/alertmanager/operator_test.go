@@ -1485,6 +1485,70 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestCheckWebexAlertmanagerConfig(t *testing.T) {
+	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+	secret := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
+		Key:                  "token",
+	}
+	emptySecret := secret
+	emptySecret.Key = "empty"
+	for _, tc := range []struct {
+		name       string
+		httpConfig *monitoringv1alpha1.HTTPConfig
+		expectErr  bool
+	}{
+		{name: "no httpConfig", expectErr: true},
+		{name: "httpConfig without authorization", httpConfig: &monitoringv1alpha1.HTTPConfig{}, expectErr: true},
+		{
+			name: "httpConfig with authorization",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				Authorization: &monitoringv1.SafeAuthorization{Credentials: &secret},
+			},
+		},
+		{
+			name:       "httpConfig with bearerTokenSecret",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{BearerTokenSecret: &secret},
+		},
+		{
+			name: "empty authorization credentials",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				Authorization: &monitoringv1.SafeAuthorization{Credentials: &emptySecret},
+			},
+			expectErr: true,
+		},
+		{
+			name:       "empty bearerTokenSecret",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{BearerTokenSecret: &emptySecret},
+			expectErr:  true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewClientset(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{Name: "webex", Namespace: "ns1"},
+				Data:       map[string][]byte{"token": []byte("webex-token"), "empty": {}},
+			})
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+			config := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{Namespace: "ns1"},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name:         "webex",
+						WebexConfigs: []monitoringv1alpha1.WebexConfig{{RoomID: "room-1", HTTPConfig: tc.httpConfig}},
+					}},
+				},
+			}
+			err := checkAlertmanagerConfigResource(context.Background(), config, version, store)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)

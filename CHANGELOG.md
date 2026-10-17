@@ -1,5 +1,6 @@
 ## UNRELEASED
 
+* [BUGFIX] Reject AlertmanagerConfig Webex receivers with missing authorization or empty credentials. #8889
 * [BUGFIX] Reject AlertmanagerConfig resources where PagerDuty `routingKey` and `serviceKey` references resolve to empty strings. #8842
 
 ## 0.94.1 / 2026-09-23
