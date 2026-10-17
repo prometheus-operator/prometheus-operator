@@ -17,8 +17,10 @@ package v1beta1
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -1533,6 +1535,57 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 					return
 				}
 				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWebexConfigsRequireAuthorization(t *testing.T) {
+	withAuthorization := &monitoringv1beta1.HTTPConfig{
+		Authorization: &monitoringv1.SafeAuthorization{
+			Credentials: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
+				Key:                  "token",
+			},
+		},
+	}
+
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1beta1.WebexConfig
+		expectErr bool
+	}{
+		{
+			name:      "no httpConfig",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1"},
+			expectErr: true,
+		},
+		{
+			name:      "httpConfig without authorization",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{}},
+			expectErr: true,
+		},
+		{
+			name:   "httpConfig with authorization",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: withAuthorization},
+		},
+		{
+			name: "httpConfig with bearerTokenSecret",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{
+				BearerTokenSecret: &monitoringv1beta1.SecretKeySelector{
+					Name: "webex",
+					Key:  "token",
+				},
+			}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateWebexConfigs([]monitoringv1beta1.WebexConfig{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
 			}
 		})
 	}

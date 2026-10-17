@@ -1636,6 +1636,21 @@ func checkWebexConfigs(
 			return err
 		}
 
+		// Alertmanager refuses a Webex receiver whose credentials are empty.
+		if config.HTTPConfig != nil {
+			if config.HTTPConfig.Authorization != nil {
+				if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.Authorization.Credentials, validation.NotEmpty); err != nil {
+					return fmt.Errorf("httpConfig.authorization: %w", err)
+				}
+			}
+
+			if config.HTTPConfig.BearerTokenSecret != nil {
+				if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.BearerTokenSecret, validation.NotEmpty); err != nil {
+					return fmt.Errorf("httpConfig.bearerTokenSecret: %w", err)
+				}
+			}
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
