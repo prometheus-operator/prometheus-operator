@@ -8,3 +8,4 @@ scrape_configs:
       - test2
     attach_metadata:
       node: true
+      namespace: true
