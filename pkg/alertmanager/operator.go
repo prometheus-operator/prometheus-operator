@@ -1748,15 +1748,15 @@ func checkPushoverConfigs(
 		}
 
 		if amVersion.LT(semver.MustParse("0.26.0")) && config.UserKeyFile != nil {
-			return fmt.Errorf(`userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if amVersion.LT(semver.MustParse("0.26.0")) && config.TokenFile != nil {
-			return fmt.Errorf(`tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
-			return fmt.Errorf(`device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
