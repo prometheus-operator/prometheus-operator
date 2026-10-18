@@ -2965,7 +2965,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			sc.UpdateMessage = nil
 		} else if *sc.UpdateMessage && sc.APIURL != "" {
 			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+				return fmt.Errorf(`'update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
 			}
 		}
 	}
