@@ -1448,7 +1448,7 @@ func checkDiscordConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1484,7 +1484,7 @@ func checkRocketChatConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1533,16 +1533,16 @@ func checkSlackConfigs(
 		}
 
 		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
 		if config.UpdateMessage != nil {
 			if amVersion.LT(semver.MustParse("0.32.0")) {
-				return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+				return fmt.Errorf(`'updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
 			}
 			if *config.UpdateMessage && slackAPIURL != "" {
 				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
+					return fmt.Errorf(`'updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
 				}
 			}
 		}
@@ -1579,7 +1579,7 @@ func checkWebhookConfigs(
 		}
 
 		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
-			return fmt.Errorf(`payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1628,7 +1628,7 @@ func checkWebexConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1668,11 +1668,11 @@ func checkEmailConfigs(
 		}
 
 		if config.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
 		if config.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
-			return fmt.Errorf(`threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
 		}
 	}
 
@@ -1769,7 +1769,7 @@ func checkSnsConfigs(
 ) error {
 	for _, config := range configs {
 		if amVersion.LT(semver.MustParse("0.33.0")) && config.UseAWSHTTPClient != nil {
-			return fmt.Errorf(`useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1799,12 +1799,12 @@ func checkTelegramConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
 		if amVersion.LT(semver.MustParse("0.26.0")) && config.BotTokenFile != nil {
-			return fmt.Errorf(`botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
