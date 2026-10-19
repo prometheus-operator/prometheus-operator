@@ -4110,18 +4110,16 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 				})
 			}
 
-			cgForHTTPClientConfig := cg.WithMinimumVersion("2.41.0")
-
 			if config.FollowRedirects != nil {
-				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+				configs[i] = cg.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
 			}
 
 			if config.EnableHTTP2 != nil {
-				configs[i] = cgForHTTPClientConfig.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+				configs[i] = cg.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
 			}
 
 			if config.TLSConfig != nil {
-				configs[i] = cgForHTTPClientConfig.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
