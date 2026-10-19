@@ -117,6 +117,10 @@ func validateReceivers(receivers []monitoringv1alpha1.Receiver) (map[string]stru
 		if err := validateRocketchatConfigs(receiver.RocketChatConfigs); err != nil {
 			return receiverValidationFailedFormat(err)
 		}
+
+		if err := validateMattermostConfigs(receiver.MattermostConfigs); err != nil {
+			return nil, fmt.Errorf("failed to validate 'mattermostConfig' - receiver %s: %w", receiver.Name, err)
+		}
 	}
 
 	return receiverNames, nil
@@ -560,6 +564,42 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 	for i, conf := range configs {
 		if err := v(conf); err != nil {
 			return fmt.Errorf("'msteamsv2Configs'[%d]: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
+	v := func(conf monitoringv1alpha1.MattermostConfig) error {
+		if err := validation.ValidateTemplateURLPtr(conf.IconURL); err != nil {
+			return fmt.Errorf("'iconURL': %w", err)
+		}
+
+		for j, att := range conf.Attachments {
+			for field, val := range map[string]*string{
+				"authorIcon": att.AuthorIcon,
+				"authorLink": att.AuthorLink,
+				"titleLink":  att.TitleLink,
+				"thumbURL":   att.ThumbURL,
+				"footerIcon": att.FooterIcon,
+				"imageURL":   att.ImageURL,
+			} {
+				if err := validation.ValidateTemplateURLPtr(val); err != nil {
+					return fmt.Errorf("invalid attachments [%d]: '%s': %w", j, field, err)
+				}
+			}
+		}
+
+		if err := conf.HTTPConfig.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'mattermostConfigs'[%d]: %w", i, err)
 		}
 	}
 
