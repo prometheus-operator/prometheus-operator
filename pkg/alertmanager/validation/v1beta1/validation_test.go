@@ -1727,3 +1727,69 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateMattermostAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate Mattermost config - valid icon url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							MattermostConfigs: []monitoringv1beta1.MattermostConfig{
+								{
+									IconURL: new("http://iconurl.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate Mattermost config - invalid icon url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							MattermostConfigs: []monitoringv1beta1.MattermostConfig{
+								{
+									IconURL: new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
