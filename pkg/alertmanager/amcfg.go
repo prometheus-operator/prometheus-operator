@@ -1415,6 +1415,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Message:       ptr.Deref(in.Message, ""),
 		URLTitle:      ptr.Deref(in.URLTitle, ""),
 		Priority:      ptr.Deref(in.Priority, ""),
+		Sound:         ptr.Deref(in.Sound, ""),
+		Device:        ptr.Deref(in.Device, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
 	}
@@ -1425,10 +1427,6 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 
 	if in.TTL != nil {
 		out.TTL = string(*in.TTL)
-	}
-
-	if in.Device != nil {
-		out.Device = *in.Device
 	}
 
 	{

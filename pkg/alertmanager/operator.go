@@ -1712,15 +1712,14 @@ func checkPushoverConfigs(
 	amVersion semver.Version,
 ) error {
 	checkSecret := func(secret *corev1.SecretKeySelector, name string) error {
-		if secret == nil {
-			return fmt.Errorf("mandatory field %s is empty", name)
-		}
-		s, err := store.GetSecretKey(ctx, namespace, *secret)
-		if err != nil {
-			return err
-		}
-		if s == "" {
-			return errors.New("mandatory field userKey is empty")
+		if secret != nil {
+			s, err := store.GetSecretKey(ctx, namespace, *secret)
+			if err != nil {
+				return err
+			}
+			if s == "" {
+				return fmt.Errorf("%s secret is specified, but the value is an empty string", name)
+			}
 		}
 		return nil
 	}
@@ -1736,10 +1735,6 @@ func checkPushoverConfigs(
 			return err
 		}
 
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return errors.New("html and monospace options are mutually exclusive")
-		}
-
 		if ptr.Deref(config.Expire, "") != "" {
 			if _, err := model.ParseDuration(*config.Expire); err != nil {
 				return err
@@ -1750,6 +1745,18 @@ func checkPushoverConfigs(
 			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
 			}
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.UserKeyFile != nil {
+			return fmt.Errorf(`'userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.TokenFile != nil {
+			return fmt.Errorf(`'tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
+			return fmt.Errorf(`'device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
