@@ -123,6 +123,47 @@ spec:
     path: "/path/to/prom/db"
 ```
 
+### Volume permissions
+
+The Prometheus container runs as a non-root user (`nobody`, UID `65534`, in the
+default image) and the operator doesn't set a Pod security context unless you
+configure one. If the root directory of the volume is owned by `root` and isn't
+writable by other users, which is common with file storage such as NFS or
+CephFS, Prometheus fails to start and the Pod goes into a crash loop.
+
+To fix it, set `fsGroup` in the `securityContext` field of the `Prometheus`
+resource so that the kubelet changes the group ownership of the volume when it
+is mounted:
+
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: example
+spec:
+  securityContext:
+    fsGroup: 65534
+    runAsNonRoot: true
+    runAsUser: 65534
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: my-file-storage
+        resources:
+          requests:
+            storage: 40Gi
+```
+
+The same applies to `Alertmanager` and `ThanosRuler` resources. Adjust the IDs
+if you use a container image that runs as a different user.
+
+Whether `fsGroup` takes effect depends on the volume type and, for CSI volumes,
+on the `fsGroupPolicy` of the driver (see [Configure volume permission and
+ownership change policy for
+Pods](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#configure-volume-permission-and-ownership-change-policy-for-pods)).
+When it doesn't (for instance with NFS volumes), make the directory writable by
+the container user on the storage side.
+
 ### Using hostPath volumes
 
 Using a hostPath volume requires ensuring that the container has the appropriate permissions to access and modify files at the specified path on the host machine, example:

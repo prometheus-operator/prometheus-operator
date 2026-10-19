@@ -416,8 +416,16 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
+		if conf.UserKey != nil && conf.UserKeyFile != nil {
+			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
+		}
+
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
+		}
+
+		if conf.Token != nil && conf.TokenFile != nil {
+			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
 		}
 
 		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
@@ -476,10 +484,6 @@ func validateSNSConfigs(configs []monitoringv1alpha1.SNSConfig) error {
 
 func validateTelegramConfigs(configs []monitoringv1alpha1.TelegramConfig) error {
 	v := func(conf monitoringv1alpha1.TelegramConfig) error {
-		if conf.BotToken == nil && conf.BotTokenFile == nil {
-			return errors.New("mandatory field botToken or botTokenfile is empty")
-		}
-
 		if conf.BotToken != nil && conf.BotTokenFile != nil {
 			return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 		}
@@ -671,6 +675,9 @@ func validateMuteTimeIntervals(muteTimeIntervals []monitoringv1alpha1.MuteTimeIn
 	for i, mti := range muteTimeIntervals {
 		if err := mti.Validate(); err != nil {
 			return nil, fmt.Errorf("mute time interval[%d] is invalid: %w", i, err)
+		}
+		if _, found := muteTimeIntervalNames[mti.Name]; found {
+			return nil, fmt.Errorf("mute time interval[%d]: %q mute time interval is not unique", i, mti.Name)
 		}
 		muteTimeIntervalNames[mti.Name] = struct{}{}
 	}

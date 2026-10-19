@@ -74,6 +74,12 @@ type ServiceMonitorSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.
 	TargetLimit *int64 `json:"targetLimit,omitempty"`
@@ -209,6 +215,14 @@ func (b *ServiceMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...mon
 // If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
 func (b *ServiceMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ServiceMonitorSpecApplyConfiguration {
 	b.FallbackScrapeProtocol = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *ServiceMonitorSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *ServiceMonitorSpecApplyConfiguration {
+	b.ExtraScrapeMetrics = &value
 	return b
 }
 

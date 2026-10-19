@@ -120,14 +120,6 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithConfigResourceStatus tells that the controller can manage the status of
-// configuration resources.
-func WithConfigResourceStatus() ControllerOption {
-	return func(o *Operator) {
-		o.configResourcesStatusEnabled = true
-	}
-}
-
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -174,7 +166,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			Labels:                 c.Labels,
 			LocalHost:              c.LocalHost,
 		},
-		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -972,7 +965,8 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 		}
 	}
 
-	for i, rw := range tr.Spec.RemoteWrite {
+	for i := range tr.Spec.RemoteWrite {
+		rw := &tr.Spec.RemoteWrite[i]
 		// Thanos does not support azureAD.workloadIdentity in any version
 		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
 			reset := resetFieldFn("none")

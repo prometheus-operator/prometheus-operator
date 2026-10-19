@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.22.0",
-      "operator.prometheus.io/version": "0.94.0"
+      "operator.prometheus.io/version": "0.94.1"
     },
     "name": "thanosrulers.monitoring.coreos.com"
   },
@@ -8104,6 +8104,13 @@
                           },
                           "clientAuthType": {
                             "description": "clientAuthType defines the server policy for client TLS authentication.\n\nFor more detail on clientAuth options:\nhttps://golang.org/pkg/crypto/tls/#ClientAuthType",
+                            "enum": [
+                              "NoClientCert",
+                              "RequestClientCert",
+                              "RequireAnyClientCert",
+                              "VerifyClientCertIfGiven",
+                              "RequireAndVerifyClientCert"
+                            ],
                             "type": "string"
                           },
                           "clientCAFile": {

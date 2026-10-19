@@ -4,7 +4,7 @@
   "metadata": {
     "annotations": {
       "controller-gen.kubebuilder.io/version": "v0.22.0",
-      "operator.prometheus.io/version": "0.94.0"
+      "operator.prometheus.io/version": "0.94.1"
     },
     "name": "scrapeconfigs.monitoring.coreos.com"
   },
@@ -4504,6 +4504,10 @@
                       "type": "object"
                     },
                     "type": "array"
+                  },
+                  "extraScrapeMetrics": {
+                    "description": "extraScrapeMetrics defines whether to store additional time series for each scrape:\n`scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.\nThese metrics help monitor how close targets are to their configured limits.\n\nIt requires Prometheus >= v3.10.0.",
+                    "type": "boolean"
                   },
                   "fallbackScrapeProtocol": {
                     "description": "fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.\n\nIt requires Prometheus >= v3.0.0.",

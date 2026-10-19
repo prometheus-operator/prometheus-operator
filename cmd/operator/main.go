@@ -486,8 +486,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promControllerOptions = append(promControllerOptions, prometheuscontroller.WithConfigResourceStatus())
 		}
 
 		po, err = prometheuscontroller.New(ctx, restConfig, cfg, logger, r, promControllerOptions...)
@@ -566,8 +564,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			promAgentControllerOptions = append(promAgentControllerOptions, prometheusagentcontroller.WithConfigResourceStatus())
 		}
 
 		pao, err = prometheusagentcontroller.New(ctx, restConfig, cfg, logger, r, promAgentControllerOptions...)
@@ -607,8 +603,17 @@ func start() int {
 	var ao *alertmanagercontroller.Operator
 	if alertmanagerSupported {
 		if cfg.Gates.Enabled(operator.StatusForConfigurationResourcesFeature) {
-			// TODO: check permissions when implementing the AlertmanagerConfig status subresource.
-			alertmanagerControllerOptions = append(alertmanagerControllerOptions, alertmanagercontroller.WithConfigResourceStatus())
+			if !checkStatusSubresourcePermissions(
+				ctx,
+				logger,
+				kclient,
+				[]schema.GroupVersionResource{
+					monitoringv1alpha1.SchemeGroupVersion.WithResource(monitoringv1alpha1.AlertmanagerConfigName),
+				},
+			) {
+				cancel()
+				return 1
+			}
 		}
 
 		ao, err = alertmanagercontroller.New(ctx, restConfig, cfg, logger, r, alertmanagerControllerOptions...)
@@ -659,8 +664,6 @@ func start() int {
 				cancel()
 				return 1
 			}
-
-			thanosControllerOptions = append(thanosControllerOptions, thanoscontroller.WithConfigResourceStatus())
 		}
 
 		to, err = thanoscontroller.New(ctx, restConfig, cfg, logger, r, thanosControllerOptions...)

@@ -463,6 +463,10 @@ func convertEmailConfigTo(in EmailConfig) v1alpha1.EmailConfig {
 }
 
 func convertEmailThreadingConfigTo(in *EmailThreadingConfig) *v1alpha1.EmailThreadingConfig {
+	if in == nil {
+		return nil
+	}
+
 	return &v1alpha1.EmailThreadingConfig{
 		ThreadByDate: v1alpha1.ThreadByDateType(in.ThreadByDate),
 	}
@@ -494,6 +498,7 @@ func convertPushoverConfigTo(in PushoverConfig) v1alpha1.PushoverConfig {
 		Message:      in.Message,
 		URL:          in.URL,
 		URLTitle:     in.URLTitle,
+		TTL:          in.TTL,
 		Device:       in.Device,
 		Sound:        in.Sound,
 		Priority:     in.Priority,

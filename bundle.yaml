@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -13361,7 +13361,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -15692,7 +15692,44 @@ spec:
                               It requires Alertmanager >= v0.24.0.
                             pattern: ^(http|https)://.+$
                             type: string
+                          botToken:
+                            description: |-
+                              botToken represents the bot token configuration for Telegram.
+                              It is mutually exclusive with `botTokenFile`.
+                              It requires Alertmanager >= v0.31.0.
+                            properties:
+                              key:
+                                description: The key of the secret to select from.  Must
+                                  be a valid secret key.
+                                type: string
+                              name:
+                                default: ""
+                                description: |-
+                                  Name of the referent.
+                                  This field is effectively required, but due to backwards compatibility is
+                                  allowed to be empty. Instances of this type with an empty value here are
+                                  almost certainly wrong.
+                                  More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                type: string
+                              optional:
+                                description: Specify whether the Secret or its key
+                                  must be defined
+                                type: boolean
+                            required:
+                            - key
+                            type: object
+                            x-kubernetes-map-type: atomic
+                          botTokenFile:
+                            description: |-
+                              botTokenFile defines the file to read the Telegram bot token from.
+                              It is mutually exclusive with `botToken`.
+                              It requires Alertmanager >= v0.31.0.
+                            minLength: 1
+                            type: string
                         type: object
+                        x-kubernetes-validations:
+                        - message: botToken and botTokenFile are mutually exclusive.
+                          rule: '!has(self.botToken) || !has(self.botTokenFile)'
                       victorops:
                         description: victorops defines the default configuration for
                           VictorOps.
@@ -16222,6 +16259,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
@@ -23530,6 +23573,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
@@ -23707,7 +23756,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -23788,6 +23837,14 @@ spec:
                 description: |-
                   convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.
                   It requires Prometheus >= v3.0.0.
+                type: boolean
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
@@ -25129,7 +25186,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -25316,6 +25373,14 @@ spec:
                 type: boolean
               enableHttp2:
                 description: enableHttp2 can be used to disable HTTP2.
+                type: boolean
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
@@ -26565,7 +26630,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -29916,6 +29981,14 @@ spec:
                   available. This is necessary to generate correct URLs (for instance if
                   Prometheus is accessible behind an Ingress resource).
                 type: string
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v2.32.0.
+                type: boolean
               hostAliases:
                 description: |-
                   hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
@@ -38227,6 +38300,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
@@ -38483,7 +38562,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -42649,6 +42728,14 @@ spec:
                   available. This is necessary to generate correct URLs (for instance if
                   Prometheus is accessible behind an Ingress resource).
                 type: string
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v2.32.0.
+                type: boolean
               hostAliases:
                 description: |-
                   hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
@@ -52542,6 +52629,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
@@ -52771,7 +52864,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -53038,7 +53131,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -57929,6 +58022,14 @@ spec:
                   - server
                   type: object
                 type: array
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -66145,7 +66246,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -66172,6 +66273,14 @@ spec:
           * Target and metric relabeling.
 
           `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+
+          Service targets that aren't backed by Pods (for instance manually managed
+          Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+          the service port with `port` instead of `targetPort` and `filterRunning` is
+          set to `false`. Manually created Pods have no such restriction.
+
+          For targets that aren't backed by Pods, you can also consider using the
+          `ScrapeConfig` CRD.
         properties:
           apiVersion:
             description: |-
@@ -67035,6 +67144,9 @@ spec:
                         by the Service.
                         If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
                         If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+
+                        Because it relies on Pod metadata, endpoints which aren't backed by Pods
+                        are never scraped when `targetPort` is used.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: tlsConfig defines TLS configuration used by the
@@ -67230,6 +67342,14 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -67584,7 +67704,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -77518,6 +77638,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
@@ -77687,7 +77813,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -77704,7 +77830,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -77723,7 +77849,17 @@ rules:
 - apiGroups:
   - monitoring.coreos.com
   resources:
+  - alertmanagers/finalizers
+  - prometheusagents/finalizers
+  - prometheuses/finalizers
+  - thanosrulers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
   - alertmanagers/status
+  - alertmanagerconfigs/status
   - podmonitors/status
   - probes/status
   - prometheuses/status
@@ -77784,7 +77920,6 @@ rules:
   - pods
   verbs:
   - list
-  - delete
 - apiGroups:
   - ""
   resources:
@@ -77795,13 +77930,6 @@ rules:
   - create
   - update
   - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - list
-  - watch
 - apiGroups:
   - ""
   resources:
@@ -77834,6 +77962,13 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - nodes
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - endpoints
   verbs:
   - get
@@ -77847,7 +77982,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
   namespace: default
 spec:
@@ -77863,13 +77998,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.94.0
+        app.kubernetes.io/version: 0.94.1
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.94.0
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.94.1
         - --watch-referenced-objects-in-all-namespaces=true
         - --disable-unmanaged-prometheus-configuration=true
         - --kubelet-endpoints=true
@@ -77877,7 +78012,7 @@ spec:
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.94.0
+        image: quay.io/prometheus-operator/prometheus-operator:v0.94.1
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -77911,7 +78046,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
   namespace: default
 ---
@@ -77921,7 +78056,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.0
+    app.kubernetes.io/version: 0.94.1
   name: prometheus-operator
   namespace: default
 spec:

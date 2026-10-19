@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.0
+    operator.prometheus.io/version: 0.94.1
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -4170,6 +4170,14 @@ spec:
                   available. This is necessary to generate correct URLs (for instance if
                   Prometheus is accessible behind an Ingress resource).
                 type: string
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v2.32.0.
+                type: boolean
               hostAliases:
                 description: |-
                   hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
@@ -14063,6 +14071,12 @@ spec:
 
                           For more detail on clientAuth options:
                           https://golang.org/pkg/crypto/tls/#ClientAuthType
+                        enum:
+                        - NoClientCert
+                        - RequestClientCert
+                        - RequireAnyClientCert
+                        - VerifyClientCertIfGiven
+                        - RequireAndVerifyClientCert
                         type: string
                       clientCAFile:
                         description: |-
