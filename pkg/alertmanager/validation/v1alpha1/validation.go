@@ -571,39 +571,35 @@ func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) erro
 }
 
 func validateMattermostConfigs(configs []monitoringv1alpha1.MattermostConfig) error {
-	for i, config := range configs {
-		if err := validation.ValidateTemplateURLPtr(config.IconURL); err != nil {
-			return fmt.Errorf("[%d]: iconURL: %w", i, err)
+	v := func(conf monitoringv1alpha1.MattermostConfig) error {
+		if err := validation.ValidateTemplateURLPtr(conf.IconURL); err != nil {
+			return fmt.Errorf("'iconURL': %w", err)
 		}
 
-		for j, att := range config.Attachments {
-			if err := validation.ValidateTemplateURLPtr(att.AuthorIcon); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: authorIcon: %w", i, j, err)
-			}
-
-			if err := validation.ValidateTemplateURLPtr(att.AuthorLink); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: authorLink: %w", i, j, err)
-			}
-
-			if err := validation.ValidateTemplateURLPtr(att.TitleLink); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: titleLink: %w", i, j, err)
-			}
-
-			if err := validation.ValidateTemplateURLPtr(att.ThumbURL); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: thumbURL: %w", i, j, err)
-			}
-
-			if err := validation.ValidateTemplateURLPtr(att.FooterIcon); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: footerIcon: %w", i, j, err)
-			}
-
-			if err := validation.ValidateTemplateURLPtr(att.ImageURL); err != nil {
-				return fmt.Errorf("[%d]: invalid attachments [%d]: imageURL: %w", i, j, err)
+		for j, att := range conf.Attachments {
+			for field, val := range map[string]*string{
+				"authorIcon": att.AuthorIcon,
+				"authorLink": att.AuthorLink,
+				"titleLink":  att.TitleLink,
+				"thumbURL":   att.ThumbURL,
+				"footerIcon": att.FooterIcon,
+				"imageURL":   att.ImageURL,
+			} {
+				if err := validation.ValidateTemplateURLPtr(val); err != nil {
+					return fmt.Errorf("invalid attachments [%d]: '%s': %w", j, field, err)
+				}
 			}
 		}
 
-		if err := config.HTTPConfig.Validate(); err != nil {
+		if err := conf.HTTPConfig.Validate(); err != nil {
 			return err
+		}
+		return nil
+	}
+
+	for i, conf := range configs {
+		if err := v(conf); err != nil {
+			return fmt.Errorf("'mattermostConfigs'[%d]: %w", i, err)
 		}
 	}
 
