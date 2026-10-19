@@ -25,6 +25,7 @@ USER 65534
 LABEL org.opencontainers.image.source="https://github.com/prometheus-operator/prometheus-operator" \
     org.opencontainers.image.url="https://prometheus-operator.dev/" \
     org.opencontainers.image.documentation="https://prometheus-operator.dev/" \
-    org.opencontainers.image.licenses="Apache-2.0"
+    org.opencontainers.image.licenses="Apache-2.0" \
+    io.prometheus.image.variant="busybox"
 
 ENTRYPOINT ["/bin/operator"]

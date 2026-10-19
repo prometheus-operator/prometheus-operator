@@ -1429,6 +1429,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Message:       ptr.Deref(in.Message, ""),
 		URLTitle:      ptr.Deref(in.URLTitle, ""),
 		Priority:      ptr.Deref(in.Priority, ""),
+		Sound:         ptr.Deref(in.Sound, ""),
+		Device:        ptr.Deref(in.Device, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
 	}
@@ -1439,10 +1441,6 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 
 	if in.TTL != nil {
 		out.TTL = string(*in.TTL)
-	}
-
-	if in.Device != nil {
-		out.Device = *in.Device
 	}
 
 	{
@@ -3077,7 +3075,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			sc.UpdateMessage = nil
 		} else if *sc.UpdateMessage && sc.APIURL != "" {
 			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+				return fmt.Errorf(`'update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
 			}
 		}
 	}
@@ -3687,6 +3685,7 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	muteTimeIntervalsAllowed := matchersV2Allowed
 	activeTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	labelsAllowed := amVersion.GTE(semver.MustParse("0.34.0"))
 	withLogger := logger.With("receiver", r.Receiver)
 
 	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
@@ -3708,6 +3707,12 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		msg := "active time intervals in route is supported in Alertmanager >= 0.24.0 only - dropping config"
 		withLogger.Warn(msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
 		r.ActiveTimeIntervals = nil
+	}
+
+	if !labelsAllowed && checkNotEmptyMap(r.Labels) {
+		msg := "'labels' in route is supported in Alertmanager >= 0.34.0 only - dropping config"
+		withLogger.Warn(msg, "labels", fmt.Sprint(r.Labels))
+		r.Labels = nil
 	}
 
 	if r.GroupWait != "" {

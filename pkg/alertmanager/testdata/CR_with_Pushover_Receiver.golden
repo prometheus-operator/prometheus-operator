@@ -11,6 +11,8 @@ receivers:
   pushover_configs:
   - user_key: userkeySecret
     token: tokenSecret
+    device: deviceone
+    sound: siren
     retry: 5m
     expire: 30s
     html: true

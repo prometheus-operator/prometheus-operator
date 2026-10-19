@@ -129,14 +129,6 @@ func WithStorageClassValidation() ControllerOption {
 	}
 }
 
-// WithConfigResourceStatus tells that the controller can manage the status of
-// configuration resources.
-func WithConfigResourceStatus() ControllerOption {
-	return func(o *Operator) {
-		o.configResourcesStatusEnabled = true
-	}
-}
-
 // New creates a new controller.
 func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger *slog.Logger, r prometheus.Registerer, options ...ControllerOption) (*Operator, error) {
 	logger = logger.With("component", controllerName)
@@ -191,7 +183,8 @@ func New(ctx context.Context, restConfig *rest.Config, c operator.Config, logger
 			WatchObjectRefsInAllNamespaces: c.WatchObjectRefsInAllNamespaces,
 		},
 
-		finalizerSyncer: operator.NewNoopFinalizerSyncer(),
+		configResourcesStatusEnabled: c.Gates.Enabled(operator.StatusForConfigurationResourcesFeature),
+		finalizerSyncer:              operator.NewNoopFinalizerSyncer(),
 	}
 	for _, opt := range options {
 		opt(o)
@@ -1386,18 +1379,18 @@ func checkPagerDutyConfigs(
 ) error {
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
-			return err
+			return fmt.Errorf("httpConfig: %w", err)
 		}
 
 		if config.RoutingKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.RoutingKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("routingKey: %w", err)
 			}
 		}
 
 		if config.ServiceKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.ServiceKey, validation.NotEmpty); err != nil {
+				return fmt.Errorf("serviceKey: %w", err)
 			}
 		}
 
@@ -1460,7 +1453,7 @@ func checkDiscordConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1496,7 +1489,7 @@ func checkRocketChatConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1545,16 +1538,16 @@ func checkSlackConfigs(
 		}
 
 		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
 		if config.UpdateMessage != nil {
 			if amVersion.LT(semver.MustParse("0.32.0")) {
-				return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+				return fmt.Errorf(`'updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
 			}
 			if *config.UpdateMessage && slackAPIURL != "" {
 				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
+					return fmt.Errorf(`'updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
 				}
 			}
 		}
@@ -1591,7 +1584,7 @@ func checkWebhookConfigs(
 		}
 
 		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
-			return fmt.Errorf(`payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1640,7 +1633,7 @@ func checkWebexConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
@@ -1680,11 +1673,11 @@ func checkEmailConfigs(
 		}
 
 		if config.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
 		if config.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
-			return fmt.Errorf(`threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
 		}
 	}
 
@@ -1724,15 +1717,14 @@ func checkPushoverConfigs(
 	amVersion semver.Version,
 ) error {
 	checkSecret := func(secret *corev1.SecretKeySelector, name string) error {
-		if secret == nil {
-			return fmt.Errorf("mandatory field %s is empty", name)
-		}
-		s, err := store.GetSecretKey(ctx, namespace, *secret)
-		if err != nil {
-			return err
-		}
-		if s == "" {
-			return errors.New("mandatory field userKey is empty")
+		if secret != nil {
+			s, err := store.GetSecretKey(ctx, namespace, *secret)
+			if err != nil {
+				return err
+			}
+			if s == "" {
+				return fmt.Errorf("%s secret is specified, but the value is an empty string", name)
+			}
 		}
 		return nil
 	}
@@ -1748,10 +1740,6 @@ func checkPushoverConfigs(
 			return err
 		}
 
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return errors.New("html and monospace options are mutually exclusive")
-		}
-
 		if ptr.Deref(config.Expire, "") != "" {
 			if _, err := model.ParseDuration(*config.Expire); err != nil {
 				return err
@@ -1762,6 +1750,18 @@ func checkPushoverConfigs(
 			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
 			}
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.UserKeyFile != nil {
+			return fmt.Errorf(`'userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.TokenFile != nil {
+			return fmt.Errorf(`'tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		}
+
+		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
+			return fmt.Errorf(`'device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1781,7 +1781,7 @@ func checkSnsConfigs(
 ) error {
 	for _, config := range configs {
 		if amVersion.LT(semver.MustParse("0.33.0")) && config.UseAWSHTTPClient != nil {
-			return fmt.Errorf(`useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1811,12 +1811,12 @@ func checkTelegramConfigs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+		return fmt.Errorf(`'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
 	}
 
 	for _, config := range configs {
 		if amVersion.LT(semver.MustParse("0.26.0")) && config.BotTokenFile != nil {
-			return fmt.Errorf(`botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			return fmt.Errorf(`'botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {

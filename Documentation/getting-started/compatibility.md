@@ -90,6 +90,7 @@ Prometheus Operator supports all Prometheus versions >= v2.0.0. The operator's e
 * v3.13.1
 * v3.13.2
 * v3.13.3
+* v3.13.4
 * v3.14.0
 ```
 

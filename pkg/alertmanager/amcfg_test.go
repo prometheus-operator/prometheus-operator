@@ -3256,7 +3256,8 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_WeChat_Receiver.golden",
 		},
 		{
-			name: "CR with Pushover Receiver",
+			name:      "CR with Pushover Receiver",
+			amVersion: &version26,
 			kclient: fake.NewClientset(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -3311,6 +3312,8 @@ func TestGenerateConfig(t *testing.T) {
 								Retry:  new("5m"),
 								Expire: new("30s"),
 								HTML:   new(true),
+								Sound:  new("siren"),
+								Device: new("deviceone"),
 							}},
 						}},
 					},
@@ -9757,6 +9760,9 @@ func TestSanitizeRoute(t *testing.T) {
 	matcherV2SyntaxAllowed := semver.Version{Major: 0, Minor: 22}
 	matcherV2SyntaxNotAllowed := semver.Version{Major: 0, Minor: 21}
 
+	labelsNotAllowed := semver.Version{Major: 0, Minor: 33}
+	labelsAllowed := semver.Version{Major: 0, Minor: 34}
+
 	namespaceLabel := "namespace"
 	namespaceValue := "test-ns"
 
@@ -9821,6 +9827,38 @@ func TestSanitizeRoute(t *testing.T) {
 				},
 			},
 			golden: "test_route_with_new_syntax_supported_with_child_routes.golden",
+		},
+		{
+			name:           "Test route with labels unsupported version",
+			againstVersion: labelsNotAllowed,
+			in: &route{
+				Receiver: "test",
+				Match: map[string]string{
+					"some": "value",
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+				Labels: map[string]string{
+					"label1": "value1",
+				},
+			},
+			golden: "test_route_with_labels_unsupported_version.golden",
+		},
+		{
+			name:           "Test route with labels supported version",
+			againstVersion: labelsAllowed,
+			in: &route{
+				Receiver: "test",
+				Match: map[string]string{
+					"some": "value",
+				},
+				Matchers: []string{fmt.Sprintf("%s=%s", namespaceLabel, namespaceValue)},
+				Continue: true,
+				Labels: map[string]string{
+					"label1": "value1",
+				},
+			},
+			golden: "test_route_with_labels_supported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

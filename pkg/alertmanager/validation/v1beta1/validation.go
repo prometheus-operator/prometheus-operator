@@ -358,8 +358,16 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
+		if conf.UserKey != nil && conf.UserKeyFile != nil {
+			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
+		}
+
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
+		}
+
+		if conf.Token != nil && conf.TokenFile != nil {
+			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
 		}
 
 		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
@@ -673,6 +681,9 @@ func validateTimeIntervals(timeIntervals []monitoringv1beta1.TimeInterval) (map[
 	for i, ti := range timeIntervals {
 		if err := ti.Validate(); err != nil {
 			return nil, fmt.Errorf("time interval[%d] is invalid: %w", i, err)
+		}
+		if _, found := timeIntervalNames[ti.Name]; found {
+			return nil, fmt.Errorf("time interval[%d]: %q time interval is not unique", i, ti.Name)
 		}
 		timeIntervalNames[ti.Name] = struct{}{}
 	}
