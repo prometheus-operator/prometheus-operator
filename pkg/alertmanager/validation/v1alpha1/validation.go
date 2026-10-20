@@ -424,7 +424,7 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
