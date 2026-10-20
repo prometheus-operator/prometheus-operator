@@ -354,11 +354,19 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
+		if conf.UserKey != nil && conf.UserKeyFile != nil {
+			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
+		}
+
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if conf.Token != nil && conf.TokenFile != nil {
+			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
+		}
+
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
