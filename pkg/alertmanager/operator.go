@@ -993,14 +993,14 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		return nil, fmt.Errorf("failed to determine alertmanager version: %w", err)
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store, version)
-	if err != nil {
-		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
-	}
-
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
+		amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store, version, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
+		}
+
 		namespacedLogger.Debug("AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
 			"secret", defaultConfigSecretName(am))
 
@@ -1061,6 +1061,13 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
+	// The base configuration is loaded first because its global section
+	// decides which AlertmanagerConfig objects are valid.
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store, version, cfgBuilder.cfg.Global)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
+	}
+
 	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs.ValidResources()); err != nil {
 		return nil, fmt.Errorf("failed to generate Alertmanager configuration: %w", err)
 	}
@@ -1108,7 +1115,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, amVersion semver.Version) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, amVersion semver.Version, global *globalConfig) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1177,6 +1184,9 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
 		err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store)
+		if err == nil {
+			err = checkGlobalConfigFields(amc, global)
+		}
 		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
@@ -1224,6 +1234,57 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 	}
 
 	return checkInhibitRules(amc, amVersion)
+}
+
+// checkGlobalConfigFields verifies that every field an AlertmanagerConfig
+// leaves unset in a receiver, but that Alertmanager requires, is set in the
+// global configuration. Otherwise Alertmanager would reject the whole generated
+// configuration instead of just the offending AlertmanagerConfig.
+func checkGlobalConfigFields(amc *monitoringv1alpha1.AlertmanagerConfig, global *globalConfig) error {
+	if global == nil {
+		global = &globalConfig{}
+	}
+
+	for _, receiver := range amc.Spec.Receivers {
+		for i, c := range receiver.EmailConfigs {
+			if ptr.Deref(c.Smarthost, "") == "" && global.SMTPSmarthost.Host == "" {
+				return fmt.Errorf("receiver %q: emailConfigs[%d]: smarthost is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+			if ptr.Deref(c.From, "") == "" && global.SMTPFrom == "" {
+				return fmt.Errorf("receiver %q: emailConfigs[%d]: from is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.SlackConfigs {
+			if c.APIURL == nil && global.SlackAPIURL == nil && global.SlackAPIURLFile == "" &&
+				global.SlackAppToken == "" && global.SlackAppTokenFile == "" {
+				return fmt.Errorf("receiver %q: slackConfigs[%d]: apiURL is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.OpsGenieConfigs {
+			if c.APIKey == nil && global.OpsGenieAPIKey == "" && global.OpsGenieAPIKeyFile == "" {
+				return fmt.Errorf("receiver %q: opsGenieConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.VictorOpsConfigs {
+			if c.APIKey == nil && global.VictorOpsAPIKey == "" && global.VictorOpsAPIKeyFile == "" {
+				return fmt.Errorf("receiver %q: victorOpsConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.WeChatConfigs {
+			if c.APISecret == nil && global.WeChatAPISecret == "" && global.WeChatAPISecretFile == "" {
+				return fmt.Errorf("receiver %q: weChatConfigs[%d]: apiSecret is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+			if ptr.Deref(c.CorpID, "") == "" && global.WeChatAPICorpID == "" {
+				return fmt.Errorf("receiver %q: weChatConfigs[%d]: corpID is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+	}
+
+	return nil
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {

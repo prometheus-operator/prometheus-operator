@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -2350,6 +2351,96 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 // configuration depending on the method chosen by the user.
 // Alertmanager can be configured using either the AlertmanagerConfig resource
 // or a Kubernetes secret.
+func TestCheckGlobalConfigFields(t *testing.T) {
+	secret := &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "s"}, Key: "k"}
+
+	for _, tc := range []struct {
+		name     string
+		receiver monitoringv1alpha1.Receiver
+		global   *globalConfig
+		err      string
+	}{
+		{
+			name:     "slack without apiURL and without global",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{}}},
+			err:      "slackConfigs[0]: apiURL",
+		},
+		{
+			name:     "slack with apiURL",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{APIURL: secret}}},
+		},
+		{
+			name:     "slack with global api url file",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{}}},
+			global:   &globalConfig{SlackAPIURLFile: "/etc/slack"},
+		},
+		{
+			name:     "opsgenie without apiKey and without global",
+			receiver: monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{}}},
+			err:      "opsGenieConfigs[0]: apiKey",
+		},
+		{
+			name:     "opsgenie with global api key",
+			receiver: monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{}}},
+			global:   &globalConfig{OpsGenieAPIKey: "key"},
+		},
+		{
+			name:     "victorops without apiKey and without global",
+			receiver: monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{}}},
+			err:      "victorOpsConfigs[0]: apiKey",
+		},
+		{
+			name:     "victorops with global api key",
+			receiver: monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{}}},
+			global:   &globalConfig{VictorOpsAPIKey: "key"},
+		},
+		{
+			name:     "wechat without apiSecret and without global",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{CorpID: ptr.To("corp")}}},
+			err:      "weChatConfigs[0]: apiSecret",
+		},
+		{
+			name:     "wechat without corpID and without global",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{APISecret: secret}}},
+			err:      "weChatConfigs[0]: corpID",
+		},
+		{
+			name:     "wechat with global secret and corp id",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{}}},
+			global:   &globalConfig{WeChatAPISecret: "secret", WeChatAPICorpID: "corp"},
+		},
+		{
+			name:     "email without smarthost and without global",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{From: ptr.To("a@example.com")}}},
+			err:      "emailConfigs[0]: smarthost",
+		},
+		{
+			name:     "email without from and without global",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{Smarthost: ptr.To("smtp.example.com:25")}}},
+			err:      "emailConfigs[0]: from",
+		},
+		{
+			name:     "email with global smarthost and from",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{}}},
+			global:   &globalConfig{SMTPFrom: "a@example.com", SMTPSmarthost: config.HostPort{Host: "smtp.example.com", Port: "25"}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.receiver.Name = "r"
+			amc := &monitoringv1alpha1.AlertmanagerConfig{
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{Receivers: []monitoringv1alpha1.Receiver{tc.receiver}},
+			}
+
+			err := checkGlobalConfigFields(amc, tc.global)
+			if tc.err == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
+}
+
 func TestProvisionAlertmanagerConfiguration(t *testing.T) {
 	for _, tc := range []struct {
 		am      *monitoringv1.Alertmanager
