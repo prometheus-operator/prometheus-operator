@@ -9050,6 +9050,31 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_http_config.golden",
 		},
 		{
+			name: "azure_sd_config_with_environment_and_http_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          new("AzurePublicCloud"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL: new("http://no-proxy.com"),
+						},
+						FollowRedirects: new(false),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_environment_and_http_config.golden",
+		},
+		{
 			name: "azure_sd_config_with_http_config_basic_auth_and_tls",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
