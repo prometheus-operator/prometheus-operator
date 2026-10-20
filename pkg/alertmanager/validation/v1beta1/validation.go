@@ -354,16 +354,8 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
-		if conf.UserKey != nil && conf.UserKeyFile != nil {
-			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
-		}
-
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
-		}
-
-		if conf.Token != nil && conf.TokenFile != nil {
-			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
 		}
 
 		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
@@ -458,6 +450,12 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		// Alertmanager refuses a Webex receiver without an authorization,
+		// and a bearer token is turned into one by its own validation.
+		if conf.HTTPConfig == nil || (conf.HTTPConfig.Authorization == nil && conf.HTTPConfig.BearerTokenSecret == nil) {
+			return errors.New("'httpConfig.authorization' or 'httpConfig.bearerTokenSecret' is required")
 		}
 
 		return nil

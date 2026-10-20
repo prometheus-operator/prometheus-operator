@@ -4042,12 +4042,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.Environment != nil {
-				configs[i] = []yaml.MapItem{
-					{
-						Key:   "environment",
-						Value: config.Environment,
-					},
-				}
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "environment",
+					Value: config.Environment,
+				})
 			}
 
 			if config.AuthenticationMethod != nil {
@@ -4110,6 +4108,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "port",
 					Value: config.Port,
 				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
