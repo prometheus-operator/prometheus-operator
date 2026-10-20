@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-version: v2.14.0
-=======
 version: v2.15.0
->>>>>>> main
 name: golangci-kube-api-linter
 destination: ./tmp/bin/
 plugins:
