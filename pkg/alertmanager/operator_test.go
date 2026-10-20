@@ -2396,7 +2396,7 @@ func TestCheckGlobalConfigFields(t *testing.T) {
 		},
 		{
 			name:     "wechat without apiSecret and without global",
-			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{CorpID: ptr.To("corp")}}},
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{CorpID: new("corp")}}},
 			err:      "weChatConfigs[0]: apiSecret",
 		},
 		{
@@ -2411,12 +2411,12 @@ func TestCheckGlobalConfigFields(t *testing.T) {
 		},
 		{
 			name:     "email without smarthost and without global",
-			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{From: ptr.To("a@example.com")}}},
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{From: new("a@example.com")}}},
 			err:      "emailConfigs[0]: smarthost",
 		},
 		{
 			name:     "email without from and without global",
-			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{Smarthost: ptr.To("smtp.example.com:25")}}},
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{Smarthost: new("smtp.example.com:25")}}},
 			err:      "emailConfigs[0]: from",
 		},
 		{
