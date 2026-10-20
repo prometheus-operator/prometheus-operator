@@ -1238,6 +1238,13 @@ func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion 
 			route.Matchers, route.Receiver)
 	}
 
+	if len(route.Labels) > 0 && !amVersion.GTE(semver.MustParse("0.34.0")) {
+		return fmt.Errorf(
+			"'labels' config set in 'route' but supported in Alertmanager >= 0.34.0 only - current %s",
+			amVersion.String(),
+		)
+	}
+
 	childRoutes, err := route.ChildRoutes()
 	if err != nil {
 		return err
