@@ -327,52 +327,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			},
 			expectErr: false,
 		},
-		{
-			name: "Test validate on Jira config",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							JiraConfigs: []monitoringv1beta1.JiraConfig{
-								{
-									Project:   "projectA",
-									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
-									IssueType: "bug",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			name: "Test validate on Jira config - API URL validation failed",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							JiraConfigs: []monitoringv1beta1.JiraConfig{
-								{
-									Project:   "projectA",
-									APIURL:    new(monitoringv1beta1.URL("http://%><invalid.com")),
-									IssueType: "bug",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -1770,6 +1724,122 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 								{
 									PhoneNumber: new("+13324653687"),
 									ApiURL:      new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateJiraAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on Jira config",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on Jira config - empty project",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on Jira config - invalid API URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://%><invalid.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on Jira config - empty issue type",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "",
 								},
 							},
 						},

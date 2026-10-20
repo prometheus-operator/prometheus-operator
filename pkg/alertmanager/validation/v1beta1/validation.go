@@ -577,7 +577,7 @@ func validateJiraConfigs(configs []monitoringv1beta1.JiraConfig) error {
 		}
 
 		if err := validation.ValidateURLPtr((*string)(conf.APIURL)); err != nil {
-			return fmt.Errorf("apiURL: %w", err)
+			return fmt.Errorf("'apiURL': %w", err)
 		}
 
 		if conf.IssueType == "" {
