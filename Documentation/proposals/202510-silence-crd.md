@@ -271,7 +271,7 @@ The controller resolves `silenceNamespaceSelector` through the shared `operator.
 ```go
 // If the selector is nil, return the object's namespace.
 if sel == nil {
-  return []string{obj.GetNamespace()}, nil
+	return []string{obj.GetNamespace()}, nil
 }
 ```
 
@@ -417,4 +417,3 @@ The feature gate lands first so that every subsequent step can merge incremental
 * [ ] Unit and e2e test coverage
 
   <gh issue="">
-
