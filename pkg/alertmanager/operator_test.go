@@ -1628,7 +1628,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -1696,7 +1696,7 @@ func TestCheckWebexAlertmanagerConfigEmptyCredentials(t *testing.T) {
 				},
 			}
 
-			err := checkAlertmanagerConfigResource(context.Background(), config, version, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: version, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, config)
 			if tc.expectErr {
 				require.Error(t, err)
 				return
@@ -1853,7 +1853,7 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -1996,7 +1996,7 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -2334,7 +2334,7 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -2344,6 +2344,44 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
+}
+
+// globalWithDefaults returns a global configuration that provides every
+// default a receiver may leave unset, so that tests of the other checks don't
+// depend on it.
+func globalWithDefaults() *globalConfig {
+	return &globalConfig{
+		SMTPFrom:        "a@example.com",
+		SMTPSmarthost:   config.HostPort{Host: "smtp.example.com", Port: "25"},
+		SlackAPIURLFile: "/etc/slack",
+		OpsGenieAPIKey:  "key",
+		VictorOpsAPIKey: "key",
+		WeChatAPISecret: "secret",
+		WeChatAPICorpID: "corp",
+	}
+}
+
+func TestCheckAlertmanagerConfigResourceGlobalFields(t *testing.T) {
+	amc := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "amc", Namespace: "ns"},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name:         "r",
+				SlackConfigs: []monitoringv1alpha1.SlackConfig{{}},
+			}},
+		},
+	}
+
+	c := fake.NewSimpleClientset()
+	store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	cb := &ConfigBuilder{amVersion: version, store: store}
+	require.ErrorContains(t, checkAlertmanagerConfigResource(t.Context(), cb, amc), "slackConfigs[0]: apiURL")
+
+	cb.cfg = &alertmanagerConfig{Global: &globalConfig{SlackAPIURLFile: "/etc/slack"}}
+	require.NoError(t, checkAlertmanagerConfigResource(t.Context(), cb, amc))
 }
 
 func TestCheckGlobalConfigFields(t *testing.T) {
@@ -2507,7 +2545,7 @@ func TestCheckAlertmanagerConfigEmptySecrets(t *testing.T) {
 				Spec:       monitoringv1alpha1.AlertmanagerConfigSpec{Receivers: []monitoringv1alpha1.Receiver{tc.receiver}},
 			}
 
-			err := checkAlertmanagerConfigResource(t.Context(), amc, version, store)
+			err := checkAlertmanagerConfigResource(t.Context(), &ConfigBuilder{amVersion: version, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, amc)
 			if tc.expectErr {
 				require.ErrorContains(t, err, "value cannot be empty")
 				return

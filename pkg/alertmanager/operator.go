@@ -1175,7 +1175,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
-		err := checkAlertmanagerConfig(ctx, cb, amc)
+		err := checkAlertmanagerConfigResource(ctx, cb, amc)
 		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
@@ -1204,8 +1204,10 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 }
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
-// for the given Alertmanager version and has no missing references to other objects.
-func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+// for the given Alertmanager version, has no missing references to other objects
+// and sets every required receiver field that the global configuration doesn't
+// provide.
+func checkAlertmanagerConfigResource(ctx context.Context, cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	// Perform semantic validation irrespective of the Alertmanager version.
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
@@ -1214,22 +1216,15 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
-	if err := checkReceivers(ctx, amc, store, amVersion); err != nil {
+	if err := checkReceivers(ctx, amc, cb.store, cb.amVersion); err != nil {
 		return err
 	}
 
-	if err := checkRoute(ctx, amc.Spec.Route, amVersion); err != nil {
+	if err := checkRoute(ctx, amc.Spec.Route, cb.amVersion); err != nil {
 		return err
 	}
 
-	return checkInhibitRules(amc, amVersion)
-}
-
-// checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
-// on its own (see checkAlertmanagerConfigResource) and together with the base
-// configuration the builder holds.
-func checkAlertmanagerConfig(ctx context.Context, cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
-	if err := checkAlertmanagerConfigResource(ctx, amc, cb.amVersion, cb.store); err != nil {
+	if err := checkInhibitRules(amc, cb.amVersion); err != nil {
 		return err
 	}
 

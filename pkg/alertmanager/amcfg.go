@@ -279,10 +279,6 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		Name:      amConfig.Name,
 	}
 
-	if err := checkAlertmanagerConfigResource(ctx, amConfig, cb.amVersion, cb.store); err != nil {
-		return err
-	}
-
 	if err := cb.checkAlertmanagerGlobalConfigResource(ctx, globalConfig, crKey.Namespace); err != nil {
 		return err
 	}
@@ -298,6 +294,10 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		cb.cfg = &alertmanagerConfig{
 			Global: global,
 		}
+	}
+
+	if err := checkAlertmanagerConfigResource(ctx, cb, amConfig); err != nil {
+		return err
 	}
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
