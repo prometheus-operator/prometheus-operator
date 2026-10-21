@@ -1692,21 +1692,14 @@ templates: []
 	require.NoError(t, err)
 }
 
-func testAlertmanagerConfigCRDValidation(t *testing.T) {
+func testAlertmanagerConfigRouteValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
-	webexAuthMsg := "httpConfig.authorization or httpConfig.bearerTokenSecret is required"
-	webexToken := &corev1.SecretKeySelector{
-		LocalObjectReference: corev1.LocalObjectReference{Name: "webex-api-token"},
-		Key:                  "api-token",
-	}
 
 	tests := []struct {
 		name          string
 		route         *monitoringv1alpha1.Route
-		receivers     []monitoringv1alpha1.Receiver
 		expectedError bool
-		errorMessage  string
 	}{
 		//
 		// GroupInterval validation:
@@ -1816,6 +1809,65 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 				Receiver: "e2e",
 			},
 		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: test.route,
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "e2e",
+						WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
+							URL: new("http://example.com"),
+						}},
+					}},
+				},
+			}
+
+			_, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
+func testAlertmanagerConfigReceiverValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	webexAuthMsg := "httpConfig.authorization or httpConfig.bearerTokenSecret is required"
+	webexToken := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "webex-api-token"},
+		Key:                  "api-token",
+	}
+
+	tests := []struct {
+		name          string
+		receivers     []monitoringv1alpha1.Receiver
+		expectedError bool
+		errorMessage  string
+	}{
 		//
 		// Webex credentials validation:
 		//
@@ -1871,24 +1923,16 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 			defer testCtx.Cleanup(t)
 			ns := framework.CreateNamespace(context.Background(), t, testCtx)
 
-			receivers := test.receivers
-			if receivers == nil {
-				receivers = []monitoringv1alpha1.Receiver{{
-					Name: "e2e",
-					WebhookConfigs: []monitoringv1alpha1.WebhookConfig{{
-						URL: new("http://example.com"),
-					}},
-				}}
-			}
-
 			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      name,
 					Namespace: ns,
 				},
 				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-					Route:     test.route,
-					Receivers: receivers,
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: test.receivers,
 				},
 			}
 
