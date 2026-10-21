@@ -199,18 +199,6 @@ Retryable failures are requeued with the workqueue's exponential backoff. The re
 
 Classification is by status code, not type assertion: the generated client returns typed responses for `400` and `404`, but `401`, `403` and connection failures all arrive through the reader's default branch as untyped errors carrying the HTTP status. `AlertmanagerUnauthorized` is listed even though authentication is deferred to [#5836](https://github.com/prometheus-operator/prometheus-operator/issues/5836), because an Alertmanager behind a proxy requiring credentials is reachable, answers, and refuses — which needs to read as a credentials problem rather than an outage.
 
-#### Controller scoping (`--controller-id`)
-
-When `--controller-id` is set, the operator only processes resources whose `operator.prometheus.io/controller-id` annotation matches. Silence resources must carry it to be picked up:
-
-```yaml
-metadata:
-  annotations:
-    operator.prometheus.io/controller-id: <namespace>/<operator-name>
-```
-
-This matters in multi-operator environments — OpenShift, for example, where a platform operator and a user-workload operator may both be running — so that each acts only on the Silences assigned to it. Resources without the annotation are silently ignored.
-
 ### Drift Detection
 
 A silence can diverge from its resource while the controller is not looking: someone edits or expires it in the UI, or the Alertmanager loses it entirely — purged after retention, or restarted without persistent storage.
@@ -258,6 +246,18 @@ This matches the convention already used by `AlertmanagerConfig` matchers.
 
 **Timing:** the API requires `startsAt` and `endsAt` as absolute RFC3339 timestamps; there is no `duration` at the API level. The controller computes `endsAt = startsAt + duration` before posting, defaulting `startsAt` to the resource's creation timestamp. Because exactly one of `endsAt` or `duration` is always present, a concrete `endsAt` can always be computed and no synthetic far-future expiry is ever posted.
 
+#### Controller scoping (`--controller-id`)
+
+When `--controller-id` is set, the operator only processes resources whose `operator.prometheus.io/controller-id` annotation matches. Silence resources must carry it to be picked up:
+
+```yaml
+metadata:
+  annotations:
+    operator.prometheus.io/controller-id: <namespace>/<operator-name>
+```
+
+This matters in multi-operator environments — OpenShift, for example, where a platform operator and a user-workload operator may both be running — so that each acts only on the Silences assigned to it. Resources without the annotation are silently ignored.
+
 ### Namespace Isolation
 
 The existing `alertmanagerConfigMatcherStrategy` field controls whether a `namespace` matcher is injected into `AlertmanagerConfig` routes and inhibit rules. The Silence controller reads the **same field**, giving operators a single knob for namespace isolation across both config-based and silence-based resources.
@@ -271,7 +271,7 @@ The controller resolves `silenceNamespaceSelector` through the shared `operator.
 ```go
 // If the selector is nil, return the object's namespace.
 if sel == nil {
-	return []string{obj.GetNamespace()}, nil
+  return []string{obj.GetNamespace()}, nil
 }
 ```
 
@@ -417,3 +417,4 @@ The feature gate lands first so that every subsequent step can merge incremental
 * [ ] Unit and e2e test coverage
 
   <gh issue="">
+
