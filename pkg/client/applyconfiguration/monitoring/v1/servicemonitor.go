@@ -33,9 +33,17 @@ import (
 // * Target and metric relabeling.
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+//
+// Service targets that aren't backed by Pods (for instance manually managed
+// Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+// the service port with `port` instead of `targetPort` and `filterRunning` is
+// set to `false`. Manually created Pods have no such restriction.
+//
+// For targets that aren't backed by Pods, you can also consider using the
+// `ScrapeConfig` CRD.
 type ServiceMonitorApplyConfiguration struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
-	metav1.TypeMetaApplyConfiguration `json:",inline"`
+	metav1.TypeMetaApplyConfiguration `json:""`
 	// metadata defines ObjectMeta as the metadata that all persisted resources.
 	*metav1.ObjectMetaApplyConfiguration `json:"metadata,omitempty"`
 	// spec defines the specification of desired Service selection for target discovery by

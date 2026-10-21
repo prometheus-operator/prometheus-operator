@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
-    operator.prometheus.io/version: 0.92.1
+    controller-gen.kubebuilder.io/version: v0.22.0
+    operator.prometheus.io/version: 0.94.1
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -191,6 +191,14 @@ spec:
                 type: boolean
               enableHttp2:
                 description: enableHttp2 can be used to disable HTTP2.
+                type: boolean
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
@@ -379,7 +387,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""
@@ -529,7 +539,9 @@ spec:
                               data to use for the targets.
                             properties:
                               key:
-                                description: The key to select.
+                                description: |-
+                                  The key to select from the ConfigMap's Data field.
+                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                 type: string
                               name:
                                 default: ""
@@ -583,7 +595,9 @@ spec:
                               data to use for the targets.
                             properties:
                               key:
-                                description: The key to select.
+                                description: |-
+                                  The key to select from the ConfigMap's Data field.
+                                  Keys in the BinaryData field are not currently propagated to container env vars.
                                 type: string
                               name:
                                 default: ""
@@ -1157,7 +1171,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""
@@ -1211,7 +1227,9 @@ spec:
                           to use for the targets.
                         properties:
                           key:
-                            description: The key to select.
+                            description: |-
+                              The key to select from the ConfigMap's Data field.
+                              Keys in the BinaryData field are not currently propagated to container env vars.
                             type: string
                           name:
                             default: ""

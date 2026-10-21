@@ -456,7 +456,7 @@ type WebTLSConfig struct {
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
 	//
 	// +optional
-	ClientAuthType *string `json:"clientAuthType,omitempty"`
+	ClientAuthType *ClientAuthType `json:"clientAuthType,omitempty"`
 
 	// minVersion defines the minimum TLS version that is acceptable.
 	//
@@ -494,6 +494,34 @@ type WebTLSConfig struct {
 	// +optional
 	CurvePreferences []string `json:"curvePreferences,omitempty"`
 }
+
+// Taken from https://golang.org/pkg/crypto/tls/#ClientAuthType.
+// +kubebuilder:validation:Enum=NoClientCert;RequestClientCert;RequireAnyClientCert;VerifyClientCertIfGiven;RequireAndVerifyClientCert
+type ClientAuthType string
+
+const (
+	// NoClientCert indicates that no client certificate should be requested
+	// during the handshake, and if any certificates are sent they will not
+	// be verified.
+	NoClientCert ClientAuthType = "NoClientCert"
+	// RequestClientCert indicates that a client certificate should be requested
+	// during the handshake, but does not require that the client send any
+	// certificates.
+	RequestClientCert ClientAuthType = "RequestClientCert"
+	// RequireAnyClientCert indicates that a client certificate should be requested
+	// during the handshake, and that at least one certificate is required to be
+	// sent by the client, but that certificate is not required to be valid.
+	RequireAnyClientCert ClientAuthType = "RequireAnyClientCert"
+	// VerifyClientCertIfGiven indicates that a client certificate should be requested
+	// during the handshake, but does not require that the client sends a
+	// certificate. If the client does send a certificate it is required to be
+	// valid.
+	VerifyClientCertIfGiven ClientAuthType = "VerifyClientCertIfGiven"
+	// RequireAndVerifyClientCert indicates that a client certificate should be requested
+	// during the handshake, and that at least one valid certificate is required
+	// to be sent by the client.
+	RequireAndVerifyClientCert ClientAuthType = "RequireAndVerifyClientCert"
+)
 
 // Validate returns an error if one of the WebTLSConfig fields is invalid.
 // A valid WebTLSConfig should have (Cert or CertFile) and (KeySecret or KeyFile) fields which are not
@@ -558,6 +586,9 @@ type Endpoint struct {
 	// by the Service.
 	// If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
 	// If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+	//
+	// Because it relies on Pod metadata, endpoints which aren't backed by Pods
+	// are never scraped when `targetPort` is used.
 	//
 	// +optional
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
@@ -1045,7 +1076,7 @@ type TracingConfig struct {
 	// clientType defines the client used to export the traces. Supported values are `HTTP` and `GRPC`.
 	// +kubebuilder:validation:Enum=http;grpc;HTTP;GRPC
 	// +optional
-	ClientType *string `json:"clientType",omitempty`
+	ClientType *string `json:"clientType,omitempty"`
 
 	// endpoint to send the traces to. Should be provided in format <host>:<port>.
 	// +kubebuilder:validation:MinLength:=1
@@ -1054,11 +1085,11 @@ type TracingConfig struct {
 
 	// samplingFraction defines the probability a given trace will be sampled. Must be a float from 0 through 1.
 	// +optional
-	SamplingFraction *resource.Quantity `json:"samplingFraction",omitempty`
+	SamplingFraction *resource.Quantity `json:"samplingFraction,omitempty"`
 
 	// insecure if disabled, the client will use a secure connection.
 	// +optional
-	Insecure *bool `json:"insecure",omitempty` // nolint:kubeapilinter
+	Insecure *bool `json:"insecure,omitempty"` // nolint:kubeapilinter
 
 	// headers defines the key-value pairs to be used as headers associated with gRPC or HTTP requests.
 	// +optional
@@ -1067,15 +1098,15 @@ type TracingConfig struct {
 	// compression key for supported compression types. The only supported value is `Gzip`.
 	// +kubebuilder:validation:Enum=gzip;Gzip
 	// +optional
-	Compression *string `json:"compression",omitempty`
+	Compression *string `json:"compression,omitempty"`
 
 	// timeout defines the maximum time the exporter will wait for each batch export.
 	// +optional
-	Timeout *Duration `json:"timeout",omitempty`
+	Timeout *Duration `json:"timeout,omitempty"`
 
 	// tlsConfig to use when sending traces.
 	// +optional
-	TLSConfig *TLSConfig `json:"tlsConfig",omitempty`
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
 }
 
 // Validate semantically validates the given TracingConfig.

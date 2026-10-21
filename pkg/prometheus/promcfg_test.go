@@ -129,6 +129,7 @@ func TestGlobalSettings(t *testing.T) {
 		ReplicaExternalLabelName    *string
 		QueryLogFile                string
 		ScrapeFailureLogFile        *string
+		ExtraScrapeMetrics          *bool
 		Version                     string
 		BodySizeLimit               *monitoringv1.ByteSize
 		SampleLimit                 *int64
@@ -221,6 +222,22 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:               "scrape_failure_log_file_unsupported_version.golden",
 		},
 		{
+			Scenario:           "extra_scrape_metrics",
+			Version:            "v3.10.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExtraScrapeMetrics: new(true),
+			Golden:             "extra_scrape_metrics.golden",
+		},
+		{
+			Scenario:           "extra_scrape_metrics_unsupported_version",
+			Version:            "v3.9.0",
+			ScrapeInterval:     "30s",
+			EvaluationInterval: "30s",
+			ExtraScrapeMetrics: new(true),
+			Golden:             "extra_scrape_metrics_unsupported_version.golden",
+		},
+		{
 			Scenario:           "valid global limits",
 			Version:            "v2.45.0",
 			ScrapeInterval:     "30s",
@@ -305,7 +322,6 @@ func TestGlobalSettings(t *testing.T) {
 			Golden:             "valid_global_config_with_rule_query_offset.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "example",
@@ -329,6 +345,7 @@ func TestGlobalSettings(t *testing.T) {
 					LabelValueLengthLimit:       tc.LabelValueLengthLimit,
 					KeepDroppedTargets:          tc.KeepDroppedTargets,
 					ScrapeFailureLogFile:        tc.ScrapeFailureLogFile,
+					ExtraScrapeMetrics:          tc.ExtraScrapeMetrics,
 				},
 				EvaluationInterval: tc.EvaluationInterval,
 				RuleQueryOffset:    tc.RuleQueryOffset,
@@ -1187,7 +1204,6 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 			golden:  "AlertmanagerBasicAuth_Invalid_Prom_Version.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -2369,6 +2385,64 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 						Spec: monitoringv1.ServiceMonitorSpec{
 							TargetLabels:    []string{"example", "env"},
 							ScrapeProtocols: tc.scrape,
+							Endpoints: []monitoringv1.Endpoint{
+								{
+									HonorTimestamps: new(false),
+									Port:            "web",
+									Interval:        "30s",
+								},
+							},
+						},
+					},
+				},
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestSettingExtraScrapeMetricsInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus old version",
+			version: "v3.9.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus new version",
+			version: "v3.10.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				map[string]*monitoringv1.ServiceMonitor{
+					"testservicemonitor1": {
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "testservicemonitor1",
+							Namespace: "default",
+						},
+						Spec: monitoringv1.ServiceMonitorSpec{
+							TargetLabels:       []string{"example", "env"},
+							ExtraScrapeMetrics: new(true),
 							Endpoints: []monitoringv1.Endpoint{
 								{
 									HonorTimestamps: new(false),
@@ -5978,6 +6052,113 @@ func TestRuntimeConfig(t *testing.T) {
 	}
 }
 
+func TestBuildCommonPrometheusArgsLogLevel(t *testing.T) {
+	for _, tc := range []struct {
+		version      string
+		logLevelFlag bool
+	}{
+		{version: "v2.53.0", logLevelFlag: true},
+		{version: "v3.14.1", logLevelFlag: true},
+		{version: "v3.15.0", logLevelFlag: false},
+		{version: "v3.16.0", logLevelFlag: false},
+	} {
+		for _, logLevel := range []string{"", "debug", "info", "warn", "error"} {
+			t.Run(fmt.Sprintf("%s/logLevel=%s", tc.version, logLevel), func(t *testing.T) {
+				p := defaultPrometheus()
+				p.Spec.Version = tc.version
+				p.Spec.LogLevel = logLevel
+
+				cg := mustNewConfigGenerator(t, p)
+				var logLevelArgs []monitoringv1.Argument
+				for _, arg := range cg.BuildCommonPrometheusArgs() {
+					if arg.Name == "log.level" {
+						logLevelArgs = append(logLevelArgs, arg)
+					}
+				}
+
+				if tc.logLevelFlag && logLevel != "" {
+					require.Equal(t, []monitoringv1.Argument{{Name: "log.level", Value: logLevel}}, logLevelArgs)
+				} else {
+					require.Empty(t, logLevelArgs)
+				}
+			})
+		}
+	}
+}
+
+func TestLogLevelVersionSwitch(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario     string
+		Version      string
+		LogLevel     string
+		Golden       string
+		Runtime      *monitoringv1.RuntimeConfig
+		LogLevelFlag bool
+	}{
+		{
+			Scenario:     "before Prometheus 3.15.0 uses command line flag",
+			Version:      "v3.14.1",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Flag_Debug.golden",
+			LogLevelFlag: true,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 uses runtime config without runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Runtime_Debug.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 preserves other runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Runtime:      &monitoringv1.RuntimeConfig{GoGC: new(int32(25))},
+			Golden:       "LogLevel_Runtime_Debug_With_GoGC.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Info level is set explicitly",
+			Version:      "v3.15.0",
+			LogLevel:     "info",
+			Golden:       "LogLevel_Default_Info.golden",
+			LogLevelFlag: false,
+		},
+	} {
+		t.Run(tc.Scenario, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.Version
+			p.Spec.CommonPrometheusFields.LogLevel = tc.LogLevel
+			p.Spec.Runtime = tc.Runtime
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				nil,
+				nil,
+				nil,
+				nil,
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			hasLogLevelFlag := false
+			args := cg.BuildCommonPrometheusArgs()
+			for _, arg := range args {
+				if arg.Name == "log.level" && arg.Value == tc.LogLevel {
+					hasLogLevelFlag = true
+					break
+				}
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.LogLevelFlag, hasLogLevelFlag)
+			golden.Assert(t, string(cfg), tc.Golden)
+		})
+	}
+}
+
 func TestStorageSettingMaxExemplars(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario  string
@@ -6191,11 +6372,13 @@ func TestTSDBConfig(t *testing.T) {
 
 func TestRetentionConfigFile(t *testing.T) {
 	for _, tc := range []struct {
-		name          string
-		version       string
-		retention     monitoringv1.Duration
-		retentionSize monitoringv1.ByteSize
-		golden        string
+		name                string
+		version             string
+		retention           monitoringv1.Duration
+		retentionSize       monitoringv1.ByteSize
+		retentionPercentage *resource.Quantity
+		golden              string
+		expectErr           bool
 	}{
 		{
 			name:      "retention.time set with Prometheus >= v3.11.0",
@@ -6217,7 +6400,27 @@ func TestRetentionConfigFile(t *testing.T) {
 			golden:        "RetentionConfigFile_time_size_v3.11.0.golden",
 		},
 		{
-			name:    "retention defaults to 24h when neither field is set with Prometheus >= v3.11.0",
+			name:                "retention.percentage set with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_percentage_v3.11.0.golden",
+		},
+		{
+			name:                "retention.time, retention.size and retention.percentage set with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retention:           "2d",
+			retentionSize:       "512MB",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_time_size_percentage_v3.11.0.golden",
+		},
+		{
+			name:                "retention.time still defaults to 24h when retention.percentage is zero with Prometheus >= v3.11.0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(0, resource.DecimalSI),
+			golden:              "RetentionConfigFile_zero_percentage_v3.11.0.golden",
+		},
+		{
+			name:    "retention defaults to 24h when no field is set with Prometheus >= v3.11.0",
 			version: "v3.11.0",
 			golden:  "RetentionConfigFile_default_v3.11.0.golden",
 		},
@@ -6228,12 +6431,31 @@ func TestRetentionConfigFile(t *testing.T) {
 			retentionSize: "512MB",
 			golden:        "RetentionConfigFile_v3.10.0.golden",
 		},
+		{
+			name:                "retention.percentage is not in the configuration file for Prometheus < v3.11.0",
+			version:             "v3.10.0",
+			retentionPercentage: resource.NewQuantity(80, resource.DecimalSI),
+			golden:              "RetentionConfigFile_percentage_v3.10.0.golden",
+		},
+		{
+			name:                "retention.percentage > 100",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(101, resource.DecimalSI),
+			expectErr:           true,
+		},
+		{
+			name:                "retention.percentage < 0",
+			version:             "v3.11.0",
+			retentionPercentage: resource.NewQuantity(-1, resource.DecimalSI),
+			expectErr:           true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
 			p.Spec.CommonPrometheusFields.Version = tc.version
 			p.Spec.Retention = tc.retention
 			p.Spec.RetentionSize = tc.retentionSize
+			p.Spec.RetentionPercentage = tc.retentionPercentage
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
@@ -6248,6 +6470,10 @@ func TestRetentionConfigFile(t *testing.T) {
 				nil,
 				nil,
 			)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
@@ -6699,7 +6925,6 @@ func TestProbeSpecConfig(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -7789,7 +8014,6 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8099,7 +8323,6 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8419,7 +8642,6 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			require.NoError(t, err)
 			golden.Assert(t, string(cfg), tc.golden)
 		})
-
 	}
 }
 
@@ -8826,6 +9048,31 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_http_config.golden",
+		},
+		{
+			name: "azure_sd_config_with_environment_and_http_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          new("AzurePublicCloud"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL: new("http://no-proxy.com"),
+						},
+						FollowRedirects: new(false),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_environment_and_http_config.golden",
 		},
 		{
 			name: "azure_sd_config_with_http_config_basic_auth_and_tls",
@@ -9965,7 +10212,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -9996,7 +10243,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10028,7 +10275,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						ProxyConfig: monitoringv1.ProxyConfig{
 							ProxyURL:             new("http://no-proxy.com"),
 							NoProxy:              new("0.0.0.0"),
@@ -10059,7 +10306,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						BasicAuth: &monitoringv1.BasicAuth{
 							Username: corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10083,7 +10330,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
@@ -10101,7 +10348,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						OAuth2: &monitoringv1.OAuth2{
 							ClientID: monitoringv1.SecretOrConfigMap{
 								ConfigMap: &corev1.ConfigMapKeySelector{
@@ -10133,7 +10380,7 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				HetznerSDConfigs: []monitoringv1alpha1.HetznerSDConfig{
 					{
-						Role: "hcloud",
+						Role: monitoringv1alpha1.HetznerRoleHcloud,
 						TLSConfig: &monitoringv1.SafeTLSConfig{
 							CA: monitoringv1.SecretOrConfigMap{
 								Secret: &corev1.SecretKeySelector{
@@ -10265,7 +10512,6 @@ func TestAppendNameValidationScheme(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -10322,7 +10568,6 @@ func TestAppendNameEscapingScheme(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -10379,7 +10624,6 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -14251,7 +14495,6 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 			golden: "AlertmanagerTLSConfig_Valid_Prom_TLSConfig_MaxVersion_MinVersion.golden",
 		},
 	} {
-
 		p := &monitoringv1.Prometheus{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test",
@@ -14283,7 +14526,6 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 
 		require.NoError(t, err)
 		golden.Assert(t, string(cfg), tc.golden)
-
 	}
 }
 
@@ -14619,7 +14861,6 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version
@@ -14676,7 +14917,6 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-
 			p := defaultPrometheus()
 			if tc.version != "" {
 				p.Spec.CommonPrometheusFields.Version = tc.version

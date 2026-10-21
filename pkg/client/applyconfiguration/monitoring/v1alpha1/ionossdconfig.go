@@ -38,7 +38,7 @@ type IonosSDConfigApplyConfiguration struct {
 	// authorization defines the header configuration to authenticate against the IONOS API.
 	// Cannot be set at the same time as `oauth2`.
 	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
-	monitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	monitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the IONOS API.
 	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.

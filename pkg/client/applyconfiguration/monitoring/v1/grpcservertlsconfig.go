@@ -26,7 +26,7 @@ import (
 //
 // GRPCServerTLSConfig defines TLS configuration for a gRPC server.
 type GRPCServerTLSConfigApplyConfiguration struct {
-	TLSConfigApplyConfiguration `json:",inline"`
+	TLSConfigApplyConfiguration `json:""`
 	// cipherSuites defines the list of supported cipher suites for TLS
 	// versions up to TLS 1.2.
 	//

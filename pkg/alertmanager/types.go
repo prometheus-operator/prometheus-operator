@@ -100,6 +100,7 @@ type route struct {
 	RepeatInterval      string            `yaml:"repeat_interval,omitempty"`
 	MuteTimeIntervals   []string          `yaml:"mute_time_intervals,omitempty"`
 	ActiveTimeIntervals []string          `yaml:"active_time_intervals,omitempty"`
+	Labels              map[string]string `yaml:"labels,omitempty"`
 }
 
 type inhibitRule struct {
@@ -403,14 +404,15 @@ type telegramConfig struct {
 }
 
 type discordConfig struct {
-	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
-	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
-	WebhookURL    string            `yaml:"webhook_url,omitempty"`
-	Title         string            `yaml:"title,omitempty"`
-	Message       string            `yaml:"message,omitempty"`
-	Content       string            `yaml:"content,omitempty"`
-	Username      string            `yaml:"username,omitempty"`
-	AvatarURL     string            `yaml:"avatar_url,omitempty"`
+	VSendResolved  *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig     *httpClientConfig `yaml:"http_config,omitempty"`
+	WebhookURL     string            `yaml:"webhook_url,omitempty"`
+	WebhookURLFile string            `yaml:"webhook_url_file,omitempty"`
+	Title          string            `yaml:"title,omitempty"`
+	Message        string            `yaml:"message,omitempty"`
+	Content        string            `yaml:"content,omitempty"`
+	Username       string            `yaml:"username,omitempty"`
+	AvatarURL      string            `yaml:"avatar_url,omitempty"`
 }
 
 type webexConfig struct {

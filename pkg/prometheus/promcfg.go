@@ -35,6 +35,7 @@ import (
 	"github.com/prometheus/common/model"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -467,6 +468,17 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
+// addExtraScrapeMetrics adds the extra_scrape_metrics field into a scrape
+// configuration. Unlike the global setting, the per-scrape override is not
+// honored on Prometheus < v3.10.0, hence the version-gated warning.
+func (cg *ConfigGenerator) addExtraScrapeMetrics(cfg yaml.MapSlice, extraScrapeMetrics *bool) yaml.MapSlice {
+	if extraScrapeMetrics == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "extra_scrape_metrics", *extraScrapeMetrics)
+}
+
 // addScrapeProtocols adds the scrape_protocols field into the configuration.
 func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
@@ -794,7 +806,6 @@ func (cg *ConfigGenerator) buildExternalLabels() yaml.MapSlice {
 		if ss != nil && ss.Mode != nil &&
 			*ss.Mode == monitoringv1.TopologyShardingStrategyMode &&
 			ss.Topology != nil {
-
 			// Default label name is "zone"; nil means use default.
 			// Empty string means skip.
 			zoneExternalLabelName := ptr.Deref(ss.Topology.ExternalLabelName, defaultTopologyZoneExternalLabelName)
@@ -860,7 +871,6 @@ func (cg *ConfigGenerator) addSafeTLStoYaml(
 	store assets.StoreGetter,
 	safetls *monitoringv1.SafeTLSConfig,
 ) yaml.MapSlice {
-
 	if safetls == nil {
 		return cfg
 	}
@@ -1055,7 +1065,7 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 	})
 
 	// Storage config
-	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize)
+	cfg, err = cg.appendStorageSettingsConfig(cfg, p.Spec.Exemplars, p.Spec.Retention, p.Spec.RetentionSize, p.Spec.RetentionPercentage)
 	if err != nil {
 		return nil, fmt.Errorf("generating storage_settings configuration failed: %w", err)
 	}
@@ -1097,6 +1107,7 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 	exemplars *monitoringv1.Exemplars,
 	retention monitoringv1.Duration,
 	retentionSize monitoringv1.ByteSize,
+	retentionPercentage *resource.Quantity,
 ) (yaml.MapSlice, error) {
 	var (
 		storage   yaml.MapSlice
@@ -1107,6 +1118,10 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 
 	err := tsdb.Validate()
 	if err != nil {
+		return cfg, err
+	}
+
+	if err := validateRetentionPercentage(retentionPercentage); err != nil {
 		return cfg, err
 	}
 
@@ -1139,15 +1154,31 @@ func (cg *ConfigGenerator) appendStorageSettingsConfig(
 		}
 	}
 
-	if cg.WithMinimumVersion("3.11.0").IsCompatible() {
-		var retentionSlice yaml.MapSlice
-		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize))
+	var (
+		retentionSlice yaml.MapSlice
+		cgRetention    = cg.WithMinimumVersion("3.11.0")
+	)
+
+	if cgRetention.IsCompatible() {
+		// Starting with v3.11.0, the time and size retention settings are read
+		// from the configuration file instead of the command-line arguments.
+		retentionTime := string(RetentionTimeOrDefault(retention, retentionSize, retentionPercentage))
 		if retentionTime != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "time", Value: retentionTime})
 		}
+
 		if retentionSize != "" {
 			retentionSlice = append(retentionSlice, yaml.MapItem{Key: "size", Value: string(retentionSize)})
 		}
+	}
+
+	// Percentage-based retention has no command-line equivalent, hence it can't
+	// be supported by older Prometheus versions.
+	if retentionPercentage != nil {
+		retentionSlice = cgRetention.AppendMapItem(retentionSlice, "percentage", retentionPercentage.AsApproximateFloat64())
+	}
+
+	if len(retentionSlice) > 0 {
 		tsdbSlice = append(tsdbSlice, yaml.MapItem{Key: "retention", Value: retentionSlice})
 	}
 
@@ -1321,13 +1352,22 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Auto-enable the extra-scrape-metrics feature flag for Prometheus
+	// versions that support the feature but not the global config option;
+	// for >= v3.10.0 the config field emitted by appendExtraScrapeMetrics
+	// is used instead. Duplicate values in enableFeatures are fine.
+	if ptr.Deref(cpf.ExtraScrapeMetrics, false) &&
+		cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
+		promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
+	}
+
 	if cpf.ExternalURL != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
 	}
 
 	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
 
-	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
+	if cpf.LogLevel != "" && !cg.WithMinimumVersion("3.15.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
 	}
 
@@ -1526,7 +1566,6 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	// Exact label matches.
 	// If roleSelector is set, we don't need to add the service labels to the relabeling rules.
 	if ptr.Deref(m.Spec.SelectorMechanism, monitoringv1.SelectorMechanismRelabel) == monitoringv1.SelectorMechanismRelabel {
-
 		for _, k := range sortutil.SortedKeys(m.Spec.Selector.MatchLabels) {
 			relabelings = append(relabelings, yaml.MapSlice{
 				{Key: "action", Value: "keep"},
@@ -1675,6 +1714,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -1752,6 +1792,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if cpf.EnforcedBodySizeLimit != "" {
@@ -2222,6 +2263,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -3121,18 +3163,27 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 }
 
 func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
-	runtime := cg.prom.GetCommonPrometheusFields().Runtime
-	if runtime == nil {
+	commonFields := cg.prom.GetCommonPrometheusFields()
+	runtime := commonFields.Runtime
+	logLevelIsSet := commonFields.LogLevel != ""
+	supportsLogLevelRuntime := cg.WithMinimumVersion("3.15.0").IsCompatible()
+	if runtime == nil && (!logLevelIsSet || !supportsLogLevelRuntime) {
 		return slice
 	}
 	if !cg.WithMinimumVersion("2.53.0").IsCompatible() {
-		cg.Warn("runtime")
+		if runtime != nil {
+			cg.Warn("runtime")
+		}
 		return slice
 	}
 
 	var runtimeSlice yaml.MapSlice
-	if runtime.GoGC != nil {
+	if runtime != nil && runtime.GoGC != nil {
 		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "gogc", Value: *runtime.GoGC})
+	}
+
+	if logLevelIsSet && supportsLogLevelRuntime {
+		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "log_level", Value: commonFields.LogLevel})
 	}
 
 	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
@@ -3230,7 +3281,6 @@ func (cg *ConfigGenerator) appendServiceMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(serviceMonitors) {
 		for i, ep := range serviceMonitors[identifier].Spec.Endpoints {
 			slices = append(slices,
@@ -3253,7 +3303,6 @@ func (cg *ConfigGenerator) appendPodMonitorConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(podMonitors) {
 		for i, ep := range podMonitors[identifier].Spec.PodMetricsEndpoints {
 			slices = append(slices,
@@ -3276,7 +3325,6 @@ func (cg *ConfigGenerator) appendProbeConfigs(
 	apiserverConfig *monitoringv1.APIServerConfig,
 	store *assets.StoreBuilder,
 	shards int32) []yaml.MapSlice {
-
 	for _, identifier := range sortutil.SortedKeys(probes) {
 		slices = append(slices,
 			cg.WithKeyVals("probe", identifier).generateProbeConfig(
@@ -3428,7 +3476,6 @@ func (cg *ConfigGenerator) appendScrapeConfigs(
 	scrapeConfigs map[string]*monitoringv1alpha1.ScrapeConfig,
 	store *assets.StoreBuilder,
 	shards int32) ([]yaml.MapSlice, error) {
-
 	for _, identifier := range sortutil.SortedKeys(scrapeConfigs) {
 		cfgGenerator := cg.WithKeyVals("scrapeconfig", identifier)
 		scrapeConfig, err := cfgGenerator.generateScrapeConfig(scrapeConfigs[identifier], store.ForNamespace(scrapeConfigs[identifier].GetNamespace()), shards)
@@ -3510,6 +3557,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, sc.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
@@ -3920,7 +3968,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -3995,12 +4042,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.Environment != nil {
-				configs[i] = []yaml.MapItem{
-					{
-						Key:   "environment",
-						Value: config.Environment,
-					},
-				}
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "environment",
+					Value: config.Environment,
+				})
 			}
 
 			if config.AuthenticationMethod != nil {
@@ -4063,6 +4108,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "port",
 					Value: config.Port,
 				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -4247,7 +4304,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			if config.Availability != nil {
 				configs[i] = append(configs[i], yaml.MapItem{
 					Key:   "availability",
-					Value: config.Availability,
+					Value: strings.ToLower(string(*config.Availability)),
 				})
 			}
 
@@ -4463,7 +4520,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "docker_sd_configs",
@@ -4523,14 +4579,12 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.FollowRedirects,
 				})
 			}
-
 		}
 
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "linode_sd_configs",
 			Value: configs,
 		})
-
 	}
 
 	// HetznerSDConfig
@@ -4544,7 +4598,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.FollowRedirects != nil {
@@ -4679,7 +4733,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 
 			configs[i] = append(configs[i], yaml.MapItem{
 				Key:   "role",
-				Value: strings.ToLower(config.Role),
+				Value: strings.ToLower(string(config.Role)),
 			})
 
 			if config.Port != nil {
@@ -4709,7 +4763,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Value: config.EnableHTTP2,
 				})
 			}
-
 		}
 		cfg = append(cfg, yaml.MapItem{
 			Key:   "dockerswarm_sd_configs",
@@ -4817,7 +4870,6 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			}
 
 			if config.AccessKey != nil && config.SecretKey != nil {
-
 				value, err := s.GetSecretKey(*config.AccessKey)
 				if err != nil {
 					return cfg, fmt.Errorf("failed to get %s access key %s: %w", config.AccessKey.Name, jobName, err)
@@ -5290,6 +5342,23 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 	return cfg
 }
 
+func (cg *ConfigGenerator) appendExtraScrapeMetrics(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if !ptr.Deref(cpf.ExtraScrapeMetrics, false) {
+		return cfg
+	}
+
+	// Don't use WithMinimumVersion() to avoid the warning log: versions
+	// >= v2.32.0 and < v3.10.0 honor the setting through the
+	// extra-scrape-metrics feature flag injected in BuildCommonPrometheusArgs.
+	if cg.Version().LT(semver.MustParse("3.10.0")) {
+		return cfg
+	}
+
+	return cg.AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
+}
+
 func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -5398,6 +5467,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 	cfg = cg.appendScrapeNativeHistograms(cfg)
+	cfg = cg.appendExtraScrapeMetrics(cfg)
 
 	return cfg
 }
@@ -5490,6 +5560,20 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 			Node: new(true),
 		},
 	}
+}
+
+// validateRetentionPercentage validates that the percentage-based retention is
+// within the range supported by Prometheus.
+func validateRetentionPercentage(retentionPercentage *resource.Quantity) error {
+	if retentionPercentage == nil {
+		return nil
+	}
+
+	if v := retentionPercentage.AsApproximateFloat64(); v < 0 || v > 100 {
+		return fmt.Errorf("`retentionPercentage` must be between 0 and 100 (the current value is %q)", retentionPercentage.String())
+	}
+
+	return nil
 }
 
 // validateChunkEncodingCompatibility validates that the chunk encoding settings

@@ -1,0 +1,11 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - url: https://events.pagerduty.com/v2/enqueue
+    client_url: https://example.com/client
+    images:
+    - src: https://example.com/image.png
+      href: https://example.com/link
+    links:
+    - href: https://example.com/docs
+templates: []

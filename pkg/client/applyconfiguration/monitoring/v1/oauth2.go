@@ -44,7 +44,7 @@ type OAuth2ApplyConfiguration struct {
 	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// Proxy configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
-	ProxyConfigApplyConfiguration `json:",inline"`
+	ProxyConfigApplyConfiguration `json:""`
 }
 
 // OAuth2ApplyConfiguration constructs a declarative configuration of the OAuth2 type for use with

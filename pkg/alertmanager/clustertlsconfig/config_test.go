@@ -27,7 +27,6 @@ import (
 )
 
 func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
-
 	tc := []struct {
 		name             string
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
@@ -213,7 +212,7 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 						},
 						Key: "tls.keySecret",
 					},
-					ClientAuthType:           new("RequireAnyClientCert"),
+					ClientAuthType:           new(monitoringv1.RequireAnyClientCert),
 					MinVersion:               new("TLS11"),
 					MaxVersion:               new("TLS13"),
 					CipherSuites:             []string{"cipher-1", "cipher-2"},
@@ -306,7 +305,6 @@ func TestCreateOrUpdateClusterTLSConfigSecret(t *testing.T) {
 			golden.Assert(t, string(data), tt.golden)
 		})
 	}
-
 }
 
 func TestGetMountParameters(t *testing.T) {

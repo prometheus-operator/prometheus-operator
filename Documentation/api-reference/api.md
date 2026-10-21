@@ -792,6 +792,26 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>portName</code><br/>
 <em>
 string
@@ -1288,6 +1308,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 int64
@@ -1708,6 +1743,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -3377,6 +3427,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -3813,7 +3878,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -3828,6 +3894,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -3857,9 +3941,9 @@ bool
 <p>disableCompaction when true, the Prometheus compaction is disabled.</p>
 <p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
 default handling depends on the Prometheus and Thanos sidecar versions:
-- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.42.0, block compaction is disabled to avoid race
 conditions during block uploads (as the Thanos documentation recommends).
-- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.42.0, local compaction is kept enabled and coordinated
 with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
 compacted after they have been uploaded.
 Setting this field to true always disables local compaction regardless of the versions.</p>
@@ -4259,6 +4343,12 @@ Among other things, it allows to specify:
 * Authentication credentials to use.
 * Target and metric relabeling.</p>
 <p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
+<p>Service targets that aren&rsquo;t backed by Pods (for instance manually managed
+Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+the service port with <code>port</code> instead of <code>targetPort</code> and <code>filterRunning</code> is
+set to <code>false</code>. Manually created Pods have no such restriction.</p>
+<p>For targets that aren&rsquo;t backed by Pods, you can also consider using the
+<code>ScrapeConfig</code> CRD.</p>
 </div>
 <table>
 <thead>
@@ -4465,6 +4555,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -7401,6 +7506,26 @@ GoDuration
 </tr>
 <tr>
 <td>
+<code>clusterPeerName</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>clusterPeerName defines the name that this Alertmanager instance uses to
+advertise itself to other cluster peers (the <code>--cluster.peer-name</code> flag,
+available since Alertmanager v0.30.0).</p>
+<p>If not set, the operator defaults to the pod&rsquo;s name (<code>$(POD_NAME)</code>),
+which is injected via the Kubernetes downward API. Setting this field
+lets you override that default with either a literal value or a string
+referencing environment variables that are already available in the
+Alertmanager container (for example <code>$(POD_NAME).$(NAMESPACE)</code>).</p>
+<p>/ It requires Alertmanager &gt;= 0.30.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>portName</code><br/>
 <em>
 string
@@ -8359,6 +8484,49 @@ Valid values are &ldquo;Xor&rdquo; and &ldquo;Xor2&rdquo;.</p>
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.ClientAuthType">ClientAuthType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.WebTLSConfig">WebTLSConfig</a>)
+</p>
+<div>
+<p>Taken from <a href="https://golang.org/pkg/crypto/tls/#ClientAuthType">https://golang.org/pkg/crypto/tls/#ClientAuthType</a>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;NoClientCert&#34;</p></td>
+<td><p>NoClientCert indicates that no client certificate should be requested
+during the handshake, and if any certificates are sent they will not
+be verified.</p>
+</td>
+</tr><tr><td><p>&#34;RequestClientCert&#34;</p></td>
+<td><p>RequestClientCert indicates that a client certificate should be requested
+during the handshake, but does not require that the client send any
+certificates.</p>
+</td>
+</tr><tr><td><p>&#34;RequireAndVerifyClientCert&#34;</p></td>
+<td><p>RequireAndVerifyClientCert indicates that a client certificate should be requested
+during the handshake, and that at least one valid certificate is required
+to be sent by the client.</p>
+</td>
+</tr><tr><td><p>&#34;RequireAnyClientCert&#34;</p></td>
+<td><p>RequireAnyClientCert indicates that a client certificate should be requested
+during the handshake, and that at least one certificate is required to be
+sent by the client, but that certificate is not required to be valid.</p>
+</td>
+</tr><tr><td><p>&#34;VerifyClientCertIfGiven&#34;</p></td>
+<td><p>VerifyClientCertIfGiven indicates that a client certificate should be requested
+during the handshake, but does not require that the client sends a
+certificate. If the client does send a certificate it is required to be
+valid.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ClusterTLSConfig">ClusterTLSConfig
 </h3>
@@ -9743,6 +9911,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -10885,8 +11068,8 @@ Kubernetes core/v1.TypedLocalObjectReference
 * An existing PVC (PersistentVolumeClaim)
 If the provisioner or an external controller can support the specified data source,
 it will create a new volume based on the contents of the specified data source.
-When the AnyVolumeDataSource feature gate is enabled, dataSource contents will be copied to dataSourceRef,
-and dataSourceRef contents will be copied to dataSource when dataSourceRef.namespace is not specified.
+dataSource contents will be copied to dataSourceRef, and dataSourceRef contents will be
+copied to dataSource when dataSourceRef.namespace is not specified.
 If the namespace is specified, then dataSourceRef will not be copied to dataSource.</p>
 </td>
 </tr>
@@ -10922,7 +11105,6 @@ preserves all values, and generates an error if a disallowed value is
 specified.
 * While dataSource only allows local objects, dataSourceRef allows objects
 in any namespaces.
-(Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
 (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.</p>
 </td>
 </tr>
@@ -11019,6 +11201,8 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 by the Service.
 If a name, it matches against <code>.spec.containers[].ports[].name</code> of the Pods.
 If a number, it matches against <code>.spec.containers[].ports[].containerPort</code> of the Pods.</p>
+<p>Because it relies on Pod metadata, endpoints which aren&rsquo;t backed by Pods
+are never scraped when <code>targetPort</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -11887,6 +12071,36 @@ URL
 <em>(Optional)</em>
 <p>apiURL defines he default Telegram API URL.</p>
 <p>It requires Alertmanager &gt;= v0.24.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botToken</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.31/#secretkeyselector-v1-core">
+Kubernetes core/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>botToken represents the bot token configuration for Telegram.
+It is mutually exclusive with <code>botTokenFile</code>.
+It requires Alertmanager &gt;= v0.31.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>botTokenFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>botTokenFile defines the file to read the Telegram bot token from.
+It is mutually exclusive with <code>botToken</code>.
+It requires Alertmanager &gt;= v0.31.0.</p>
 </td>
 </tr>
 </tbody>
@@ -14210,6 +14424,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 int64
@@ -14602,6 +14831,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -16570,6 +16814,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -17006,7 +17265,8 @@ Duration
 <td>
 <em>(Optional)</em>
 <p>retention defines how long to retain the Prometheus data.</p>
-<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code> and <code>spec.retentionSize</code> are empty.</p>
+<p>Default: &ldquo;24h&rdquo; if <code>spec.retention</code>, <code>spec.retentionSize</code> and
+<code>spec.retentionPercentage</code> are empty.</p>
 </td>
 </tr>
 <tr>
@@ -17021,6 +17281,24 @@ ByteSize
 <td>
 <em>(Optional)</em>
 <p>retentionSize defines the maximum number of bytes used by the Prometheus data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retentionPercentage</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>retentionPercentage defines the maximum percentage of the data volume&rsquo;s
+capacity used by the Prometheus data.</p>
+<p>The value is a number between 0 and 100. If set to 0, percentage-based
+retention is disabled.</p>
+<p>It requires Prometheus &gt;= v3.11.0 and is ignored by older versions.</p>
 </td>
 </tr>
 <tr>
@@ -17050,9 +17328,9 @@ bool
 <p>disableCompaction when true, the Prometheus compaction is disabled.</p>
 <p>When <code>spec.thanos.objectStorageConfig</code> or <code>spec.thanos.objectStorageConfigFile</code> are defined, the operator&rsquo;s
 default handling depends on the Prometheus and Thanos sidecar versions:
-- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.41.0, block compaction is disabled to avoid race
+- With Prometheus &lt; v3.9.0 or a Thanos sidecar &lt; v0.42.0, block compaction is disabled to avoid race
 conditions during block uploads (as the Thanos documentation recommends).
-- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.41.0, local compaction is kept enabled and coordinated
+- With Prometheus &gt;= v3.9.0 and a Thanos sidecar &gt;= v0.42.0, local compaction is kept enabled and coordinated
 with the sidecar through the shipper meta file (<code>--storage.tsdb.delay-compact-file.path</code>), so blocks are only
 compacted after they have been uploaded.
 Setting this field to true always disables local compaction regardless of the versions.</p>
@@ -19684,6 +19962,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>targetLimit</code><br/>
 <em>
 int64
@@ -20179,7 +20472,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
-It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.33.0. Currently not supported by Thanos.</p>
+It requires Prometheus &gt;= v3.11.0 or Alertmanager &gt;= v0.34.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 <tr>
@@ -22909,7 +23202,9 @@ the server.</p>
 <td>
 <code>clientAuthType</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.ClientAuthType">
+ClientAuthType
+</a>
 </em>
 </td>
 <td>
@@ -24626,6 +24921,21 @@ bool
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -25521,6 +25831,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -27413,6 +27738,29 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmRole">DockerSwarmRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig</a>)
+</p>
+<div>
+<p>DockerSwarmRole defines the role of Docker Swarm targets to retrieve.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Nodes&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Services&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Tasks&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.DockerSwarmSDConfig">DockerSwarmSDConfig
 </h3>
 <p>
@@ -27445,7 +27793,9 @@ string
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.DockerSwarmRole">
+DockerSwarmRole
+</a>
 </em>
 </td>
 <td>
@@ -28889,6 +29239,27 @@ bool
 </tr>
 </tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.HetznerRole">HetznerRole
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig</a>)
+</p>
+<div>
+<p>HetznerRole defines the Hetzner role of entities that should be discovered.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Hcloud&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Robot&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.HetznerSDConfig">HetznerSDConfig
 </h3>
 <p>
@@ -28911,7 +29282,9 @@ See <a href="https://prometheus.io/docs/prometheus/latest/configuration/configur
 <td>
 <code>role</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.HetznerRole">
+HetznerRole
+</a>
 </em>
 </td>
 <td>
@@ -31132,6 +31505,29 @@ If not set, Prometheus uses its default value.</p>
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1alpha1.OpenStackAvailability">OpenStackAvailability
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.OpenStackSDConfig">OpenStackSDConfig</a>)
+</p>
+<div>
+<p>OpenStackAvailability defines the availability of the endpoint to connect to.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Admin&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Internal&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Public&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1alpha1.OpenStackRole">OpenStackRole
 (<code>string</code> alias)</h3>
 <p>
@@ -31392,7 +31788,9 @@ instead be specified in the relabeling rule.</p>
 <td>
 <code>availability</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1alpha1.OpenStackAvailability">
+OpenStackAvailability
+</a>
 </em>
 </td>
 <td>
@@ -33465,6 +33863,21 @@ bool
 <p>scrapeClassicHistograms defines whether to scrape a classic histogram that is also exposed as a native histogram.</p>
 <p>Notice: <code>scrapeClassicHistograms</code> corresponds to the <code>always_scrape_classic_histograms</code> field in the Prometheus configuration.</p>
 <p>It requires Prometheus &gt;= v3.5.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v2.32.0.</p>
 </td>
 </tr>
 <tr>
@@ -36009,6 +36422,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>

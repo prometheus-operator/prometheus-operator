@@ -1,0 +1,11 @@
+receivers:
+- name: ""
+  mattermost_configs:
+  - webhook_url: http://mattermost.example.com/hooks/xxx
+    author_link: https://example.com/author
+    author_icon: '{{ .CommonAnnotations.authorIcon }}'
+    title_link: '{{ .CommonAnnotations.title }}'
+    thumb_url: https://example.com/thumb.png
+    footer_icon: '{{ .CommonAnnotations.footerIcon }}'
+    image_url: https://example.com/image.png
+templates: []

@@ -515,7 +515,7 @@ func (cb *ConfigBuilder) convertGlobalConfig(ctx context.Context, in *monitoring
 		out.PagerdutyURL = &commoncfg.URL{URL: u}
 	}
 
-	if err := cb.convertGlobalTelegramConfig(out, in.TelegramConfig); err != nil {
+	if err := cb.convertGlobalTelegramConfig(ctx, out, in.TelegramConfig, crKey); err != nil {
 		return nil, fmt.Errorf("invalid global telegram config: %w", err)
 	}
 
@@ -1415,6 +1415,8 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		Message:       ptr.Deref(in.Message, ""),
 		URLTitle:      ptr.Deref(in.URLTitle, ""),
 		Priority:      ptr.Deref(in.Priority, ""),
+		Sound:         ptr.Deref(in.Sound, ""),
+		Device:        ptr.Deref(in.Device, ""),
 		HTML:          in.HTML,
 		Monospace:     in.Monospace,
 	}
@@ -1427,30 +1429,34 @@ func (cb *ConfigBuilder) convertPushoverConfig(ctx context.Context, in monitorin
 		out.TTL = string(*in.TTL)
 	}
 
-	if in.Device != nil {
-		out.Device = *in.Device
+	{
+		// Either userKey or userKeyFile is set, the controller
+		// rejects configurations that set neither.
+		if in.UserKey != nil {
+			userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user key: %w", err)
+			}
+			if userKey == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
+			}
+			out.UserKey = userKey
+		}
+		out.UserKeyFile = ptr.Deref(in.UserKeyFile, "")
 	}
 
 	{
-		userKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.UserKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user key: %w", err)
+		if in.Token != nil {
+			token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get token: %w", err)
+			}
+			if token == "" {
+				return nil, fmt.Errorf("mandatory field %q is empty", "token")
+			}
+			out.Token = token
 		}
-		if userKey == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "userKey")
-		}
-		out.UserKey = userKey
-	}
-
-	{
-		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Token)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get token: %w", err)
-		}
-		if token == "" {
-			return nil, fmt.Errorf("mandatory field %q is empty", "token")
-		}
-		out.Token = token
+		out.TokenFile = ptr.Deref(in.TokenFile, "")
 	}
 
 	{
@@ -1509,10 +1515,14 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 		if err != nil {
 			return nil, fmt.Errorf("failed to get bot token: %w", err)
 		}
-		if botToken == "" {
+		out.BotToken = botToken
+	}
+
+	// Confirm botToken is specified for either global or receiver
+	if out.BotToken == "" && out.BotTokenFile == "" {
+		if cb.cfg.Global == nil || (cb.cfg.Global.TelegramBotToken == "" && cb.cfg.Global.TelegramBotTokenFile == "") {
 			return nil, fmt.Errorf("mandatory field %q is empty", "botToken")
 		}
-		out.BotToken = botToken
 	}
 
 	return out, nil
@@ -1565,7 +1575,7 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			RoleARN: in.Sigv4.RoleArn,
 		}
 
-		if cb.amVersion.GTE(semver.MustParse("0.33.0")) {
+		if cb.amVersion.GTE(semver.MustParse("0.34.0")) {
 			out.Sigv4.ExternalID = in.Sigv4.ExternalID
 		}
 
@@ -1578,7 +1588,6 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 			secretKey, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.Sigv4.SecretKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get AWS secret key: %w", err)
-
 			}
 			out.Sigv4.AccessKey = accessKey
 			out.Sigv4.SecretKey = secretKey
@@ -1993,7 +2002,7 @@ func (cb *ConfigBuilder) convertProxyConfig(ctx context.Context, in monitoringv1
 	return out, nil
 }
 
-func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *monitoringv1.GlobalTelegramConfig) error {
+func (cb *ConfigBuilder) convertGlobalTelegramConfig(ctx context.Context, out *globalConfig, in *monitoringv1.GlobalTelegramConfig, crKey types.NamespacedName) error {
 	if in == nil {
 		return nil
 	}
@@ -2004,6 +2013,18 @@ func (cb *ConfigBuilder) convertGlobalTelegramConfig(out *globalConfig, in *moni
 			return fmt.Errorf("failed to parse Telegram API URL: %w", err)
 		}
 		out.TelegramAPIURL = &commoncfg.URL{URL: u}
+	}
+
+	if in.BotToken != nil {
+		token, err := cb.store.GetSecretKey(ctx, crKey.Namespace, *in.BotToken)
+		if err != nil {
+			return fmt.Errorf("failed to get Telegram Token: %w", err)
+		}
+		out.TelegramBotToken = token
+	}
+
+	if in.BotTokenFile != nil {
+		out.TelegramBotTokenFile = *in.BotTokenFile
 	}
 
 	return nil
@@ -2792,6 +2813,39 @@ func (pdc *pagerdutyConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		}
 	}
 
+	if pdc.URL != "" {
+		if _, err := validation.ValidateURL(pdc.URL); err != nil {
+			return fmt.Errorf("invalid 'url': %w", err)
+		}
+	}
+
+	if pdc.ClientURL != "" {
+		if err := validation.ValidateTemplateURL(pdc.ClientURL); err != nil {
+			return fmt.Errorf("invalid 'client_url': %w", err)
+		}
+	}
+
+	for i, image := range pdc.Images {
+		if image.Src != "" {
+			if err := validation.ValidateTemplateURL(image.Src); err != nil {
+				return fmt.Errorf("invalid 'src' in images[%d]: %w", i, err)
+			}
+		}
+		if image.Href != "" {
+			if err := validation.ValidateTemplateURL(image.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in images[%d]: %w", i, err)
+			}
+		}
+	}
+
+	for i, link := range pdc.Links {
+		if link.Href != "" {
+			if err := validation.ValidateTemplateURL(link.Href); err != nil {
+				return fmt.Errorf("invalid 'href' in links[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return pdc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -2850,8 +2904,8 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		*poc.Monospace = false
 	}
 
-	if poc.HTML != nil && *poc.HTML && poc.Monospace != nil && *poc.Monospace {
-		return errors.New("either monospace or html must be configured")
+	if ptr.Deref(poc.HTML, false) && ptr.Deref(poc.Monospace, false) {
+		return errors.New("'html' and 'monospace' options are mutually exclusive")
 	}
 
 	if poc.URL != "" {
@@ -2909,7 +2963,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			sc.UpdateMessage = nil
 		} else if *sc.UpdateMessage && sc.APIURL != "" {
 			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+				return fmt.Errorf(`'update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
 			}
 		}
 	}
@@ -3087,8 +3141,8 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 		if sc.Sigv4.RoleARN == "" {
 			return fmt.Errorf("'external_id' in sigv4 config requires 'role_arn' to be set")
 		}
-		if amVersion.LT(semver.MustParse("0.33.0")) {
-			msg := "'external_id' supported in Alertmanager >= 0.33.0 only - dropping field `external_id` from sigv4 config"
+		if amVersion.LT(semver.MustParse("0.34.0")) {
+			msg := "'external_id' supported in Alertmanager >= 0.34.0 only - dropping field `external_id` from sigv4 config"
 			logger.Warn(msg)
 			sc.Sigv4.ExternalID = ""
 		}
@@ -3165,6 +3219,20 @@ func (dc *discordConfig) sanitize(amVersion semver.Version, logger *slog.Logger)
 
 	if !discordAllowed {
 		return fmt.Errorf(`invalid syntax in receivers config; discord integration is available in Alertmanager >= 0.25.0`)
+	}
+
+	if dc.WebhookURLFile != "" && lessThanV0_28 {
+		msg := "'webhook_url_file' supported in Alertmanager >= 0.28.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		dc.WebhookURLFile = ""
+	}
+
+	if dc.WebhookURL == "" && dc.WebhookURLFile == "" {
+		return errors.New("no webhook_url or webhook_url_file provided")
+	}
+
+	if dc.WebhookURL != "" && dc.WebhookURLFile != "" {
+		return errors.New("both webhook_url and webhook_url_file cannot be set at the same time")
 	}
 
 	if dc.Content != "" && lessThanV0_28 {
@@ -3254,6 +3322,49 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 		return fmt.Errorf("at most one of token_id & token_id_file must be configured")
 	}
 
+	if rc.APIURL != "" {
+		if _, err := validation.ValidateURL(rc.APIURL); err != nil {
+			return fmt.Errorf("invalid 'api_url': %w", err)
+		}
+	}
+
+	if rc.TitleLink != "" {
+		if err := validation.ValidateTemplateURL(rc.TitleLink); err != nil {
+			return fmt.Errorf("invalid 'title_link': %w", err)
+		}
+	}
+
+	if rc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(rc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	if rc.ImageURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ImageURL); err != nil {
+			return fmt.Errorf("invalid 'image_url': %w", err)
+		}
+	}
+
+	if rc.ThumbURL != "" {
+		if err := validation.ValidateTemplateURL(rc.ThumbURL); err != nil {
+			return fmt.Errorf("invalid 'thumb_url': %w", err)
+		}
+	}
+
+	for i, action := range rc.Actions {
+		if action.URL != "" {
+			if err := validation.ValidateTemplateURL(action.URL); err != nil {
+				return fmt.Errorf("invalid 'url' in actions[%d]: %w", i, err)
+			}
+		}
+		if action.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(action.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in actions[%d]: %w", i, err)
+			}
+		}
+	}
+
 	return rc.HTTPConfig.sanitize(amVersion, logger)
 }
 
@@ -3303,6 +3414,67 @@ func (mc *mattermostConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 			msg := "'fields'" + commonErrorMsg
 			logger.Warn(msg, "current_version", amVersion.String())
 			mc.Fields = nil
+		}
+	}
+
+	if mc.WebhookURL != "" {
+		if _, err := validation.ValidateURL(mc.WebhookURL); err != nil {
+			return fmt.Errorf("invalid 'webhook_url': %w", err)
+		}
+	}
+
+	if mc.IconURL != "" {
+		if err := validation.ValidateTemplateURL(mc.IconURL); err != nil {
+			return fmt.Errorf("invalid 'icon_url': %w", err)
+		}
+	}
+
+	for name, value := range map[string]string{
+		"author_link": mc.AuthorLink,
+		"author_icon": mc.AuthorIcon,
+		"title_link":  mc.TitleLink,
+		"thumb_url":   mc.ThumbURL,
+		"footer_icon": mc.FooterIcon,
+		"image_url":   mc.ImageURL,
+	} {
+		if value == "" {
+			continue
+		}
+		if err := validation.ValidateTemplateURL(value); err != nil {
+			return fmt.Errorf("invalid '%s': %w", name, err)
+		}
+	}
+
+	for i, attachment := range mc.Attachments {
+		if attachment.AuthorLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorLink); err != nil {
+				return fmt.Errorf("invalid 'author_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.AuthorIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.AuthorIcon); err != nil {
+				return fmt.Errorf("invalid 'author_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.TitleLink != "" {
+			if err := validation.ValidateTemplateURL(attachment.TitleLink); err != nil {
+				return fmt.Errorf("invalid 'title_link' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ThumbURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ThumbURL); err != nil {
+				return fmt.Errorf("invalid 'thumb_url' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.FooterIcon != "" {
+			if err := validation.ValidateTemplateURL(attachment.FooterIcon); err != nil {
+				return fmt.Errorf("invalid 'footer_icon' in attachments[%d]: %w", i, err)
+			}
+		}
+		if attachment.ImageURL != "" {
+			if err := validation.ValidateTemplateURL(attachment.ImageURL); err != nil {
+				return fmt.Errorf("invalid 'image_url' in attachments[%d]: %w", i, err)
+			}
 		}
 	}
 
@@ -3401,6 +3573,7 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	matchersV2Allowed := amVersion.GTE(semver.MustParse("0.22.0"))
 	muteTimeIntervalsAllowed := matchersV2Allowed
 	activeTimeIntervalsAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	labelsAllowed := amVersion.GTE(semver.MustParse("0.34.0"))
 	withLogger := logger.With("receiver", r.Receiver)
 
 	if !matchersV2Allowed && checkNotEmptyStrSlice(r.Matchers) {
@@ -3422,6 +3595,12 @@ func (r *route) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 		msg := "active time intervals in route is supported in Alertmanager >= 0.24.0 only - dropping config"
 		withLogger.Warn(msg, "active_time_intervals", fmt.Sprint(r.ActiveTimeIntervals))
 		r.ActiveTimeIntervals = nil
+	}
+
+	if !labelsAllowed && checkNotEmptyMap(r.Labels) {
+		msg := "'labels' in route is supported in Alertmanager >= 0.34.0 only - dropping config"
+		withLogger.Warn(msg, "labels", fmt.Sprint(r.Labels))
+		r.Labels = nil
 	}
 
 	if r.GroupWait != "" {
@@ -3562,7 +3741,7 @@ func (cb *ConfigBuilder) checkAlertmanagerGlobalConfigResource(
 		return err
 	}
 
-	if err := cb.checkGlobalTelegramConfig(gc.TelegramConfig); err != nil {
+	if err := cb.checkGlobalTelegramConfig(ctx, gc.TelegramConfig, namespace); err != nil {
 		return err
 	}
 
@@ -3605,13 +3784,27 @@ func (cb *ConfigBuilder) checkGlobalSMTPConfig(sc *monitoringv1.GlobalSMTPConfig
 	return nil
 }
 
-func (cb *ConfigBuilder) checkGlobalTelegramConfig(tc *monitoringv1.GlobalTelegramConfig) error {
+func (cb *ConfigBuilder) checkGlobalTelegramConfig(ctx context.Context, tc *monitoringv1.GlobalTelegramConfig, namespace string) error {
 	if tc == nil {
 		return nil
 	}
 
 	if cb.amVersion.LT(semver.MustParse("0.24.0")) {
 		return fmt.Errorf(`'telegram' integration requires Alertmanager >= 0.24.0 - current %s`, cb.amVersion)
+	}
+
+	if tc.BotToken != nil && cb.amVersion.LT(semver.MustParse("0.31.0")) {
+		return fmt.Errorf(`'botToken' in telegram integration requires Alertmanager >= 0.31.0 - current %s`, cb.amVersion)
+	}
+
+	if tc.BotToken != nil {
+		if _, err := cb.store.GetSecretKey(ctx, namespace, *tc.BotToken); err != nil {
+			return err
+		}
+	}
+
+	if tc.BotTokenFile != nil && cb.amVersion.LT(semver.MustParse("0.31.0")) {
+		return fmt.Errorf(`'botTokenFile' in telegram integration requires Alertmanager >= 0.31.0 - current %s`, cb.amVersion)
 	}
 
 	return nil

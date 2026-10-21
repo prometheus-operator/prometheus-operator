@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.21.0
-    operator.prometheus.io/version: 0.92.1
+    controller-gen.kubebuilder.io/version: v0.22.0
+    operator.prometheus.io/version: 0.94.1
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -31,6 +31,14 @@ spec:
           * Target and metric relabeling.
 
           `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+
+          Service targets that aren't backed by Pods (for instance manually managed
+          Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+          the service port with `port` instead of `targetPort` and `filterRunning` is
+          set to `false`. Manually created Pods have no such restriction.
+
+          For targets that aren't backed by Pods, you can also consider using the
+          `ScrapeConfig` CRD.
         properties:
           apiVersion:
             description: |-
@@ -386,7 +394,9 @@ spec:
                                 data to use for the targets.
                               properties:
                                 key:
-                                  description: The key to select.
+                                  description: |-
+                                    The key to select from the ConfigMap's Data field.
+                                    Keys in the BinaryData field are not currently propagated to container env vars.
                                   type: string
                                 name:
                                   default: ""
@@ -536,7 +546,9 @@ spec:
                                     data to use for the targets.
                                   properties:
                                     key:
-                                      description: The key to select.
+                                      description: |-
+                                        The key to select from the ConfigMap's Data field.
+                                        Keys in the BinaryData field are not currently propagated to container env vars.
                                       type: string
                                     name:
                                       default: ""
@@ -590,7 +602,9 @@ spec:
                                     data to use for the targets.
                                   properties:
                                     key:
-                                      description: The key to select.
+                                      description: |-
+                                        The key to select from the ConfigMap's Data field.
+                                        Keys in the BinaryData field are not currently propagated to container env vars.
                                       type: string
                                     name:
                                       default: ""
@@ -888,6 +902,9 @@ spec:
                         by the Service.
                         If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
                         If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+
+                        Because it relies on Pod metadata, endpoints which aren't backed by Pods
+                        are never scraped when `targetPort` is used.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: tlsConfig defines TLS configuration used by the
@@ -902,7 +919,9 @@ spec:
                                 data to use for the targets.
                               properties:
                                 key:
-                                  description: The key to select.
+                                  description: |-
+                                    The key to select from the ConfigMap's Data field.
+                                    Keys in the BinaryData field are not currently propagated to container env vars.
                                   type: string
                                 name:
                                   default: ""
@@ -960,7 +979,9 @@ spec:
                                 data to use for the targets.
                               properties:
                                 key:
-                                  description: The key to select.
+                                  description: |-
+                                    The key to select from the ConfigMap's Data field.
+                                    Keys in the BinaryData field are not currently propagated to container env vars.
                                   type: string
                                 name:
                                   default: ""
@@ -1079,6 +1100,14 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.

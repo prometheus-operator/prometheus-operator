@@ -49,5 +49,4 @@ func patchIfNotString(patches *[]string, gi, ri int, typ, key string, val any) {
 	*patches = append(*patches,
 		fmt.Sprintf(`{"op": "replace","path": "/spec/groups/%d/rules/%d/%s/%s","value": "%v"}`,
 			gi, ri, typ, key, val))
-
 }

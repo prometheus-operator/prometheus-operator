@@ -1822,7 +1822,7 @@ func (in *OpenStackSDConfig) DeepCopyInto(out *OpenStackSDConfig) {
 	}
 	if in.Availability != nil {
 		in, out := &in.Availability, &out.Availability
-		*out = new(string)
+		*out = new(OpenStackAvailability)
 		**out = **in
 	}
 	if in.TLSConfig != nil {
@@ -3062,6 +3062,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 	if in.FallbackScrapeProtocol != nil {
 		in, out := &in.FallbackScrapeProtocol, &out.FallbackScrapeProtocol
 		*out = new(v1.ScrapeProtocol)
+		**out = **in
+	}
+	if in.ExtraScrapeMetrics != nil {
+		in, out := &in.ExtraScrapeMetrics, &out.ExtraScrapeMetrics
+		*out = new(bool)
 		**out = **in
 	}
 	if in.HonorTimestamps != nil {

@@ -32,11 +32,39 @@ import (
 )
 
 // AlertmanagerInformer provides access to a shared informer and lister for
-// Alertmanagers.
+// Alertmanagers. Prefer using the type-safe variant (see [TypedAlertmanagerInformer]).
 type AlertmanagerInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() monitoringv1.AlertmanagerLister
 }
+
+// TypedAlertmanagerInformer provides access to a shared informer and lister for
+// Alertmanagers, including the type-safe TypedInformer variant.
+// It is a superset of AlertmanagerInformer.
+type TypedAlertmanagerInformer interface {
+	Informer() cache.SharedIndexInformer
+	TypedInformer() AlertmanagerIndexInformer
+	Lister() monitoringv1.AlertmanagerLister
+}
+
+// AlertmanagerIndexInformer is a wrapper around the underlying [cache.SharedIndexInformer]
+// with type-safe variants of several methods.
+type AlertmanagerIndexInformer cache.TypedSharedIndexInformer[*apismonitoringv1.Alertmanager]
+
+// AlertmanagerHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerFuncs] for Alertmanager.
+type AlertmanagerHandlerFuncs = cache.TypedResourceEventHandlerFuncs[*apismonitoringv1.Alertmanager]
+
+// AlertmanagerDetailedHandlerFuncs is a specialization of [cache.TypedResourceEventHandlerDetailedFuncs] for Alertmanager.
+type AlertmanagerDetailedHandlerFuncs = cache.TypedResourceEventHandlerDetailedFuncs[*apismonitoringv1.Alertmanager]
+
+// AlertmanagerFilteringHandler is a specialization of [cache.TypedFilteringResourceEventHandler] for Alertmanager.
+type AlertmanagerFilteringHandler = cache.TypedFilteringResourceEventHandler[*apismonitoringv1.Alertmanager]
+
+// AlertmanagerIndexers is a specialization of [cache.TypedIndexers] for Alertmanager.
+type AlertmanagerIndexers = cache.TypedIndexers[*apismonitoringv1.Alertmanager]
+
+// DeletedAlertmanager is a specialization of [cache.DeletedObject] for Alertmanager.
+type DeletedAlertmanager = cache.DeletedObject[*apismonitoringv1.Alertmanager]
 
 type alertmanagerInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
@@ -47,25 +75,49 @@ type alertmanagerInformer struct {
 // NewAlertmanagerInformer constructs a new informer for Alertmanager type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAlertmanagerInformer]).
 func NewAlertmanagerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
 	return NewAlertmanagerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers})
+}
+
+// NewTypedAlertmanagerInformer constructs a new informer for Alertmanager type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAlertmanagerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers AlertmanagerIndexers) AlertmanagerIndexInformer {
+	return NewTypedAlertmanagerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers)})
 }
 
 // NewFilteredAlertmanagerInformer constructs a new informer for Alertmanager type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedFilteredAlertmanagerInformer]).
 func NewFilteredAlertmanagerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
-	return NewAlertmanagerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+	return NewTypedAlertmanagerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: indexers, TweakListOptions: tweakListOptions})
+}
+
+// NewTypedFilteredAlertmanagerInformer constructs a new informer for Alertmanager type.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedFilteredAlertmanagerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers AlertmanagerIndexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) AlertmanagerIndexInformer {
+	return NewTypedAlertmanagerInformerWithOptions(client, namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.TypedIndexersToIndexers(indexers), TweakListOptions: tweakListOptions})
 }
 
 // NewAlertmanagerInformerWithOptions constructs a new informer for Alertmanager type with additional options.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
+// If you really need an independent one, prefer using the type-safe variant (see [NewTypedAlertmanagerInformerWithOptions]).
 func NewAlertmanagerInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) cache.SharedIndexInformer {
+	return NewTypedAlertmanagerInformerWithOptions(client, namespace, options)
+}
+
+// NewTypedAlertmanagerInformerWithOptions constructs a new informer for Alertmanager type with additional options.
+// Always prefer using an informer factory to get a shared informer instead of getting an independent
+// one. This reduces memory footprint and number of connections to the server.
+func NewTypedAlertmanagerInformerWithOptions(client versioned.Interface, namespace string, options internalinterfaces.InformerOptions) AlertmanagerIndexInformer {
 	gvr := schema.GroupVersionResource{Group: "monitoring.coreos.com", Version: "v1", Resource: "alertmanagers"}
 	identifier := options.InformerName.WithResource(gvr)
 	tweakListOptions := options.TweakListOptions
-	return cache.NewSharedIndexInformerWithOptions(
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Alertmanager](cache.NewSharedIndexInformerWithOptions(
 		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
@@ -98,17 +150,57 @@ func NewAlertmanagerInformerWithOptions(client versioned.Interface, namespace st
 			Indexers:     options.Indexers,
 			Identifier:   identifier,
 		},
-	)
+	))
 }
 
 func (f *alertmanagerInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewAlertmanagerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
+	return NewTypedAlertmanagerInformerWithOptions(client, f.namespace, internalinterfaces.InformerOptions{ResyncPeriod: resyncPeriod, Indexers: cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, InformerName: f.factory.InformerName(), TweakListOptions: f.tweakListOptions})
 }
 
 func (f *alertmanagerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apismonitoringv1.Alertmanager{}, f.defaultInformer)
+	return f.TypedInformer()
+}
+
+func (f *alertmanagerInformer) TypedInformer() AlertmanagerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Alertmanager](f.factory.InformerFor(&apismonitoringv1.Alertmanager{}, f.defaultInformer))
 }
 
 func (f *alertmanagerInformer) Lister() monitoringv1.AlertmanagerLister {
 	return monitoringv1.NewAlertmanagerLister(f.Informer().GetIndexer())
+}
+
+// ToTypedAlertmanagerInformer converts an untyped informer into a TypedAlertmanagerInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Alertmanager. If that is not the case, calling type-safe methods of the returned
+// TypedAlertmanagerInformer leads to runtime panics. A safer alternative is to pass
+// around a TypedAlertmanagerInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToTypedAlertmanagerInformer(informer AlertmanagerInformer) TypedAlertmanagerInformer {
+	if informer, ok := informer.(TypedAlertmanagerInformer); ok {
+		return informer
+	}
+	return &alertmanagerTypedInformerAdapter{informer}
+}
+
+type alertmanagerTypedInformerAdapter struct {
+	AlertmanagerInformer
+}
+
+func (a *alertmanagerTypedInformerAdapter) TypedInformer() AlertmanagerIndexInformer {
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Alertmanager](a.Informer())
+}
+
+// ToAlertmanagerIndexInformer converts an untyped informer into a AlertmanagerIndexInformer.
+//
+// WARNING: this conversion is only safe if the informer handles objects of type
+// *Alertmanager. If that is not the case, calling type-safe methods of the returned
+// AlertmanagerIndexInformer leads to runtime panics. A safer alternative is to pass
+// around a AlertmanagerIndexInformer instances that was obtained from a
+// SharedInformerFactory.
+func ToAlertmanagerIndexInformer(informer cache.SharedIndexInformer) AlertmanagerIndexInformer {
+	if informer, ok := informer.(AlertmanagerIndexInformer); ok {
+		return informer
+	}
+	return cache.NewTypedSharedIndexInformer[*apismonitoringv1.Alertmanager](informer)
 }

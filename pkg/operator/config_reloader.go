@@ -278,7 +278,6 @@ func CreateConfigReloader(name string, options ...ReloaderOption) corev1.Contain
 				Protocol:      corev1.ProtocolTCP,
 			},
 		)
-
 	}
 
 	if len(configReloader.webConfigFile) > 0 {

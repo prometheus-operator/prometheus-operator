@@ -63,7 +63,7 @@ type AzureSDConfigApplyConfiguration struct {
 	// oauth2 defines the configuration to use on every scrape request.
 	OAuth2 *applyconfigurationmonitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:",inline"`
+	applyconfigurationmonitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.

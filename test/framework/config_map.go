@@ -28,7 +28,6 @@ import (
 
 func MakeConfigMapWithCert(ns, name, keyKey, certKey, caKey string,
 	keyBytes, certBytes, caBytes []byte) *corev1.ConfigMap {
-
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: ns},
 		Data:       map[string]string{},

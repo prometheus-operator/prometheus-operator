@@ -34,7 +34,7 @@ func SetMemLimit(logger *slog.Logger, memlimitRatio float64) {
 		return
 	}
 
-	if _, err := memlimit.SetGoMemLimitWithOpts(
+	if _, err := memlimit.Set(
 		memlimit.WithRatio(memlimitRatio),
 		memlimit.WithProvider(
 			memlimit.ApplyFallback(

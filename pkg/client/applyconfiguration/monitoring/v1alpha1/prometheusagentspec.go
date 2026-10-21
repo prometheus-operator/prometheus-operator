@@ -35,7 +35,7 @@ type PrometheusAgentSpecApplyConfiguration struct {
 	//
 	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
 	Mode                                        *monitoringv1alpha1.PrometheusAgentMode `json:"mode,omitempty"`
-	v1.CommonPrometheusFieldsApplyConfiguration `json:",inline"`
+	v1.CommonPrometheusFieldsApplyConfiguration `json:""`
 }
 
 // PrometheusAgentSpecApplyConfiguration constructs a declarative configuration of the PrometheusAgentSpec type for use with
@@ -717,6 +717,14 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeNativeHistograms(value
 // If called multiple times, the ScrapeClassicHistograms field is set to the value of the last call.
 func (b *PrometheusAgentSpecApplyConfiguration) WithScrapeClassicHistograms(value bool) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.ScrapeClassicHistograms = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *PrometheusAgentSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *PrometheusAgentSpecApplyConfiguration {
+	b.CommonPrometheusFieldsApplyConfiguration.ExtraScrapeMetrics = &value
 	return b
 }
 

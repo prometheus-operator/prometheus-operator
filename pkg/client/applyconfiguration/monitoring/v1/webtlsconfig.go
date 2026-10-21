@@ -17,6 +17,7 @@
 package v1
 
 import (
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -63,7 +64,7 @@ type WebTLSConfigApplyConfiguration struct {
 	//
 	// For more detail on clientAuth options:
 	// https://golang.org/pkg/crypto/tls/#ClientAuthType
-	ClientAuthType *string `json:"clientAuthType,omitempty"`
+	ClientAuthType *monitoringv1.ClientAuthType `json:"clientAuthType,omitempty"`
 	// minVersion defines the minimum TLS version that is acceptable.
 	MinVersion *string `json:"minVersion,omitempty"`
 	// maxVersion defines the Maximum TLS version that is acceptable.
@@ -145,7 +146,7 @@ func (b *WebTLSConfigApplyConfiguration) WithClientCAFile(value string) *WebTLSC
 // WithClientAuthType sets the ClientAuthType field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the ClientAuthType field is set to the value of the last call.
-func (b *WebTLSConfigApplyConfiguration) WithClientAuthType(value string) *WebTLSConfigApplyConfiguration {
+func (b *WebTLSConfigApplyConfiguration) WithClientAuthType(value monitoringv1.ClientAuthType) *WebTLSConfigApplyConfiguration {
 	b.ClientAuthType = &value
 	return b
 }

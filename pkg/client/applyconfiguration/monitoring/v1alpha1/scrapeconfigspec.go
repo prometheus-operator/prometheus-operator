@@ -103,6 +103,12 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v3.0.0.
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -153,7 +159,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.28.0.
 	BodySizeLimit                              *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
-	v1.NativeHistogramConfigApplyConfiguration `json:",inline"`
+	v1.NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
@@ -162,7 +168,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
 	MetricRelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
-	v1.ProxyConfigApplyConfiguration `json:",inline"`
+	v1.ProxyConfigApplyConfiguration `json:""`
 	// nameValidationScheme defines the validation scheme for metric and label names.
 	//
 	// It requires Prometheus >= v3.0.0.
@@ -540,6 +546,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeProtocols(values ...monit
 // If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
 	b.FallbackScrapeProtocol = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.ExtraScrapeMetrics = &value
 	return b
 }
 

@@ -43,7 +43,6 @@ type namespaceGroupKind struct {
 // excludeConfig - list of ObjectReference to be excluded while enforcing adding namespace label
 // prometheusRuleLabeler - whether this should apply for Prometheus or Thanos rules.
 func New(enforcedNsLabel string, excludeConfig []monitoringv1.ObjectReference, prometheusRuleLabeler bool) *Labeler {
-
 	if enforcedNsLabel == "" {
 		return &Labeler{} // no-op labeler
 	}
@@ -98,7 +97,6 @@ func (l *Labeler) IsExcluded(prometheusTypeMeta metav1.TypeMeta, prometheusObjec
 // EnforceNamespaceLabel - adds(or modifies) namespace label to promRule labels with specified namespace
 // and also adds namespace label to all the metrics used in promRule.
 func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error {
-
 	if l.enforcedNsLabel == "" || l.IsExcluded(rule.TypeMeta, rule.ObjectMeta) {
 		return nil
 	}
@@ -136,7 +134,6 @@ func (l *Labeler) EnforceNamespaceLabel(rule *monitoringv1.PrometheusRule) error
 
 // GetRelabelingConfigs - append the namespace enforcement relabeling rule.
 func (l *Labeler) GetRelabelingConfigs(monitorTypeMeta metav1.TypeMeta, monitorObjectMeta metav1.ObjectMeta, rc []monitoringv1.RelabelConfig) []monitoringv1.RelabelConfig {
-
 	if l.IsExcluded(monitorTypeMeta, monitorObjectMeta) {
 		return rc
 	}

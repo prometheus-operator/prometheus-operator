@@ -199,7 +199,6 @@ func (f *Framework) WaitForConfigResWorkloadBindingCleanup(ctx context.Context, 
 
 		for _, binding := range bindings {
 			if binding.Resource == resource && binding.Name == workload.GetName() && binding.Namespace == workload.GetNamespace() {
-
 				pollErr = fmt.Errorf("binding for resource %q with name %q in namespace %q still exists", resource, workload.GetName(), workload.GetNamespace())
 				return false, nil
 			}

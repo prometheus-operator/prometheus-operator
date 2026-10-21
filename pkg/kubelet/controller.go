@@ -16,6 +16,7 @@ package kubelet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -286,12 +287,13 @@ type nodeAddress struct {
 	ipAddress  string
 	name       string
 	uid        types.UID
+	zone       string
 	ipv4       bool
 	ready      bool
 }
 
 func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
-	return discoveryv1.Endpoint{
+	ep := discoveryv1.Endpoint{
 		Addresses: []string{na.ipAddress},
 		Conditions: discoveryv1.EndpointConditions{
 			Ready: new(true),
@@ -304,6 +306,12 @@ func (na *nodeAddress) discoveryV1Endpoint() discoveryv1.Endpoint {
 			APIVersion: na.apiVersion,
 		},
 	}
+
+	if na.zone != "" {
+		ep.Zone = new(na.zone)
+	}
+
+	return ep
 }
 
 func (na *nodeAddress) v1EndpointAddress() corev1.EndpointAddress {
@@ -335,6 +343,10 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 			continue
 		}
 
+		// A node with several interfaces reports several addresses per family,
+		// all reaching the same kubelet.
+		var seenIPv4, seenIPv6 bool
+
 		for _, address := range nodeIPs {
 			ip := net.ParseIP(address)
 			if ip == nil {
@@ -342,12 +354,27 @@ func (c *Controller) getNodeAddresses(nodes []corev1.Node) ([]nodeAddress, []err
 				continue
 			}
 
+			ipv4 := ip.To4() != nil
+			if ipv4 && seenIPv4 {
+				continue
+			}
+			if !ipv4 && seenIPv6 {
+				continue
+			}
+
+			if ipv4 {
+				seenIPv4 = true
+			} else {
+				seenIPv6 = true
+			}
+
 			na := nodeAddress{
 				ipAddress:  address,
 				name:       n.Name,
 				uid:        n.UID,
 				apiVersion: n.APIVersion,
-				ipv4:       ip.To4() != nil,
+				zone:       n.Labels[corev1.LabelTopologyZone],
+				ipv4:       ipv4,
 				ready:      nodeReadyConditionKnown(n),
 			}
 			addresses = append(addresses, na)
@@ -413,7 +440,7 @@ func (c *Controller) sync(ctx context.Context) {
 
 	if c.manageEndpoints {
 		c.nodeEndpointSyncs.WithLabelValues(endpointsLabel).Inc()
-		if err = c.syncEndpoints(ctx, addresses); err != nil {
+		if err = c.syncEndpoints(ctx, svc, addresses); err != nil {
 			c.nodeEndpointSyncErrors.WithLabelValues(endpointsLabel).Inc()
 			c.logger.Error("Failed to synchronize kubelet endpoints", "err", err)
 		}
@@ -428,8 +455,48 @@ func (c *Controller) sync(ctx context.Context) {
 	}
 }
 
-func (c *Controller) syncEndpoints(ctx context.Context, addresses []nodeAddress) error {
+// singleAddressPerNode returns one address per node, preferring the service's
+// primary IP family. The Endpoints API has no address family filter, unlike the
+// endpointslice one, so keeping every address would make Prometheus scrape
+// dual-stack nodes once per address. Nodes reporting no address of the primary
+// family keep their first address rather than being dropped.
+func singleAddressPerNode(svc *corev1.Service, addresses []nodeAddress) []nodeAddress {
+	var primaryIPv4, hasPrimary bool
+	if svc != nil && len(svc.Spec.IPFamilies) > 0 {
+		hasPrimary = true
+		primaryIPv4 = svc.Spec.IPFamilies[0] == corev1.IPv4Protocol
+	}
+
+	indexes := make(map[string]int, len(addresses))
+
+	filtered := make([]nodeAddress, 0, len(addresses))
+	for _, a := range addresses {
+		i, found := indexes[a.name]
+		if !found {
+			indexes[a.name] = len(filtered)
+			filtered = append(filtered, a)
+
+			continue
+		}
+
+		if !hasPrimary {
+			continue
+		}
+
+		if a.ipv4 != primaryIPv4 {
+			continue
+		}
+
+		filtered[i] = a
+	}
+
+	return filtered
+}
+
+func (c *Controller) syncEndpoints(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpoints")
+
+	addresses = singleAddressPerNode(svc, addresses)
 
 	//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
 	eps := &corev1.Endpoints{
@@ -496,6 +563,10 @@ func (c *Controller) syncService(ctx context.Context) (*corev1.Service, error) {
 
 func (c *Controller) syncEndpointSlice(ctx context.Context, svc *corev1.Service, addresses []nodeAddress) error {
 	c.logger.Debug("Sync endpointslice")
+
+	if svc == nil {
+		return errors.New("kubelet service not available")
+	}
 
 	// Get the list of endpointslice objects associated to the service.
 	client := c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace)

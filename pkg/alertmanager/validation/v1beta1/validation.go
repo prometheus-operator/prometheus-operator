@@ -354,11 +354,19 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
+		if conf.UserKey != nil && conf.UserKeyFile != nil {
+			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
+		}
+
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if conf.Token != nil && conf.TokenFile != nil {
+			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
+		}
+
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
@@ -414,10 +422,6 @@ func validateSNSConfigs(configs []monitoringv1beta1.SNSConfig) error {
 
 func validateTelegramConfigs(configs []monitoringv1beta1.TelegramConfig) error {
 	v := func(conf monitoringv1beta1.TelegramConfig) error {
-		if conf.BotToken == nil && conf.BotTokenFile == nil {
-			return errors.New("mandatory field botToken or botTokenfile is empty")
-		}
-
 		if conf.BotToken != nil && conf.BotTokenFile != nil {
 			return errors.New("only one of 'botToken' or 'botTokenfile' must be configured")
 		}
@@ -454,6 +458,12 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("'httpConfig': %w", err)
+		}
+
+		// Alertmanager refuses a Webex receiver without an authorization,
+		// and a bearer token is turned into one by its own validation.
+		if conf.HTTPConfig == nil || (conf.HTTPConfig.Authorization == nil && conf.HTTPConfig.BearerTokenSecret == nil) {
+			return errors.New("'httpConfig.authorization' or 'httpConfig.bearerTokenSecret' is required")
 		}
 
 		return nil
@@ -633,6 +643,9 @@ func validateTimeIntervals(timeIntervals []monitoringv1beta1.TimeInterval) (map[
 	for i, ti := range timeIntervals {
 		if err := ti.Validate(); err != nil {
 			return nil, fmt.Errorf("time interval[%d] is invalid: %w", i, err)
+		}
+		if _, found := timeIntervalNames[ti.Name]; found {
+			return nil, fmt.Errorf("time interval[%d]: %q time interval is not unique", i, ti.Name)
 		}
 		timeIntervalNames[ti.Name] = struct{}{}
 	}
