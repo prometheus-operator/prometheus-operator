@@ -998,11 +998,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
 	if am.Spec.AlertmanagerConfigSelector == nil && am.Spec.AlertmanagerConfiguration == nil {
-		amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, cfgBuilder)
-		if err != nil {
-			return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
-		}
-
 		namespacedLogger.Debug("AlertmanagerConfigSelector and AlertmanagerConfiguration not specified, using the configuration from secret as-is",
 			"secret", defaultConfigSecretName(am))
 
@@ -1016,7 +1011,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return nil, fmt.Errorf("create or update generated config secret failed: %w", err)
 		}
 
-		return amConfigs, nil
+		return nil, nil
 	}
 
 	var additionalData map[string][]byte
@@ -1060,8 +1055,6 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		}
 	}
 
-	// The base configuration is loaded first because its global section
-	// decides which AlertmanagerConfig objects are valid.
 	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, cfgBuilder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
@@ -1182,7 +1175,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
-		err := cb.checkAlertmanagerConfig(ctx, amc)
+		err := checkAlertmanagerConfig(ctx, cb, amc)
 		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
@@ -1235,33 +1228,22 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 // checkAlertmanagerConfig verifies that an AlertmanagerConfig object is valid
 // on its own (see checkAlertmanagerConfigResource) and together with the base
 // configuration the builder holds.
-func (cb *ConfigBuilder) checkAlertmanagerConfig(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig) error {
+func checkAlertmanagerConfig(ctx context.Context, cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	if err := checkAlertmanagerConfigResource(ctx, amc, cb.amVersion, cb.store); err != nil {
 		return err
 	}
 
-	return cb.checkGlobalConfigFields(ctx, amc)
+	return checkGlobalConfigFields(cb, amc)
 }
 
 // checkGlobalConfigFields verifies that every field an AlertmanagerConfig
 // leaves unset in a receiver, but that Alertmanager requires, is set in the
 // global configuration. Otherwise Alertmanager would reject the whole generated
-// configuration instead of just the offending AlertmanagerConfig. A Secret
-// reference whose data is empty counts as unset, as it does for Alertmanager.
-func (cb *ConfigBuilder) checkGlobalConfigFields(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig) error {
+// configuration instead of just the offending AlertmanagerConfig.
+func checkGlobalConfigFields(cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	global := &globalConfig{}
 	if cb.cfg != nil && cb.cfg.Global != nil {
 		global = cb.cfg.Global
-	}
-
-	// secret returns the data of the referenced Secret key, or an empty string
-	// when there is no reference.
-	secret := func(sel *corev1.SecretKeySelector) (string, error) {
-		if sel == nil {
-			return "", nil
-		}
-
-		return cb.store.GetSecretKey(ctx, amc.Namespace, *sel)
 	}
 
 	for _, receiver := range amc.Spec.Receivers {
@@ -1275,42 +1257,26 @@ func (cb *ConfigBuilder) checkGlobalConfigFields(ctx context.Context, amc *monit
 		}
 
 		for i, c := range receiver.SlackConfigs {
-			apiURL, err := secret(c.APIURL)
-			if err != nil {
-				return fmt.Errorf("receiver %q: slackConfigs[%d]: apiURL: %w", receiver.Name, i, err)
-			}
-			if apiURL == "" && global.SlackAPIURL == nil && global.SlackAPIURLFile == "" &&
+			if c.APIURL == nil && global.SlackAPIURL == nil && global.SlackAPIURLFile == "" &&
 				global.SlackAppToken == "" && global.SlackAppTokenFile == "" {
 				return fmt.Errorf("receiver %q: slackConfigs[%d]: apiURL is neither specified at receiver level nor in the global configuration", receiver.Name, i)
 			}
 		}
 
 		for i, c := range receiver.OpsGenieConfigs {
-			apiKey, err := secret(c.APIKey)
-			if err != nil {
-				return fmt.Errorf("receiver %q: opsGenieConfigs[%d]: apiKey: %w", receiver.Name, i, err)
-			}
-			if apiKey == "" && global.OpsGenieAPIKey == "" && global.OpsGenieAPIKeyFile == "" {
+			if c.APIKey == nil && global.OpsGenieAPIKey == "" && global.OpsGenieAPIKeyFile == "" {
 				return fmt.Errorf("receiver %q: opsGenieConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
 			}
 		}
 
 		for i, c := range receiver.VictorOpsConfigs {
-			apiKey, err := secret(c.APIKey)
-			if err != nil {
-				return fmt.Errorf("receiver %q: victorOpsConfigs[%d]: apiKey: %w", receiver.Name, i, err)
-			}
-			if apiKey == "" && global.VictorOpsAPIKey == "" && global.VictorOpsAPIKeyFile == "" {
+			if c.APIKey == nil && global.VictorOpsAPIKey == "" && global.VictorOpsAPIKeyFile == "" {
 				return fmt.Errorf("receiver %q: victorOpsConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
 			}
 		}
 
 		for i, c := range receiver.WeChatConfigs {
-			apiSecret, err := secret(c.APISecret)
-			if err != nil {
-				return fmt.Errorf("receiver %q: weChatConfigs[%d]: apiSecret: %w", receiver.Name, i, err)
-			}
-			if apiSecret == "" && global.WeChatAPISecret == "" && global.WeChatAPISecretFile == "" {
+			if c.APISecret == nil && global.WeChatAPISecret == "" && global.WeChatAPISecretFile == "" {
 				return fmt.Errorf("receiver %q: weChatConfigs[%d]: apiSecret is neither specified at receiver level nor in the global configuration", receiver.Name, i)
 			}
 			if ptr.Deref(c.CorpID, "") == "" && global.WeChatAPICorpID == "" {
@@ -1509,7 +1475,7 @@ func checkOpsGenieConfigs(
 		}
 
 		if config.APIKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey, validation.NotEmpty); err != nil {
 				return err
 			}
 		}
@@ -1619,7 +1585,7 @@ func checkSlackConfigs(
 		slackAPIURL := ""
 		if config.APIURL != nil {
 			var err error
-			slackAPIURL, err = store.GetSecretKey(ctx, namespace, *config.APIURL)
+			slackAPIURL, err = store.GetSecretKey(ctx, namespace, *config.APIURL, validation.NotEmpty)
 			if err != nil {
 				return err
 			}
@@ -1699,7 +1665,7 @@ func checkWechatConfigs(
 		}
 
 		if config.APISecret != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret, validation.NotEmpty); err != nil {
 				return err
 			}
 		}
@@ -1802,7 +1768,7 @@ func checkVictorOpsConfigs(
 			return err
 		}
 		if config.APIKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey, validation.NotEmpty); err != nil {
 				return err
 			}
 		}
