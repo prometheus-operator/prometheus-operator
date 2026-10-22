@@ -95,3 +95,36 @@ func TestValidateWebexConfigsRequireAuthorization(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateMSTeamsV2ConfigsRequireWebhookURL(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1alpha1.MSTeamsV2Config
+		expectErr bool
+	}{
+		{
+			name:      "no webhookURL",
+			config:    monitoringv1alpha1.MSTeamsV2Config{},
+			expectErr: true,
+		},
+		{
+			name: "webhookURL",
+			config: monitoringv1alpha1.MSTeamsV2Config{
+				WebhookURL: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "msteams"},
+					Key:                  "url",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateMSTeamsV2Configs([]monitoringv1alpha1.MSTeamsV2Config{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
