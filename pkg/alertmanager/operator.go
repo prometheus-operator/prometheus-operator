@@ -1898,8 +1898,8 @@ func checkMSTeamsV2Configs(
 
 	for _, config := range configs {
 		if config.WebhookURL != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL, validation.NotEmpty); err != nil {
+				return fmt.Errorf("webhookURL: %w", err)
 			}
 		}
 

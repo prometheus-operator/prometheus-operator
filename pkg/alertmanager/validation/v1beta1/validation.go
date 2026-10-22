@@ -556,6 +556,10 @@ func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 
 func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error {
 	v := func(conf monitoringv1beta1.MSTeamsV2Config) error {
+		if conf.WebhookURL == nil {
+			return errors.New("'webhookURL' is required")
+		}
+
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}
