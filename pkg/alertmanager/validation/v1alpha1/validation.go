@@ -412,11 +412,19 @@ func validatePushoverConfigs(configs []monitoringv1alpha1.PushoverConfig) error 
 			return errors.New("one of 'userKey' or 'userKeyFile' must be configured")
 		}
 
+		if conf.UserKey != nil && conf.UserKeyFile != nil {
+			return errors.New("'userKey' and 'userKeyFile' options are mutually exclusive")
+		}
+
 		if conf.Token == nil && conf.TokenFile == nil {
 			return errors.New("one of 'token' or 'tokenFile' must be configured")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if conf.Token != nil && conf.TokenFile != nil {
+			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
+		}
+
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
@@ -510,6 +518,12 @@ func validateWebexConfigs(configs []monitoringv1alpha1.WebexConfig) error {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}
 
+		// Alertmanager refuses a Webex receiver without an authorization,
+		// and a bearer token is turned into one by its own validation.
+		if conf.HTTPConfig == nil || (conf.HTTPConfig.Authorization == nil && conf.HTTPConfig.BearerTokenSecret == nil) {
+			return errors.New("'httpConfig.authorization' or 'httpConfig.bearerTokenSecret' is required")
+		}
+
 		return nil
 	}
 
@@ -542,6 +556,10 @@ func validateMSTeamsConfigs(configs []monitoringv1alpha1.MSTeamsConfig) error {
 
 func validateMSTeamsV2Configs(configs []monitoringv1alpha1.MSTeamsV2Config) error {
 	v := func(conf monitoringv1alpha1.MSTeamsV2Config) error {
+		if conf.WebhookURL == nil {
+			return errors.New("'webhookURL' is required")
+		}
+
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}
@@ -629,6 +647,9 @@ func validateMuteTimeIntervals(muteTimeIntervals []monitoringv1alpha1.MuteTimeIn
 	for i, mti := range muteTimeIntervals {
 		if err := mti.Validate(); err != nil {
 			return nil, fmt.Errorf("mute time interval[%d] is invalid: %w", i, err)
+		}
+		if _, found := muteTimeIntervalNames[mti.Name]; found {
+			return nil, fmt.Errorf("mute time interval[%d]: %q mute time interval is not unique", i, mti.Name)
 		}
 		muteTimeIntervalNames[mti.Name] = struct{}{}
 	}

@@ -16,6 +16,7 @@ package validation
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"text/template"
@@ -23,6 +24,15 @@ import (
 	"github.com/prometheus/alertmanager/config/common"
 	"k8s.io/utils/ptr"
 )
+
+// NotEmpty is a validator that returns an error if the provided value is empty.
+func NotEmpty(value string) error {
+	if value == "" {
+		return errors.New("value cannot be empty")
+	}
+
+	return nil
+}
 
 // ValidateURLPtr validates a URL string pointer.
 // If the pointer is nil, it will return no error.

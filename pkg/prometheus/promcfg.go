@@ -468,6 +468,17 @@ func (cg *ConfigGenerator) AddTrackTimestampsStaleness(cfg yaml.MapSlice, trackT
 	return cg.WithMinimumVersion("2.48.0").AppendMapItem(cfg, "track_timestamps_staleness", *trackTimestampsStaleness)
 }
 
+// addExtraScrapeMetrics adds the extra_scrape_metrics field into a scrape
+// configuration. Unlike the global setting, the per-scrape override is not
+// honored on Prometheus < v3.10.0, hence the version-gated warning.
+func (cg *ConfigGenerator) addExtraScrapeMetrics(cfg yaml.MapSlice, extraScrapeMetrics *bool) yaml.MapSlice {
+	if extraScrapeMetrics == nil {
+		return cfg
+	}
+
+	return cg.WithMinimumVersion("3.10.0").AppendMapItem(cfg, "extra_scrape_metrics", *extraScrapeMetrics)
+}
+
 // addScrapeProtocols adds the scrape_protocols field into the configuration.
 func (cg *ConfigGenerator) addScrapeProtocols(cfg yaml.MapSlice, scrapeProtocols []monitoringv1.ScrapeProtocol) yaml.MapSlice {
 	if len(scrapeProtocols) == 0 {
@@ -1341,13 +1352,22 @@ func (cg *ConfigGenerator) BuildCommonPrometheusArgs() []monitoringv1.Argument {
 		}
 	}
 
+	// Auto-enable the extra-scrape-metrics feature flag for Prometheus
+	// versions that support the feature but not the global config option;
+	// for >= v3.10.0 the config field emitted by appendExtraScrapeMetrics
+	// is used instead. Duplicate values in enableFeatures are fine.
+	if ptr.Deref(cpf.ExtraScrapeMetrics, false) &&
+		cg.Version().GTE(semver.MustParse("2.32.0")) && cg.Version().LT(semver.MustParse("3.10.0")) {
+		promArgs = cg.AppendCommandlineArgument(promArgs, monitoringv1.Argument{Name: "enable-feature", Value: "extra-scrape-metrics"})
+	}
+
 	if cpf.ExternalURL != "" {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "web.external-url", Value: cpf.ExternalURL})
 	}
 
 	promArgs = append(promArgs, monitoringv1.Argument{Name: "web.route-prefix", Value: cpf.WebRoutePrefix()})
 
-	if cpf.LogLevel != "" && cpf.LogLevel != "info" {
+	if cpf.LogLevel != "" && !cg.WithMinimumVersion("3.15.0").IsCompatible() {
 		promArgs = append(promArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
 	}
 
@@ -1694,6 +1714,7 @@ func (cg *ConfigGenerator) generatePodMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -1771,6 +1792,7 @@ func (cg *ConfigGenerator) generateProbeConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if cpf.EnforcedBodySizeLimit != "" {
@@ -2241,6 +2263,7 @@ func (cg *ConfigGenerator) generateServiceMonitorConfig(
 	cfg = cg.AddLimitsToYAML(cfg, keepDroppedTargetsKey, m.Spec.KeepDroppedTargets, cpf.EnforcedKeepDroppedTargets)
 	cfg = cg.addNativeHistogramConfig(cfg, m.Spec.NativeHistogramConfig)
 	cfg = cg.addScrapeProtocols(cfg, m.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, m.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(m.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if bodySizeLimit := getLowerByteSize(m.Spec.BodySizeLimit, &cpf); !isByteSizeEmpty(bodySizeLimit) {
@@ -3140,18 +3163,27 @@ func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSl
 }
 
 func (cg *ConfigGenerator) appendRuntime(slice yaml.MapSlice) yaml.MapSlice {
-	runtime := cg.prom.GetCommonPrometheusFields().Runtime
-	if runtime == nil {
+	commonFields := cg.prom.GetCommonPrometheusFields()
+	runtime := commonFields.Runtime
+	logLevelIsSet := commonFields.LogLevel != ""
+	supportsLogLevelRuntime := cg.WithMinimumVersion("3.15.0").IsCompatible()
+	if runtime == nil && (!logLevelIsSet || !supportsLogLevelRuntime) {
 		return slice
 	}
 	if !cg.WithMinimumVersion("2.53.0").IsCompatible() {
-		cg.Warn("runtime")
+		if runtime != nil {
+			cg.Warn("runtime")
+		}
 		return slice
 	}
 
 	var runtimeSlice yaml.MapSlice
-	if runtime.GoGC != nil {
+	if runtime != nil && runtime.GoGC != nil {
 		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "gogc", Value: *runtime.GoGC})
+	}
+
+	if logLevelIsSet && supportsLogLevelRuntime {
+		runtimeSlice = append(runtimeSlice, yaml.MapItem{Key: "log_level", Value: commonFields.LogLevel})
 	}
 
 	return cg.AppendMapItem(slice, "runtime", runtimeSlice)
@@ -3525,6 +3557,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 	}
 
 	cfg = cg.addScrapeProtocols(cfg, sc.Spec.ScrapeProtocols)
+	cfg = cg.addExtraScrapeMetrics(cfg, sc.Spec.ExtraScrapeMetrics)
 	cfg = cg.addFallbackScrapeProtocol(cfg, mergeFallbackScrapeProtocolWithScrapeClass(sc.Spec.FallbackScrapeProtocol, scrapeClass))
 
 	if sc.Spec.Scheme != nil {
@@ -4009,12 +4042,10 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)
 
 			if config.Environment != nil {
-				configs[i] = []yaml.MapItem{
-					{
-						Key:   "environment",
-						Value: config.Environment,
-					},
-				}
+				configs[i] = append(configs[i], yaml.MapItem{
+					Key:   "environment",
+					Value: config.Environment,
+				})
 			}
 
 			if config.AuthenticationMethod != nil {
@@ -4077,6 +4108,18 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 					Key:   "port",
 					Value: config.Port,
 				})
+			}
+
+			if config.FollowRedirects != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "follow_redirects", config.FollowRedirects)
+			}
+
+			if config.EnableHTTP2 != nil {
+				configs[i] = cg.AppendMapItem(configs[i], "enable_http2", config.EnableHTTP2)
+			}
+
+			if config.TLSConfig != nil {
+				configs[i] = cg.addSafeTLStoYaml(configs[i], s, config.TLSConfig)
 			}
 		}
 		cfg = append(cfg, yaml.MapItem{
@@ -5310,6 +5353,23 @@ func (cg *ConfigGenerator) appendNameEscapingScheme(cfg yaml.MapSlice, nameEscap
 	return cfg
 }
 
+func (cg *ConfigGenerator) appendExtraScrapeMetrics(cfg yaml.MapSlice) yaml.MapSlice {
+	cpf := cg.prom.GetCommonPrometheusFields()
+
+	if !ptr.Deref(cpf.ExtraScrapeMetrics, false) {
+		return cfg
+	}
+
+	// Don't use WithMinimumVersion() to avoid the warning log: versions
+	// >= v2.32.0 and < v3.10.0 honor the setting through the
+	// extra-scrape-metrics feature flag injected in BuildCommonPrometheusArgs.
+	if cg.Version().LT(semver.MustParse("3.10.0")) {
+		return cfg
+	}
+
+	return cg.AppendMapItem(cfg, "extra_scrape_metrics", *cpf.ExtraScrapeMetrics)
+}
+
 func (cg *ConfigGenerator) appendConvertClassicHistogramsToNHCB(cfg yaml.MapSlice) yaml.MapSlice {
 	cpf := cg.prom.GetCommonPrometheusFields()
 
@@ -5418,6 +5478,7 @@ func (cg *ConfigGenerator) buildGlobalConfig() yaml.MapSlice {
 	cfg = cg.appendConvertClassicHistogramsToNHCB(cfg)
 	cfg = cg.appendConvertScrapeClassicHistograms(cfg)
 	cfg = cg.appendScrapeNativeHistograms(cfg)
+	cfg = cg.appendExtraScrapeMetrics(cfg)
 
 	return cfg
 }

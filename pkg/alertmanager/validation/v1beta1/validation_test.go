@@ -17,8 +17,10 @@ package v1beta1
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/ptr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -91,183 +93,6 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name: "Test fail to validate PushoverConfigs - missing user key and user key file",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - missing token and token file",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									UserKey: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - token and tokenFile has be configured",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									Token: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-									TokenFile: new("/path/token_file"),
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - userKey and userKeyFile has be configured",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									UserKey: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-									UserKeyFile: new("/path/user_key_file"),
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - missing token",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									UserKey: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - html and monospace both true",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									UserKey: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-									Token: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "token",
-									},
-									HTML:      new(true),
-									Monospace: new(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "Test fail to validate PushoverConfigs - invalid URL",
-			in: &monitoringv1beta1.AlertmanagerConfig{
-				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
-					Receivers: []monitoringv1beta1.Receiver{
-						{
-							Name: "same",
-						},
-						{
-							Name: "different",
-							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
-								{
-									UserKey: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "user",
-									},
-									Token: &monitoringv1beta1.SecretKeySelector{
-										Name: "creds",
-										Key:  "token",
-									},
-									HTML: new(true),
-									URL:  "http://%><invalid.com",
-								},
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
 			name: "Test fail to validate routes - parent route has no receiver",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
@@ -329,6 +154,36 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 					Route: &monitoringv1beta1.Route{
 						Receiver:          "same",
 						MuteTimeIntervals: []string{"awol"},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on duplicate time interval",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+					},
+					Route: &monitoringv1beta1.Route{
+						Receiver: "same",
+					},
+					TimeIntervals: []monitoringv1beta1.TimeInterval{
+						{
+							Name: "night",
+							TimeIntervals: []monitoringv1beta1.TimePeriod{
+								{Weekdays: []monitoringv1beta1.WeekdayRange{"Saturday"}},
+							},
+						},
+						{
+							Name: "night",
+							TimeIntervals: []monitoringv1beta1.TimePeriod{
+								{Weekdays: []monitoringv1beta1.WeekdayRange{"Sunday"}},
+							},
+						},
 					},
 				},
 			},
@@ -1175,6 +1030,142 @@ func TestValidateWechatAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestValidateTelegramAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test fail to validate telegram config - missing chatID",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate telegram config - both botToken and botTokenFile specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotToken:     &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									BotTokenFile: new("/etc/secrets/bot-token"),
+									ChatID:       12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate telegram config - invalid apiURL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									ChatID:   12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test happy path telegram config - botToken specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("https://api.telegram.org")),
+									BotToken: &monitoringv1beta1.SecretKeySelector{Name: "foo", Key: "bar"},
+									ChatID:   12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test happy path telegram config - botTokenFile specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							TelegramConfigs: []monitoringv1beta1.TelegramConfig{
+								{
+									BotTokenFile: new("/etc/secrets/bot-token"),
+									ChatID:       12345,
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
 func TestValidateEmailAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -1314,6 +1305,343 @@ func TestValidateEmailAlertmanagerConfig(t *testing.T) {
 	}
 }
 
+func TestValidatePushoverAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate PushoverConfigs - userKey and token are specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate PushoverConfigs - userKeyFile and tokenFile are specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKeyFile: new("/path/user_key_file"),
+									TokenFile:   new("/path/token_file"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate PushoverConfigs - userKeyFile and token are specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKeyFile: new("/path/user_key_file"),
+									Token:       &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate PushoverConfigs - userKey and tokenFile are specified",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									TokenFile: new("/path/token_file"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - empty config",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - missing token and tokenFile",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - token and tokenFile has been configured",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:     &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									TokenFile: new("/path/token_file"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - missing userKey and userKeyFile",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									Token: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - userKey and userKeyFile has been configured",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey:     &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									UserKeyFile: new("/path/user_key_file"),
+									Token:       &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate PushoverConfigs - html is true, no monospace",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									HTML:    new(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate PushoverConfigs - monospace is true, no html",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:     &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Monospace: new(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - html and monospace are both true",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:     &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									HTML:      new(true),
+									Monospace: new(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate PushoverConfigs - correct url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									HTML:    new(true),
+									URL:     "https://pushover.url",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate PushoverConfigs - invalid url",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							PushoverConfigs: []monitoringv1beta1.PushoverConfig{
+								{
+									UserKey: &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									Token:   &monitoringv1beta1.SecretKeySelector{Name: "creds", Key: "user"},
+									HTML:    new(true),
+									URL:     "http://%><invalid.com",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
 func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -1376,6 +1704,271 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 								{
 									PhoneNumber: new("+13324653687"),
 									ApiURL:      new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWebexConfigsRequireAuthorization(t *testing.T) {
+	withAuthorization := &monitoringv1beta1.HTTPConfig{
+		Authorization: &monitoringv1.SafeAuthorization{
+			Credentials: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
+				Key:                  "token",
+			},
+		},
+	}
+
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1beta1.WebexConfig
+		expectErr bool
+	}{
+		{
+			name:      "no httpConfig",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1"},
+			expectErr: true,
+		},
+		{
+			name:      "httpConfig without authorization",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{}},
+			expectErr: true,
+		},
+		{
+			name:   "httpConfig with authorization",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: withAuthorization},
+		},
+		{
+			name: "httpConfig with bearerTokenSecret",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{
+				BearerTokenSecret: &monitoringv1beta1.SecretKeySelector{
+					Name: "webex",
+					Key:  "token",
+				},
+			}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateWebexConfigs([]monitoringv1beta1.WebexConfig{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateMSTeamsV2ConfigsRequireWebhookURL(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1beta1.MSTeamsV2Config
+		expectErr bool
+	}{
+		{
+			name:      "no webhookURL",
+			config:    monitoringv1beta1.MSTeamsV2Config{},
+			expectErr: true,
+		},
+		{
+			name: "webhookURL",
+			config: monitoringv1beta1.MSTeamsV2Config{
+				WebhookURL: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "msteams"},
+					Key:                  "url",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateMSTeamsV2Configs([]monitoringv1beta1.MSTeamsV2Config{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on rocketchat config - valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - valid URLs",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://rocketchat.api.url")),
+									IconURL:  new("{{ .labels.url }}"),
+									ImageURL: new("{{ .labels.url }}"),
+									ThumbURL: new("{{ .labels.url }}"),
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url }}"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid API URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid icon URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									IconURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid image URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ImageURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid thumb URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ThumbURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid action URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url"),
+										},
+									},
 								},
 							},
 						},

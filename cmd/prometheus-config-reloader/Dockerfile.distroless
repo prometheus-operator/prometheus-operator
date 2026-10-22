@@ -1,0 +1,25 @@
+ARG GOLANG_BUILDER=1.26
+
+FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
+WORKDIR /workspace
+
+COPY . .
+
+# Download Go dependencies to reuse the Go cache in subsequent builds.
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build go mod download -x && go mod verify
+
+# Build
+ARG GOARCH
+ENV GOARCH=${GOARCH}
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build make prometheus-config-reloader
+
+FROM gcr.io/distroless/static-debian13:nonroot
+
+COPY --from=builder workspace/prometheus-config-reloader /bin/prometheus-config-reloader
+
+# Prometheus runs as UID 65534; the signal reload strategy requires the same UID.
+USER 65534
+
+LABEL io.prometheus.image.variant="distroless"
+
+ENTRYPOINT ["/bin/prometheus-config-reloader"]
