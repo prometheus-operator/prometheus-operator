@@ -1692,7 +1692,7 @@ templates: []
 	require.NoError(t, err)
 }
 
-func testAlertmanagerConfigCRDValidation(t *testing.T) {
+func testAlertmanagerConfigRouteValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
 
@@ -1842,6 +1842,111 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 				}
 				if !apierrors.IsInvalid(err) {
 					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
+func testAlertmanagerConfigReceiverValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	webexAuthMsg := "httpConfig.authorization or httpConfig.bearerTokenSecret is required"
+	webexToken := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "webex-api-token"},
+		Key:                  "api-token",
+	}
+
+	tests := []struct {
+		name          string
+		receivers     []monitoringv1alpha1.Receiver
+		expectedError bool
+		errorMessage  string
+	}{
+		//
+		// Webex credentials validation:
+		//
+		{
+			name: "invalid-webex-without-http-config",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name:         "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{RoomID: "room-1"}},
+			}},
+			expectedError: true,
+			errorMessage:  webexAuthMsg,
+		},
+		{
+			name: "invalid-webex-http-config-without-credentials",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID:     "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{FollowRedirects: new(true)},
+				}},
+			}},
+			expectedError: true,
+			errorMessage:  webexAuthMsg,
+		},
+		{
+			name: "valid-webex-with-authorization",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID: "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{Credentials: webexToken},
+					},
+				}},
+			}},
+		},
+		{
+			name: "valid-webex-with-bearer-token-secret",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID:     "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{BearerTokenSecret: webexToken},
+				}},
+			}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: test.receivers,
+				},
+			}
+
+			_, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				if !strings.Contains(err.Error(), test.errorMessage) {
+					t.Fatalf("expected error to contain %q but got %v", test.errorMessage, err)
 				}
 				return
 			}
