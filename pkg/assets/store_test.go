@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -78,14 +79,17 @@ func TestGetSecretKey(t *testing.T) {
 	)
 
 	for _, tc := range []struct {
+		name         string
 		ns           string
 		selectedName string
 		selectedKey  string
+		optional     *bool
 
 		err      bool
 		expected string
 	}{
 		{
+			name:         "existing secret key",
 			ns:           "ns1",
 			selectedName: "secret",
 			selectedKey:  "key1",
@@ -94,6 +98,7 @@ func TestGetSecretKey(t *testing.T) {
 		},
 		// Wrong namespace.
 		{
+			name:         "missing namespace",
 			ns:           "ns2",
 			selectedName: "secret",
 			selectedKey:  "key1",
@@ -102,6 +107,7 @@ func TestGetSecretKey(t *testing.T) {
 		},
 		// Wrong name.
 		{
+			name:         "missing secret",
 			ns:           "ns1",
 			selectedName: "secreet",
 			selectedKey:  "key1",
@@ -110,21 +116,37 @@ func TestGetSecretKey(t *testing.T) {
 		},
 		// Wrong key.
 		{
+			name:         "missing key",
 			ns:           "ns1",
 			selectedName: "secret",
 			selectedKey:  "key2",
 
 			err: true,
 		},
+		{
+			name:         "optional missing secret",
+			ns:           "ns1",
+			selectedName: "secreet",
+			selectedKey:  "key1",
+			optional:     ptr.To(true),
+		},
+		{
+			name:         "optional missing key",
+			ns:           "ns1",
+			selectedName: "secret",
+			selectedKey:  "key2",
+			optional:     ptr.To(true),
+		},
 	} {
-		t.Run("", func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			store := NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
 			sel := corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: tc.selectedName,
 				},
-				Key: tc.selectedKey,
+				Key:      tc.selectedKey,
+				Optional: tc.optional,
 			}
 
 			s, err := store.GetSecretKey(context.Background(), tc.ns, sel)
@@ -137,6 +159,10 @@ func TestGetSecretKey(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expected, s, "expecting %q, got %q", tc.expected, s)
+
+			b, err := store.ForNamespace(tc.ns).GetSecretKey(sel)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, string(b))
 		})
 	}
 }
