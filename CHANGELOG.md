@@ -1,3 +1,8 @@
+## 0.94.2 / 2026-10-22
+
+* - [SECURITY] Rebuild with latest `quay.io/prometheus/busybox` base images to remove the `Comodo AAA Services root` and `emSign ECC Root CA - G3` root CAs. #8907
+* - [SECURITY] Rebuild with Go 1.27.3 to fix various vulnerabilities. #8907
+
 ## 0.94.1 / 2026-09-23
 
 * [BUGFIX] Restore `update` permission on finalizer subresources in the operator's ClusterRole, required by `OwnerReferencesPermissionEnforcement` when `blockOwnerDeletion` is set. #8830
