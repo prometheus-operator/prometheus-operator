@@ -370,7 +370,7 @@ func validatePushoverConfigs(configs []monitoringv1beta1.PushoverConfig) error {
 			return errors.New("'token' and 'tokenFile' options are mutually exclusive")
 		}
 
-		if conf.HTML != nil && *conf.HTML && conf.Monospace != nil && *conf.Monospace {
+		if ptr.Deref(conf.HTML, false) && ptr.Deref(conf.Monospace, false) {
 			return errors.New("'html' and 'monospace' options are mutually exclusive")
 		}
 
@@ -464,6 +464,12 @@ func validateWebexConfigs(configs []monitoringv1beta1.WebexConfig) error {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}
 
+		// Alertmanager refuses a Webex receiver without an authorization,
+		// and a bearer token is turned into one by its own validation.
+		if conf.HTTPConfig == nil || (conf.HTTPConfig.Authorization == nil && conf.HTTPConfig.BearerTokenSecret == nil) {
+			return errors.New("'httpConfig.authorization' or 'httpConfig.bearerTokenSecret' is required")
+		}
+
 		return nil
 	}
 
@@ -554,6 +560,10 @@ func validateMSTeamsConfigs(configs []monitoringv1beta1.MSTeamsConfig) error {
 
 func validateMSTeamsV2Configs(configs []monitoringv1beta1.MSTeamsV2Config) error {
 	v := func(conf monitoringv1beta1.MSTeamsV2Config) error {
+		if conf.WebhookURL == nil {
+			return errors.New("'webhookURL' is required")
+		}
+
 		if err := conf.HTTPConfig.Validate(); err != nil {
 			return fmt.Errorf("'httpConfig': %w", err)
 		}

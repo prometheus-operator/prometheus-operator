@@ -17,9 +17,11 @@ package v1beta1
 import (
 	"testing"
 
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/utils/ptr"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1beta1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
 )
 
@@ -1724,6 +1726,271 @@ func TestValidateSNSAlertmanagerConfig(t *testing.T) {
 								{
 									PhoneNumber: new("+13324653687"),
 									ApiURL:      new("http://%><invalid.com"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateWebexConfigsRequireAuthorization(t *testing.T) {
+	withAuthorization := &monitoringv1beta1.HTTPConfig{
+		Authorization: &monitoringv1.SafeAuthorization{
+			Credentials: &corev1.SecretKeySelector{
+				LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
+				Key:                  "token",
+			},
+		},
+	}
+
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1beta1.WebexConfig
+		expectErr bool
+	}{
+		{
+			name:      "no httpConfig",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1"},
+			expectErr: true,
+		},
+		{
+			name:      "httpConfig without authorization",
+			config:    monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{}},
+			expectErr: true,
+		},
+		{
+			name:   "httpConfig with authorization",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: withAuthorization},
+		},
+		{
+			name: "httpConfig with bearerTokenSecret",
+			config: monitoringv1beta1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1beta1.HTTPConfig{
+				BearerTokenSecret: &monitoringv1beta1.SecretKeySelector{
+					Name: "webex",
+					Key:  "token",
+				},
+			}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateWebexConfigs([]monitoringv1beta1.WebexConfig{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateMSTeamsV2ConfigsRequireWebhookURL(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		config    monitoringv1beta1.MSTeamsV2Config
+		expectErr bool
+	}{
+		{
+			name:      "no webhookURL",
+			config:    monitoringv1beta1.MSTeamsV2Config{},
+			expectErr: true,
+		},
+		{
+			name: "webhookURL",
+			config: monitoringv1beta1.MSTeamsV2Config{
+				WebhookURL: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "msteams"},
+					Key:                  "url",
+				},
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateMSTeamsV2Configs([]monitoringv1beta1.MSTeamsV2Config{tc.config})
+			if tc.expectErr && err == nil {
+				t.Fatal("expected error but got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on rocketchat config - valid",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - valid URLs",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL:   ptr.To(monitoringv1beta1.URL("http://rocketchat.api.url")),
+									IconURL:  new("{{ .labels.url }}"),
+									ImageURL: new("{{ .labels.url }}"),
+									ThumbURL: new("{{ .labels.url }}"),
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url }}"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid API URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									APIURL: ptr.To(monitoringv1beta1.URL("http://%><invalid.com")),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid icon URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									IconURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid image URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ImageURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid thumb URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									ThumbURL: new("{{ .labels.url"),
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test validate on rocketchat config - invalid action URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							RocketChatConfigs: []monitoringv1beta1.RocketChatConfig{
+								{
+									Actions: []monitoringv1beta1.RocketChatActionConfig{
+										{
+											URL: new("{{ .labels.url"),
+										},
+									},
 								},
 							},
 						},

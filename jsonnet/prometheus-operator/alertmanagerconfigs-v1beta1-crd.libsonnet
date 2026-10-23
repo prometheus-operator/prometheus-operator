@@ -10148,6 +10148,12 @@
                           'roomID',
                         ],
                         type: 'object',
+                        'x-kubernetes-validations': [
+                          {
+                            message: 'httpConfig.authorization or httpConfig.bearerTokenSecret is required',
+                            rule: 'has(self.httpConfig) && (has(self.httpConfig.authorization) || has(self.httpConfig.bearerTokenSecret))',
+                          },
+                        ],
                       },
                       type: 'array',
                     },

@@ -747,6 +747,7 @@ type HTTPConfig struct {
 
 // WebexConfig configures notification via Cisco Webex
 // See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
+// +kubebuilder:validation:XValidation:rule="has(self.httpConfig) && (has(self.httpConfig.authorization) || has(self.httpConfig.bearerTokenSecret))",message="httpConfig.authorization or httpConfig.bearerTokenSecret is required"
 type WebexConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional

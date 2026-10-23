@@ -2981,8 +2981,8 @@ func (poc *pushoverConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 		*poc.Monospace = false
 	}
 
-	if poc.HTML != nil && *poc.HTML && poc.Monospace != nil && *poc.Monospace {
-		return errors.New("either monospace or html must be configured")
+	if ptr.Deref(poc.HTML, false) && ptr.Deref(poc.Monospace, false) {
+		return errors.New("'html' and 'monospace' options are mutually exclusive")
 	}
 
 	if poc.URL != "" {

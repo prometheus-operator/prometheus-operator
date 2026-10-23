@@ -228,7 +228,8 @@ func testAllNSAlertmanager(t *testing.T) {
 	skipAlertmanagerTests(t)
 	testFuncs := map[string]func(t *testing.T){
 		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
-		"AlertmanagerConfigCRDValidation":         testAlertmanagerConfigCRDValidation,
+		"AlertmanagerConfigRouteValidation":       testAlertmanagerConfigRouteValidation,
+		"AlertmanagerConfigReceiverValidation":    testAlertmanagerConfigReceiverValidation,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,

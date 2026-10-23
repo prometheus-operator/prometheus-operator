@@ -12,7 +12,7 @@ require (
 	github.com/distribution/reference v0.6.0
 	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/go-kit/log v0.2.1
-	github.com/go-test/deep v1.1.1
+	github.com/go-test/deep v1.1.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-cmp v0.7.0
 	github.com/kylelemons/godebug v1.1.0
