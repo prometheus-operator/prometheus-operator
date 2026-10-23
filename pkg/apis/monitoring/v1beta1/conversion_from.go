@@ -152,6 +152,7 @@ func convertHTTPConfigFrom(in *v1alpha1.HTTPConfig) *HTTPConfig {
 		ProxyConfig:       in.ProxyConfig,
 		FollowRedirects:   in.FollowRedirects,
 		EnableHTTP2:       in.EnableHTTP2,
+		HTTPHeaders:       in.HTTPHeaders,
 	}
 }
 
