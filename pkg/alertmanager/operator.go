@@ -993,10 +993,7 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		return nil, fmt.Errorf("failed to determine alertmanager version: %w", err)
 	}
 
-	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, store, version)
-	if err != nil {
-		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
-	}
+	cfgBuilder := NewConfigBuilder(namespacedLogger, version, store, am)
 
 	// If no AlertmanagerConfig selectors and AlertmanagerConfiguration are
 	// configured, the user wants to manage configuration themselves.
@@ -1014,13 +1011,10 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 			return nil, fmt.Errorf("create or update generated config secret failed: %w", err)
 		}
 
-		return amConfigs, nil
+		return nil, nil
 	}
 
-	var (
-		additionalData map[string][]byte
-		cfgBuilder     = NewConfigBuilder(namespacedLogger, version, store, am)
-	)
+	var additionalData map[string][]byte
 
 	if am.Spec.AlertmanagerConfiguration != nil {
 		// Load the base configuration from the referenced AlertmanagerConfig.
@@ -1059,6 +1053,11 @@ func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *m
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize from secret: %w", err)
 		}
+	}
+
+	amConfigs, err := c.selectAlertmanagerConfigs(ctx, am, cfgBuilder)
+	if err != nil {
+		return nil, fmt.Errorf("failed to select alertmanager configs: %w", err)
 	}
 
 	if err := cfgBuilder.AddAlertmanagerConfigs(ctx, amConfigs.ValidResources()); err != nil {
@@ -1108,7 +1107,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	return nil
 }
 
-func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.StoreBuilder, amVersion semver.Version) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
+func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoringv1.Alertmanager, cb *ConfigBuilder) (operator.TypedResourcesSelection[*monitoringv1alpha1.AlertmanagerConfig], error) {
 	namespaces := []string{}
 
 	// If 'AlertmanagerConfigNamespaceSelector' is nil, only check own namespace.
@@ -1176,7 +1175,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
-		err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store)
+		err := checkAlertmanagerConfigResource(ctx, cb, amc)
 		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
@@ -1205,8 +1204,10 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 }
 
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
-// for the given Alertmanager version and has no missing references to other objects.
-func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+// for the given Alertmanager version, has no missing references to other objects
+// and sets every required receiver field that the global configuration doesn't
+// provide.
+func checkAlertmanagerConfigResource(ctx context.Context, cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
 	// Perform semantic validation irrespective of the Alertmanager version.
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
@@ -1215,15 +1216,71 @@ func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha
 	// Perform more specific validations which depend on the Alertmanager
 	// version. It also retrieves data from referenced secrets and configmaps
 	// (and fails in case of missing/invalid references).
-	if err := checkReceivers(ctx, amc, store, amVersion); err != nil {
+	if err := checkReceivers(ctx, amc, cb.store, cb.amVersion); err != nil {
 		return err
 	}
 
-	if err := checkRoute(ctx, amc.Spec.Route, amVersion); err != nil {
+	if err := checkRoute(ctx, amc.Spec.Route, cb.amVersion); err != nil {
 		return err
 	}
 
-	return checkInhibitRules(amc, amVersion)
+	if err := checkInhibitRules(amc, cb.amVersion); err != nil {
+		return err
+	}
+
+	return checkGlobalConfigFields(cb, amc)
+}
+
+// checkGlobalConfigFields verifies that every field an AlertmanagerConfig
+// leaves unset in a receiver, but that Alertmanager requires, is set in the
+// global configuration. Otherwise Alertmanager would reject the whole generated
+// configuration instead of just the offending AlertmanagerConfig.
+func checkGlobalConfigFields(cb *ConfigBuilder, amc *monitoringv1alpha1.AlertmanagerConfig) error {
+	global := &globalConfig{}
+	if cb.cfg != nil && cb.cfg.Global != nil {
+		global = cb.cfg.Global
+	}
+
+	for _, receiver := range amc.Spec.Receivers {
+		for i, c := range receiver.EmailConfigs {
+			if ptr.Deref(c.Smarthost, "") == "" && global.SMTPSmarthost.Host == "" {
+				return fmt.Errorf("receiver %q: emailConfigs[%d]: smarthost is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+			if ptr.Deref(c.From, "") == "" && global.SMTPFrom == "" {
+				return fmt.Errorf("receiver %q: emailConfigs[%d]: from is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.SlackConfigs {
+			if c.APIURL == nil && global.SlackAPIURL == nil && global.SlackAPIURLFile == "" &&
+				global.SlackAppToken == "" && global.SlackAppTokenFile == "" {
+				return fmt.Errorf("receiver %q: slackConfigs[%d]: apiURL is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.OpsGenieConfigs {
+			if c.APIKey == nil && global.OpsGenieAPIKey == "" && global.OpsGenieAPIKeyFile == "" {
+				return fmt.Errorf("receiver %q: opsGenieConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.VictorOpsConfigs {
+			if c.APIKey == nil && global.VictorOpsAPIKey == "" && global.VictorOpsAPIKeyFile == "" {
+				return fmt.Errorf("receiver %q: victorOpsConfigs[%d]: apiKey is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
+		for i, c := range receiver.WeChatConfigs {
+			if c.APISecret == nil && global.WeChatAPISecret == "" && global.WeChatAPISecretFile == "" {
+				return fmt.Errorf("receiver %q: weChatConfigs[%d]: apiSecret is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+			if ptr.Deref(c.CorpID, "") == "" && global.WeChatAPICorpID == "" {
+				return fmt.Errorf("receiver %q: weChatConfigs[%d]: corpID is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+	}
+
+	return nil
 }
 
 func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion semver.Version) error {
@@ -1413,7 +1470,7 @@ func checkOpsGenieConfigs(
 		}
 
 		if config.APIKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey, validation.NotEmpty); err != nil {
 				return err
 			}
 		}
@@ -1523,7 +1580,7 @@ func checkSlackConfigs(
 		slackAPIURL := ""
 		if config.APIURL != nil {
 			var err error
-			slackAPIURL, err = store.GetSecretKey(ctx, namespace, *config.APIURL)
+			slackAPIURL, err = store.GetSecretKey(ctx, namespace, *config.APIURL, validation.NotEmpty)
 			if err != nil {
 				return err
 			}
@@ -1603,7 +1660,7 @@ func checkWechatConfigs(
 		}
 
 		if config.APISecret != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APISecret, validation.NotEmpty); err != nil {
 				return err
 			}
 		}
@@ -1706,7 +1763,7 @@ func checkVictorOpsConfigs(
 			return err
 		}
 		if config.APIKey != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey); err != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.APIKey, validation.NotEmpty); err != nil {
 				return err
 			}
 		}

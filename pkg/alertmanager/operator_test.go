@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
@@ -1677,7 +1678,7 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -1745,7 +1746,7 @@ func TestCheckWebexAlertmanagerConfigEmptyCredentials(t *testing.T) {
 				},
 			}
 
-			err := checkAlertmanagerConfigResource(context.Background(), config, version, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: version, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, config)
 			if tc.expectErr {
 				require.Error(t, err)
 				return
@@ -1902,7 +1903,7 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -2045,7 +2046,7 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -2383,7 +2384,7 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -2391,6 +2392,215 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 
 			t.Logf("err: %s", err)
 			require.Error(t, err)
+		})
+	}
+}
+
+// globalWithDefaults returns a global configuration that provides every
+// default a receiver may leave unset, so that tests of the other checks don't
+// depend on it.
+func globalWithDefaults() *globalConfig {
+	return &globalConfig{
+		SMTPFrom:        "a@example.com",
+		SMTPSmarthost:   config.HostPort{Host: "smtp.example.com", Port: "25"},
+		SlackAPIURLFile: "/etc/slack",
+		OpsGenieAPIKey:  "key",
+		VictorOpsAPIKey: "key",
+		WeChatAPISecret: "secret",
+		WeChatAPICorpID: "corp",
+	}
+}
+
+func TestCheckAlertmanagerConfigResourceGlobalFields(t *testing.T) {
+	amc := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{Name: "amc", Namespace: "ns"},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name:         "r",
+				SlackConfigs: []monitoringv1alpha1.SlackConfig{{}},
+			}},
+		},
+	}
+
+	c := fake.NewSimpleClientset()
+	store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	cb := &ConfigBuilder{amVersion: version, store: store}
+	require.ErrorContains(t, checkAlertmanagerConfigResource(t.Context(), cb, amc), "slackConfigs[0]: apiURL")
+
+	cb.cfg = &alertmanagerConfig{Global: &globalConfig{SlackAPIURLFile: "/etc/slack"}}
+	require.NoError(t, checkAlertmanagerConfigResource(t.Context(), cb, amc))
+}
+
+func TestCheckGlobalConfigFields(t *testing.T) {
+	secret := &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "s"}, Key: "k"}
+
+	for _, tc := range []struct {
+		name     string
+		receiver monitoringv1alpha1.Receiver
+		global   *globalConfig
+		err      string
+	}{
+		{
+			name:     "slack without apiURL and without global",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{}}},
+			err:      "slackConfigs[0]: apiURL",
+		},
+		{
+			name:     "slack with apiURL",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{APIURL: secret}}},
+		},
+		{
+			name:     "slack with global api url file",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{}}},
+			global:   &globalConfig{SlackAPIURLFile: "/etc/slack"},
+		},
+		{
+			name:     "opsgenie without apiKey and without global",
+			receiver: monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{}}},
+			err:      "opsGenieConfigs[0]: apiKey",
+		},
+		{
+			name:     "opsgenie with global api key",
+			receiver: monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{}}},
+			global:   &globalConfig{OpsGenieAPIKey: "key"},
+		},
+		{
+			name:     "victorops without apiKey and without global",
+			receiver: monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{}}},
+			err:      "victorOpsConfigs[0]: apiKey",
+		},
+		{
+			name:     "victorops with global api key",
+			receiver: monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{}}},
+			global:   &globalConfig{VictorOpsAPIKey: "key"},
+		},
+		{
+			name:     "wechat without apiSecret and without global",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{CorpID: new("corp")}}},
+			err:      "weChatConfigs[0]: apiSecret",
+		},
+		{
+			name:     "wechat without corpID and without global",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{APISecret: secret}}},
+			err:      "weChatConfigs[0]: corpID",
+		},
+		{
+			name:     "wechat with global secret and corp id",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{}}},
+			global:   &globalConfig{WeChatAPISecret: "secret", WeChatAPICorpID: "corp"},
+		},
+		{
+			name:     "email without smarthost and without global",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{From: new("a@example.com")}}},
+			err:      "emailConfigs[0]: smarthost",
+		},
+		{
+			name:     "email without from and without global",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{Smarthost: new("smtp.example.com:25")}}},
+			err:      "emailConfigs[0]: from",
+		},
+		{
+			name:     "email with global smarthost and from",
+			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{}}},
+			global:   &globalConfig{SMTPFrom: "a@example.com", SMTPSmarthost: config.HostPort{Host: "smtp.example.com", Port: "25"}},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.receiver.Name = "r"
+			amc := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{Name: "amc", Namespace: "ns"},
+				Spec:       monitoringv1alpha1.AlertmanagerConfigSpec{Receivers: []monitoringv1alpha1.Receiver{tc.receiver}},
+			}
+
+			cb := &ConfigBuilder{cfg: &alertmanagerConfig{Global: tc.global}}
+
+			err := checkGlobalConfigFields(cb, amc)
+			if tc.err == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
+}
+
+func TestCheckAlertmanagerConfigEmptySecrets(t *testing.T) {
+	version, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	secret := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "s"},
+		Key:                  "k",
+	}
+	emptySecret := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "s"},
+		Key:                  "empty",
+	}
+
+	for _, tc := range []struct {
+		name      string
+		receiver  monitoringv1alpha1.Receiver
+		expectErr bool
+	}{
+		{
+			name:     "slack apiURL",
+			receiver: monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{APIURL: secret}}},
+		},
+		{
+			name:      "slack empty apiURL",
+			receiver:  monitoringv1alpha1.Receiver{SlackConfigs: []monitoringv1alpha1.SlackConfig{{APIURL: emptySecret}}},
+			expectErr: true,
+		},
+		{
+			name:     "opsgenie apiKey",
+			receiver: monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{APIKey: secret}}},
+		},
+		{
+			name:      "opsgenie empty apiKey",
+			receiver:  monitoringv1alpha1.Receiver{OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{APIKey: emptySecret}}},
+			expectErr: true,
+		},
+		{
+			name:     "victorops apiKey",
+			receiver: monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{APIKey: secret, RoutingKey: "rk"}}},
+		},
+		{
+			name:      "victorops empty apiKey",
+			receiver:  monitoringv1alpha1.Receiver{VictorOpsConfigs: []monitoringv1alpha1.VictorOpsConfig{{APIKey: emptySecret, RoutingKey: "rk"}}},
+			expectErr: true,
+		},
+		{
+			name:     "wechat apiSecret",
+			receiver: monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{APISecret: secret}}},
+		},
+		{
+			name:      "wechat empty apiSecret",
+			receiver:  monitoringv1alpha1.Receiver{WeChatConfigs: []monitoringv1alpha1.WeChatConfig{{APISecret: emptySecret}}},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := fake.NewClientset(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{Name: "s", Namespace: "ns"},
+				Data:       map[string][]byte{"k": []byte("https://example.com/value"), "empty": {}},
+			})
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			tc.receiver.Name = "r"
+			amc := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{Namespace: "ns"},
+				Spec:       monitoringv1alpha1.AlertmanagerConfigSpec{Receivers: []monitoringv1alpha1.Receiver{tc.receiver}},
+			}
+
+			err := checkAlertmanagerConfigResource(t.Context(), &ConfigBuilder{amVersion: version, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, amc)
+			if tc.expectErr {
+				require.ErrorContains(t, err, "value cannot be empty")
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }
