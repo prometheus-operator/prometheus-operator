@@ -246,6 +246,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMAlertmanagerConfigVersions":            testAlertmanagerConfigVersions,
 		"AMUserDefinedAMConfigFromSecret":         testUserDefinedAlertmanagerConfigFromSecret,
 		"AMUserDefinedAMConfigFromCustomResource": testUserDefinedAlertmanagerConfigFromCustomResource,
+		"AMConfigTracing":                         testAlertmanagerConfigTracing,
 		"AMPreserveUserAddedMetadata":             testAMPreserveUserAddedMetadata,
 		"AMRollbackManualChanges":                 testAMRollbackManualChanges,
 		"AMMinReadySeconds":                       testAlertManagerMinReadySeconds,
