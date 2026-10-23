@@ -216,6 +216,12 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
+	version33, err := semver.ParseTolerant("v0.33.0")
+	require.NoError(t, err)
+
+	version34, err := semver.ParseTolerant("v0.34.0")
+	require.NoError(t, err)
+
 	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -1668,6 +1674,48 @@ func TestCheckAlertmanagerConfig(t *testing.T) {
 			},
 			version: &version25,
 			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "route-labels-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Labels: []monitoringv1alpha1.KeyValue{
+							{Key: "env", Value: "production"},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}},
+				},
+			},
+			version: &version33,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "route-labels-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+						Labels: []monitoringv1alpha1.KeyValue{
+							{Key: "env", Value: "production"},
+						},
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+					}},
+				},
+			},
+			version: &version34,
+			ok:      true,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {

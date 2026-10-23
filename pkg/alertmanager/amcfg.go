@@ -584,6 +584,16 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		}
 	}
 
+	// The AlertmanagerConfig resource is already rejected during resource
+	// selection when labels are used with Alertmanager < 0.34.0.
+	var labels map[string]string
+	if l := len(in.Labels); l > 0 {
+		labels = make(map[string]string, l)
+		for _, kv := range in.Labels {
+			labels[kv.Key] = kv.Value
+		}
+	}
+
 	return &route{
 		Receiver:            receiver,
 		GroupByStr:          in.GroupBy,
@@ -597,6 +607,7 @@ func (cb *ConfigBuilder) convertRoute(in *monitoringv1alpha1.Route, crKey types.
 		Routes:              routes,
 		MuteTimeIntervals:   prefixedMuteTimeIntervals,
 		ActiveTimeIntervals: prefixedActiveTimeIntervals,
+		Labels:              labels,
 	}
 }
 
