@@ -240,6 +240,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMClusterInitialization":                 testAMClusterInitialization,
 		"AMClusterAfterRollingUpdate":             testAMClusterAfterRollingUpdate,
 		"AMClusterGossipSilences":                 testAMClusterGossipSilences,
+		"AMGossipTLSConfigurationRollout":         testAMGossipTLSConfigurationRollout,
 		"AMReloadConfig":                          testAMReloadConfig,
 		"AMZeroDowntimeRollingDeployment":         testAMZeroDowntimeRollingDeployment,
 		"AMAlertmanagerConfigCRD":                 testAlertmanagerConfigCRD,
