@@ -5,4 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   scrape_native_histograms: true
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []

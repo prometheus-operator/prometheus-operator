@@ -18933,6 +18933,10 @@ spec:
                 - info
                 - warn
                 - error
+                - Debug
+                - Info
+                - Warn
+                - Error
                 type: string
               minReadySeconds:
                 description: |-
@@ -30918,6 +30922,10 @@ spec:
                 - info
                 - warn
                 - error
+                - Debug
+                - Info
+                - Warn
+                - Error
                 type: string
               maximumStartupDurationSeconds:
                 description: |-
@@ -43665,6 +43673,10 @@ spec:
                 - info
                 - warn
                 - error
+                - Debug
+                - Info
+                - Warn
+                - Error
                 type: string
               maximumStartupDurationSeconds:
                 description: |-
@@ -48673,6 +48685,10 @@ spec:
                     - info
                     - warn
                     - error
+                    - Debug
+                    - Info
+                    - Warn
+                    - Error
                     type: string
                   minTime:
                     description: |-
@@ -71619,6 +71635,10 @@ spec:
                 - info
                 - warn
                 - error
+                - Debug
+                - Info
+                - Warn
+                - Error
                 type: string
               minReadySeconds:
                 description: |-

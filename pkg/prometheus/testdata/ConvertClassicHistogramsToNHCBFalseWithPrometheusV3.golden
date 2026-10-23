@@ -5,4 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   convert_classic_histograms_to_nhcb: false
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []

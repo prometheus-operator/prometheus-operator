@@ -5,4 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   metric_name_escaping_scheme: allow-utf-8
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []

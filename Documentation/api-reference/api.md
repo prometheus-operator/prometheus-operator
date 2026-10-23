@@ -276,7 +276,9 @@ receiver (effectively dropping alert notifications).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -2462,7 +2464,9 @@ the empty string (<code>&quot;&quot;</code>).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -5404,7 +5408,9 @@ Deprecated: use excludedFromEnforcement instead.</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -6990,7 +6996,9 @@ receiver (effectively dropping alert notifications).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -8946,7 +8954,9 @@ the empty string (<code>&quot;&quot;</code>).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -13067,6 +13077,37 @@ string
 For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
 For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.</p>
 </div>
+<h3 id="monitoring.coreos.com/v1.LogLevel">LogLevel
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.CommonPrometheusFields">CommonPrometheusFields</a>, <a href="#monitoring.coreos.com/v1.ThanosRulerSpec">ThanosRulerSpec</a>, <a href="#monitoring.coreos.com/v1.ThanosSpec">ThanosSpec</a>)
+</p>
+<div>
+<p>LogLevel represents the level of logging emitted by a component.
+Supported values are:
+* <code>Debug</code>
+* <code>Info</code>
+* <code>Warn</code>
+* <code>Error</code>
+The lowercase variants (<code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>) are also accepted.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Debug&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Error&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Info&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;Warn&#34;</p></td>
+<td></td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.ManagedIdentity">ManagedIdentity
 </h3>
 <p>
@@ -15849,7 +15890,9 @@ the empty string (<code>&quot;&quot;</code>).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -21526,7 +21569,9 @@ Deprecated: use excludedFromEnforcement instead.</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -22360,7 +22405,9 @@ GRPCServerTLSConfig
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -23956,7 +24003,9 @@ the empty string (<code>&quot;&quot;</code>).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
@@ -32902,7 +32951,9 @@ the empty string (<code>&quot;&quot;</code>).</p>
 <td>
 <code>logLevel</code><br/>
 <em>
-string
+<a href="#monitoring.coreos.com/v1.LogLevel">
+LogLevel
+</a>
 </em>
 </td>
 <td>
