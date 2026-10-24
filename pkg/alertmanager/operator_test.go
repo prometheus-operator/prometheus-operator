@@ -43,7 +43,7 @@ import (
 )
 
 func commonFieldErrorMessage(fieldName, expectedVersion, currentVersion string) error {
-	return fmt.Errorf("'%s' is available in Alertmanager >= %s only - current %s", fieldName, expectedVersion, currentVersion)
+	return fmt.Errorf("%w: '%s' is available in Alertmanager >= %s only - current %s", ErrFieldNotAvailable, fieldName, expectedVersion, currentVersion)
 }
 
 func TestCreateStatefulSetInputHash(t *testing.T) {
