@@ -16,7 +16,7 @@ package alertmanager
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"testing"
@@ -41,6 +41,10 @@ import (
 	monitoringfake "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/fake"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 )
+
+func commonFieldErrorMessage(fieldName, expectedVersion, currentVersion string) error {
+	return fmt.Errorf("'%s' is available in Alertmanager >= %s only - current %s", fieldName, expectedVersion, currentVersion)
+}
 
 func TestCreateStatefulSetInputHash(t *testing.T) {
 	falseVal := false
@@ -2503,7 +2507,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			},
 			version: &version32,
 			ok:      false,
-			errMsg:  errors.New("'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current 0.32.0"),
+			errMsg:  commonFieldErrorMessage("useAWSHTTPClient", "0.33.0", version32.String()),
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
