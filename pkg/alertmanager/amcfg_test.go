@@ -3070,146 +3070,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Pagerduty_Receiver.golden",
 		},
 		{
-			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-og-test-receiver",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"apiKey": []byte("1234abc"),
-					},
-				},
-			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-								APIKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-og-test-receiver",
-									},
-									Key: "apiKey",
-								},
-							}},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_Opsgenie_Receiver.golden",
-		},
-		{
-			name: "CR with Opsgenie Team Responder",
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-og-test-receiver",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"apiKey": []byte("1234abc"),
-					},
-				},
-			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-								APIKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-og-test-receiver",
-									},
-									Key: "apiKey",
-								},
-								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
-									Name: new("myname"),
-									Type: "team",
-								}},
-							}},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_Opsgenie_Team_Responder.golden",
-		},
-		{
-			name: "CR with Opsgenie Receiver",
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-og-test-receiver",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"apiKey": []byte("1234abc"),
-					},
-				},
-			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
-								APIKey: &corev1.SecretKeySelector{
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "am-og-test-receiver",
-									},
-									Key: "apiKey",
-								},
-								APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
-							}},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_Opsgenie_Receiver_Valid_APIURL.golden",
-		},
-		{
 			name: "CR with WeChat Receiver",
 			kclient: fake.NewClientset(
 				&corev1.Secret{
@@ -4277,6 +4137,293 @@ func TestGenerateConfig(t *testing.T) {
 				},
 			},
 			golden: "CR_with_Active_Time_Intervals.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestGenerateConfigOpsgenieReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	testCases := []testCase{
+		{
+			name: "CR with Opsgenie Receiver",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Opsgenie_Receiver.golden",
+		},
+		{
+			name: "CR with Opsgenie Team Responder",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+								Responders: []monitoringv1alpha1.OpsGenieConfigResponder{{
+									Name: new("myname"),
+									Type: "team",
+								}},
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Opsgenie_Team_Responder.golden",
+		},
+		{
+			name: "CR with Opsgenie Receiver Valid API URL",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+								APIURL: ptr.To(monitoringv1alpha1.URL("https://example.com/")),
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Opsgenie_Receiver_Valid_APIURL.golden",
+		},
+		{
+			name: "CR with Opsgenie Receiver Invalid API URL",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+								APIURL: ptr.To(monitoringv1alpha1.URL("https:://example.com/")),
+							}},
+						}},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "CR with Opsgenie Details",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-og-test-receiver",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiKey": []byte("1234abc"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{{
+								APIKey: &corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "am-og-test-receiver",
+									},
+									Key: "apiKey",
+								},
+								Details: []monitoringv1alpha1.KeyValue{
+									{Key: "foo", Value: "bar"},
+								},
+							}},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_Opsgenie_Details.golden",
 		},
 	}
 
