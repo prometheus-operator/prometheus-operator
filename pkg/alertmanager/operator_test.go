@@ -2499,7 +2499,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 				},
 			},
 			version: &version32,
-			ok:      true,
+			ok:      false,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
