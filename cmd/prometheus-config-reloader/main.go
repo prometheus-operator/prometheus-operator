@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	stdlog "log"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -204,7 +205,7 @@ func main() {
 				WebConfigFile:      webConfig,
 			}, logger)
 		}, func(error) {
-			srv.Close()
+			shutdownServer(logger, srv)
 		})
 	}
 
@@ -251,4 +252,16 @@ func createOrdinalEnvvar(fromName string) error {
 	reg := regexp.MustCompile(`\d+$`)
 	val := reg.FindString(os.Getenv(fromName))
 	return os.Setenv(statefulsetOrdinalEnvvar, val)
+}
+
+// shutdownServer gracefully shuts down the HTTP server, waiting for in-flight
+// requests to complete or until the timeout expires. It uses an independent
+// context (not derived from the run.Group context) to ensure shutdown proceeds
+// even if the parent context has already been cancelled.
+func shutdownServer(logger *slog.Logger, srv *http.Server) {
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Failed to shutdown web server", "err", err)
+	}
 }
