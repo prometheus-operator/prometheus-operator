@@ -84,11 +84,29 @@ func NewLogger(c Config) (log.Logger, error) {
 		return nil, fmt.Errorf("log format %s unknown, %v are possible values", c.Format, AvailableLogFormats)
 	}
 
+	logger = orderedLogger{next: logger}
 	logger = loglevel.NewFilter(logger, lvlOption)
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	return logger, nil
+}
+
+// orderedLogger puts "ts" before "level" to match the slog output order.
+// level.Info() prepends "level" via WithPrefix, so entries arrive as
+// level, ts, caller, ...
+type orderedLogger struct {
+	next log.Logger
+}
+
+func (l orderedLogger) Log(keyvals ...interface{}) error {
+	if len(keyvals) >= 4 && keyvals[0] == "level" && keyvals[2] == "ts" {
+		keyvals = append([]interface{}(nil), keyvals...)
+		keyvals[0], keyvals[2] = keyvals[2], keyvals[0]
+		keyvals[1], keyvals[3] = keyvals[3], keyvals[1]
+	}
+
+	return l.next.Log(keyvals...)
 }
 
 // AvailableLogLevels is a list of supported logging levels
