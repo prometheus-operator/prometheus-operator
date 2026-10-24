@@ -16,12 +16,14 @@ package alertmanager
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"testing"
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
@@ -2400,6 +2402,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 		amConfig *monitoringv1alpha1.AlertmanagerConfig
 		version  *semver.Version
 		ok       bool
+		errMsg   error
 	}{
 		{
 			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
@@ -2500,6 +2503,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			},
 			version: &version32,
 			ok:      false,
+			errMsg:  errors.New("'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current 0.32.0"),
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
@@ -2516,6 +2520,9 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			}
 
 			t.Logf("err: %s", err)
+			if tc.errMsg != nil {
+				assert.EqualError(t, err, tc.errMsg.Error())
+			}
 			require.Error(t, err)
 		})
 	}
