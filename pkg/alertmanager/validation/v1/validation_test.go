@@ -16,47 +16,70 @@ package v1
 
 import (
 	"testing"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 )
 
-func TestValidateGlobalTelegramConfig(T *testing.T) {
-
-	for _, tc := range []struct {
+func TestValidateGlobalTelegramConfig(t *testing.T) {
+	testCases := []struct {
 		name      string
-		config    monitoringv1alpha1.WebexConfig
+		config    *monitoringv1.AlertmanagerGlobalConfig
 		expectErr bool
+		errMsg    *string
 	}{
 		{
-			name:      "no httpConfig",
-			config:    monitoringv1alpha1.WebexConfig{RoomID: "room-1"},
-			expectErr: true,
-		},
-		{
-			name:      "httpConfig without authorization",
-			config:    monitoringv1alpha1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1alpha1.HTTPConfig{}},
-			expectErr: true,
-		},
-		{
-			name:   "httpConfig with authorization",
-			config: monitoringv1alpha1.WebexConfig{RoomID: "room-1", HTTPConfig: withAuthorization},
-		},
-		{
-			name: "httpConfig with bearerTokenSecret",
-			config: monitoringv1alpha1.WebexConfig{RoomID: "room-1", HTTPConfig: &monitoringv1alpha1.HTTPConfig{
-				BearerTokenSecret: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{Name: "webex"},
-					Key:                  "token",
+			name: "Test validate global telegram config - botToken specified",
+			config: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					BotToken: &v1.SecretKeySelector{
+						Key:                  "token",
+						LocalObjectReference: v1.LocalObjectReference{Name: "telegram"},
+					},
 				},
-			}},
+			},
+			expectErr: false,
 		},
-	} {
+		{
+			name: "Test validate global telegram config - botTokenFile specified",
+			config: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					BotTokenFile: new("/bot/token/file"),
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate global telegram config - botToken and botTokenFile specified",
+			config: &monitoringv1.AlertmanagerGlobalConfig{
+				TelegramConfig: &monitoringv1.GlobalTelegramConfig{
+					BotToken: &v1.SecretKeySelector{
+						Key:                  "token",
+						LocalObjectReference: v1.LocalObjectReference{Name: "telegram"},
+					},
+					BotTokenFile: new("/bot/token/file"),
+				},
+			},
+			expectErr: true,
+			errMsg:    new("only one of 'botToken' or 'botTokenfile' must be configured"),
+		},
+	}
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := validateWebexConfigs([]monitoringv1alpha1.WebexConfig{tc.config})
-			if tc.expectErr && err == nil {
-				t.Fatal("expected error but got none")
+			err := ValidateAlertmanagerGlobalConfig(tc.config)
+			if !tc.expectErr {
+				require.NoError(t, err)
+				return
 			}
-			if !tc.expectErr && err != nil {
-				t.Fatalf("unexpected error: %v", err)
+
+			t.Logf("err: %s", err)
+			if tc.errMsg != nil {
+				assert.EqualError(t, err, *tc.errMsg)
+				return
 			}
+			require.Error(t, err)
 		})
 	}
 }
