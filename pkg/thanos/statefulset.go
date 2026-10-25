@@ -414,6 +414,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				operator.WatchedDirectories(watchedDirectories),
 				operator.VolumeMounts(configReloaderVolumeMounts),
 				operator.Shard(-1),
+				operator.ImagePullPolicy(tr.Spec.ImagePullPolicy),
 			),
 		)
 	}
