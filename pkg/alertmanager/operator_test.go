@@ -2526,6 +2526,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			t.Logf("err: %s", err)
 			if tc.errMsg != nil {
 				assert.EqualError(t, err, tc.errMsg.Error())
+				return
 			}
 			require.Error(t, err)
 		})
