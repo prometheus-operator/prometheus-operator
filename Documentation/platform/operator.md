@@ -62,6 +62,8 @@ Arguments:
     	Value used by the operator to filter Alertmanager, Prometheus, PrometheusAgent and ThanosRuler objects that it should reconcile. If the value isn't empty, the operator only reconciles objects with an operator.prometheus.io/controller-id annotation of the same value. Otherwise the operator reconciles all objects without the annotation or with an empty annotation value.
   -deny-namespaces value
     	Namespaces not to scope the interaction of the Prometheus Operator (deny list). This is mutually exclusive with --namespaces.
+  -disable-pprof
+    	Disable all pprof (/debug/pprof/) endpoints. Default: false.
   -disable-unmanaged-prometheus-configuration
     	Disable support for unmanaged Prometheus configuration when all resource selectors are nil. As stated in the API documentation, unmanaged Prometheus configuration is a deprecated feature which can be avoided with '.spec.additionalScrapeConfigs' or the ScrapeConfig CRD. Default: false.
   -enable-config-reloader-probes
