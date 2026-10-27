@@ -1072,6 +1072,184 @@ func testRmScrapeConfigBindingDuringWorkloadDelete(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// testScrapeConfigStatusSubresourceForPrometheusAgent validates ScrapeConfig status updates upon PrometheusAgent selection.
+func testScrapeConfigStatusSubresourceForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "scfg-status-agent-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	// Create a first ScrapeConfig to check that the operator only updates the binding when needed.
+	sc1 := framework.MakeBasicScrapeConfig(ns, "sc1")
+	sc1.Labels["group"] = name
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Record the lastTransitionTime value.
+	sc1, err = framework.WaitForScrapeConfigCondition(ctx, sc1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err := framework.GetWorkloadBinding(sc1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err := framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	ts := cond.LastTransitionTime.String()
+	require.NotEmpty(t, ts)
+
+	// Create a second ScrapeConfig to check that the operator updates the binding when the condition changes.
+	sc2 := framework.MakeBasicScrapeConfig(ns, "sc2")
+	sc2.Labels["group"] = name
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc2, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc2, err = framework.WaitForScrapeConfigCondition(ctx, sc2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	// A label update doesn't change the ScrapeConfig's status.
+	sc1.Labels["test"] = "test"
+	sc1, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc1, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// Reference a non-existing Secret to make the second ScrapeConfig invalid.
+	sc2.Spec.BasicAuth = &monitoringv1.BasicAuth{
+		Username: corev1.SecretKeySelector{
+			Key: "username",
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: name,
+			},
+		},
+	}
+	sc2, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc2, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// The second ScrapeConfig should change to Accepted=False.
+	sc2, err = framework.WaitForScrapeConfigCondition(ctx, sc2, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionFalse, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sc2.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, operator.InvalidConfiguration, cond.Reason)
+	require.NotEmpty(t, cond.Message)
+	require.Equal(t, sc2.Generation, cond.ObservedGeneration)
+
+	// The first ScrapeConfig should remain unchanged.
+	sc1, err = framework.WaitForScrapeConfigCondition(ctx, sc1, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+	binding, err = framework.GetWorkloadBinding(sc1.Status.Bindings, p, monitoringv1alpha1.PrometheusAgentName)
+	require.NoError(t, err)
+	cond, err = framework.GetConfigResourceCondition(binding.Conditions, monitoringv1.Accepted)
+	require.NoError(t, err)
+	require.Equal(t, ts, cond.LastTransitionTime.String())
+}
+
+// testGarbageCollectionOfScrapeConfigBindingForPrometheusAgent validates that deselecting a ScrapeConfig removes its PrometheusAgent workload binding.
+func testGarbageCollectionOfScrapeConfigBindingForPrometheusAgent(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "scfg-agent-binding-cleanup-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	sc.Labels = map[string]string{}
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Update(ctx, sc, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	_, err = framework.WaitForScrapeConfigWorkloadBindingCleanup(ctx, sc, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
+// testRmScrapeConfigBindingDuringPrometheusAgentDelete validates that deleting a PrometheusAgent removes its binding from the ScrapeConfig status.
+func testRmScrapeConfigBindingDuringPrometheusAgentDelete(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+	_, err := framework.CreateOrUpdatePrometheusOperatorWithOpts(
+		ctx, testFramework.PrometheusOperatorOpts{
+			Namespace:           ns,
+			AllowedNamespaces:   []string{ns},
+			EnabledFeatureGates: []operator.FeatureGateName{operator.StatusForConfigurationResourcesFeature},
+		},
+	)
+	require.NoError(t, err)
+
+	name := "agent-delete-scfg-test"
+	p := framework.MakeBasicPrometheusAgent(ns, name, name, 1)
+	p.Spec.ScrapeConfigSelector = &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"group": name,
+		},
+	}
+	p, err = framework.CreatePrometheusAgentAndWaitUntilReady(ctx, ns, p)
+	require.NoError(t, err)
+
+	sc := framework.MakeBasicScrapeConfig(ns, name)
+	sc.Labels["group"] = name
+	sc, err = framework.MonClientV1alpha1.ScrapeConfigs(ns).Create(ctx, sc, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	sc, err = framework.WaitForScrapeConfigCondition(ctx, sc, p, monitoringv1alpha1.PrometheusAgentName, monitoringv1.Accepted, monitoringv1.ConditionTrue, 1*time.Minute)
+	require.NoError(t, err)
+
+	err = framework.DeletePrometheusAgentAndWaitUntilGone(ctx, ns, name)
+	require.NoError(t, err)
+
+	_, err = framework.WaitForScrapeConfigWorkloadBindingCleanup(ctx, sc, p, monitoringv1alpha1.PrometheusAgentName, 1*time.Minute)
+	require.NoError(t, err)
+}
+
 // testFinalizerForPromAgentWhenStatusForConfigResEnabled tests the adding/removing of status-cleanup finalizer for PrometheusAgent when StatusForConfigurationResourcesFeature is enabled.
 func testFinalizerForPromAgentWhenStatusForConfigResEnabled(t *testing.T) {
 	t.Parallel()
