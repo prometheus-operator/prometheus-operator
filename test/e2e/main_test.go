@@ -230,6 +230,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AlertmanagerConfigMatcherStrategy":       testAlertmanagerConfigMatcherStrategy,
 		"AlertmanagerConfigRouteValidation":       testAlertmanagerConfigRouteValidation,
 		"AlertmanagerConfigReceiverValidation":    testAlertmanagerConfigReceiverValidation,
+		"AlertmanagerConfigRouteLabels":           testAlertmanagerConfigRouteLabels,
 		"AlertmanagerCRD":                         testAlertmanagerCRDValidation,
 		"AMCreateDeleteCluster":                   testAMCreateDeleteCluster,
 		"AMWithStatefulsetCreationFailure":        testAlertmanagerWithStatefulsetCreationFailure,

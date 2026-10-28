@@ -29775,7 +29775,7 @@ e.g: <code>metadata.name=foobar</code></p>
 <h3 id="monitoring.coreos.com/v1alpha1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -35544,6 +35544,23 @@ route by the Prometheus operator.</p>
 <p>activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.KeyValue">
+[]KeyValue
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
+<p>It requires Alertmanager &gt;= 0.34.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.SDFile">SDFile
@@ -39322,7 +39339,7 @@ for the inhibition to take effect. This ensures related alerts are properly grou
 <h3 id="monitoring.coreos.com/v1beta1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -41387,6 +41404,23 @@ route by the Prometheus operator.</p>
 <td>
 <em>(Optional)</em>
 <p>activeTimeIntervals is a list of TimeInterval names when this route should be active.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.KeyValue">
+[]KeyValue
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
+<p>It requires Alertmanager &gt;= 0.34.0.</p>
 </td>
 </tr>
 </tbody>
