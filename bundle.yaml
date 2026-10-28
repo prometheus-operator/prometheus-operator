@@ -51858,8 +51858,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               basicAuth:
                 description: basicAuth defines information to use on every scrape
@@ -52713,8 +52714,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               convertClassicHistogramsToNHCB:
                 description: |-
@@ -53341,8 +53343,8 @@ spec:
                   type: object
                   x-kubernetes-validations:
                   - message: at most one of authorization or oauth2 can be configured
-                    rule: '[has(self.authorization), has(self.oauth2)].filter(x, x).size()
-                      <= 1'
+                    rule: '!(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               dnsSDConfigs:
                 description: dnsSDConfigs defines a list of DNS service discovery
@@ -54117,8 +54119,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               dockerSwarmSDConfigs:
                 description: dockerSwarmSDConfigs defines a list of Dockerswarm service
@@ -54846,8 +54849,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               ec2SDConfigs:
                 description: ec2SDConfigs defines a list of EC2 service discovery
@@ -55886,8 +55890,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               fallbackScrapeProtocol:
                 description: |-
@@ -56686,8 +56691,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               honorLabels:
                 description: |-
@@ -57379,8 +57385,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               ionosSDConfigs:
                 description: ionosSDConfigs defines a list of IONOS service discovery
@@ -58784,8 +58791,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               kumaSDConfigs:
                 description: kumaSDConfigs defines a list of Kuma service discovery
@@ -59475,8 +59483,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               labelLimit:
                 description: |-
@@ -60239,8 +60248,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               linodeSDConfigs:
                 description: linodeSDConfigs defines a list of Linode service discovery
@@ -60871,8 +60881,8 @@ spec:
                   type: object
                   x-kubernetes-validations:
                   - message: at most one of authorization or oauth2 can be configured
-                    rule: '[has(self.authorization), has(self.oauth2)].filter(x, x).size()
-                      <= 1'
+                    rule: '!(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               metricRelabelings:
                 description: metricRelabelings defines the metricRelabelings to apply
@@ -61716,8 +61726,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               oauth2:
                 description: oauth2 defines the configuration to use on every scrape
@@ -63220,8 +63231,9 @@ spec:
                   x-kubernetes-validations:
                   - message: at most one of basicAuth, authorization, or oauth2 can
                       be configured
-                    rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                      x).size() <= 1'
+                    rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                      && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
+                maxItems: 100
                 type: array
               relabelings:
                 description: |-
@@ -63921,8 +63933,8 @@ spec:
             type: object
             x-kubernetes-validations:
             - message: at most one of basicAuth, authorization, or oauth2 can be configured
-              rule: '[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x,
-                x).size() <= 1'
+              rule: '!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth)
+                && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))'
           status:
             description: |-
               status defines the status subresource. It is under active development and is updated only when the

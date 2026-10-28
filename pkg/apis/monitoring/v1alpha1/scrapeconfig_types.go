@@ -164,7 +164,7 @@ func (l *ScrapeConfigList) DeepCopyObject() runtime.Object {
 
 // ScrapeConfigSpec is a specification of the desired configuration for a scrape configuration.
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ScrapeConfigSpec struct {
 	// jobName defines the value of the `job` label assigned to the scraped metrics by default.
 	//
@@ -182,12 +182,15 @@ type ScrapeConfigSpec struct {
 	// +optional
 	FileSDConfigs []FileSDConfig `json:"fileSDConfigs,omitempty"`
 	// httpSDConfigs defines a list of HTTP service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	HTTPSDConfigs []HTTPSDConfig `json:"httpSDConfigs,omitempty"`
 	// kubernetesSDConfigs defines a list of Kubernetes service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	KubernetesSDConfigs []KubernetesSDConfig `json:"kubernetesSDConfigs,omitempty"`
 	// consulSDConfigs defines a list of Consul service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	ConsulSDConfigs []ConsulSDConfig `json:"consulSDConfigs,omitempty"`
 	// dnsSDConfigs defines a list of DNS service discovery configurations.
@@ -197,6 +200,7 @@ type ScrapeConfigSpec struct {
 	// +optional
 	EC2SDConfigs []EC2SDConfig `json:"ec2SDConfigs,omitempty"`
 	// azureSDConfigs defines a list of Azure service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	AzureSDConfigs []AzureSDConfig `json:"azureSDConfigs,omitempty"`
 	// gceSDConfigs defines a list of GCE service discovery configurations.
@@ -206,33 +210,43 @@ type ScrapeConfigSpec struct {
 	// +optional
 	OpenStackSDConfigs []OpenStackSDConfig `json:"openstackSDConfigs,omitempty"`
 	// digitalOceanSDConfigs defines a list of DigitalOcean service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	DigitalOceanSDConfigs []DigitalOceanSDConfig `json:"digitalOceanSDConfigs,omitempty"`
 	// kumaSDConfigs defines a list of Kuma service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	KumaSDConfigs []KumaSDConfig `json:"kumaSDConfigs,omitempty"`
 	// eurekaSDConfigs defines a list of Eureka service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	EurekaSDConfigs []EurekaSDConfig `json:"eurekaSDConfigs,omitempty"`
 	// dockerSDConfigs defines a list of Docker service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	DockerSDConfigs []DockerSDConfig `json:"dockerSDConfigs,omitempty"`
 	// linodeSDConfigs defines a list of Linode service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	LinodeSDConfigs []LinodeSDConfig `json:"linodeSDConfigs,omitempty"`
 	// hetznerSDConfigs defines a list of Hetzner service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	HetznerSDConfigs []HetznerSDConfig `json:"hetznerSDConfigs,omitempty"`
 	// nomadSDConfigs defines a list of Nomad service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	NomadSDConfigs []NomadSDConfig `json:"nomadSDConfigs,omitempty"`
 	// dockerSwarmSDConfigs defines a list of Dockerswarm service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	DockerSwarmSDConfigs []DockerSwarmSDConfig `json:"dockerSwarmSDConfigs,omitempty"`
 	// puppetDBSDConfigs defines a list of PuppetDB service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	PuppetDBSDConfigs []PuppetDBSDConfig `json:"puppetDBSDConfigs,omitempty"`
 	// lightSailSDConfigs defines a list of Lightsail service discovery configurations.
+	// +kubebuilder:validation:MaxItems=100
 	// +optional
 	LightSailSDConfigs []LightSailSDConfig `json:"lightSailSDConfigs,omitempty"`
 	// ovhcloudSDConfigs defines a list of OVHcloud service discovery configurations.
@@ -426,7 +440,7 @@ type FileSDConfig struct {
 // HTTPSDConfig defines a prometheus HTTP service discovery configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type HTTPSDConfig struct {
 	// url defines the URL from which the targets are fetched.
 	// +required
@@ -463,7 +477,7 @@ type HTTPSDConfig struct {
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type KubernetesSDConfig struct {
 	// apiServer defines the API server address consisting of a hostname or IP address followed
 	// by an optional port number.
@@ -518,7 +532,7 @@ type KubernetesSDConfig struct {
 // ConsulSDConfig defines a Consul service discovery configuration
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type ConsulSDConfig struct {
 	// server defines the consul server address. A valid string consisting of a hostname or IP followed by an optional port number.
 	// +kubebuilder:validation:MinLength=1
@@ -725,7 +739,7 @@ const (
 // AzureSDConfig allow retrieving scrape targets from Azure VMs.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type AzureSDConfig struct {
 	// environment defines the Azure environment.
 	// +kubebuilder:validation:MinLength=1
@@ -942,7 +956,7 @@ type OpenStackSDConfig struct {
 // This service discovery uses the public IPv4 address by default, by that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#digitalocean_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of authorization or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.authorization) && has(self.oauth2))",message="at most one of authorization or oauth2 can be configured"
 type DigitalOceanSDConfig struct {
 	// authorization defines the header configuration to authenticate against the DigitalOcean API.
 	// Cannot be set at the same time as `oauth2`.
@@ -977,7 +991,7 @@ type DigitalOceanSDConfig struct {
 // KumaSDConfig allow retrieving scrape targets from Kuma's control plane.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kuma_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type KumaSDConfig struct {
 	// server defines the address of the Kuma Control Plane's MADS xDS server.
 	// +required
@@ -1022,7 +1036,7 @@ type KumaSDConfig struct {
 // Prometheus will periodically check the REST endpoint and create a target for every app instance.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#eureka_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type EurekaSDConfig struct {
 	// server defines the URL to connect to the Eureka server.
 	// +required
@@ -1060,7 +1074,7 @@ type EurekaSDConfig struct {
 // port the container is configured to expose.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#docker_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type DockerSDConfig struct {
 	// host defines the address of the docker daemon.
 	// +kubebuilder:validation:MinLength=1
@@ -1117,7 +1131,7 @@ type DockerSDConfig struct {
 // This service discovery uses the public IPv4 address by default, but that can be changed with relabeling
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#hetzner_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type HetznerSDConfig struct {
 	// role defines the Hetzner role of entities that should be discovered.
 	// +kubebuilder:validation:Enum=hcloud;Hcloud;robot;Robot
@@ -1164,7 +1178,7 @@ type HetznerSDConfig struct {
 // NomadSDConfig configurations allow retrieving scrape targets from Nomad's Service API.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#nomad_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type NomadSDConfig struct {
 	// allowStale defines the information to access the Nomad API. It is to be defined
 	// as the Nomad documentation requires.
@@ -1261,7 +1275,7 @@ type OVHCloudSDConfig struct {
 // DockerSwarmSDConfig configurations allow retrieving scrape targets from Docker Swarm engine.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#dockerswarm_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type DockerSwarmSDConfig struct {
 	// host defines the address of the Docker daemon
 	// +kubebuilder:validation:Pattern="^[a-zA-Z][a-zA-Z0-9+.-]*://.+$"
@@ -1315,7 +1329,7 @@ type DockerSwarmSDConfig struct {
 // LinodeSDConfig configurations allow retrieving scrape targets from Linode's Linode APIv4.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#linode_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="[has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of authorization or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.authorization) && has(self.oauth2))",message="at most one of authorization or oauth2 can be configured"
 type LinodeSDConfig struct {
 	// region defines the region to filter on.
 	// +kubebuilder:validation:MinLength=1
@@ -1356,7 +1370,7 @@ type LinodeSDConfig struct {
 
 // PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type PuppetDBSDConfig struct {
 	// url defines the URL of the PuppetDB root query endpoint.
 	// +required
@@ -1406,7 +1420,7 @@ type PuppetDBSDConfig struct {
 
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
-// +kubebuilder:validation:XValidation:rule="[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of basicAuth, authorization, or oauth2 can be configured"
+// +kubebuilder:validation:XValidation:rule="!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))",message="at most one of basicAuth, authorization, or oauth2 can be configured"
 type LightSailSDConfig struct {
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
