@@ -36,6 +36,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -183,7 +184,7 @@ func (f *Framework) AlertmanagerConfigSecret(ns, name string) (*corev1.Secret, e
 	return s, nil
 }
 
-func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
+func (f *Framework) CreateAlertmanager(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	amConfigSecretName := fmt.Sprintf("alertmanager-%s", a.Name)
 	s, err := f.AlertmanagerConfigSecret(a.Namespace, amConfigSecretName)
 	if err != nil {
@@ -200,19 +201,42 @@ func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *
 		return nil, fmt.Errorf("creating alertmanager %v failed: %w", a.Name, err)
 	}
 
-	a, err = f.WaitForAlertmanagerReady(ctx, a)
+	return a, nil
+}
+
+func (f *Framework) CreateAlertmanagerAndWaitUntilReady(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
+	a, err := f.CreateAlertmanager(ctx, a)
 	if err != nil {
 		return nil, err
 	}
 
-	return a, nil
+	return f.WaitForAlertmanagerReady(ctx, a)
 }
 
-// WaitForAlertmanagerReady waits for each individual pod as well as the
-// cluster as a whole to be ready.
+// WaitForAlertmanagerReady waits for the Alertmanager resource to be reported
+// as Reconciled=True and Available=True as well as the cluster as a whole to
+// be ready.
 func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
-	replicas := int(*a.Spec.Replicas)
+	am, err := f.WaitForAlertmanagerAvailable(ctx, a)
+	if err != nil {
+		return nil, err
+	}
 
+	for i := range int(ptr.Deref(a.Spec.Replicas, 1)) {
+		if err := f.WaitForAlertmanagerClusterReady(ctx, a, i); err != nil {
+			return nil, fmt.Errorf(
+				"%s/%s: alertmanager pod at ordinal %d: %w",
+				a.Namespace, a.Name, i, err,
+			)
+		}
+	}
+
+	return am, nil
+}
+
+// WaitForAlertmanagerAvailable waits for the Alertmanager resource to be reported
+// as Reconciled=True and Available=True.
+func (f *Framework) WaitForAlertmanagerAvailable(ctx context.Context, a *monitoringv1.Alertmanager) (*monitoringv1.Alertmanager, error) {
 	var current *monitoringv1.Alertmanager
 	var getErr error
 	if err := f.WaitForResourceAvailable(
@@ -223,7 +247,7 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 				return resourceStatus{}, getErr
 			}
 			return resourceStatus{
-				expectedReplicas: int32(replicas),
+				expectedReplicas: ptr.Deref(a.Spec.Replicas, 1),
 				generation:       current.Generation,
 				replicas:         current.Status.UpdatedReplicas,
 				conditions:       current.Status.Conditions,
@@ -232,15 +256,6 @@ func (f *Framework) WaitForAlertmanagerReady(ctx context.Context, a *monitoringv
 		5*time.Minute,
 	); err != nil {
 		return nil, fmt.Errorf("alertmanager %v/%v failed to become available: %w", a.Namespace, a.Name, err)
-	}
-
-	for i := range replicas {
-		if err := f.WaitForAlertmanagerClusterReady(ctx, a, i); err != nil {
-			return nil, fmt.Errorf(
-				"%s/%s: alertmanager pod at ordinal %d: %w",
-				a.Namespace, a.Name, i, err,
-			)
-		}
 	}
 
 	return current, nil
@@ -429,7 +444,7 @@ func (f *Framework) GetAlertmanagerPodStatus(ctx context.Context, ns, pod string
 	return amStatus, nil
 }
 
-func (f *Framework) CreateSilence(ctx context.Context, ns, n string) (string, error) {
+func (f *Framework) createSilence(ctx context.Context, ns, n string) (string, error) {
 	var createSilenceResponse silence.PostSilencesOKBody
 
 	request := f.ProxyPostPod(
@@ -446,6 +461,45 @@ func (f *Framework) CreateSilence(ctx context.Context, ns, n string) (string, er
 		return "", err
 	}
 	return createSilenceResponse.SilenceID, nil
+}
+
+// CheckGossipReplication creates a silence and verifies that it is replicated
+// across all Alertmanager instances.
+func (f *Framework) CheckGossipReplication(ctx context.Context, am *monitoringv1.Alertmanager) error {
+	silID, err := f.createSilence(ctx, am.Namespace, fmt.Sprintf("alertmanager-%s-0", am.Name))
+	if err != nil {
+		return fmt.Errorf("failed to create silence: %w", err)
+	}
+
+	replicas := 1
+	if am.Spec.Replicas != nil {
+		replicas = int(*am.Spec.Replicas)
+	}
+
+	for i := 0; i < replicas; i++ {
+		pod := fmt.Sprintf("alertmanager-%s-%d", am.Name, i)
+		err := wait.PollUntilContextTimeout(ctx, time.Second, f.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+			silences, err := f.GetSilences(ctx, am.Namespace, pod)
+			if err != nil {
+				return false, err
+			}
+
+			if len(silences) != 1 {
+				return false, nil
+			}
+
+			if *silences[0].ID != silID {
+				return false, fmt.Errorf("expected silence id to match id of created silence %q but got %q", silID, *silences[0].ID)
+			}
+
+			return true, nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to replicate silence to Alertmanager pod %s: %w", pod, err)
+		}
+	}
+
+	return nil
 }
 
 // SendAlertToAlertmanager sends an alert to the alertmanager in the given

@@ -2,6 +2,7 @@
 
 * [ENHANCEMENT] Add `--disable-pprof` CLI argument. #8920
 * [BUGFIX] Reject AlertmanagerConfig resources where PagerDuty `routingKey` and `serviceKey` references resolve to empty strings. #8842
+* [BUGFIX] Rollout Alertmanager pods when the cluster TLS configuration is updated. #8840
 
 ## 0.94.2 / 2026-10-22
 
