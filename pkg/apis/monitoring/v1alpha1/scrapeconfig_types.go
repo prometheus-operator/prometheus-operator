@@ -1381,6 +1381,7 @@ type LinodeSDConfig struct {
 
 // PuppetDBSDConfig configurations allow retrieving scrape targets from PuppetDB resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#puppetdb_sd_config
+// +k8s:openapi-gen=true
 type PuppetDBSDConfig struct {
 	// url defines the URL of the PuppetDB root query endpoint.
 	// +required
@@ -1430,6 +1431,7 @@ type PuppetDBSDConfig struct {
 
 // LightSailSDConfig configurations allow retrieving scrape targets from AWS Lightsail instances.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#lightsail_sd_config
+// +k8s:openapi-gen=true
 type LightSailSDConfig struct {
 	// region defines the AWS region.
 	// +kubebuilder:validation:MinLength=1
@@ -1496,6 +1498,7 @@ const (
 //
 // Note: The `_file` variants of credential fields (e.g. `secret_key_file`)
 // from the Prometheus configuration are not supported. Use Kubernetes secrets via `secretKey` instead.
+// +k8s:openapi-gen=true
 type ScalewaySDConfig struct {
 	// accessKey defines the access key to use. https://console.scaleway.com/project/credentials
 	// +kubebuilder:validation:MinLength=1
@@ -1552,6 +1555,7 @@ type ScalewaySDConfig struct {
 
 // IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
+// +k8s:openapi-gen=true
 type IonosSDConfig struct {
 	// datacenterID defines the unique ID of the IONOS data center.
 	// +kubebuilder:validation:MinLength=1
