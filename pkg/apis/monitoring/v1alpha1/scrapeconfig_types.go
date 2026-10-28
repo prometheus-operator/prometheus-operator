@@ -1556,6 +1556,7 @@ type ScalewaySDConfig struct {
 // IonosSDConfig configurations allow retrieving scrape targets from IONOS resources.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#ionos_sd_config
 // +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="[has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1",message="at most one of authorization or oauth2 can be configured"
 type IonosSDConfig struct {
 	// datacenterID defines the unique ID of the IONOS data center.
 	// +kubebuilder:validation:MinLength=1
@@ -1572,8 +1573,10 @@ type IonosSDConfig struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// authorization defines the header configuration to authenticate against the IONOS API.
 	// Cannot be set at the same time as `oauth2`.
-	// +required
-	Authorization  v1.SafeAuthorization `json:"authorization"`
+	// +optional
+	Authorization *v1.SafeAuthorization `json:"authorization,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
+	// +optional
 	v1.ProxyConfig `json:",inline"`
 	// tlsConfig defines the TLS configuration to connect to the IONOS API.
 	// +optional
@@ -1585,6 +1588,7 @@ type IonosSDConfig struct {
 	// +optional
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"` // nolint:kubeapilinter
 	// oauth2 defines the configuration to use on every scrape request.
+	// Cannot be set at the same time as `authorization`.
 	// +optional
 	OAuth2 *v1.OAuth2 `json:"oauth2,omitempty"`
 }

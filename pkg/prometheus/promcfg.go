@@ -5068,7 +5068,7 @@ func (cg *ConfigGenerator) generateScrapeConfig(
 		configs := make([][]yaml.MapItem, len(sc.Spec.IonosSDConfigs))
 		for i, config := range sc.Spec.IonosSDConfigs {
 			if config.OAuth2 == nil {
-				configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, &config.Authorization)
+				configs[i] = cg.addSafeAuthorizationToYaml(configs[i], s, config.Authorization)
 			}
 			configs[i] = cg.addOAuth2ToYaml(configs[i], s, config.OAuth2)
 			configs[i] = cg.addProxyConfigtoYaml(configs[i], s, config.ProxyConfig)

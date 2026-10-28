@@ -13163,7 +13163,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
 						DataCenterID: "11111111-1111-1111-1111-111111111111",
-						Authorization: monitoringv1.SafeAuthorization{
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
@@ -13201,7 +13201,7 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 				IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
 					{
 						DataCenterID: "11111111-1111-1111-1111-111111111111",
-						Authorization: monitoringv1.SafeAuthorization{
+						Authorization: &monitoringv1.SafeAuthorization{
 							Credentials: &corev1.SecretKeySelector{
 								LocalObjectReference: corev1.LocalObjectReference{
 									Name: "secret",
