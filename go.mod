@@ -23,7 +23,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.94.2
 	github.com/prometheus/alertmanager v0.34.1
 	github.com/prometheus/client_golang v1.25.0
-	github.com/prometheus/common v0.72.1
+	github.com/prometheus/common v0.73.0
 	github.com/prometheus/exporter-toolkit v0.20.0
 	github.com/prometheus/prometheus v0.315.1
 	github.com/stretchr/testify v1.12.1
@@ -91,6 +91,7 @@ require (
 	github.com/hashicorp/go-msgpack/v2 v2.1.5 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
+	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/memberlist v0.6.0 // indirect
@@ -100,6 +101,7 @@ require (
 	github.com/miekg/dns v1.1.73 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.2 // indirect
+	github.com/pandatix/go-abnf v0.5.1 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
