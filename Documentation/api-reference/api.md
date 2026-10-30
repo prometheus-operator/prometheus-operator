@@ -4024,7 +4024,7 @@ int32
 <p>ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes
 mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
 not exist and are mounted with optional: true.
-Reserving volumes avoids Pod rollouts when the number of generated rule
+Reserving volumes avoids a Pod rollout when the number of generated rule
 ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
 are still deleted.
 All generated rule ConfigMaps are mounted even if their count exceeds this
@@ -17431,7 +17431,7 @@ int32
 <p>ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes
 mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
 not exist and are mounted with optional: true.
-Reserving volumes avoids Pod rollouts when the number of generated rule
+Reserving volumes avoids a Pod rollout when the number of generated rule
 ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
 are still deleted.
 All generated rule ConfigMaps are mounted even if their count exceeds this

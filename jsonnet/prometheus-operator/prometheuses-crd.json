@@ -7200,7 +7200,7 @@
                   },
                   "ruleConfigMapMinCount": {
                     "default": 3,
-                    "description": "ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes\nmounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do\nnot exist and are mounted with optional: true.\nReserving volumes avoids Pod rollouts when the number of generated rule\nConfigMaps changes within this minimum. ConfigMaps that are no longer needed\nare still deleted.\nAll generated rule ConfigMaps are mounted even if their count exceeds this\nvalue. Changing the number of mounted volumes triggers a Pod rollout.\nDefaults to 3. Set to 0 to mount only the generated rule ConfigMaps.",
+                    "description": "ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes\nmounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do\nnot exist and are mounted with optional: true.\nReserving volumes avoids a Pod rollout when the number of generated rule\nConfigMaps changes within this minimum. ConfigMaps that are no longer needed\nare still deleted.\nAll generated rule ConfigMaps are mounted even if their count exceeds this\nvalue. Changing the number of mounted volumes triggers a Pod rollout.\nDefaults to 3. Set to 0 to mount only the generated rule ConfigMaps.",
                     "format": "int32",
                     "minimum": 0,
                     "type": "integer"
