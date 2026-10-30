@@ -2829,6 +2829,11 @@ func (in *PrometheusSpec) DeepCopyInto(out *PrometheusSpec) {
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.RuleConfigMapMinCount != nil {
+		in, out := &in.RuleConfigMapMinCount, &out.RuleConfigMapMinCount
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Query != nil {
 		in, out := &in.Query, &out.Query
 		*out = new(QuerySpec)

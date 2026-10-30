@@ -8515,6 +8515,21 @@ spec:
                   the server serves requests under a different route prefix. For example
                   for use with `kubectl proxy`.
                 type: string
+              ruleConfigMapMinCount:
+                default: 3
+                description: |-
+                  ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes
+                  mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+                  not exist and are mounted with optional: true.
+                  Reserving volumes avoids a Pod rollout when the number of generated rule
+                  ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+                  are still deleted.
+                  All generated rule ConfigMaps are mounted even if their count exceeds this
+                  value. Changing the number of mounted volumes triggers a Pod rollout.
+                  Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+                format: int32
+                minimum: 0
+                type: integer
               ruleNamespaceSelector:
                 description: |-
                   ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
