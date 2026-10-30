@@ -82,6 +82,16 @@ type PrometheusSpecApplyConfiguration struct {
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	RuleNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleNamespaceSelector,omitempty"`
+	// ruleConfigMapMinCount defines the minimum number of rule ConfigMap volumes
+	// mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+	// not exist and are mounted with optional: true.
+	// Reserving volumes avoids Pod rollouts when the number of generated rule
+	// ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+	// are still deleted.
+	// All generated rule ConfigMaps are mounted even if their count exceeds this
+	// value. Changing the number of mounted volumes triggers a Pod rollout.
+	// Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+	RuleConfigMapMinCount *int32 `json:"ruleConfigMapMinCount,omitempty"`
 	// query defines the configuration of the Prometheus query service.
 	Query *QuerySpecApplyConfiguration `json:"query,omitempty"`
 	// alerting defines the settings related to Alertmanager.
@@ -1160,6 +1170,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRuleSelector(value *metav1.LabelS
 // If called multiple times, the RuleNamespaceSelector field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithRuleNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.RuleNamespaceSelector = value
+	return b
+}
+
+// WithRuleConfigMapMinCount sets the RuleConfigMapMinCount field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RuleConfigMapMinCount field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRuleConfigMapMinCount(value int32) *PrometheusSpecApplyConfiguration {
+	b.RuleConfigMapMinCount = &value
 	return b
 }
 

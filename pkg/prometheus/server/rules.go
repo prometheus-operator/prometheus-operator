@@ -22,6 +22,7 @@ import (
 
 	"github.com/prometheus/prometheus/promql/parser"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -115,5 +116,5 @@ func (c *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, p *monitori
 		return nil, fmt.Errorf("synchronizing PrometheusRules failed: %w", err)
 	}
 
-	return prs.AppendConfigMapNames(configMapNames, 3), nil
+	return prs.AppendConfigMapNames(configMapNames, int(ptr.Deref(p.Spec.RuleConfigMapMinCount, 3))), nil
 }

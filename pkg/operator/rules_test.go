@@ -16,7 +16,9 @@ package operator
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"maps"
 	"os"
 	"strings"
 	"testing"
@@ -829,4 +831,65 @@ func TestPrometheusRuleSync(t *testing.T) {
 			prs.AppendConfigMapNames([]string{"prometheus-foo-rulefiles-0", "prometheus-foo-rulefiles-1", "prometheus-foo-rulefiles-2"}, 3),
 		)
 	})
+}
+
+func TestPrometheusRuleSyncWithReservedMounts(t *testing.T) {
+	ctx := context.Background()
+	client := fake.NewClientset(&corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "prometheus-other-rulefiles-0",
+			Namespace: "monitoring",
+			Labels:    map[string]string{"prometheus-name": "other"},
+		},
+		Data: map[string]string{"other.yaml": "keep"},
+	})
+	cmClient := client.CoreV1().ConfigMaps("monitoring")
+	prs := NewPrometheusRuleSyncer(
+		slog.Default(), "prometheus-test", cmClient,
+		map[string]string{"prometheus-name": "test"}, nil,
+	)
+
+	largeRules := map[string]string{}
+	for i := range 4 {
+		largeRules[fmt.Sprintf("rule-%d.yaml", i)] = strings.Repeat("a", MaxConfigMapDataSize/2+1)
+	}
+	wantMounts := make([]string, 6)
+	for i := range wantMounts {
+		wantMounts[i] = fmt.Sprintf("prometheus-test-rulefiles-%d", i)
+	}
+
+	for _, tc := range []struct {
+		name  string
+		rules map[string]string
+		count int
+	}{
+		{name: "initial rules", rules: map[string]string{"rule.yaml": "initial"}, count: 1},
+		{name: "grow within reservation", rules: largeRules, count: 4},
+		{name: "delete obsolete configmaps", rules: map[string]string{"rule.yaml": "updated"}, count: 1},
+		{name: "remove all rules", rules: map[string]string{}, count: 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			names, err := prs.Sync(ctx, tc.rules)
+			require.NoError(t, err)
+			require.Len(t, names, tc.count)
+			require.Equal(t, wantMounts, prs.AppendConfigMapNames(names, 6))
+			if tc.count > 2 {
+				// The reservation is a minimum, not a cap on generated ConfigMaps.
+				require.Equal(t, names, prs.AppendConfigMapNames(names, 2))
+			}
+
+			cms, err := cmClient.List(ctx, metav1.ListOptions{LabelSelector: "prometheus-name=test"})
+			require.NoError(t, err)
+			require.Len(t, cms.Items, tc.count)
+			actualRules := map[string]string{}
+			for _, cm := range cms.Items {
+				maps.Copy(actualRules, cm.Data)
+			}
+			require.Equal(t, tc.rules, actualRules)
+
+			other, err := cmClient.Get(ctx, "prometheus-other-rulefiles-0", metav1.GetOptions{})
+			require.NoError(t, err)
+			require.Equal(t, map[string]string{"other.yaml": "keep"}, other.Data)
+		})
+	}
 }
