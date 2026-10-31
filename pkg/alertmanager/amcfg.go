@@ -1948,7 +1948,7 @@ func (cb *ConfigBuilder) convertTLSConfig(in *monitoringv1.SafeTLSConfig, crKey 
 	out := tlsConfig{}
 
 	if in.ServerName != nil {
-		out.ServerName = *in.ServerName
+		out.ServerName = string(*in.ServerName)
 	}
 
 	if in.InsecureSkipVerify != nil {
