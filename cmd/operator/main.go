@@ -297,9 +297,6 @@ func start() int {
 		"enable_config_reloader_probes", cfg.ReloaderConfig.EnableProbes)
 	goruntime.SetMemLimit(logger, memlimitRatio)
 
-	if len(cfg.Namespaces.AllowList) > 0 && len(cfg.Namespaces.DenyList) > 0 {
-		return 1
-	}
 	if err := cfg.Namespaces.Finalize(); err != nil {
 		logger.Error("failed to parse namespaces configuration", "configuration", cfg.Namespaces.String(), "error", err)
 		return 1
