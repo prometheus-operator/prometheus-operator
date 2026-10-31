@@ -1543,30 +1543,12 @@ func (cb *ConfigBuilder) convertSnsConfig(ctx context.Context, in monitoringv1al
 	out := &snsConfig{
 		VSendResolved: in.SendResolved,
 		Attributes:    in.Attributes,
-	}
-
-	if in.ApiURL != nil {
-		out.APIUrl = *in.ApiURL
-	}
-
-	if in.TopicARN != nil {
-		out.TopicARN = *in.TopicARN
-	}
-
-	if in.PhoneNumber != nil {
-		out.PhoneNumber = *in.PhoneNumber
-	}
-
-	if in.TargetARN != nil {
-		out.TargetARN = *in.TargetARN
-	}
-
-	if in.Subject != nil {
-		out.Subject = *in.Subject
-	}
-
-	if in.Message != nil {
-		out.Message = *in.Message
+		APIUrl:        ptr.Deref(in.ApiURL, ""),
+		TopicARN:      ptr.Deref(in.TopicARN, ""),
+		PhoneNumber:   ptr.Deref(in.PhoneNumber, ""),
+		TargetARN:     ptr.Deref(in.TargetARN, ""),
+		Subject:       ptr.Deref(in.Subject, ""),
+		Message:       ptr.Deref(in.Message, ""),
 	}
 
 	if cb.amVersion.GTE(semver.MustParse("0.33.0")) && in.UseAWSHTTPClient != nil {
