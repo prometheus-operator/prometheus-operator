@@ -1,0 +1,11 @@
+receivers:
+- name: ""
+  slack_configs:
+  - api_url: https://hooks.slack.com/services/xxx
+    title_link: https://example.com/title
+    icon_url: https://example.com/icon.png
+    image_url: https://example.com/image.png
+    thumb_url: https://example.com/thumb.png
+    actions:
+    - url: https://example.com/action
+templates: []
