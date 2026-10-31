@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -166,23 +167,32 @@ func (s *StoreBuilder) AddOAuth2(ctx context.Context, ns string, oauth2 *monitor
 		return err
 	}
 
-	_, err := s.GetKey(ctx, ns, oauth2.ClientID)
-	if err != nil {
+	if _, err := s.GetKey(ctx, ns, oauth2.ClientID); err != nil {
 		return fmt.Errorf("failed to get oauth2 client id: %w", err)
 	}
 
-	_, err = s.GetSecretKey(ctx, ns, oauth2.ClientSecret)
-	if err != nil {
-		return fmt.Errorf("failed to get oauth2 client secret: %w", err)
+	switch ptr.Deref(oauth2.GrantType, monitoringv1.GrantTypeClientCredentials) {
+	case monitoringv1.GrantTypeClientCredentials:
+		if oauth2.ClientSecret == nil {
+			return fmt.Errorf("oauth2 client secret is required for client_credentials grant type")
+		}
+		if _, err := s.GetSecretKey(ctx, ns, *oauth2.ClientSecret); err != nil {
+			return fmt.Errorf("failed to get oauth2 client secret: %w", err)
+		}
+	case monitoringv1.GrantTypeJWTBearer:
+		if oauth2.ClientCertificateKey == nil {
+			return fmt.Errorf("oauth2 client certificate key is required for jwt_bearer grant type")
+		}
+		if _, err := s.GetSecretKey(ctx, ns, *oauth2.ClientCertificateKey); err != nil {
+			return fmt.Errorf("failed to get oauth2 client certificate key: %w", err)
+		}
 	}
 
-	err = s.AddProxyConfig(ctx, ns, oauth2.ProxyConfig)
-	if err != nil {
+	if err := s.AddProxyConfig(ctx, ns, oauth2.ProxyConfig); err != nil {
 		return fmt.Errorf("failed to get oauth2 proxyConfig: %w", err)
 	}
 
-	err = s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig)
-	if err != nil {
+	if err := s.AddSafeTLSConfig(ctx, ns, oauth2.TLSConfig); err != nil {
 		return fmt.Errorf("failed to get oauth2 tlsConfig: %w", err)
 	}
 

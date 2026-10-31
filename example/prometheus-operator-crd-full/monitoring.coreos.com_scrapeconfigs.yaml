@@ -255,6 +255,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -316,6 +394,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -345,6 +424,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -403,6 +503,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -579,13 +691,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: |-
                         port defines the port to scrape metrics from. If using the public IP address, this must
@@ -1067,6 +1213,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -1128,6 +1352,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -1157,6 +1382,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1215,6 +1461,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -1391,13 +1649,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     partition:
                       description: partition defines the admin Partitions are only
                         supported in Consul Enterprise.
@@ -1770,6 +2062,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -1831,6 +2201,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -1860,6 +2231,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -1918,6 +2310,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -2094,13 +2498,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -2548,6 +2986,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -2609,6 +3125,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -2638,6 +3155,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -2696,6 +3234,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -2872,13 +3422,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -3272,6 +3856,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -3333,6 +3995,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -3362,6 +4025,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -3420,6 +4104,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -3596,13 +4292,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: |-
                         port defines the port to scrape metrics from. If using the public IP address, this must
@@ -4333,6 +5063,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -4394,6 +5202,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -4423,6 +5232,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -4481,6 +5311,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -4657,13 +5499,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -5135,6 +6011,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -5196,6 +6150,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -5225,6 +6180,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5283,6 +6259,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -5459,13 +6447,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -5842,6 +6864,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -5903,6 +7003,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -5932,6 +7033,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -5990,6 +7112,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -6166,13 +7300,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -6475,6 +7643,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -6536,6 +7782,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -6565,6 +7812,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -6623,6 +7891,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -6799,13 +8079,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -7224,6 +8538,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -7285,6 +8677,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -7314,6 +8707,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -7372,6 +8786,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -7548,13 +8974,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -7959,6 +9419,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -8020,6 +9558,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -8049,6 +9588,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8107,6 +9667,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -8283,13 +9855,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -8695,6 +10301,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -8756,6 +10440,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -8785,6 +10470,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -8843,6 +10549,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -9019,13 +10737,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -9357,6 +11109,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -9418,6 +11248,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -9447,6 +11278,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -9505,6 +11357,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -9681,13 +11545,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
@@ -10203,6 +12101,84 @@ spec:
                       description: oauth2 defines the configuration to use on every
                         scrape request.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -10264,6 +12240,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -10293,6 +12270,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10351,6 +12349,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -10527,13 +12537,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     proxyConnectHeader:
                       additionalProperties:
                         items:
@@ -10782,6 +12826,84 @@ spec:
                 description: oauth2 defines the configuration to use on every scrape
                   request.
                 properties:
+                  audience:
+                    description: |-
+                      audience defines the intended audience of the JWT token request.
+                      If empty, the value of TokenURL is used as the intended audience.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    minLength: 1
+                    type: string
+                  claims:
+                    description: |-
+                      claims defines a map of additional claims to include in the JWT token.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    items:
+                      description: |-
+                        Entry represents a key-value pair and is used as a general-purpose
+                        replacement for `map[string]string` in the API. Kubernetes API
+                        conventions discourage the use of map types in certain contexts
+                        (e.g. list-type fields), so this struct provides an equivalent
+                        representation as a list of entries.
+                      properties:
+                        key:
+                          description: key defines the map key.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                        value:
+                          description: value defines the map value.
+                          maxLength: 2048
+                          type: string
+                      required:
+                      - key
+                      type: object
+                    maxItems: 100
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - key
+                    x-kubernetes-list-type: map
+                  clientCertificateKey:
+                    description: |-
+                      clientCertificateKey defines a key of a Secret containing the RSA
+                      private key used to sign JWT tokens.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    properties:
+                      key:
+                        description: The key of the secret to select from.  Must be
+                          a valid secret key.
+                        type: string
+                      name:
+                        default: ""
+                        description: |-
+                          Name of the referent.
+                          This field is effectively required, but due to backwards compatibility is
+                          allowed to be empty. Instances of this type with an empty value here are
+                          almost certainly wrong.
+                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        type: string
+                      optional:
+                        description: Specify whether the Secret or its key must be
+                          defined
+                        type: boolean
+                    required:
+                    - key
+                    type: object
+                    x-kubernetes-map-type: atomic
+                  clientCertificateKeyId:
+                    description: |-
+                      clientCertificateKeyId defines the JWT key identifier to include
+                      in the JWT token header.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    minLength: 1
+                    type: string
                   clientId:
                     description: |-
                       clientId defines a key of a Secret or ConfigMap containing the
@@ -10843,6 +12965,7 @@ spec:
                     description: |-
                       clientSecret defines a key of a Secret containing the OAuth2
                       client's secret.
+                      Only used when grantType is set to "ClientCredentials" or empty.
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -10872,6 +12995,27 @@ spec:
                       endpointParams configures the HTTP parameters to append to the token
                       URL.
                     type: object
+                  grantType:
+                    description: |-
+                      grantType defines the OAuth2 grant type to use. It can be one of
+                      "ClientCredentials" or "JWTBearer".
+                      If empty, defaults to "ClientCredentials".
+
+                      It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                      grant type requires Alertmanager >= v0.30.0.
+                    enum:
+                    - ClientCredentials
+                    - JWTBearer
+                    minLength: 1
+                    type: string
+                  issuer:
+                    description: |-
+                      issuer defines the issuer claim for JWT tokens.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    minLength: 1
+                    type: string
                   noProxy:
                     description: |-
                       noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -10930,6 +13074,18 @@ spec:
                     items:
                       type: string
                     type: array
+                  signatureAlgorithm:
+                    description: |-
+                      signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                      Valid values are RS256, RS384, RS512. Defaults to RS256.
+                      Only used when grantType is set to "JWTBearer".
+
+                      It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                    enum:
+                    - RS256
+                    - RS384
+                    - RS512
+                    type: string
                   tlsConfig:
                     description: |-
                       tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -11105,13 +13261,45 @@ spec:
                     type: object
                   tokenUrl:
                     description: tokenUrl defines the URL to fetch the token from.
+                    minLength: 1
                     pattern: ^(http|https)://.+$
                     type: string
                 required:
                 - clientId
-                - clientSecret
                 - tokenUrl
                 type: object
+                x-kubernetes-validations:
+                - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                    or empty
+                  rule: '!has(self.clientSecret) || !has(self.grantType) || self.grantType
+                    == ''ClientCredentials'''
+                - message: clientSecret is required when grantType is 'ClientCredentials'
+                    or empty
+                  rule: (has(self.grantType) && self.grantType == 'JWTBearer') ||
+                    has(self.clientSecret)
+                - message: clientCertificateKey is only allowed when grantType is
+                    'JWTBearer'
+                  rule: '!has(self.clientCertificateKey) || (has(self.grantType) &&
+                    self.grantType == ''JWTBearer'')'
+                - message: clientCertificateKey is required when grantType is 'JWTBearer'
+                  rule: '!has(self.grantType) || self.grantType != ''JWTBearer'' ||
+                    has(self.clientCertificateKey)'
+                - message: clientCertificateKeyId is only allowed when grantType is
+                    'JWTBearer'
+                  rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                    && self.grantType == ''JWTBearer'')'
+                - message: signatureAlgorithm is only allowed when grantType is 'JWTBearer'
+                  rule: '!has(self.signatureAlgorithm) || (has(self.grantType) &&
+                    self.grantType == ''JWTBearer'')'
+                - message: issuer is only allowed when grantType is 'JWTBearer'
+                  rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                    == ''JWTBearer'')'
+                - message: audience is only allowed when grantType is 'JWTBearer'
+                  rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                    == ''JWTBearer'')'
+                - message: claims is only allowed when grantType is 'JWTBearer'
+                  rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                    == ''JWTBearer'')'
               openstackSDConfigs:
                 description: openstackSDConfigs defines a list of OpenStack service
                   discovery configurations.
@@ -11718,6 +13906,84 @@ spec:
                         oauth2 defines the optional OAuth 2.0 configuration to authenticate against the target HTTP endpoint.
                         Cannot be set at the same time as `authorization`, or `basicAuth`.
                       properties:
+                        audience:
+                          description: |-
+                            audience defines the intended audience of the JWT token request.
+                            If empty, the value of TokenURL is used as the intended audience.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
+                        claims:
+                          description: |-
+                            claims defines a map of additional claims to include in the JWT token.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          items:
+                            description: |-
+                              Entry represents a key-value pair and is used as a general-purpose
+                              replacement for `map[string]string` in the API. Kubernetes API
+                              conventions discourage the use of map types in certain contexts
+                              (e.g. list-type fields), so this struct provides an equivalent
+                              representation as a list of entries.
+                            properties:
+                              key:
+                                description: key defines the map key.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              value:
+                                description: value defines the map value.
+                                maxLength: 2048
+                                type: string
+                            required:
+                            - key
+                            type: object
+                          maxItems: 100
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - key
+                          x-kubernetes-list-type: map
+                        clientCertificateKey:
+                          description: |-
+                            clientCertificateKey defines a key of a Secret containing the RSA
+                            private key used to sign JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              default: ""
+                              description: |-
+                                Name of the referent.
+                                This field is effectively required, but due to backwards compatibility is
+                                allowed to be empty. Instances of this type with an empty value here are
+                                almost certainly wrong.
+                                More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                          x-kubernetes-map-type: atomic
+                        clientCertificateKeyId:
+                          description: |-
+                            clientCertificateKeyId defines the JWT key identifier to include
+                            in the JWT token header.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         clientId:
                           description: |-
                             clientId defines a key of a Secret or ConfigMap containing the
@@ -11779,6 +14045,7 @@ spec:
                           description: |-
                             clientSecret defines a key of a Secret containing the OAuth2
                             client's secret.
+                            Only used when grantType is set to "ClientCredentials" or empty.
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -11808,6 +14075,27 @@ spec:
                             endpointParams configures the HTTP parameters to append to the token
                             URL.
                           type: object
+                        grantType:
+                          description: |-
+                            grantType defines the OAuth2 grant type to use. It can be one of
+                            "ClientCredentials" or "JWTBearer".
+                            If empty, defaults to "ClientCredentials".
+
+                            It requires Prometheus >= v3.9.0. For Alertmanager, the JWTBearer
+                            grant type requires Alertmanager >= v0.30.0.
+                          enum:
+                          - ClientCredentials
+                          - JWTBearer
+                          minLength: 1
+                          type: string
+                        issuer:
+                          description: |-
+                            issuer defines the issuer claim for JWT tokens.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          minLength: 1
+                          type: string
                         noProxy:
                           description: |-
                             noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
@@ -11866,6 +14154,18 @@ spec:
                           items:
                             type: string
                           type: array
+                        signatureAlgorithm:
+                          description: |-
+                            signatureAlgorithm defines the RSA algorithm used to sign JWT tokens.
+                            Valid values are RS256, RS384, RS512. Defaults to RS256.
+                            Only used when grantType is set to "JWTBearer".
+
+                            It requires Prometheus >= v3.9.0 and Alertmanager >= v0.30.0.
+                          enum:
+                          - RS256
+                          - RS384
+                          - RS512
+                          type: string
                         tlsConfig:
                           description: |-
                             tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
@@ -12042,13 +14342,47 @@ spec:
                         tokenUrl:
                           description: tokenUrl defines the URL to fetch the token
                             from.
+                          minLength: 1
                           pattern: ^(http|https)://.+$
                           type: string
                       required:
                       - clientId
-                      - clientSecret
                       - tokenUrl
                       type: object
+                      x-kubernetes-validations:
+                      - message: clientSecret is only allowed when grantType is 'ClientCredentials'
+                          or empty
+                        rule: '!has(self.clientSecret) || !has(self.grantType) ||
+                          self.grantType == ''ClientCredentials'''
+                      - message: clientSecret is required when grantType is 'ClientCredentials'
+                          or empty
+                        rule: (has(self.grantType) && self.grantType == 'JWTBearer')
+                          || has(self.clientSecret)
+                      - message: clientCertificateKey is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKey) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: clientCertificateKey is required when grantType is
+                          'JWTBearer'
+                        rule: '!has(self.grantType) || self.grantType != ''JWTBearer''
+                          || has(self.clientCertificateKey)'
+                      - message: clientCertificateKeyId is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.clientCertificateKeyId) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: signatureAlgorithm is only allowed when grantType
+                          is 'JWTBearer'
+                        rule: '!has(self.signatureAlgorithm) || (has(self.grantType)
+                          && self.grantType == ''JWTBearer'')'
+                      - message: issuer is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.issuer) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: audience is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.audience) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
+                      - message: claims is only allowed when grantType is 'JWTBearer'
+                        rule: '!has(self.claims) || (has(self.grantType) && self.grantType
+                          == ''JWTBearer'')'
                     port:
                       description: port defines the port to scrape metrics from. If
                         using the public IP address, this must
