@@ -5936,7 +5936,7 @@
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "oauth2 defines the configuration to use on every scrape request.",
+                          "description": "oauth2 defines the configuration to use on every scrape request.\nCannot be set at the same time as `authorization`.",
                           "properties": {
                             "clientId": {
                               "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -6460,10 +6460,15 @@
                         }
                       },
                       "required": [
-                        "authorization",
                         "datacenterID"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of authorization or oauth2 can be configured",
+                          "rule": "[has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1"
+                        }
+                      ]
                     },
                     "type": "array"
                   },

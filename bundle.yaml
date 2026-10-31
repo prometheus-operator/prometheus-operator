@@ -58802,8 +58802,9 @@ spec:
                         It requires Prometheus >= v2.43.0, Alertmanager >= v0.25.0 or Thanos >= v0.32.0.
                       type: string
                     oauth2:
-                      description: oauth2 defines the configuration to use on every
-                        scrape request.
+                      description: |-
+                        oauth2 defines the configuration to use on every scrape request.
+                        Cannot be set at the same time as `authorization`.
                       properties:
                         clientId:
                           description: |-
@@ -59366,9 +59367,12 @@ spec:
                           type: string
                       type: object
                   required:
-                  - authorization
                   - datacenterID
                   type: object
+                  x-kubernetes-validations:
+                  - message: at most one of authorization or oauth2 can be configured
+                    rule: '[has(self.authorization), has(self.oauth2)].filter(x, x).size()
+                      <= 1'
                 type: array
               jobName:
                 description: |-

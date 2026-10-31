@@ -29600,6 +29600,7 @@ SafeAuthorization
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>authorization defines the header configuration to authenticate against the IONOS API.
 Cannot be set at the same time as <code>oauth2</code>.</p>
 </td>
@@ -29709,7 +29710,8 @@ OAuth2
 </td>
 <td>
 <em>(Optional)</em>
-<p>oauth2 defines the configuration to use on every scrape request.</p>
+<p>oauth2 defines the configuration to use on every scrape request.
+Cannot be set at the same time as <code>authorization</code>.</p>
 </td>
 </tr>
 </tbody>
