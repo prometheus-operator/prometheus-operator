@@ -764,8 +764,15 @@
                       "required": [
                         "subscriptionID"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "basicAuth": {
@@ -1550,8 +1557,15 @@
                       "required": [
                         "server"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "convertClassicHistogramsToNHCB": {
@@ -2132,8 +2146,15 @@
                           "type": "object"
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of authorization or oauth2 can be configured",
+                          "rule": "!(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "dnsSDConfigs": {
@@ -2857,8 +2878,15 @@
                       "required": [
                         "host"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "dockerSwarmSDConfigs": {
@@ -3538,8 +3566,15 @@
                         "host",
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "ec2SDConfigs": {
@@ -4501,8 +4536,15 @@
                       "required": [
                         "server"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "extraScrapeMetrics": {
@@ -5237,8 +5279,15 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "honorLabels": {
@@ -5876,8 +5925,15 @@
                       "required": [
                         "url"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "ionosSDConfigs": {
@@ -7180,8 +7236,15 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "kumaSDConfigs": {
@@ -7821,8 +7884,15 @@
                       "required": [
                         "server"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "labelLimit": {
@@ -8530,8 +8600,15 @@
                           "type": "object"
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "linodeSDConfigs": {
@@ -9118,8 +9195,15 @@
                           "type": "object"
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of authorization or oauth2 can be configured",
+                          "rule": "!(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "metricRelabelings": {
@@ -9884,8 +9968,15 @@
                       "required": [
                         "server"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "oauth2": {
@@ -11283,8 +11374,15 @@
                         "query",
                         "url"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+                          "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
+                        }
+                      ]
                     },
+                    "maxItems": 100,
                     "type": "array"
                   },
                   "relabelings": {
@@ -11928,7 +12026,7 @@
                 "x-kubernetes-validations": [
                   {
                     "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
-                    "rule": "[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1"
+                    "rule": "!(has(self.basicAuth) && has(self.authorization)) && !(has(self.basicAuth) && has(self.oauth2)) && !(has(self.authorization) && has(self.oauth2))"
                   }
                 ]
               },
