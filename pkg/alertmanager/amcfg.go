@@ -1184,11 +1184,8 @@ func (cb *ConfigBuilder) convertOpsgenieConfig(ctx context.Context, in monitorin
 		Priority:      ptr.Deref(in.Priority, ""),
 		Actions:       ptr.Deref(in.Actions, ""),
 		Entity:        ptr.Deref(in.Entity, ""),
+		APIURL:        ptr.Deref((*string)(in.APIURL), ""),
 		UpdateAlerts:  in.UpdateAlerts,
-	}
-
-	if in.APIURL != nil {
-		out.APIURL = string(*in.APIURL)
 	}
 
 	if in.APIKey != nil {
