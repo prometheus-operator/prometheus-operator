@@ -3,4 +3,5 @@ global:
   external_labels:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
+runtime: {}
 scrape_configs: []

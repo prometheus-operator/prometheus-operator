@@ -351,8 +351,8 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		}
 	}
 
-	if a.Spec.LogLevel != "" && a.Spec.LogLevel != "info" {
-		amArgs = append(amArgs, monitoringv1.Argument{Name: "log.level", Value: a.Spec.LogLevel})
+	if a.Spec.LogLevel != "" {
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "log.level", Value: strings.ToLower(string(a.Spec.LogLevel))})
 	}
 
 	if version.GTE(semver.MustParse("0.16.0")) {
@@ -801,7 +801,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			operator.ListenLocal(a.Spec.ListenLocal),
 			operator.LocalHost(config.LocalHost),
 			operator.LogFormat(a.Spec.LogFormat),
-			operator.LogLevel(a.Spec.LogLevel),
+			operator.LogLevel(string(a.Spec.LogLevel)),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),
@@ -823,7 +823,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 			operator.ReloaderConfig(config.ReloaderConfig),
 			operator.InitContainer(),
 			operator.LogFormat(a.Spec.LogFormat),
-			operator.LogLevel(a.Spec.LogLevel),
+			operator.LogLevel(string(a.Spec.LogLevel)),
 			operator.WatchedDirectories(watchedDirectories),
 			operator.VolumeMounts(configReloaderVolumeMounts),
 			operator.Shard(-1),

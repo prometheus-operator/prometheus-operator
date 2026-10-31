@@ -4,6 +4,7 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []
 otlp:
   label_name_preserve_multiple_underscores: false
