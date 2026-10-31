@@ -85,6 +85,19 @@ func (b *HTTPConfigApplyConfiguration) WithEnableHTTP2(value bool) *HTTPConfigAp
 	return b
 }
 
+// WithHTTPHeaders adds the given value to the HTTPHeaders field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the HTTPHeaders field.
+func (b *HTTPConfigApplyConfiguration) WithHTTPHeaders(values ...*HTTPHeaderApplyConfiguration) *HTTPConfigApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithHTTPHeaders")
+		}
+		b.HTTPConfigWithoutTLSApplyConfiguration.HTTPHeaders = append(b.HTTPConfigWithoutTLSApplyConfiguration.HTTPHeaders, *values[i])
+	}
+	return b
+}
+
 // WithTLSConfig sets the TLSConfig field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the TLSConfig field is set to the value of the last call.
