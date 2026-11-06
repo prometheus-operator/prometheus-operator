@@ -4318,6 +4318,333 @@ func TestGenerateConfig(t *testing.T) {
 	}
 }
 
+func TestGenerateConfigDiscordReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version24, err := semver.ParseTolerant("v0.24.0")
+	require.NoError(t, err)
+
+	version25, err := semver.ParseTolerant("v0.25.0")
+	require.NoError(t, err)
+
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	testCases := []testCase{
+		{
+			name:      "CR with Discord Receiver",
+			amVersion: &version25,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "discord-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://discord.com/api/webhooks/id/token"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+										Title:   new("test title"),
+										Message: new("test message"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver.golden",
+		},
+		{
+			name:      "CR with Discord Receiver with Content, Username and AvatarURL",
+			amVersion: &version28,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "discord-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://discord.com/api/webhooks/id/token"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+										Title:     new("test title"),
+										Message:   new("test message"),
+										Content:   new("test content"),
+										Username:  new("test username"),
+										AvatarURL: ptr.To(monitoringv1alpha1.URL("https://example.com/avatar.png")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver_Content_Username_AvatarURL.golden",
+		},
+		{
+			name:      "CR with Discord Receiver with Partial Conf",
+			amVersion: &version25,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "discord-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://discord.com/api/webhooks/id/token"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver_Partial_Conf.golden",
+		},
+		{
+			name:      "CR with Discord Receiver drops Content, Username and AvatarURL for unsupported versions",
+			amVersion: &version27,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "discord-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://discord.com/api/webhooks/id/token"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+										Title:     new("test title"),
+										Message:   new("test message"),
+										Content:   new("test content"),
+										Username:  new("test username"),
+										AvatarURL: ptr.To(monitoringv1alpha1.URL("https://example.com/avatar.png")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver_Unsupported_Fields_Dropped.golden",
+		},
+		{
+			name:      "CR with Discord Receiver returns error for unsupported versions",
+			amVersion: &version24,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "discord-secret",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"url": []byte("https://discord.com/api/webhooks/id/token"),
+					},
+				},
+			),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedError: true,
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestGenerateConfigMSTeamsReceiver(t *testing.T) {
 	type testCase struct {
 		name            string
@@ -5275,12 +5602,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
 	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
 
-	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
-	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
-
-	versionDiscordMessageFieldsAllowed := semver.Version{Major: 0, Minor: 28}
-	versionDiscordMessageFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
-
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -5641,189 +5962,6 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "api_key_file_is_dropped_for_unsupported_versions.golden",
-		},
-		{
-			name:           "discord_config for supported versions",
-			againstVersion: versionDiscordAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			golden: "discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "discord_config returns error for unsupported versions",
-			againstVersion: versionDiscordNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test content is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Content:    "content added for unsupported version",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_content_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test content is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Content:    "content added for supported version",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_content_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test username is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Username:   "discord_admin",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_username_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test username is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Username:   "discord_admin",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_username_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test avatar_url is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								AvatarURL:  "http://example.com/discord_avatar",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_avatar_url_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test avatar_url is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								AvatarURL:  "http://example.com/discord_avatar",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "discord_config with webhook url file set",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			golden: "discord_config_with_webhook_url_file_set.golden",
-		},
-		{
-			name:           "discord_config both webhook url and webhook url file set",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL:     "http://example.com",
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "discord_config webhook url file dropped for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
 		},
 		{
 			name:           "webex_config for supported versions",
@@ -8487,15 +8625,55 @@ func TestSanitizeJiraConfig(t *testing.T) {
 func TestSanitizeDiscordConfig(t *testing.T) {
 	logger := newNopLogger(t)
 
+	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
+	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
+
+	// Username, Content, WebhookURLFile and AvatarURL supported in the same version
+	versionDiscordContentFieldsAllowed := semver.Version{Major: 0, Minor: 28}
+	versionDiscordContentFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
+			name:           "discord_config for supported versions",
+			againstVersion: versionDiscordAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "discord_config returns error for unsupported versions",
+			againstVersion: versionDiscordNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "Test Username field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8514,7 +8692,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Username field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8533,7 +8711,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test AvatarURL field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8552,7 +8730,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test AvatarURL field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8571,7 +8749,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Content field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8590,7 +8768,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Content field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8607,9 +8785,63 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 			},
 			golden: "Discord_content_add_in_supported_versions_config.golden",
 		},
+		{
+			name:           "discord_config with webhook url file set",
+			againstVersion: versionDiscordContentFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_with_webhook_url_file_set.golden",
+		},
+		{
+			name:           "discord_config both webhook url and webhook url file set",
+			againstVersion: versionDiscordContentFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "discord_config webhook url file dropped for unsupported versions",
+			againstVersion: versionDiscordContentFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)

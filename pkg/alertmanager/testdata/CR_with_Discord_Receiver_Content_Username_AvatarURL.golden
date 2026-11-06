@@ -1,0 +1,18 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  discord_configs:
+  - webhook_url: https://discord.com/api/webhooks/id/token
+    title: test title
+    message: test message
+    content: test content
+    username: test username
+    avatar_url: https://example.com/avatar.png
+templates: []

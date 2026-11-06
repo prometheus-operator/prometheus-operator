@@ -1540,6 +1540,18 @@ func checkDiscordConfigs(
 			return err
 		}
 
+		if amVersion.LT(semver.MustParse("0.28.0")) {
+			if ptr.Deref(config.Content, "") != "" {
+				return fmt.Errorf(`'content' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+			if ptr.Deref(config.Username, "") != "" {
+				return fmt.Errorf(`'username' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+			if ptr.Deref(config.AvatarURL, "") != "" {
+				return fmt.Errorf(`'avartarURL' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+		}
+
 		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve API URL: %w", err)

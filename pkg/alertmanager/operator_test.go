@@ -2164,6 +2164,12 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 	version25, err := semver.ParseTolerant("v0.25.0")
 	require.NoError(t, err)
 
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
 	c := fake.NewClientset(
 		&corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2276,6 +2282,150 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 			},
 			version: &version25,
 			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-content-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Content: new("content"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-content-supported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Content: new("content"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version28,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-username-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Username: new("username"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-username-supported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								Username: new("username"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version28,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-avatar-url-unsupported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								AvatarURL: ptr.To(monitoringv1alpha1.URL("https://example.com/avatar.png")),
+							},
+						},
+					}},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "discord-avatar-url-supported-version",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+							{
+								APIURL: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+									Key:                  "key1",
+								},
+								AvatarURL: ptr.To(monitoringv1alpha1.URL("https://example.com/avatar.png")),
+							},
+						},
+					}},
+				},
+			},
+			version: &version28,
+			ok:      true,
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {

@@ -941,23 +941,11 @@ func (cb *ConfigBuilder) convertWebhookConfig(ctx context.Context, in monitoring
 
 func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoringv1alpha1.DiscordConfig, crKey types.NamespacedName) (*discordConfig, error) {
 	out := &discordConfig{
+		Title:         ptr.Deref(in.Title, ""),
+		Message:       ptr.Deref(in.Message, ""),
+		Content:       ptr.Deref(in.Content, ""),
+		Username:      ptr.Deref(in.Username, ""),
 		VSendResolved: in.SendResolved,
-	}
-
-	if in.Title != nil && *in.Title != "" {
-		out.Title = *in.Title
-	}
-
-	if in.Message != nil && *in.Message != "" {
-		out.Message = *in.Message
-	}
-
-	if in.Content != nil && *in.Content != "" {
-		out.Content = *in.Content
-	}
-
-	if in.Username != nil && *in.Username != "" {
-		out.Username = *in.Username
 	}
 
 	if in.AvatarURL != nil && *in.AvatarURL != "" {
