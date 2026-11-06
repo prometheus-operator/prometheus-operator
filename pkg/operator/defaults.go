@@ -119,6 +119,12 @@ var (
 		"v3.13.4",
 		"v3.13.5",
 		"v3.14.0",
+		// The v3.15.x is skipped: releases built with Go 1.27 lose HTTP/2 ALPN
+		// negotiation (exporter-toolkit < v0.20.0 returns an empty NextProtos
+		// list on TLS config reload), see
+		// https://github.com/prometheus/prometheus/issues/19807.
+		// The fix is included in v3.16.0.
+		"v3.16.0",
 	}
 )
 
