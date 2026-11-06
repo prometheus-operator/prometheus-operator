@@ -2831,6 +2831,13 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
 
 	am := framework.MakeBasicAlertmanager(ns, "basic-am", 3)
+	// An explicit rollingUpdate block lets Kubernetes default partition to zero,
+	// avoiding the Parallel rollout loop in Kubernetes 1.37.
+	// See https://github.com/kubernetes/kubernetes/issues/143532.
+	am.Spec.UpdateStrategy = &monitoringv1.StatefulSetUpdateStrategy{
+		Type:          monitoringv1.RollingUpdateStatefulSetStrategyType,
+		RollingUpdate: &monitoringv1.RollingUpdateStatefulSetStrategy{},
+	}
 	am.Spec.MinReadySeconds = new(int32(5))
 	am, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), am)
 	require.NoError(t, err)
@@ -2839,6 +2846,8 @@ func testAlertManagerMinReadySeconds(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, int32(5), amSS.Spec.MinReadySeconds)
+	require.NotNil(t, amSS.Spec.UpdateStrategy.RollingUpdate)
+	require.Equal(t, new(int32(0)), amSS.Spec.UpdateStrategy.RollingUpdate.Partition)
 
 	_, err = framework.PatchAlertmanagerAndWaitUntilReady(context.Background(), am.Name, am.Namespace, monitoringv1.AlertmanagerSpec{MinReadySeconds: new(int32(10))})
 	require.NoError(t, err)
