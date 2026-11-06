@@ -213,7 +213,7 @@ spec:
   selector:
     matchLabels:
       app: example-app
-  endpoints:
+  podMetricsEndpoints:
   - port: web
     metricRelabelings:
     - sourceLabels:
