@@ -22,6 +22,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/relabel"
+	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
@@ -103,8 +104,9 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 		return fmt.Errorf("%s relabel action is only supported from Prometheus version 2.41.0", rc.Action)
 	}
 
-	if _, err := relabel.NewRegexp(rc.Regex); err != nil {
-		return fmt.Errorf("invalid regex %s for relabel configuration: %w", rc.Regex, err)
+	regex := ptr.Deref(rc.Regex, "")
+	if _, err := relabel.NewRegexp(regex); err != nil {
+		return fmt.Errorf("invalid regex %s for relabel configuration: %w", regex, err)
 	}
 
 	if rc.Modulus == 0 && action == string(relabel.HashMod) {
@@ -140,7 +142,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
-		if (rc.Regex != "" && rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
+		if (rc.Regex != nil && *rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
 			(rc.Modulus != 0 &&
 				rc.Modulus != int64(relabel.DefaultRelabelConfig.Modulus)) ||
 			(rc.Separator != nil &&

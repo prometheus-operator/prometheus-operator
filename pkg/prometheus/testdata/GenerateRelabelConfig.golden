@@ -79,6 +79,10 @@ scrape_configs:
     replacement: ""
     action: replace
   - source_labels:
+    - __name__
+    regex: ""
+    action: keep
+  - source_labels:
     - __address__
     - __tmp_hash
     target_label: __tmp_hash
