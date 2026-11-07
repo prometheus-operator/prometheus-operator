@@ -3845,279 +3845,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_with_UpdateMessage.golden",
 		},
 		{
-			name: "CR with SNS Receiver with Access and Key",
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-sns-test",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"key":    []byte("xyz"),
-						"secret": []byte("123"),
-					},
-				}),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
-									Sigv4: &monitoringv1.Sigv4{
-										Region: "us-east-2",
-										AccessKey: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "am-sns-test",
-											},
-											Key: "key",
-										},
-										SecretKey: &corev1.SecretKeySelector{
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "am-sns-test",
-											},
-											Key: "secret",
-										},
-									},
-									TopicARN: new("test-topicARN"),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_Access_and_Key.golden",
-		},
-		{
-			name: "CR with SNS Receiver with roleARN",
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-sns-test",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"key":    []byte("xyz"),
-						"secret": []byte("123"),
-					},
-				}),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
-									Sigv4: &monitoringv1.Sigv4{
-										Region:  "us-east-2",
-										RoleArn: "test-roleARN",
-									},
-									TopicARN: new("test-topicARN"),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
-		},
-		{
-			name:      "CR with SNS Receiver with roleARN and externalId",
-			amVersion: &semver.Version{Major: 0, Minor: 34},
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-sns-test",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"key":    []byte("xyz"),
-						"secret": []byte("123"),
-					},
-				}),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
-									Sigv4: &monitoringv1.Sigv4{
-										Region:     "us-east-2",
-										RoleArn:    "test-roleARN",
-										ExternalID: "test-externalId",
-									},
-									TopicARN: new("test-topicARN"),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId.golden",
-		},
-		{
-			name:      "CR with SNS Receiver with roleARN and externalId in old am version",
-			amVersion: &semver.Version{Major: 0, Minor: 31},
-			kclient: fake.NewClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "am-sns-test",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"key":    []byte("xyz"),
-						"secret": []byte("123"),
-					},
-				}),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
-									Sigv4: &monitoringv1.Sigv4{
-										Region:     "us-east-2",
-										RoleArn:    "test-roleARN",
-										ExternalID: "test-externalId",
-									},
-									TopicARN: new("test-topicARN"),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId_in_old_amVersion.golden",
-		},
-		{
-			name:      "CR with SNS Receiver with useAWSHTTPClient",
-			amVersion: &semver.Version{Major: 0, Minor: 33},
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL:           new("https://sns.us-east-2.amazonaws.com"),
-									TopicARN:         new("test-topicARN"),
-									UseAWSHTTPClient: new(true),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_useAWSHTTPClient.golden",
-		},
-		{
-			name:      "CR with SNS Receiver with useAWSHTTPClient in old am version",
-			amVersion: &semver.Version{Major: 0, Minor: 31},
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							SNSConfigs: []monitoringv1alpha1.SNSConfig{
-								{
-									ApiURL:           new("https://sns.us-east-2.amazonaws.com"),
-									TopicARN:         new("test-topicARN"),
-									UseAWSHTTPClient: new(true),
-								},
-							},
-						}},
-					},
-				},
-			},
-			golden: "CR_with_SNS_Receiver_with_useAWSHTTPClient_in_old_amVersion.golden",
-		},
-		{
 			name:    "CR with Mute Time Intervals",
 			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
@@ -5220,6 +4947,341 @@ func TestGenerateConfigEmailReceiver(t *testing.T) {
 				},
 			},
 			golden: "CR_with_EmailConfig_with_Threading.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestGenerateConfigSNSReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version31, err := semver.ParseTolerant("v0.31.0")
+	require.NoError(t, err)
+
+	version33, err := semver.ParseTolerant("v0.33.0")
+	require.NoError(t, err)
+
+	version34, err := semver.ParseTolerant("v0.34.0")
+	require.NoError(t, err)
+
+	testCases := []testCase{
+		{
+			name: "CR with SNS Receiver with Access and Key",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region: "us-east-2",
+										AccessKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "am-sns-test",
+											},
+											Key: "key",
+										},
+										SecretKey: &corev1.SecretKeySelector{
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "am-sns-test",
+											},
+											Key: "secret",
+										},
+									},
+									TopicARN: new("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_Access_and_Key.golden",
+		},
+		{
+			name: "CR with SNS Receiver with roleARN",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:  "us-east-2",
+										RoleArn: "test-roleARN",
+									},
+									TopicARN: new("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_roleARN.golden",
+		},
+		{
+			name:      "CR with SNS Receiver with roleARN and externalId",
+			amVersion: &version34,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:     "us-east-2",
+										RoleArn:    "test-roleARN",
+										ExternalID: "test-externalId",
+									},
+									TopicARN: new("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId.golden",
+		},
+		{
+			name:      "CR with SNS Receiver with roleARN and externalId in old am version",
+			amVersion: &version31,
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "am-sns-test",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"key":    []byte("xyz"),
+						"secret": []byte("123"),
+					},
+				}),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL: new("https://sns.us-east-2.amazonaws.com"),
+									Sigv4: &monitoringv1.Sigv4{
+										Region:     "us-east-2",
+										RoleArn:    "test-roleARN",
+										ExternalID: "test-externalId",
+									},
+									TopicARN: new("test-topicARN"),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_roleARN_and_externalId_in_old_amVersion.golden",
+		},
+		{
+			name:      "CR with SNS Receiver with useAWSHTTPClient",
+			amVersion: &version33,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL:           new("https://sns.us-east-2.amazonaws.com"),
+									TopicARN:         new("test-topicARN"),
+									UseAWSHTTPClient: new(true),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_useAWSHTTPClient.golden",
+		},
+		{
+			name:      "CR with SNS Receiver with useAWSHTTPClient in old am version",
+			amVersion: &version31,
+			kclient:   fake.NewClientset(),
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SNSConfigs: []monitoringv1alpha1.SNSConfig{
+								{
+									ApiURL:           new("https://sns.us-east-2.amazonaws.com"),
+									TopicARN:         new("test-topicARN"),
+									UseAWSHTTPClient: new(true),
+								},
+							},
+						}},
+					},
+				},
+			},
+			golden: "CR_with_SNS_Receiver_with_useAWSHTTPClient_in_old_amVersion.golden",
 		},
 	}
 
