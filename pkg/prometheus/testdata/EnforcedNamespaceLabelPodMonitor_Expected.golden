@@ -4,6 +4,7 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
   evaluation_interval: 30s
+runtime: {}
 scrape_configs:
 - job_name: podMonitor/pod-monitor-ns/testpodmonitor1/0
   honor_labels: false

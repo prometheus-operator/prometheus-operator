@@ -5,4 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   evaluation_interval: 30s
   rule_query_offset: 30s
+runtime: {}
 scrape_configs: []

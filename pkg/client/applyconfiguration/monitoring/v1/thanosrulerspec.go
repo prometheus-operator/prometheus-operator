@@ -181,7 +181,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// Deprecated: use excludedFromEnforcement instead.
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfigApplyConfiguration `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 	// logLevel for ThanosRuler to be configured with.
-	LogLevel *string `json:"logLevel,omitempty"`
+	LogLevel *monitoringv1.LogLevel `json:"logLevel,omitempty"`
 	// logFormat for ThanosRuler to be configured with.
 	LogFormat *string `json:"logFormat,omitempty"`
 	// portName defines the port name used for the pods and governing service.
@@ -682,7 +682,7 @@ func (b *ThanosRulerSpecApplyConfiguration) WithPrometheusRulesExcludedFromEnfor
 // WithLogLevel sets the LogLevel field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LogLevel field is set to the value of the last call.
-func (b *ThanosRulerSpecApplyConfiguration) WithLogLevel(value string) *ThanosRulerSpecApplyConfiguration {
+func (b *ThanosRulerSpecApplyConfiguration) WithLogLevel(value monitoringv1.LogLevel) *ThanosRulerSpecApplyConfiguration {
 	b.LogLevel = &value
 	return b
 }

@@ -4,4 +4,5 @@ global:
     prometheus: default/test
     prometheus_replica: $(POD_NAME)
   scrape_failure_log_file: /var/log/prometheus/file.log
+runtime: {}
 scrape_configs: []

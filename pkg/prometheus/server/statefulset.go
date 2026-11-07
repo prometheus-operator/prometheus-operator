@@ -19,6 +19,7 @@ import (
 	"maps"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/blang/semver/v4"
 	appsv1 "k8s.io/api/apps/v1"
@@ -698,10 +699,12 @@ func createThanosContainer(p *monitoringv1.Prometheus, c prompkg.Config, compact
 		}
 	}
 
-	if thanos.LogLevel != "" {
-		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: thanos.LogLevel})
-	} else if cpf.LogLevel != "" {
-		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: cpf.LogLevel})
+	logLevel := thanos.LogLevel
+	if logLevel == "" {
+		logLevel = cpf.LogLevel
+	}
+	if logLevel != "" {
+		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.level", Value: strings.ToLower(string(logLevel))})
 	}
 	if thanos.LogFormat != "" {
 		thanosArgs = append(thanosArgs, monitoringv1.Argument{Name: "log.format", Value: thanos.LogFormat})

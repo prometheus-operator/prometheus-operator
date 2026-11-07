@@ -5,6 +5,7 @@ global:
     prometheus_replica: $(POD_NAME)
   metric_name_validation_scheme: legacy
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []
 otlp:
   translation_strategy: UnderscoreEscapingWithSuffixes

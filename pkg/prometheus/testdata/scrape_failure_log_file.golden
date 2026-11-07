@@ -5,4 +5,5 @@ global:
     prometheus_replica: $(POD_NAME)
   scrape_failure_log_file: /tmp/file.log
   evaluation_interval: 30s
+runtime: {}
 scrape_configs: []

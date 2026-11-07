@@ -24,6 +24,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
 
 var reloaderConfig = ContainerConfig{
@@ -152,7 +154,7 @@ func TestCreateInitConfigReloader(t *testing.T) {
 func TestCreateConfigReloader(t *testing.T) {
 	containerName := "config-reloader"
 	logFormat := "logFormat"
-	logLevel := "logLevel"
+	logLevel := string(monitoringv1.LogLevelDebug)
 	configFile := "configFile"
 	webConfigFile := "webConfigFile"
 	configEnvsubstFile := "configEnvsubstFile"
@@ -188,8 +190,8 @@ func TestCreateConfigReloader(t *testing.T) {
 	if !slices.Contains(container.Args, "--reload-url=http://localhost:9093/-/reload") {
 		t.Errorf("Expected '--reload-url=http://localhost:9093/-/reload' not found in %s", container.Args)
 	}
-	if !slices.Contains(container.Args, "--log-level=logLevel") {
-		t.Errorf("Expected '--log-level=%s' not found in %s", logLevel, container.Args)
+	if !slices.Contains(container.Args, "--log-level=debug") {
+		t.Errorf("Expected '--log-level=debug' not found in %s", container.Args)
 	}
 	if !slices.Contains(container.Args, "--log-format=logFormat") {
 		t.Errorf("Expected '--log-format=%s' not found in %s", logFormat, container.Args)

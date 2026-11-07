@@ -2935,7 +2935,7 @@ func TestThanosAdditionalArgsNoError(t *testing.T) {
 		},
 		Spec: monitoringv1.PrometheusSpec{
 			Thanos: &monitoringv1.ThanosSpec{
-				LogLevel: "info",
+				LogLevel: monitoringv1.LogLevelInfo,
 				AdditionalArgs: []monitoringv1.Argument{
 					{
 						Name:  "reloader.watch-interval",

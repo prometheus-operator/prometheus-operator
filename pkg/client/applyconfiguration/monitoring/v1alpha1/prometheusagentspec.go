@@ -209,7 +209,7 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithPrometheusExternalLabelName(
 // WithLogLevel sets the LogLevel field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the LogLevel field is set to the value of the last call.
-func (b *PrometheusAgentSpecApplyConfiguration) WithLogLevel(value string) *PrometheusAgentSpecApplyConfiguration {
+func (b *PrometheusAgentSpecApplyConfiguration) WithLogLevel(value monitoringv1.LogLevel) *PrometheusAgentSpecApplyConfiguration {
 	b.CommonPrometheusFieldsApplyConfiguration.LogLevel = &value
 	return b
 }
