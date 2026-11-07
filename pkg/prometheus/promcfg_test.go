@@ -56,6 +56,12 @@ func defaultPrometheus() *monitoringv1.Prometheus {
 				},
 				Version:        operator.DefaultPrometheusVersion,
 				ScrapeInterval: "30s",
+				EnforceMetricRelabelings: []monitoringv1.RelabelConfig{
+					{
+						TargetLabel: "enforced_label",
+						Replacement: new("enforced_value"),
+					},
+				},
 			},
 			EvaluationInterval: "30s",
 		},

@@ -13,6 +13,8 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

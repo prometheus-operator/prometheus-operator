@@ -29029,6 +29029,102 @@ spec:
                 description: enableServiceLinks defines whether information about
                   services should be injected into pod's environment variables
                 type: boolean
+              enforceMetricRelabelings:
+                description: |-
+                  enforceMetricRelabelings defines the relabeling rules to apply to all samples before ingestion.
+
+                  The Operator adds the scrape class metric relabelings.
+                  Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+                  Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+                  Then the Operator adds the '.spec.enforceMetricRelabelings' defined here.
+
+                  More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+                items:
+                  description: |-
+                    RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+                    scraped samples and remote write samples.
+
+                    More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+                  properties:
+                    action:
+                      default: replace
+                      description: |-
+                        action to perform based on the regex matching.
+
+                        `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
+                        `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
+
+                        Default: "Replace"
+                      enum:
+                      - replace
+                      - Replace
+                      - keep
+                      - Keep
+                      - drop
+                      - Drop
+                      - hashmod
+                      - HashMod
+                      - labelmap
+                      - LabelMap
+                      - labeldrop
+                      - LabelDrop
+                      - labelkeep
+                      - LabelKeep
+                      - lowercase
+                      - Lowercase
+                      - uppercase
+                      - Uppercase
+                      - keepequal
+                      - KeepEqual
+                      - dropequal
+                      - DropEqual
+                      type: string
+                    modulus:
+                      description: |-
+                        modulus to take of the hash of the source label values.
+
+                        Only applicable when the action is `HashMod`.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    regex:
+                      description: regex defines the regular expression against which
+                        the extracted value is matched.
+                      type: string
+                    replacement:
+                      description: |-
+                        replacement value against which a Replace action is performed if the
+                        regular expression matches.
+
+                        Regex capture groups are available.
+                      type: string
+                    separator:
+                      description: separator defines the string between concatenated
+                        SourceLabels.
+                      type: string
+                    sourceLabels:
+                      description: |-
+                        sourceLabels defines the source labels select values from existing labels. Their content is
+                        concatenated using the configured Separator and matched against the
+                        configured regular expression.
+                      items:
+                        description: |-
+                          LabelName is a valid Prometheus label name.
+                          For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                          For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
+                        type: string
+                      type: array
+                    targetLabel:
+                      description: |-
+                        targetLabel defines the label to which the resulting string is written in a replacement.
+
+                        It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
+                        `KeepEqual` and `DropEqual` actions.
+
+                        Regex capture groups are available.
+                      type: string
+                  type: object
+                type: array
               enforcedBodySizeLimit:
                 description: |-
                   enforcedBodySizeLimit when defined specifies a global limit on the size
@@ -32854,6 +32950,7 @@ spec:
                         The Operator adds the scrape class metric relabelings defined here.
                         Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
                         Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+                        Then the Operator adds the '.spec.enforceMetricRelabelings'.
 
                         More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
                       items:
@@ -41755,6 +41852,102 @@ spec:
                 description: enableServiceLinks defines whether information about
                   services should be injected into pod's environment variables
                 type: boolean
+              enforceMetricRelabelings:
+                description: |-
+                  enforceMetricRelabelings defines the relabeling rules to apply to all samples before ingestion.
+
+                  The Operator adds the scrape class metric relabelings.
+                  Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+                  Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+                  Then the Operator adds the '.spec.enforceMetricRelabelings' defined here.
+
+                  More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+                items:
+                  description: |-
+                    RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
+                    scraped samples and remote write samples.
+
+                    More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
+                  properties:
+                    action:
+                      default: replace
+                      description: |-
+                        action to perform based on the regex matching.
+
+                        `Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.
+                        `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
+
+                        Default: "Replace"
+                      enum:
+                      - replace
+                      - Replace
+                      - keep
+                      - Keep
+                      - drop
+                      - Drop
+                      - hashmod
+                      - HashMod
+                      - labelmap
+                      - LabelMap
+                      - labeldrop
+                      - LabelDrop
+                      - labelkeep
+                      - LabelKeep
+                      - lowercase
+                      - Lowercase
+                      - uppercase
+                      - Uppercase
+                      - keepequal
+                      - KeepEqual
+                      - dropequal
+                      - DropEqual
+                      type: string
+                    modulus:
+                      description: |-
+                        modulus to take of the hash of the source label values.
+
+                        Only applicable when the action is `HashMod`.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    regex:
+                      description: regex defines the regular expression against which
+                        the extracted value is matched.
+                      type: string
+                    replacement:
+                      description: |-
+                        replacement value against which a Replace action is performed if the
+                        regular expression matches.
+
+                        Regex capture groups are available.
+                      type: string
+                    separator:
+                      description: separator defines the string between concatenated
+                        SourceLabels.
+                      type: string
+                    sourceLabels:
+                      description: |-
+                        sourceLabels defines the source labels select values from existing labels. Their content is
+                        concatenated using the configured Separator and matched against the
+                        configured regular expression.
+                      items:
+                        description: |-
+                          LabelName is a valid Prometheus label name.
+                          For Prometheus 3.x, a label name is valid if it contains UTF-8 characters.
+                          For Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.
+                        type: string
+                      type: array
+                    targetLabel:
+                      description: |-
+                        targetLabel defines the label to which the resulting string is written in a replacement.
+
+                        It is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,
+                        `KeepEqual` and `DropEqual` actions.
+
+                        Regex capture groups are available.
+                      type: string
+                  type: object
+                type: array
               enforcedBodySizeLimit:
                 description: |-
                   enforcedBodySizeLimit when defined specifies a global limit on the size
@@ -46575,6 +46768,7 @@ spec:
                         The Operator adds the scrape class metric relabelings defined here.
                         Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
                         Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+                        Then the Operator adds the '.spec.enforceMetricRelabelings'.
 
                         More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
                       items:

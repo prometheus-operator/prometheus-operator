@@ -13,6 +13,9 @@ scrape_configs:
   - target_label: job
     action: replace
     replacement: explicit-test-scrape-config3
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

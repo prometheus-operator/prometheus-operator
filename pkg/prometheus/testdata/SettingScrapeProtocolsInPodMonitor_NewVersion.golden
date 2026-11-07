@@ -69,3 +69,6 @@ scrape_configs:
   scrape_protocols:
   - OpenMetricsText1.0.0
   - OpenMetricsText0.0.1
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value

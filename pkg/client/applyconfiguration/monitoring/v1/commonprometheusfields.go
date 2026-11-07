@@ -698,6 +698,15 @@ type CommonPrometheusFieldsApplyConfiguration struct {
 	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
 	// Starting Kubernetes 1.33, the feature is enabled by default.
 	HostUsers *bool `json:"hostUsers,omitempty"`
+	// enforceMetricRelabelings defines the relabeling rules to apply to all samples before ingestion.
+	//
+	// The Operator adds the scrape class metric relabelings.
+	// Then the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.
+	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
+	// Then the Operator adds the '.spec.enforceMetricRelabelings' defined here.
+	//
+	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
+	EnforceMetricRelabelings []RelabelConfigApplyConfiguration `json:"enforceMetricRelabelings,omitempty"`
 }
 
 // CommonPrometheusFieldsApplyConfiguration constructs a declarative configuration of the CommonPrometheusFields type for use with
@@ -1601,5 +1610,18 @@ func (b *CommonPrometheusFieldsApplyConfiguration) WithTerminationGracePeriodSec
 // If called multiple times, the HostUsers field is set to the value of the last call.
 func (b *CommonPrometheusFieldsApplyConfiguration) WithHostUsers(value bool) *CommonPrometheusFieldsApplyConfiguration {
 	b.HostUsers = &value
+	return b
+}
+
+// WithEnforceMetricRelabelings adds the given value to the EnforceMetricRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnforceMetricRelabelings field.
+func (b *CommonPrometheusFieldsApplyConfiguration) WithEnforceMetricRelabelings(values ...*RelabelConfigApplyConfiguration) *CommonPrometheusFieldsApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEnforceMetricRelabelings")
+		}
+		b.EnforceMetricRelabelings = append(b.EnforceMetricRelabelings, *values[i])
+	}
 	return b
 }

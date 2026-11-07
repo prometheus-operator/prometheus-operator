@@ -103,6 +103,8 @@ scrape_configs:
   - target_label: job
     replacement: ""
     action: replace
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

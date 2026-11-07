@@ -45,3 +45,6 @@ scrape_configs:
     replacement: default/defaultPodMonitor
   - target_label: endpoint
     replacement: web
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value

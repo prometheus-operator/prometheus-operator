@@ -949,3 +949,16 @@ func (b *PrometheusAgentSpecApplyConfiguration) WithHostUsers(value bool) *Prome
 	b.CommonPrometheusFieldsApplyConfiguration.HostUsers = &value
 	return b
 }
+
+// WithEnforceMetricRelabelings adds the given value to the EnforceMetricRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnforceMetricRelabelings field.
+func (b *PrometheusAgentSpecApplyConfiguration) WithEnforceMetricRelabelings(values ...*v1.RelabelConfigApplyConfiguration) *PrometheusAgentSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEnforceMetricRelabelings")
+		}
+		b.CommonPrometheusFieldsApplyConfiguration.EnforceMetricRelabelings = append(b.CommonPrometheusFieldsApplyConfiguration.EnforceMetricRelabelings, *values[i])
+	}
+	return b
+}

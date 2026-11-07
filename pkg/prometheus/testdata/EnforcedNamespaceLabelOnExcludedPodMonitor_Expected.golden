@@ -77,6 +77,8 @@ scrape_configs:
     target_label: my-ns
     regex: my-job-pod-.+
     action: drop
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

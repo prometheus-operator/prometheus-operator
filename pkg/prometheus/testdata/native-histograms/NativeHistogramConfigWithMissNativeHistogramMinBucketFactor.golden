@@ -76,3 +76,6 @@ scrape_configs:
     action: keep
   native_histogram_bucket_limit: 10
   scrape_classic_histograms: true
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value

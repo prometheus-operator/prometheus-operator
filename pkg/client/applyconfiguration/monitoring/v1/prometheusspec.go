@@ -1062,6 +1062,19 @@ func (b *PrometheusSpecApplyConfiguration) WithHostUsers(value bool) *Prometheus
 	return b
 }
 
+// WithEnforceMetricRelabelings adds the given value to the EnforceMetricRelabelings field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the EnforceMetricRelabelings field.
+func (b *PrometheusSpecApplyConfiguration) WithEnforceMetricRelabelings(values ...*RelabelConfigApplyConfiguration) *PrometheusSpecApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithEnforceMetricRelabelings")
+		}
+		b.CommonPrometheusFieldsApplyConfiguration.EnforceMetricRelabelings = append(b.CommonPrometheusFieldsApplyConfiguration.EnforceMetricRelabelings, *values[i])
+	}
+	return b
+}
+
 // WithBaseImage sets the BaseImage field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the BaseImage field is set to the value of the last call.

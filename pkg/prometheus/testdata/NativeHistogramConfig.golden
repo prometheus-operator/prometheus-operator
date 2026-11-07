@@ -78,3 +78,6 @@ scrape_configs:
   native_histogram_min_bucket_factor: 12.124
   always_scrape_classic_histograms: true
   convert_classic_histograms_to_nhcb: true
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
