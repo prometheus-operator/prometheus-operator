@@ -798,6 +798,48 @@ func testPromCreateDeleteCluster(t *testing.T) {
 	}
 }
 
+func testPromListenLocalReady(t *testing.T) {
+	// Validate listenLocal probes for both official image packaging styles.
+	// Distroless images lack sh/curl/wget; probes must use promtool (2.44+).
+	// Non-distroless images also ship promtool and use the same path.
+	// Each case owns its namespace: t.Parallel subtests resume only after
+	// this function returns, so a shared namespace would already be gone.
+	t.Parallel()
+
+	version := operator.DefaultPrometheusVersion
+	cases := []struct {
+		name  string
+		image string
+	}{
+		{
+			name:  "distroless",
+			image: fmt.Sprintf("%s:%s-distroless", operator.DefaultPrometheusBaseImage, version),
+		},
+		{
+			name:  "busybox",
+			image: operator.DefaultPrometheusImage,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+			framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+			p := framework.MakeBasicPrometheus(ns, "listen-local", "listen-local", 1)
+			p.Spec.ListenLocal = true
+			p.Spec.Version = version
+			p.Spec.Image = &tc.image
+			if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p); err != nil {
+				t.Fatalf("%s listenLocal Prometheus not ready: %v", tc.name, err)
+			}
+		})
+	}
+}
+
 func testPromScaleUpDownReplicas(t *testing.T) {
 	t.Parallel()
 	testCtx := framework.NewTestCtx(t)
