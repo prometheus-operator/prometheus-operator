@@ -21,12 +21,14 @@ import (
 	"log/slog"
 	"maps"
 	"net"
+	"net/http"
 	"net/url"
 	"slices"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/blang/semver/v4"
+	commoncfg "github.com/prometheus/common/config"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -250,6 +252,14 @@ func (rs *ResourceSelector) checkServiceMonitor(ctx context.Context, sm *monitor
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
 		}
 
+		if err := validateHTTPHeaders(endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
+		if err := rs.store.AddHTTPHeaders(ctx, sm.GetNamespace(), endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: httpHeaders: %w", epErr, err)
+		}
+
 		if err := addProxyConfigToStore(ctx, endpoint.ProxyConfig, rs.store, sm.GetNamespace()); err != nil {
 			return err
 		}
@@ -296,6 +306,18 @@ func validateScrapeIntervalAndTimeout(p monitoringv1.PrometheusInterface, scrape
 		scrapeInterval = p.GetCommonPrometheusFields().ScrapeInterval
 	}
 	return CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval)
+}
+
+// validateHTTPHeaders returns an error if one of the headers can't be set by
+// the user because Prometheus manages it itself.
+func validateHTTPHeaders(headers []monitoringv1.HTTPHeader) error {
+	for i, header := range headers {
+		if _, found := commoncfg.ReservedHeaders[http.CanonicalHeaderKey(header.Name)]; found {
+			return fmt.Errorf("httpHeaders[%d]: setting the %q header isn't allowed", i, header.Name)
+		}
+	}
+
+	return nil
 }
 
 func validateScrapeClass(p monitoringv1.PrometheusInterface, sc *string) error {
@@ -360,6 +382,14 @@ func (rs *ResourceSelector) checkPodMonitor(ctx context.Context, pm *monitoringv
 
 		if err := rs.ValidateRelabelConfigs(endpoint.MetricRelabelConfigs); err != nil {
 			return fmt.Errorf("%w: metricRelabelConfigs: %w", epErr, err)
+		}
+
+		if err := validateHTTPHeaders(endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: %w", epErr, err)
+		}
+
+		if err := rs.store.AddHTTPHeaders(ctx, pm.GetNamespace(), endpoint.HTTPHeaders); err != nil {
+			return fmt.Errorf("%w: httpHeaders: %w", epErr, err)
 		}
 
 		if err := rs.addHTTPConfigToStore(ctx, endpoint.HTTPConfigWithProxy, pm.GetNamespace()); err != nil {
