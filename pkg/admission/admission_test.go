@@ -32,6 +32,8 @@ import (
 	"gotest.tools/v3/golden"
 	v1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1"
@@ -109,6 +111,82 @@ func TestAdmitBadRule(t *testing.T) {
 		if !strings.Contains(act, exp) {
 			t.Error("Expected error about invalid character")
 		}
+	}
+}
+
+func TestPrometheusRuleAdmissionErrorFields(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		groups string
+		fields []string
+	}{
+		{
+			name:   "first rule",
+			groups: `[{"name":"first","rules":[{"record":"test","expr":"vector(1))"}]}]`,
+			fields: []string{"spec.groups[0].rules[0]"},
+		},
+		{
+			name:   "second rule in second group",
+			groups: `[{"name":"first","rules":[{"record":"test","expr":"vector(1)"}]},{"name":"second","rules":[{"record":"good","expr":"vector(1)"},{"record":"bad","expr":"vector(1))"}]}]`,
+			fields: []string{"spec.groups[1].rules[1]"},
+		},
+		{
+			name:   "errors in multiple groups",
+			groups: `[{"name":"first","rules":[{"record":"test","expr":"vector(1))"}]},{"name":"second","rules":[{"record":"test","expr":"vector(1))"}]}]`,
+			fields: []string{"spec.groups[0].rules[0]", "spec.groups[1].rules[0]"},
+		},
+		{
+			name:   "multiple errors in one rule",
+			groups: `[{"name":"first","rules":[{"alert":"Test","expr":"vector(1))","annotations":{"message":"{{ print “%f“ $value }}"}}]}]`,
+			fields: []string{"spec.groups[0].rules[0]", "spec.groups[0].rules[0]"},
+		},
+		{
+			name:   "missing group name",
+			groups: `[{"name":"","rules":[{"record":"test","expr":"vector(1)"}]}]`,
+			fields: []string{"spec.groups"},
+		},
+		{
+			name:   "duplicate group names with a rule error",
+			groups: `[{"name":"same","rules":[{"record":"test","expr":"vector(1))"}]},{"name":"same","rules":[{"record":"test","expr":"vector(1)"}]}]`,
+			fields: []string{"spec.groups", "spec.groups"},
+		},
+		{
+			name:   "invalid group interval",
+			groups: `[{"name":"first","interval":"invalid","rules":[{"record":"test","expr":"vector(1)"}]}]`,
+			fields: []string{"spec.groups", "spec.groups"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body, err := json.Marshal(v1.AdmissionReview{
+				TypeMeta: metav1.TypeMeta{APIVersion: "admission.k8s.io/v1", Kind: "AdmissionReview"},
+				Request: &v1.AdmissionRequest{
+					UID:      "rule-validation",
+					Resource: prometheusRuleGVR,
+					Object: runtime.RawExtension{Raw: []byte(fmt.Sprintf(
+						`{"apiVersion":"monitoring.coreos.com/v1","kind":"PrometheusRule","spec":{"groups":%s}}`, tc.groups))},
+				},
+			})
+			require.NoError(t, err)
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(body))
+			request.Header.Set("Content-Type", "application/json")
+			api().servePrometheusRulesValidate(recorder, request)
+			require.Equal(t, http.StatusOK, recorder.Code)
+			var review v1.AdmissionReview
+			require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &review))
+			require.NotNil(t, review.Response)
+			require.False(t, review.Response.Allowed)
+			require.EqualValues(t, "rule-validation", review.Response.UID)
+			require.NotNil(t, review.Response.Result)
+			require.Equal(t, metav1.StatusReasonInvalid, review.Response.Result.Reason)
+			require.EqualValues(t, http.StatusUnprocessableEntity, review.Response.Result.Code)
+			require.NotNil(t, review.Response.Result.Details)
+			require.Len(t, review.Response.Result.Details.Causes, len(tc.fields))
+			for i, cause := range review.Response.Result.Details.Causes {
+				require.Equal(t, tc.fields[i], cause.Field)
+				require.NotEmpty(t, cause.Message)
+			}
+		})
 	}
 }
 
