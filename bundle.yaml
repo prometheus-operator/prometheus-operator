@@ -8295,6 +8295,15 @@ spec:
                                 - key
                                 type: object
                                 x-kubernetes-map-type: atomic
+                              serviceName:
+                                description: |-
+                                  serviceName defines the name of the AWS service to sign requests for.
+                                  If not specified, the default value is `aps` for Amazon Managed Service
+                                  for Prometheus (AMP) or `s3` for S3-compatible remote write.
+                                  It requires Prometheus >= v3.5.0.
+                                  It is currently not supported by Alertmanager and Thanos.
+                                minLength: 1
+                                type: string
                               useFIPSSTSEndpoint:
                                 description: |-
                                   useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
@@ -32337,6 +32346,15 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        serviceName:
+                          description: |-
+                            serviceName defines the name of the AWS service to sign requests for.
+                            If not specified, the default value is `aps` for Amazon Managed Service
+                            for Prometheus (AMP) or `s3` for S3-compatible remote write.
+                            It requires Prometheus >= v3.5.0.
+                            It is currently not supported by Alertmanager and Thanos.
+                          minLength: 1
+                          type: string
                         useFIPSSTSEndpoint:
                           description: |-
                             useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
@@ -39403,6 +39421,15 @@ spec:
                               - key
                               type: object
                               x-kubernetes-map-type: atomic
+                            serviceName:
+                              description: |-
+                                serviceName defines the name of the AWS service to sign requests for.
+                                If not specified, the default value is `aps` for Amazon Managed Service
+                                for Prometheus (AMP) or `s3` for S3-compatible remote write.
+                                It requires Prometheus >= v3.5.0.
+                                It is currently not supported by Alertmanager and Thanos.
+                              minLength: 1
+                              type: string
                             useFIPSSTSEndpoint:
                               description: |-
                                 useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
@@ -45898,6 +45925,15 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        serviceName:
+                          description: |-
+                            serviceName defines the name of the AWS service to sign requests for.
+                            If not specified, the default value is `aps` for Amazon Managed Service
+                            for Prometheus (AMP) or `s3` for S3-compatible remote write.
+                            It requires Prometheus >= v3.5.0.
+                            It is currently not supported by Alertmanager and Thanos.
+                          minLength: 1
+                          type: string
                         useFIPSSTSEndpoint:
                           description: |-
                             useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
@@ -72759,6 +72795,15 @@ spec:
                           - key
                           type: object
                           x-kubernetes-map-type: atomic
+                        serviceName:
+                          description: |-
+                            serviceName defines the name of the AWS service to sign requests for.
+                            If not specified, the default value is `aps` for Amazon Managed Service
+                            for Prometheus (AMP) or `s3` for S3-compatible remote write.
+                            It requires Prometheus >= v3.5.0.
+                            It is currently not supported by Alertmanager and Thanos.
+                          minLength: 1
+                          type: string
                         useFIPSSTSEndpoint:
                           description: |-
                             useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
