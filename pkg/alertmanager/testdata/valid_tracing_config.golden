@@ -1,0 +1,22 @@
+route:
+  receiver: mynamespace/global-config/null
+  routes:
+  - receiver: mynamespace/global-config/myreceiver
+    matchers:
+    - mykey="myvalue"
+    - mykey1="myvalue1"
+receivers:
+- name: mynamespace/global-config/null
+- name: mynamespace/global-config/myreceiver
+tracing:
+  client_type: grpc
+  endpoint: tempo.monitoring.svc:4317
+  sampling_fraction: 0.5
+  insecure: true
+  headers:
+    X-Scope-OrgID:
+      values:
+      - tenant-a
+  compression: gzip
+  timeout: 10s
+templates: []
