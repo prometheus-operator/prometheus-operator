@@ -7424,6 +7424,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -19736,6 +19743,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
