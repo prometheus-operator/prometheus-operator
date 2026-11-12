@@ -1631,6 +1631,17 @@ func checkSlackConfigs(
 			}
 		}
 
+		if config.PostUpdatesToThread != nil {
+			if amVersion.LT(semver.MustParse("0.35.0")) {
+				return fmt.Errorf(`'postUpdatesToThread' is available in Alertmanager >= 0.35.0 only - current %s`, amVersion)
+			}
+			if *config.PostUpdatesToThread && slackAPIURL != "" {
+				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
+					return fmt.Errorf(`'postUpdatesToThread' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
+				}
+			}
+		}
+
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}

@@ -11023,6 +11023,8 @@ func TestSanitizeSlackConfig(t *testing.T) {
 
 	versionSlackUpdateMessageAllowed := semver.Version{Major: 0, Minor: 32}
 	versionSlackUpdateMessageNotAllowed := semver.Version{Major: 0, Minor: 31}
+	versionSlackPostUpdatesToThreadAllowed := semver.Version{Major: 0, Minor: 35}
+	versionSlackPostUpdatesToThreadNotAllowed := semver.Version{Major: 0, Minor: 34}
 
 	for _, tc := range []struct {
 		name           string
@@ -11189,6 +11191,55 @@ func TestSanitizeSlackConfig(t *testing.T) {
 							{
 								APIURL:        "https://api.url",
 								UpdateMessage: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test slack post_updates_to_thread unsupported version",
+			againstVersion: versionSlackPostUpdatesToThreadNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								PostUpdatesToThread: new(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_post_updates_to_thread_unsupported_version.golden",
+		},
+		{
+			name:           "Test slack post_updates_to_thread supported version",
+			againstVersion: versionSlackPostUpdatesToThreadAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								PostUpdatesToThread: new(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_post_updates_to_thread_supported_version.golden",
+		},
+		{
+			name:           "Test slack post_updates_to_thread custom api url",
+			againstVersion: versionSlackPostUpdatesToThreadAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								APIURL:              "https://api.url",
+								PostUpdatesToThread: new(true),
 							},
 						},
 					},
