@@ -112,7 +112,7 @@ func DefaultConfig(cpu, memory string) Config {
 			},
 			StatusForConfigurationResourcesFeature: FeatureGate{
 				description: "Updates the status subresource for configuration resources",
-				enabled:     false,
+				enabled:     true,
 			},
 			RemoteWriteCustomResourceDefinitionFeature: FeatureGate{
 				description: "Enables the RemoteWrite CRD support",
