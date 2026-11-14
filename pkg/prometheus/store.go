@@ -87,6 +87,10 @@ func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, name
 			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
 
+		if err := validateRemoteHeaders(remote.Headers); err != nil {
+			return fmt.Errorf("remoteRead[%d]: %w", i, err)
+		}
+
 		if err := store.AddProxyConfig(ctx, namespace, remote.ProxyConfig); err != nil {
 			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}
