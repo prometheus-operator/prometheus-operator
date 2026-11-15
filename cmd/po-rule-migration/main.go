@@ -70,6 +70,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to read file '%v': %v", ruleConfigMapName, err.Error())
 	}
+	defer file.Close()
 
 	configMap := corev1.ConfigMap{}
 
