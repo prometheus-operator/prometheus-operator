@@ -993,13 +993,19 @@ func CompareScrapeTimeoutToScrapeInterval(scrapeTimeout, scrapeInterval monitori
 	return nil
 }
 
+// ConfigResources holds the valid configuration resources selected by a
+// Prometheus or PrometheusAgent resource.
+type ConfigResources struct {
+	ServiceMonitors map[string]*monitoringv1.ServiceMonitor
+	PodMonitors     map[string]*monitoringv1.PodMonitor
+	Probes          map[string]*monitoringv1.Probe
+	ScrapeConfigs   map[string]*monitoringv1alpha1.ScrapeConfig
+}
+
 // GenerateServerConfiguration creates a serialized YAML representation of a Prometheus Server configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateServerConfiguration(
 	p *monitoringv1.Prometheus,
-	sMons map[string]*monitoringv1.ServiceMonitor,
-	pMons map[string]*monitoringv1.PodMonitor,
-	probes map[string]*monitoringv1.Probe,
-	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
+	resources ConfigResources,
 	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 	additionalAlertRelabelConfigs []byte,
@@ -1037,10 +1043,10 @@ func (cg *ConfigGenerator) GenerateServerConfiguration(
 		shards          = shardsNumber(cg.prom)
 	)
 
-	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
-	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+	scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, resources.ServiceMonitors, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, resources.PodMonitors, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, resources.Probes, apiserverConfig, store, shards)
+	scrapeConfigs, err := cg.appendScrapeConfigs(scrapeConfigs, resources.ScrapeConfigs, store, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate scrape configs: %w", err)
 	}
@@ -3350,10 +3356,7 @@ func (cg *ConfigGenerator) appendAdditionalScrapeConfigs(scrapeConfigs []yaml.Ma
 
 // GenerateAgentConfiguration creates a serialized YAML representation of a Prometheus Agent configuration using the provided resources.
 func (cg *ConfigGenerator) GenerateAgentConfiguration(
-	sMons map[string]*monitoringv1.ServiceMonitor,
-	pMons map[string]*monitoringv1.PodMonitor,
-	probes map[string]*monitoringv1.Probe,
-	sCons map[string]*monitoringv1alpha1.ScrapeConfig,
+	resources ConfigResources,
 	store *assets.StoreBuilder,
 	additionalScrapeConfigs []byte,
 ) ([]byte, error) {
@@ -3381,7 +3384,7 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 		shards          = shardsNumber(cg.prom)
 	)
 
-	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, pMons, apiserverConfig, store, shards)
+	scrapeConfigs = cg.appendPodMonitorConfigs(scrapeConfigs, resources.PodMonitors, apiserverConfig, store, shards)
 	scrapeConfigs, err := cg.appendAdditionalScrapeConfigs(scrapeConfigs, additionalScrapeConfigs, shards)
 	if err != nil {
 		return nil, fmt.Errorf("generate additional scrape configs: %w", err)
@@ -3389,9 +3392,9 @@ func (cg *ConfigGenerator) GenerateAgentConfiguration(
 
 	// Currently, DaemonSet mode doesn't support these.
 	if !cg.daemonSet {
-		scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, sMons, apiserverConfig, store, shards)
-		scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, probes, apiserverConfig, store, shards)
-		scrapeConfigs, err = cg.appendScrapeConfigs(scrapeConfigs, sCons, store, shards)
+		scrapeConfigs = cg.appendServiceMonitorConfigs(scrapeConfigs, resources.ServiceMonitors, apiserverConfig, store, shards)
+		scrapeConfigs = cg.appendProbeConfigs(scrapeConfigs, resources.Probes, apiserverConfig, store, shards)
+		scrapeConfigs, err = cg.appendScrapeConfigs(scrapeConfigs, resources.ScrapeConfigs, store, shards)
 		if err != nil {
 			return nil, fmt.Errorf("generate scrape configs: %w", err)
 		}
