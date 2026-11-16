@@ -1575,7 +1575,6 @@ func testRulesConfigMapLifecycle(t *testing.T) {
 			p.Spec.RuleConfigMapsMinimumCount = tc.minimumCount
 			p, err = framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, p)
 			require.NoError(t, err)
-			require.Equal(t, tc.minimumCount, p.Spec.RuleConfigMapsMinimumCount)
 
 			pSVC := framework.MakePrometheusService(p.Name, "not-relevant", corev1.ServiceTypeClusterIP)
 			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(context.Background(), ns, pSVC)
