@@ -25,7 +25,7 @@ require (
 	github.com/prometheus/client_golang v1.25.0
 	github.com/prometheus/common v0.74.0
 	github.com/prometheus/exporter-toolkit v0.20.0
-	github.com/prometheus/prometheus v0.315.1
+	github.com/prometheus/prometheus v0.316.0
 	github.com/stretchr/testify v1.12.1
 	github.com/thanos-io/thanos v0.42.5
 	golang.org/x/net v0.62.0
