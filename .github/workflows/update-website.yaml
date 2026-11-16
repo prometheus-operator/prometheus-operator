@@ -1,0 +1,85 @@
+# Opens a pull request in prometheus-operator/website after a stable release is published.
+name: Update website
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Operator version to publish on the website, for example v0.94.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  update-website:
+    name: Open website version pull request
+    if: >
+      github.repository == 'prometheus-operator/prometheus-operator' &&
+      (github.event_name == 'workflow_dispatch' || !github.event.release.prerelease)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout website repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: prometheus-operator/website
+          ref: main
+          token: ${{ secrets.PROM_OP_BOT_PAT }}
+
+      - name: Update prometheusOperator version
+        id: update
+        env:
+          VERSION: ${{ inputs.version || github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          if ! printf '%s' "${VERSION}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '${VERSION}' is not v<major>.<minor>.<patch>."
+            exit 1
+          fi
+
+          file="data/prometheusOperator.json"
+          current="$(jq -er '.version' "${file}")"
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+          if [ "${current}" = "${VERSION}" ]; then
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::Website already lists ${VERSION}."
+            exit 0
+          fi
+
+          newest="$(printf '%s\n%s\n' "${current}" "${VERSION}" | sort -V | tail -n 1)"
+          if [ "${newest}" != "${VERSION}" ]; then
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::Website version ${current} is newer than ${VERSION}. Leaving the website unchanged."
+            exit 0
+          fi
+
+          tmp="$(mktemp)"
+          jq --arg version "${VERSION}" '.version = $version' "${file}" > "${tmp}"
+          mv "${tmp}" "${file}"
+          echo "changed=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Create pull request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8
+        with:
+          commit-message: "[bot] Update prometheusOperator version to ${{ steps.update.outputs.version }}"
+          title: "[bot] Update prometheusOperator version to ${{ steps.update.outputs.version }}"
+          body: |
+            Update the Prometheus Operator version published on the website to ${{ steps.update.outputs.version }}.
+
+            Release: https://github.com/prometheus-operator/prometheus-operator/releases/tag/${{ steps.update.outputs.version }}
+
+            Opened by the update website workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          add-paths: data/prometheusOperator.json
+          committer: "Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>"
+          author: "Prometheus Operator Bot <prom-op-bot@users.noreply.github.com>"
+          branch: automated-website-${{ steps.update.outputs.version }}
+          base: main
+          delete-branch: true
+          token: ${{ secrets.PROM_OP_BOT_PAT }}

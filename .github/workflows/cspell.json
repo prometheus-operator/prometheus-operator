@@ -313,6 +313,7 @@
     "portworx",
     "preconfigured",
     "privs",
+    "prom",
     "promagent",
     "prometheus",
     "prometheusagent",
@@ -432,7 +433,9 @@
     "nattapong",
     "AWSHTTP",
     "nodev",
+    "noreply",
     "nosuid",
+    "prerelease",
     "distroless"
   ]
 }
