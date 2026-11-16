@@ -56,7 +56,17 @@ func addRemoteWritesToStore(ctx context.Context, store *assets.StoreBuilder, nam
 
 // AddRemoteReadsToStore loads all secret/configmap references from remote-read configs into the store.
 func AddRemoteReadsToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rrs []monitoringv1.RemoteReadSpec) error {
+	// Prometheus refuses to load a configuration with remote read
+	// configurations having the same name.
+	names := map[string]int{}
 	for i, remote := range rrs {
+		if remote.Name != "" {
+			if j, found := names[remote.Name]; found {
+				return fmt.Errorf("remoteRead[%d]: name %q is already used by remoteRead[%d]", i, remote.Name, j)
+			}
+			names[remote.Name] = i
+		}
+
 		if err := store.AddBasicAuth(ctx, namespace, remote.BasicAuth); err != nil {
 			return fmt.Errorf("remoteRead[%d]: %w", i, err)
 		}

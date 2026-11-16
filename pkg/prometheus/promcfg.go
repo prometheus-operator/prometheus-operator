@@ -2893,7 +2893,17 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 // AddRemoteWriteToStore validates the remote-write configurations and loads
 // all secret/configmap references into the store.
 func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
+	// Prometheus refuses to load a configuration with remote write
+	// configurations having the same name.
+	names := map[string]int{}
 	for i, rw := range rws {
+		if name := ptr.Deref(rw.Name, ""); name != "" {
+			if j, found := names[name]; found {
+				return fmt.Errorf("remoteWrite[%d]: name %q is already used by remoteWrite[%d]", i, name, j)
+			}
+			names[name] = i
+		}
+
 		if err := cg.validateRemoteWriteSpec(rw); err != nil {
 			return fmt.Errorf("remoteWrite[%d]: %w", i, err)
 		}

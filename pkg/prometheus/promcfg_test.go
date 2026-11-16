@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -15396,6 +15398,53 @@ func TestInzoneShardForShard(t *testing.T) {
 			for i, exp := range tc.expected {
 				require.Equal(t, exp, cg.InzoneShardForShard(int32(i)))
 			}
+		})
+	}
+}
+
+func TestAddRemoteWriteToStore(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		names     []*string
+		expectErr bool
+	}{
+		{
+			name:  "no names",
+			names: []*string{nil, nil},
+		},
+		{
+			name:  "empty names",
+			names: []*string{new(""), new("")},
+		},
+		{
+			name:  "unique names",
+			names: []*string{new("a"), new("b"), nil},
+		},
+		{
+			name:      "duplicate names",
+			names:     []*string{new("a"), nil, new("a")},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cs := fake.NewClientset()
+			store := assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1())
+
+			rws := make([]monitoringv1.RemoteWriteSpec, 0, len(tc.names))
+			for _, name := range tc.names {
+				rws = append(rws, monitoringv1.RemoteWriteSpec{
+					URL:  "http://example.com",
+					Name: name,
+				})
+			}
+
+			err := mustNewConfigGenerator(t, nil).AddRemoteWriteToStore(context.Background(), store, "default", rws)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
 		})
 	}
 }
