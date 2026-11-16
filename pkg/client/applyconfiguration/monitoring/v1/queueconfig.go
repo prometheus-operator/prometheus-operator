@@ -50,6 +50,7 @@ type QueueConfigApplyConfiguration struct {
 	RetryOnRateLimit *bool `json:"retryOnRateLimit,omitempty"`
 	// sampleAgeLimit drops samples older than the limit.
 	// It requires Prometheus >= v2.50.0 or Thanos >= v0.32.0.
+	//
 	SampleAgeLimit *monitoringv1.Duration `json:"sampleAgeLimit,omitempty"`
 }
 

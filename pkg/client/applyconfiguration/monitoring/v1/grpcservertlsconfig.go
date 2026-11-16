@@ -36,6 +36,7 @@ type GRPCServerTLSConfigApplyConfiguration struct {
 	//
 	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
 	// the Thanos version supports the provided values.
+	//
 	CipherSuites []string `json:"cipherSuites,omitempty"`
 	// curves defines the list of preferred elliptic curves for
 	// TLS handshakes.
@@ -46,6 +47,7 @@ type GRPCServerTLSConfigApplyConfiguration struct {
 	//
 	// It requires Thanos >= v0.42.0. Note that the operator doesn't verify if
 	// the Thanos version supports the provided values.
+	//
 	Curves []string `json:"curves,omitempty"`
 }
 

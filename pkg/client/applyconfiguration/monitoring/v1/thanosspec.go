@@ -36,6 +36,7 @@ type ThanosSpecApplyConfiguration struct {
 	// If neither `spec.thanos.image` nor `spec.thanos.baseImage` are defined,
 	// the operator will use the latest upstream version of Thanos available at
 	// the time when the operator was released.
+	//
 	Image *string `json:"image,omitempty"`
 	// version of Thanos being deployed. The operator uses this information
 	// to generate the Prometheus StatefulSet + configuration files.
@@ -43,6 +44,7 @@ type ThanosSpecApplyConfiguration struct {
 	// If not specified, the operator assumes the latest upstream release of
 	// Thanos available at the time when the version of the operator was
 	// released.
+	//
 	Version *string `json:"version,omitempty"`
 	// tag is deprecated: use 'image' instead. The image's tag can be specified as as part of the image name.
 	Tag *string `json:"tag,omitempty"`
@@ -84,6 +86,7 @@ type ThanosSpecApplyConfiguration struct {
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
+	//
 	TracingConfig *corev1.SecretKeySelector `json:"tracingConfig,omitempty"`
 	// tracingConfigFile defines the tracing configuration file for the Thanos sidecar.
 	//
@@ -97,6 +100,7 @@ type ThanosSpecApplyConfiguration struct {
 	// grpcServerTlsConfig defines the TLS parameters for the gRPC server providing the StoreAPI.
 	//
 	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
+	//
 	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// logLevel for the Thanos sidecar.
 	LogLevel *string `json:"logLevel,omitempty"`
@@ -115,6 +119,7 @@ type ThanosSpecApplyConfiguration struct {
 	// with memory and Thanos compactors. It is recommended to keep this value
 	// set to a multiple of 120 times your longest scrape or rule interval. For
 	// example, 30s * 120 = 1h.
+	//
 	BlockDuration *monitoringv1.Duration `json:"blockSize,omitempty"`
 	// readyTimeout defines the maximum time that the Thanos sidecar will wait for
 	// Prometheus to start.
