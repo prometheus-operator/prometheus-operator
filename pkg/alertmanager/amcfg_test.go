@@ -3963,6 +3963,65 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Slack_Receiver_with_PostUpdatesToThread_in_old_version.golden",
 		},
 		{
+			name: "CR with Slack Receiver with PostUpdatesToThread and non-standard API URL",
+			kclient: fake.NewClientset(
+				&corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "slack-non-standard-api-url",
+						Namespace: "mynamespace",
+					},
+					Data: map[string][]byte{
+						"apiurl":   []byte("https://slack.example.com/api/chat.postMessage"),
+						"bottoken": []byte("abcdef123456"),
+					},
+				},
+			),
+			amVersion: &semver.Version{Major: 0, Minor: 35},
+			baseConfig: alertmanagerConfig{
+				Route: &route{
+					Receiver: "null",
+				},
+				Receivers: []*receiver{{Name: "null"}},
+			},
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{{
+							Name: "test",
+							SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+								APIURL: &corev1.SecretKeySelector{
+									Key: "apiurl",
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "slack-non-standard-api-url",
+									},
+								},
+								HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+									Authorization: &monitoringv1.SafeAuthorization{
+										Type: "Bearer",
+										Credentials: &corev1.SecretKeySelector{
+											Key: "bottoken",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "slack-non-standard-api-url",
+											},
+										},
+									},
+								},
+								PostUpdatesToThread: new(true),
+							}},
+						}},
+					},
+				},
+			},
+			expectedError: true,
+		},
+		{
 			name: "CR with SNS Receiver with Access and Key",
 			kclient: fake.NewClientset(
 				&corev1.Secret{
@@ -11347,6 +11406,22 @@ func TestSanitizeSlackConfig(t *testing.T) {
 				},
 			},
 			golden: "test_slack_post_updates_to_thread_supported_version.golden",
+		},
+		{
+			name:           "Test slack post_updates_to_thread disabled with default api url",
+			againstVersion: versionSlackPostUpdatesToThreadAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						SlackConfigs: []*slackConfig{
+							{
+								PostUpdatesToThread: new(false),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_slack_post_updates_to_thread_disabled_default_api_url.golden",
 		},
 		{
 			name:           "Test slack post_updates_to_thread custom api url",

@@ -2962,8 +2962,8 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			logger.Warn(msg)
 			sc.UpdateMessage = nil
 		} else if *sc.UpdateMessage && sc.APIURL != "" {
-			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`'update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+			if sc.APIURL != slackBotAPIURL {
+				return fmt.Errorf("'update_message' can only be used with bot tokens. api_url must be set to %s", slackBotAPIURL)
 			}
 		}
 	}
@@ -2974,8 +2974,8 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			logger.Warn(msg)
 			sc.PostUpdatesToThread = nil
 		} else if *sc.PostUpdatesToThread && sc.APIURL != "" {
-			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`'post_updates_to_thread' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+			if sc.APIURL != slackBotAPIURL {
+				return fmt.Errorf("'post_updates_to_thread' can only be used with bot tokens. api_url must be set to %s", slackBotAPIURL)
 			}
 		}
 	}
