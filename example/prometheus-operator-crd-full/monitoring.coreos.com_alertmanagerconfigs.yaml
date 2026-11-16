@@ -6393,6 +6393,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -18712,6 +18720,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.

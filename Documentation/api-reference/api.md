@@ -35418,6 +35418,21 @@ These appear as buttons that users can click to trigger responses.</p>
 </tr>
 <tr>
 <td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -41276,6 +41291,21 @@ When true, @username and #channel references become clickable links.</p>
 <em>(Optional)</em>
 <p>actions defines interactive actions to include in the message.
 These appear as buttons that users can click to trigger responses.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 <tr>

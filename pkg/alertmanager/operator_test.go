@@ -22,6 +22,7 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authorization/v1"
@@ -2318,6 +2319,107 @@ func TestCheckDiscordAlertmanagerConfig(t *testing.T) {
 
 			t.Logf("err: %s", err)
 			require.Error(t, err)
+		})
+	}
+}
+
+func TestCheckRocketChatAlertmanagerConfig(t *testing.T) {
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version34, err := semver.ParseTolerant("v0.34.0")
+	require.NoError(t, err)
+
+	version35, err := semver.ParseTolerant("v0.35.0")
+	require.NoError(t, err)
+
+	c := fake.NewClientset(
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "rocketchat",
+				Namespace: "ns1",
+			},
+			Data: map[string][]byte{
+				"token":    []byte("abcdef"),
+				"token-id": []byte("abcdef12345"),
+			},
+		},
+	)
+
+	newAMConfig := func(name string, rc monitoringv1alpha1.RocketChatConfig) *monitoringv1alpha1.AlertmanagerConfig {
+		return &monitoringv1alpha1.AlertmanagerConfig{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: "ns1",
+			},
+			Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+				Receivers: []monitoringv1alpha1.Receiver{{
+					Name:              "recv1",
+					RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{rc},
+				}},
+			},
+		}
+	}
+
+	for _, tc := range []struct {
+		amConfig *monitoringv1alpha1.AlertmanagerConfig
+		version  *semver.Version
+		ok       bool
+		errMsg   *string
+	}{
+		{
+			amConfig: newAMConfig("rocketchat-message-text-unsupported-version", monitoringv1alpha1.RocketChatConfig{
+				Token: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					Key:                  "token",
+				},
+				TokenID: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					Key:                  "token-id",
+				},
+				MessageText: new("{{ .CommonAnnotations.summary }}"),
+			}),
+			version: &version34,
+			ok:      false,
+			errMsg:  new("'messageText' is available in Alertmanager >= 0.35.0 only - current 0.34.0"),
+		},
+		{
+			amConfig: newAMConfig("rocketchat-message-text-supported-version", monitoringv1alpha1.RocketChatConfig{
+				Token: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					Key:                  "token",
+				},
+				TokenID: corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					Key:                  "token-id",
+				},
+				MessageText: new("{{ .CommonAnnotations.summary }}"),
+			}),
+			version: &version35,
+			ok:      true,
+		},
+	} {
+		t.Run(tc.amConfig.Name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
+
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+
+			err := checkAlertmanagerConfigResource(context.Background(), allowAllFileSystemAM(), tc.amConfig, amVersion, store)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
+			require.Error(t, err)
+
+			if tc.errMsg != nil {
+				assert.EqualError(t, err, *tc.errMsg)
+				return
+			}
 		})
 	}
 }

@@ -328,6 +328,7 @@ func convertRocketchatConfigFrom(in v1alpha1.RocketChatConfig) RocketChatConfig 
 		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsFrom(in.Actions),
+		MessageText:  in.MessageText,
 		HTTPConfig:   convertHTTPConfigFrom(in.HTTPConfig),
 	}
 }

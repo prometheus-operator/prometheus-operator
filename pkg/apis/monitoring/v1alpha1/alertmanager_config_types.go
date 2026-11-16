@@ -1345,6 +1345,13 @@ type RocketChatConfig struct {
 	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// messageText is a top-level message text, shown above the attachment
+	// and used in desktop and push notifications.
+	// If unset, notifications show only a generic placeholder.
+	// It requires Alertmanager >= v0.35.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 	// httpConfig defines the HTTP client configuration for RocketChat API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

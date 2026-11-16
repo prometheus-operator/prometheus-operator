@@ -5415,6 +5415,9 @@ func TestGenerateConfigRocketChatReceiver(t *testing.T) {
 	version28, err := semver.ParseTolerant("v0.28.0")
 	require.NoError(t, err)
 
+	version35, err := semver.ParseTolerant("v0.35.0")
+	require.NoError(t, err)
+
 	rocketChatSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "rocketchat-secret",
@@ -5523,6 +5526,18 @@ func TestGenerateConfigRocketChatReceiver(t *testing.T) {
 				TokenID:      tokenIDSelector,
 			}),
 			golden: "CR_with_RocketChatConfig_Send_Resolved_Disabled.golden",
+		},
+		{
+			name:       "CR with RocketChatConfig with messageText",
+			amVersion:  &version35,
+			kclient:    fake.NewClientset(rocketChatSecret),
+			baseConfig: baseCfg(),
+			amConfigs: amConfigWith(monitoringv1alpha1.RocketChatConfig{
+				Token:       tokenSelector,
+				TokenID:     tokenIDSelector,
+				MessageText: new("{{ .CommonAnnotations.summary }}"),
+			}),
+			golden: "CR_with_RocketChatConfig_MessageText.golden",
 		},
 		{
 			name:       "CR with RocketChatConfig missing token secret",

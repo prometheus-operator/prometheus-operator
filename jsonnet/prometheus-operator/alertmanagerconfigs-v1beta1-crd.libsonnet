@@ -5561,6 +5561,11 @@
                             description: 'linkNames defines whether to enable automatic linking of usernames and channels.\nWhen true, @username and #channel references become clickable links.',
                             type: 'boolean',
                           },
+                          messageText: {
+                            description: 'messageText is a top-level message text, shown above the attachment\nand used in desktop and push notifications.\nIf unset, notifications show only a generic placeholder.\nIt requires Alertmanager >= v0.35.0.',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           sendResolved: {
                             description: 'sendResolved defines whether or not to notify about resolved alerts.',
                             type: 'boolean',

@@ -2582,6 +2582,11 @@ func (in *RocketChatConfig) DeepCopyInto(out *RocketChatConfig) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.MessageText != nil {
+		in, out := &in.MessageText, &out.MessageText
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)

@@ -829,6 +829,7 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		ImageURL:     ptr.Deref(in.ImageURL, ""),
 		ThumbURL:     ptr.Deref(in.ThumbURL, ""),
 		LinkNames:    ptr.Deref(in.LinkNames, false),
+		MessageText:  ptr.Deref(in.MessageText, ""),
 	}
 
 	if in.APIURL != nil && *in.APIURL != "" {

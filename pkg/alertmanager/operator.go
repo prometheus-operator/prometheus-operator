@@ -1583,6 +1583,10 @@ func checkRocketChatConfigs(
 		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
+
+		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.35.0")) {
+			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.35.0 only - current %s`, amVersion)
+		}
 	}
 
 	return nil
