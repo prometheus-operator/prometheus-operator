@@ -2925,234 +2925,239 @@ func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *ass
 func (cg *ConfigGenerator) GenerateRemoteWriteConfig(rws []monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapItem {
 	var cfgs []yaml.MapSlice
 
-	for i, spec := range rws {
-		cfg := yaml.MapSlice{
-			{Key: "url", Value: spec.URL},
-		}
-
-		if spec.RemoteTimeout != nil {
-			cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: *spec.RemoteTimeout})
-		}
-
-		if len(spec.Headers) > 0 {
-			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
-		}
-
-		if ptr.Deref(spec.Name, "") != "" {
-			cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", *spec.Name)
-		}
-
-		if spec.MessageVersion != nil {
-			cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "protobuf_message", toProtobufMessageVersion(*spec.MessageVersion))
-		}
-
-		if spec.SendExemplars != nil {
-			cfg = cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "send_exemplars", spec.SendExemplars)
-		}
-
-		if spec.SendNativeHistograms != nil {
-			cfg = cg.WithMinimumVersion("2.40.0").AppendMapItem(cfg, "send_native_histograms", spec.SendNativeHistograms)
-		}
-
-		var relabelings []yaml.MapSlice
-		for _, c := range spec.WriteRelabelConfigs {
-			var relabeling yaml.MapSlice
-
-			if len(c.SourceLabels) > 0 {
-				relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
-			}
-
-			if c.Separator != nil {
-				relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
-			}
-
-			if c.TargetLabel != "" {
-				relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
-			}
-
-			if c.Regex != "" {
-				relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
-			}
-
-			if c.Modulus != 0 {
-				relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
-			}
-
-			if c.Replacement != nil {
-				relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
-			}
-
-			if c.Action != "" {
-				relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
-			}
-
-			relabelings = append(relabelings, relabeling)
-		}
-
-		if len(relabelings) > 0 {
-			cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
-		}
-
-		cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
-
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if spec.BearerToken != "" {
-			cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
-			cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
-		}
-
-		//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
-		if spec.BearerTokenFile != "" {
-			cg.logger.Debug("'bearerTokenFile' is deprecated, use 'authorization' instead.")
-			cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
-		}
-
-		cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
-
-		cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
-
-		cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
-
-		cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
-
-		cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, fmt.Sprintf("remoteWrite/%d", i), s, spec.Sigv4)
-
-		if spec.AzureAD != nil {
-			azureAd := yaml.MapSlice{}
-
-			if spec.AzureAD.ManagedIdentity != nil {
-				managedIdentity := yaml.MapSlice{}
-				if clientID := ptr.Deref(spec.AzureAD.ManagedIdentity.ClientID, ""); clientID != "" {
-					managedIdentity = append(managedIdentity, yaml.MapItem{Key: "client_id", Value: clientID})
-				}
-				azureAd = append(azureAd, yaml.MapItem{Key: "managed_identity", Value: managedIdentity})
-			}
-
-			if spec.AzureAD.OAuth != nil {
-				b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
-				if err != nil {
-					cg.logger.Error("invalid Azure OAuth client secret", "err", err)
-				} else {
-					azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
-						{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
-						{Key: "client_secret", Value: string(b)},
-						{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
-					})
-				}
-			}
-
-			if spec.AzureAD.SDK != nil {
-				azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(
-					azureAd,
-					"sdk",
-					yaml.MapSlice{
-						{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
-					})
-			}
-
-			if spec.AzureAD.WorkloadIdentity != nil {
-				workloadIdentityConfig := yaml.MapSlice{
-					{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
-					{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
-				}
-
-				azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
-			}
-
-			if spec.AzureAD.Cloud != nil {
-				azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
-			}
-
-			if scope := ptr.Deref(spec.AzureAD.Scope, ""); scope != "" {
-				azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
-			}
-
-			cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
-		}
-
-		if spec.FollowRedirects != nil {
-			cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
-		}
-
-		if spec.EnableHttp2 != nil {
-			cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *spec.EnableHttp2)
-		}
-
-		if spec.QueueConfig != nil {
-			queueConfig := yaml.MapSlice{}
-
-			if spec.QueueConfig.Capacity != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
-			}
-
-			if spec.QueueConfig.MinShards != int(0) {
-				queueConfig = cg.WithMinimumVersion("2.6.0").AppendMapItem(queueConfig, "min_shards", spec.QueueConfig.MinShards)
-			}
-
-			if spec.QueueConfig.MaxShards != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
-			}
-
-			if spec.QueueConfig.MaxSamplesPerSend != int(0) {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
-			}
-
-			if spec.QueueConfig.BatchSendDeadline != nil {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: string(*spec.QueueConfig.BatchSendDeadline)})
-			}
-
-			if spec.QueueConfig.MaxRetries != int(0) {
-				queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
-			}
-
-			if spec.QueueConfig.MinBackoff != nil {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: string(*spec.QueueConfig.MinBackoff)})
-			}
-
-			if spec.QueueConfig.MaxBackoff != nil {
-				queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: string(*spec.QueueConfig.MaxBackoff)})
-			}
-
-			if spec.QueueConfig.RetryOnRateLimit {
-				queueConfig = cg.WithMinimumVersion("2.26.0").AppendMapItem(queueConfig, "retry_on_http_429", spec.QueueConfig.RetryOnRateLimit)
-			}
-
-			if spec.QueueConfig.SampleAgeLimit != nil {
-				queueConfig = cg.WithMinimumVersion("2.50.0").AppendMapItem(queueConfig, "sample_age_limit", string(*spec.QueueConfig.SampleAgeLimit))
-			}
-
-			cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
-		}
-
-		if spec.MetadataConfig != nil {
-			var metadataConfig yaml.MapSlice
-			if ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
-				// Prometheus automatically turns off metadata sending when remote-write v2 is used.
-				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: false})
-			} else {
-				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
-			}
-			if spec.MetadataConfig.SendInterval != "" {
-				metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
-			}
-			if spec.MetadataConfig.MaxSamplesPerSend != nil {
-				metadataConfig = cg.WithMinimumVersion("2.29.0").AppendMapItem(metadataConfig, "max_samples_per_send", *spec.MetadataConfig.MaxSamplesPerSend)
-			}
-
-			cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
-		}
-
-		if spec.RoundRobinDNS != nil {
-			cfg = cg.WithMinimumVersion("3.1.0").AppendMapItem(cfg, "round_robin_dns", spec.RoundRobinDNS)
-		}
-
-		cfgs = append(cfgs, cfg)
+	for _, spec := range rws {
+		cfgs = append(cfgs, cg.generateRemoteWriteConfig(spec, s))
 	}
 
 	return yaml.MapItem{
 		Key:   "remote_write",
 		Value: cfgs,
 	}
+}
+
+// generateRemoteWriteConfig generates the configuration of a single remote write endpoint.
+func (cg *ConfigGenerator) generateRemoteWriteConfig(spec monitoringv1.RemoteWriteSpec, s assets.StoreGetter) yaml.MapSlice {
+	cfg := yaml.MapSlice{
+		{Key: "url", Value: spec.URL},
+	}
+
+	if spec.RemoteTimeout != nil {
+		cfg = append(cfg, yaml.MapItem{Key: "remote_timeout", Value: *spec.RemoteTimeout})
+	}
+
+	if len(spec.Headers) > 0 {
+		cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "headers", stringMapToMapSlice(spec.Headers))
+	}
+
+	if ptr.Deref(spec.Name, "") != "" {
+		cfg = cg.WithMinimumVersion("2.15.0").AppendMapItem(cfg, "name", *spec.Name)
+	}
+
+	if spec.MessageVersion != nil {
+		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "protobuf_message", toProtobufMessageVersion(*spec.MessageVersion))
+	}
+
+	if spec.SendExemplars != nil {
+		cfg = cg.WithMinimumVersion("2.27.0").AppendMapItem(cfg, "send_exemplars", spec.SendExemplars)
+	}
+
+	if spec.SendNativeHistograms != nil {
+		cfg = cg.WithMinimumVersion("2.40.0").AppendMapItem(cfg, "send_native_histograms", spec.SendNativeHistograms)
+	}
+
+	var relabelings []yaml.MapSlice
+	for _, c := range spec.WriteRelabelConfigs {
+		var relabeling yaml.MapSlice
+
+		if len(c.SourceLabels) > 0 {
+			relabeling = append(relabeling, yaml.MapItem{Key: "source_labels", Value: c.SourceLabels})
+		}
+
+		if c.Separator != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "separator", Value: *c.Separator})
+		}
+
+		if c.TargetLabel != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "target_label", Value: c.TargetLabel})
+		}
+
+		if c.Regex != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "regex", Value: c.Regex})
+		}
+
+		if c.Modulus != 0 {
+			relabeling = append(relabeling, yaml.MapItem{Key: "modulus", Value: c.Modulus})
+		}
+
+		if c.Replacement != nil {
+			relabeling = append(relabeling, yaml.MapItem{Key: "replacement", Value: *c.Replacement})
+		}
+
+		if c.Action != "" {
+			relabeling = append(relabeling, yaml.MapItem{Key: "action", Value: strings.ToLower(c.Action)})
+		}
+
+		relabelings = append(relabelings, relabeling)
+	}
+
+	if len(relabelings) > 0 {
+		cfg = append(cfg, yaml.MapItem{Key: "write_relabel_configs", Value: relabelings})
+	}
+
+	cfg = cg.addBasicAuthToYaml(cfg, s, spec.BasicAuth)
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if spec.BearerToken != "" {
+		cg.logger.Warn("'bearerToken' is deprecated, use 'authorization' instead.")
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token", Value: spec.BearerToken})
+	}
+
+	//nolint:staticcheck // Ignore SA1019 this field is marked as deprecated.
+	if spec.BearerTokenFile != "" {
+		cg.logger.Debug("'bearerTokenFile' is deprecated, use 'authorization' instead.")
+		cfg = append(cfg, yaml.MapItem{Key: "bearer_token_file", Value: spec.BearerTokenFile})
+	}
+
+	cfg = cg.addOAuth2ToYaml(cfg, s, spec.OAuth2)
+
+	cfg = cg.addTLStoYaml(cfg, s, spec.TLSConfig)
+
+	cfg = cg.addAuthorizationToYaml(cfg, s, spec.Authorization)
+
+	cfg = cg.addProxyConfigtoYaml(cfg, s, spec.ProxyConfig)
+
+	cfg = cg.WithMinimumVersion("2.26.0").addSigv4ToYaml(cfg, "remoteWrite", s, spec.Sigv4)
+
+	if spec.AzureAD != nil {
+		azureAd := yaml.MapSlice{}
+
+		if spec.AzureAD.ManagedIdentity != nil {
+			managedIdentity := yaml.MapSlice{}
+			if clientID := ptr.Deref(spec.AzureAD.ManagedIdentity.ClientID, ""); clientID != "" {
+				managedIdentity = append(managedIdentity, yaml.MapItem{Key: "client_id", Value: clientID})
+			}
+			azureAd = append(azureAd, yaml.MapItem{Key: "managed_identity", Value: managedIdentity})
+		}
+
+		if spec.AzureAD.OAuth != nil {
+			b, err := s.GetSecretKey(spec.AzureAD.OAuth.ClientSecret)
+			if err != nil {
+				cg.logger.Error("invalid Azure OAuth client secret", "err", err)
+			} else {
+				azureAd = cg.WithMinimumVersion("2.48.0").AppendMapItem(azureAd, "oauth", yaml.MapSlice{
+					{Key: "client_id", Value: spec.AzureAD.OAuth.ClientID},
+					{Key: "client_secret", Value: string(b)},
+					{Key: "tenant_id", Value: spec.AzureAD.OAuth.TenantID},
+				})
+			}
+		}
+
+		if spec.AzureAD.SDK != nil {
+			azureAd = cg.WithMinimumVersion("2.52.0").AppendMapItem(
+				azureAd,
+				"sdk",
+				yaml.MapSlice{
+					{Key: "tenant_id", Value: ptr.Deref(spec.AzureAD.SDK.TenantID, "")},
+				})
+		}
+
+		if spec.AzureAD.WorkloadIdentity != nil {
+			workloadIdentityConfig := yaml.MapSlice{
+				{Key: "client_id", Value: spec.AzureAD.WorkloadIdentity.ClientID},
+				{Key: "tenant_id", Value: spec.AzureAD.WorkloadIdentity.TenantID},
+			}
+
+			azureAd = cg.WithMinimumVersion("3.7.0").AppendMapItem(azureAd, "workload_identity", workloadIdentityConfig)
+		}
+
+		if spec.AzureAD.Cloud != nil {
+			azureAd = append(azureAd, yaml.MapItem{Key: "cloud", Value: spec.AzureAD.Cloud})
+		}
+
+		if scope := ptr.Deref(spec.AzureAD.Scope, ""); scope != "" {
+			azureAd = cg.WithMinimumVersion("3.9.0").AppendMapItem(azureAd, "scope", scope)
+		}
+
+		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
+	}
+
+	if spec.FollowRedirects != nil {
+		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
+	}
+
+	if spec.EnableHttp2 != nil {
+		cfg = cg.WithMinimumVersion("2.35.0").AppendMapItem(cfg, "enable_http2", *spec.EnableHttp2)
+	}
+
+	if spec.QueueConfig != nil {
+		queueConfig := yaml.MapSlice{}
+
+		if spec.QueueConfig.Capacity != int(0) {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "capacity", Value: spec.QueueConfig.Capacity})
+		}
+
+		if spec.QueueConfig.MinShards != int(0) {
+			queueConfig = cg.WithMinimumVersion("2.6.0").AppendMapItem(queueConfig, "min_shards", spec.QueueConfig.MinShards)
+		}
+
+		if spec.QueueConfig.MaxShards != int(0) {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "max_shards", Value: spec.QueueConfig.MaxShards})
+		}
+
+		if spec.QueueConfig.MaxSamplesPerSend != int(0) {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "max_samples_per_send", Value: spec.QueueConfig.MaxSamplesPerSend})
+		}
+
+		if spec.QueueConfig.BatchSendDeadline != nil {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "batch_send_deadline", Value: string(*spec.QueueConfig.BatchSendDeadline)})
+		}
+
+		if spec.QueueConfig.MaxRetries != int(0) {
+			queueConfig = cg.WithMaximumVersion("2.11.0").AppendMapItem(queueConfig, "max_retries", spec.QueueConfig.MaxRetries)
+		}
+
+		if spec.QueueConfig.MinBackoff != nil {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "min_backoff", Value: string(*spec.QueueConfig.MinBackoff)})
+		}
+
+		if spec.QueueConfig.MaxBackoff != nil {
+			queueConfig = append(queueConfig, yaml.MapItem{Key: "max_backoff", Value: string(*spec.QueueConfig.MaxBackoff)})
+		}
+
+		if spec.QueueConfig.RetryOnRateLimit {
+			queueConfig = cg.WithMinimumVersion("2.26.0").AppendMapItem(queueConfig, "retry_on_http_429", spec.QueueConfig.RetryOnRateLimit)
+		}
+
+		if spec.QueueConfig.SampleAgeLimit != nil {
+			queueConfig = cg.WithMinimumVersion("2.50.0").AppendMapItem(queueConfig, "sample_age_limit", string(*spec.QueueConfig.SampleAgeLimit))
+		}
+
+		cfg = append(cfg, yaml.MapItem{Key: "queue_config", Value: queueConfig})
+	}
+
+	if spec.MetadataConfig != nil {
+		var metadataConfig yaml.MapSlice
+		if ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
+			// Prometheus automatically turns off metadata sending when remote-write v2 is used.
+			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: false})
+		} else {
+			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send", Value: spec.MetadataConfig.Send})
+		}
+		if spec.MetadataConfig.SendInterval != "" {
+			metadataConfig = append(metadataConfig, yaml.MapItem{Key: "send_interval", Value: spec.MetadataConfig.SendInterval})
+		}
+		if spec.MetadataConfig.MaxSamplesPerSend != nil {
+			metadataConfig = cg.WithMinimumVersion("2.29.0").AppendMapItem(metadataConfig, "max_samples_per_send", *spec.MetadataConfig.MaxSamplesPerSend)
+		}
+
+		cfg = cg.WithMinimumVersion("2.23.0").AppendMapItem(cfg, "metadata_config", metadataConfig)
+	}
+
+	if spec.RoundRobinDNS != nil {
+		cfg = cg.WithMinimumVersion("3.1.0").AppendMapItem(cfg, "round_robin_dns", spec.RoundRobinDNS)
+	}
+
+	return cfg
 }
 
 func (cg *ConfigGenerator) appendScrapeIntervals(slice yaml.MapSlice) yaml.MapSlice {
