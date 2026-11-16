@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/utils/ptr"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -281,6 +282,27 @@ func TestValidateAlertmanagerConfig(t *testing.T) {
 									},
 									Retry:  new("10m"),
 									Expire: new("5m"),
+								},
+							},
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "testA",
+									Labels:    []string{"aa", "bb"},
+									IssueType: "bug",
+									Fields: []monitoringv1beta1.JiraField{
+										{
+											Key:   "customField1",
+											Value: apiextensionsv1.JSON{Raw: []byte(`{"aa": "recv2", "bb": 11}`)},
+										},
+										{
+											Key:   "customField2",
+											Value: apiextensionsv1.JSON{Raw: []byte(nil)},
+										},
+										{
+											Key:   "customField3",
+											Value: apiextensionsv1.JSON{Raw: []byte(`[{"aa": "recv2", "bb": 11, "cc": {"aa": 11}}, "aa", 11, ["aa", "bb", 11] ]`)},
+										},
+									},
 								},
 							},
 						},
@@ -2060,6 +2082,122 @@ func TestValidateRocketchatAlertmanagerConfig(t *testing.T) {
 											URL: new("{{ .labels.url"),
 										},
 									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateAlertmanagerConfig(tc.in)
+			if tc.expectErr && err == nil {
+				t.Error("expected error but got none")
+			}
+
+			if err != nil {
+				if tc.expectErr {
+					return
+				}
+				t.Errorf("got error but expected none -%s", err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateJiraAlertmanagerConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		in        *monitoringv1beta1.AlertmanagerConfig
+		expectErr bool
+	}{
+		{
+			name: "Test validate on Jira config",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test fail to validate on Jira config - empty project",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on Jira config - invalid API URL",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://%><invalid.com")),
+									IssueType: "bug",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "Test fail to validate on Jira config - empty issue type",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{
+						{
+							Name: "same",
+						},
+						{
+							Name: "different",
+							JiraConfigs: []monitoringv1beta1.JiraConfig{
+								{
+									Project:   "projectA",
+									APIURL:    new(monitoringv1beta1.URL("http://test.com")),
+									IssueType: "",
 								},
 							},
 						},
