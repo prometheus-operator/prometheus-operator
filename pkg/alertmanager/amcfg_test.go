@@ -7400,190 +7400,7 @@ func TestTimeInterval(t *testing.T) {
 		})
 	}
 }
-func TestSanitizePushoverReceiverConfig(t *testing.T) {
-	logger := newNopLogger(t)
 
-	for _, tc := range []struct {
-		name           string
-		againstVersion semver.Version
-		in             *alertmanagerConfig
-		expectErr      bool
-		golden         string
-	}{
-		{
-			name:           "Test pushover user_key/token takes precedence in pushover config",
-			againstVersion: semver.Version{Major: 0, Minor: 26},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:     "foo",
-								UserKeyFile: "/path/use_key_file",
-								Token:       "bar",
-								TokenFile:   "/path/token_file",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_pushover_user_key_token_takes_precedence_in_pushover_config.golden",
-		},
-		{
-			name:           "Test pushover token or token_file must be configured",
-			againstVersion: semver.Version{Major: 0, Minor: 26},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey: "foo",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test pushover user_key or user_key_file must be configured",
-			againstVersion: semver.Version{Major: 0, Minor: 26},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								Token: "bar",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test pushover user_key/token_file dropped in pushover config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 25},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:   "foo",
-								TokenFile: "/path/token_file",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test pushover user_key_file/token dropped in pushover config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 25},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKeyFile: "/path/use_key_file",
-								Token:       "bar",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test pushover HTML and Monospace are mutually exclusive",
-			againstVersion: semver.Version{Major: 0, Minor: 29},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:   "foo",
-								Token:     "bar",
-								HTML:      new(true),
-								Monospace: new(true),
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test pushover HTML allowed without Monospace",
-			againstVersion: semver.Version{Major: 0, Minor: 29},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey: "foo",
-								Token:   "bar",
-								HTML:    new(true),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_pushover_html_allowed_without_monospace.golden",
-		},
-		{
-			name:           "Test pushover Monospace allowed without HTML",
-			againstVersion: semver.Version{Major: 0, Minor: 29},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:   "foo",
-								Token:     "bar",
-								Monospace: new(true),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_pushover_monospace_allowed_without_html.golden",
-		},
-		{
-			name:           "Test pushover Monospace dropped in unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						PushoverConfigs: []*pushoverConfig{
-							{
-								UserKey:   "foo",
-								Token:     "bar",
-								Monospace: new(true),
-							},
-						},
-					},
-				},
-			},
-			golden: "test_pushover_monospace_dropped_unsupported_version.golden",
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.in.sanitize(tc.againstVersion, logger)
-			if tc.expectErr {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
-
-			amConfigs, err := yaml.Marshal(tc.in)
-			require.NoError(t, err)
-
-			golden.Assert(t, string(amConfigs), tc.golden)
-		})
-	}
-}
 func TestSanitizeEmailConfig(t *testing.T) {
 	logger := newNopLogger(t)
 
@@ -8291,6 +8108,164 @@ func TestSanitizePushoverConfig(t *testing.T) {
 				},
 			},
 			golden: "test_pushover_valid_url_passes.golden",
+		},
+		{
+			name:           "Test pushover user_key/token takes precedence in pushover config",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:     "foo",
+								UserKeyFile: "/path/use_key_file",
+								Token:       "bar",
+								TokenFile:   "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_user_key_token_takes_precedence_in_pushover_config.golden",
+		},
+		{
+			name:           "Test pushover token or token_file must be configured",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover user_key or user_key_file must be configured",
+			againstVersion: semver.Version{Major: 0, Minor: 26},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								Token: "bar",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover user_key/token_file dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								TokenFile: "/path/token_file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover user_key_file/token dropped in pushover config for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKeyFile: "/path/use_key_file",
+								Token:       "bar",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover HTML and Monospace are mutually exclusive",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								HTML:      new(true),
+								Monospace: new(true),
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test pushover HTML allowed without Monospace",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey: "foo",
+								Token:   "bar",
+								HTML:    new(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_html_allowed_without_monospace.golden",
+		},
+		{
+			name:           "Test pushover Monospace allowed without HTML",
+			againstVersion: semver.Version{Major: 0, Minor: 29},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								Monospace: new(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_monospace_allowed_without_html.golden",
+		},
+		{
+			name:           "Test pushover Monospace dropped in unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 28},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PushoverConfigs: []*pushoverConfig{
+							{
+								UserKey:   "foo",
+								Token:     "bar",
+								Monospace: new(true),
+							},
+						},
+					},
+				},
+			},
+			golden: "test_pushover_monospace_dropped_unsupported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
