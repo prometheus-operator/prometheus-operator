@@ -29,17 +29,20 @@ type HTTPConfigWithoutTLSApplyConfiguration struct {
 	// the client.
 	//
 	// Cannot be set at the same time as `basicAuth`, `bearerTokenSecret` or `oauth2`.
+	//
 	Authorization *SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// basicAuth defines the Basic Authentication credentials used by the
 	// client.
 	//
 	// Cannot be set at the same time as `authorization`, `bearerTokenSecret` or `oauth2`.
+	//
 	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// oauth2 defines the OAuth2 settings used by the client.
 	//
 	// It requires Prometheus >= 2.27.0.
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth` or `bearerTokenSecret`.
+	//
 	OAuth2 *OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	// bearerTokenSecret defines a key of a Secret containing the bearer token
 	// used by the client for authentication. The secret needs to be in the
@@ -48,12 +51,15 @@ type HTTPConfigWithoutTLSApplyConfiguration struct {
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth` or `oauth2`.
 	//
+	//
 	// Deprecated: use `authorization` instead.
 	BearerTokenSecret *corev1.SecretKeySelector `json:"bearerTokenSecret,omitempty"`
 	// followRedirects defines whether the client should follow HTTP 3xx
 	// redirects.
+	//
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHttp2 can be used to disable HTTP2.
+	//
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 }
 
