@@ -47,13 +47,22 @@
                   "attachMetadata": {
                     "description": "attachMetadata defines additional metadata which is added to the\ndiscovered targets.\n\nIt requires Prometheus >= v2.35.0.",
                     "properties": {
-                      "namespace": {
-                        "description": "namespace when set to true, Prometheus attaches namespace metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Namespaces` objects.\n\nIt requires Prometheus >= v3.6.0.",
+                      "node": {
+                        "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nNode metadata labels are not automatically added to scraped metrics. They are\nexposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries\nwith relabeling configuration.\n\nDeprecated: add `Node` to `resources` instead.",
                         "type": "boolean"
                       },
-                      "node": {
-                        "description": "node when set to true, Prometheus attaches node metadata to the discovered\ntargets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on the `Nodes` objects.\n\nNode metadata labels are not automatically added to scraped metrics. They are\nexposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries\nwith relabeling configuration.",
-                        "type": "boolean"
+                      "resources": {
+                        "description": "resources defines the Kubernetes objects whose metadata Prometheus\nattaches to the discovered targets.\n\nThe Prometheus service account must have the `list` and `watch`\npermissions on each listed kind of object.\n\nThe metadata labels are not automatically added to scraped metrics. They\nare exposed as `__meta_kubernetes_<resource>_*` labels and can be copied\nto timeseries with relabeling configuration.\n\n`Namespace` requires Prometheus >= v3.6.0.",
+                        "items": {
+                          "description": "MetadataResource is a kind of Kubernetes object whose metadata Prometheus\ncan attach to discovered targets.",
+                          "enum": [
+                            "Node",
+                            "Namespace"
+                          ],
+                          "type": "string"
+                        },
+                        "type": "array",
+                        "x-kubernetes-list-type": "set"
                       }
                     },
                     "type": "object"

@@ -7954,22 +7954,28 @@ permissions on the <code>Nodes</code> objects.</p>
 <p>Node metadata labels are not automatically added to scraped metrics. They are
 exposed as <code>__meta_kubernetes_node_*</code> labels and can be copied to timeseries
 with relabeling configuration.</p>
+<p>Deprecated: add <code>Node</code> to <code>resources</code> instead.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>namespace</code><br/>
+<code>resources</code><br/>
 <em>
-bool
+<a href="#monitoring.coreos.com/v1.MetadataResource">
+[]MetadataResource
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>namespace when set to true, Prometheus attaches namespace metadata to the discovered
-targets.</p>
+<p>resources defines the Kubernetes objects whose metadata Prometheus
+attaches to the discovered targets.</p>
 <p>The Prometheus service account must have the <code>list</code> and <code>watch</code>
-permissions on the <code>Namespaces</code> objects.</p>
-<p>It requires Prometheus &gt;= v3.6.0.</p>
+permissions on each listed kind of object.</p>
+<p>The metadata labels are not automatically added to scraped metrics. They
+are exposed as <code>__meta_kubernetes_&lt;resource&gt;_*</code> labels and can be copied
+to timeseries with relabeling configuration.</p>
+<p><code>Namespace</code> requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>
@@ -12957,6 +12963,30 @@ int32
 </td>
 </tr>
 </tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.MetadataResource">MetadataResource
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AttachMetadata">AttachMetadata</a>, <a href="#monitoring.coreos.com/v1alpha1.AttachMetadata">AttachMetadata</a>)
+</p>
+<div>
+<p>MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+can attach to discovered targets.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;Namespace&#34;</p></td>
+<td><p>MetadataResourceNamespace attaches the metadata of the target&rsquo;s namespace.</p>
+</td>
+</tr><tr><td><p>&#34;Node&#34;</p></td>
+<td><p>MetadataResourceNode attaches the metadata of the target&rsquo;s node.</p>
+</td>
+</tr></tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.NameEscapingSchemeOptions">NameEscapingSchemeOptions
 (<code>string</code> alias)</h3>
@@ -26097,21 +26127,26 @@ bool
 When set to true, Prometheus must have the <code>list/watch</code> permission on the
 <code>Nodes</code> objects.
 Only valid for Pod, Endpoint and Endpointslice roles.</p>
+<p>Deprecated: add <code>Node</code> to <code>resources</code> instead.</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>namespace</code><br/>
+<code>resources</code><br/>
 <em>
-bool
+<a href="#monitoring.coreos.com/v1.MetadataResource">
+[]MetadataResource
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>namespace attaches namespace metadata to discovered targets.
-When set to true, Prometheus must have permissions to list/watch Namespaces.
-Only valid for pod, endpoints, endpointslice, service, ingress.</p>
-<p>It requires Prometheus &gt;= v3.6.0.</p>
+<p>resources defines the Kubernetes objects whose metadata Prometheus
+attaches to discovered targets. Prometheus must have the <code>list</code> and
+<code>watch</code> permissions on each listed kind of object.
+<code>Node</code> is only valid for the Pod, Endpoints and EndpointSlice roles.
+<code>Namespace</code> is only valid for the Pod, Endpoints, EndpointSlice, Service
+and Ingress roles, and requires Prometheus &gt;= v3.6.0.</p>
 </td>
 </tr>
 </tbody>

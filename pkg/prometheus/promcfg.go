@@ -2451,11 +2451,11 @@ type attachMetadataConfig struct {
 }
 
 func (a *attachMetadataConfig) node() bool {
-	return ptr.Deref(a.attachMetadata.Node, false)
+	return a.attachMetadata.HasResource(monitoringv1.MetadataResourceNode)
 }
 
 func (a *attachMetadataConfig) namespace() bool {
-	return ptr.Deref(a.attachMetadata.Namespace, false)
+	return a.attachMetadata.HasResource(monitoringv1.MetadataResourceNamespace)
 }
 
 // k8s sd config options.
@@ -2498,7 +2498,7 @@ func convertV1alpha1AttachMetadata(am *monitoringv1alpha1.AttachMetadata) *monit
 	}
 	return &monitoringv1.AttachMetadata{
 		Node:      am.Node,
-		Namespace: am.Namespace,
+		Resources: slices.Clone(am.Resources),
 	}
 }
 
@@ -5515,18 +5515,15 @@ func (cg *ConfigGenerator) mergeAttachMetadataForTopology(amc *attachMetadataCon
 		return amc
 	}
 
-	attachMetadata := &monitoringv1.AttachMetadata{
-		Node: new(true),
-	}
-
-	// Preserve existing namespace setting if present.
-	if amc != nil && amc.namespace() {
-		attachMetadata.Namespace = new(true)
+	// Keep the other requested metadata (e.g. namespace), only add node.
+	var attachMetadata *monitoringv1.AttachMetadata
+	if amc != nil {
+		attachMetadata = amc.attachMetadata
 	}
 
 	return &attachMetadataConfig{
 		MinimumVersion: minimumVersion,
-		attachMetadata: attachMetadata,
+		attachMetadata: attachMetadata.WithResource(monitoringv1.MetadataResourceNode),
 	}
 }
 

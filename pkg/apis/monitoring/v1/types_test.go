@@ -635,3 +635,62 @@ func TestValidateTracingConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestAttachMetadataHasResource(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		am        *AttachMetadata
+		node      bool
+		namespace bool
+	}{
+		{name: "nil"},
+		{name: "empty", am: &AttachMetadata{}},
+		{name: "deprecated node", am: &AttachMetadata{Node: new(true)}, node: true},
+		{name: "deprecated node false", am: &AttachMetadata{Node: new(false)}},
+		{
+			name: "resources",
+			am:   &AttachMetadata{Resources: []MetadataResource{MetadataResourceNode, MetadataResourceNamespace}},
+			node: true, namespace: true,
+		},
+		{
+			name:      "namespace only",
+			am:        &AttachMetadata{Resources: []MetadataResource{MetadataResourceNamespace}},
+			namespace: true,
+		},
+		{
+			name: "deprecated node false, node in resources",
+			am:   &AttachMetadata{Node: new(false), Resources: []MetadataResource{MetadataResourceNode}},
+			node: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.am.HasResource(MetadataResourceNode); got != tc.node {
+				t.Errorf("HasResource(Node) = %v, want %v", got, tc.node)
+			}
+			if got := tc.am.HasResource(MetadataResourceNamespace); got != tc.namespace {
+				t.Errorf("HasResource(Namespace) = %v, want %v", got, tc.namespace)
+			}
+		})
+	}
+}
+
+func TestAttachMetadataWithResource(t *testing.T) {
+	var nilAM *AttachMetadata
+	if got := nilAM.WithResource(MetadataResourceNode); !got.HasResource(MetadataResourceNode) || got.HasResource(MetadataResourceNamespace) {
+		t.Errorf("nil.WithResource(Node) = %+v, want node only", got)
+	}
+
+	am := &AttachMetadata{Resources: []MetadataResource{MetadataResourceNamespace}}
+	got := am.WithResource(MetadataResourceNode)
+	if !got.HasResource(MetadataResourceNode) || !got.HasResource(MetadataResourceNamespace) {
+		t.Errorf("WithResource(Node) = %+v, want node and namespace", got)
+	}
+	if am.HasResource(MetadataResourceNode) {
+		t.Errorf("WithResource modified its receiver: %+v", am)
+	}
+
+	again := got.WithResource(MetadataResourceNode)
+	if len(again.Resources) != 2 {
+		t.Errorf("WithResource added a duplicate: %v", again.Resources)
+	}
+}
