@@ -23072,7 +23072,32 @@ spec:
                       Node metadata labels are not automatically added to scraped metrics. They are
                       exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
                       with relabeling configuration.
+
+                      Deprecated: add `Node` to `resources` instead.
                     type: boolean
+                  resources:
+                    description: |-
+                      resources defines the Kubernetes objects whose metadata Prometheus
+                      attaches to the discovered targets.
+
+                      The Prometheus service account must have the `list` and `watch`
+                      permissions on each listed kind of object.
+
+                      The metadata labels are not automatically added to scraped metrics. They
+                      are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+                      to timeseries with relabeling configuration.
+
+                      `Namespace` requires Prometheus >= v3.6.0.
+                    items:
+                      description: |-
+                        MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                        can attach to discovered targets.
+                      enum:
+                      - Node
+                      - Namespace
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
                 type: object
               bodySizeLimit:
                 description: |-
@@ -32790,7 +32815,32 @@ spec:
                             Node metadata labels are not automatically added to scraped metrics. They are
                             exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
                             with relabeling configuration.
+
+                            Deprecated: add `Node` to `resources` instead.
                           type: boolean
+                        resources:
+                          description: |-
+                            resources defines the Kubernetes objects whose metadata Prometheus
+                            attaches to the discovered targets.
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on each listed kind of object.
+
+                            The metadata labels are not automatically added to scraped metrics. They
+                            are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+                            to timeseries with relabeling configuration.
+
+                            `Namespace` requires Prometheus >= v3.6.0.
+                          items:
+                            description: |-
+                              MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                              can attach to discovered targets.
+                            enum:
+                            - Node
+                            - Namespace
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: set
                       type: object
                     authorization:
                       description: |-
@@ -46511,7 +46561,32 @@ spec:
                             Node metadata labels are not automatically added to scraped metrics. They are
                             exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
                             with relabeling configuration.
+
+                            Deprecated: add `Node` to `resources` instead.
                           type: boolean
+                        resources:
+                          description: |-
+                            resources defines the Kubernetes objects whose metadata Prometheus
+                            attaches to the discovered targets.
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on each listed kind of object.
+
+                            The metadata labels are not automatically added to scraped metrics. They
+                            are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+                            to timeseries with relabeling configuration.
+
+                            `Namespace` requires Prometheus >= v3.6.0.
+                          items:
+                            description: |-
+                              MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                              can attach to discovered targets.
+                            enum:
+                            - Node
+                            - Namespace
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: set
                       type: object
                     authorization:
                       description: |-
@@ -59460,16 +59535,37 @@ spec:
                     attachMetadata:
                       description: |-
                         attachMetadata defines the metadata to attach to discovered targets.
-                        It requires Prometheus >= v2.35.0 when using the `Pod` role and
-                        Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.
+                        It requires Prometheus >= v2.35.0 when using the `Pod` role,
+                        Prometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and
+                        Prometheus >= v3.6.0 for `Service` and `Ingress` roles.
                       properties:
                         node:
                           description: |-
                             node attaches node metadata to discovered targets.
-                            When set to true, Prometheus must have the `get` permission on the
+                            When set to true, Prometheus must have the `list/watch` permission on the
                             `Nodes` objects.
                             Only valid for Pod, Endpoint and Endpointslice roles.
+
+                            Deprecated: add `Node` to `resources` instead.
                           type: boolean
+                        resources:
+                          description: |-
+                            resources defines the Kubernetes objects whose metadata Prometheus
+                            attaches to discovered targets. Prometheus must have the `list` and
+                            `watch` permissions on each listed kind of object.
+                            `Node` is only valid for the Pod, Endpoints and EndpointSlice roles.
+                            `Namespace` is only valid for the Pod, Endpoints, EndpointSlice, Service
+                            and Ingress roles, and requires Prometheus >= v3.6.0.
+                          items:
+                            description: |-
+                              MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                              can attach to discovered targets.
+                            enum:
+                            - Node
+                            - Namespace
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: set
                       type: object
                     authorization:
                       description: |-
@@ -60206,6 +60302,19 @@ spec:
                   required:
                   - role
                   type: object
+                  x-kubernetes-validations:
+                  - message: node metadata is only valid for Pod, Endpoints, and EndpointSlice
+                      roles
+                    rule: '!has(self.attachMetadata) || !((has(self.attachMetadata.node)
+                      && self.attachMetadata.node) || (has(self.attachMetadata.resources)
+                      && ''Node'' in self.attachMetadata.resources)) || self.role
+                      in [''Pod'', ''Endpoints'', ''EndpointSlice'']'
+                  - message: namespace metadata is only valid for Pod, Endpoints,
+                      EndpointSlice, Service, and Ingress roles
+                    rule: '!has(self.attachMetadata) || !has(self.attachMetadata.resources)
+                      || !(''Namespace'' in self.attachMetadata.resources) || self.role
+                      in [''Pod'', ''Endpoints'', ''EndpointSlice'', ''Service'',
+                      ''Ingress'']'
                 type: array
               kumaSDConfigs:
                 description: kumaSDConfigs defines a list of Kuma service discovery
@@ -65577,7 +65686,32 @@ spec:
                       Node metadata labels are not automatically added to scraped metrics. They are
                       exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
                       with relabeling configuration.
+
+                      Deprecated: add `Node` to `resources` instead.
                     type: boolean
+                  resources:
+                    description: |-
+                      resources defines the Kubernetes objects whose metadata Prometheus
+                      attaches to the discovered targets.
+
+                      The Prometheus service account must have the `list` and `watch`
+                      permissions on each listed kind of object.
+
+                      The metadata labels are not automatically added to scraped metrics. They
+                      are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+                      to timeseries with relabeling configuration.
+
+                      `Namespace` requires Prometheus >= v3.6.0.
+                    items:
+                      description: |-
+                        MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                        can attach to discovered targets.
+                      enum:
+                      - Node
+                      - Namespace
+                      type: string
+                    type: array
+                    x-kubernetes-list-type: set
                 type: object
               bodySizeLimit:
                 description: |-

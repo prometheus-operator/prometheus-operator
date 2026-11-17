@@ -6489,11 +6489,24 @@
                           "type": "string"
                         },
                         "attachMetadata": {
-                          "description": "attachMetadata defines the metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role and\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles.",
+                          "description": "attachMetadata defines the metadata to attach to discovered targets.\nIt requires Prometheus >= v2.35.0 when using the `Pod` role,\nPrometheus >= v2.37.0 for `Endpoints` and `Endpointslice` roles and\nPrometheus >= v3.6.0 for `Service` and `Ingress` roles.",
                           "properties": {
                             "node": {
-                              "description": "node attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `get` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.",
+                              "description": "node attaches node metadata to discovered targets.\nWhen set to true, Prometheus must have the `list/watch` permission on the\n`Nodes` objects.\nOnly valid for Pod, Endpoint and Endpointslice roles.\n\nDeprecated: add `Node` to `resources` instead.",
                               "type": "boolean"
+                            },
+                            "resources": {
+                              "description": "resources defines the Kubernetes objects whose metadata Prometheus\nattaches to discovered targets. Prometheus must have the `list` and\n`watch` permissions on each listed kind of object.\n`Node` is only valid for the Pod, Endpoints and EndpointSlice roles.\n`Namespace` is only valid for the Pod, Endpoints, EndpointSlice, Service\nand Ingress roles, and requires Prometheus >= v3.6.0.",
+                              "items": {
+                                "description": "MetadataResource is a kind of Kubernetes object whose metadata Prometheus\ncan attach to discovered targets.",
+                                "enum": [
+                                  "Node",
+                                  "Namespace"
+                                ],
+                                "type": "string"
+                              },
+                              "type": "array",
+                              "x-kubernetes-list-type": "set"
                             }
                           },
                           "type": "object"
@@ -7180,7 +7193,17 @@
                       "required": [
                         "role"
                       ],
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "node metadata is only valid for Pod, Endpoints, and EndpointSlice roles",
+                          "rule": "!has(self.attachMetadata) || !((has(self.attachMetadata.node) && self.attachMetadata.node) || (has(self.attachMetadata.resources) && 'Node' in self.attachMetadata.resources)) || self.role in ['Pod', 'Endpoints', 'EndpointSlice']"
+                        },
+                        {
+                          "message": "namespace metadata is only valid for Pod, Endpoints, EndpointSlice, Service, and Ingress roles",
+                          "rule": "!has(self.attachMetadata) || !has(self.attachMetadata.resources) || !('Namespace' in self.attachMetadata.resources) || self.role in ['Pod', 'Endpoints', 'EndpointSlice', 'Service', 'Ingress']"
+                        }
+                      ]
                     },
                     "type": "array"
                   },

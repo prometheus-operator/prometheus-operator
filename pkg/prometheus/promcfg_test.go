@@ -499,7 +499,7 @@ func TestNamespaceSetCorrectly(t *testing.T) {
 						MatchNames: []string{"test1", "test2"},
 					},
 					AttachMetadata: &monitoringv1.AttachMetadata{
-						Node: new(true),
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode, monitoringv1.MetadataResourceNamespace},
 					},
 				},
 			},
@@ -8018,12 +8018,13 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 					{
 						Role: monitoringv1alpha1.KubernetesRolePod,
 						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
-							Node: new(true),
+							Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode, monitoringv1.MetadataResourceNamespace},
 						},
 					},
 				},
 			},
-			golden: "ScrapeConfigSpecConfig_K8SSD_with_AttachMetadata.golden",
+			version: "3.5.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_AttachMetadata.golden",
 		},
 		{
 			name: "kubernetes_sd_config_with_unsupported_role_attach_metadata",
@@ -8038,6 +8039,68 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_K8SSD_with_Unsupported_Role_AttachMetadata.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_supported_role_attach_metadata_with_namespace",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRolePod,
+						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+							Node:      new(true),
+							Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+						},
+					},
+				},
+			},
+			version: "3.6.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_AttachMetadata_with_Namespace.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_supported_role_attach_metadata_with_Namespace",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleService,
+						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+							Node:      new(true),
+							Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+						},
+					},
+				},
+			},
+			version: "3.6.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_Supported_Role_AttachMetadata_with_Namespace.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_unsupported_version_attach_metadata_with_Namespace",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleService,
+						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+							Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode, monitoringv1.MetadataResourceNamespace},
+						},
+					},
+				},
+			},
+			version: "3.5.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_Unsupported_Version_AttachMetadata_with_Namespace.golden",
+		},
+		{
+			name: "kubernetes_sd_config_with_attach_metadata_namespace_only",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+					{
+						Role: monitoringv1alpha1.KubernetesRoleService,
+						AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+							Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+						},
+					},
+				},
+			},
+			version: "3.6.0",
+			golden:  "ScrapeConfigSpecConfig_K8SSD_with_AttachMetadata_Namespace_Only.golden",
 		},
 		{
 			name: "kubernetes_sd_config_with_selectors",
@@ -13810,6 +13873,7 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 	podMonitorWithNonDefaultScrapeClass.Spec.ScrapeClassName = new("test-attachmetadata-scrape-class")
 	for _, tc := range []struct {
 		name            string
+		version         string
 		scrapeClasses   []monitoringv1.ScrapeClass
 		serviceMonitors map[string]*monitoringv1.ServiceMonitor
 		podMonitors     map[string]*monitoringv1.PodMonitor
@@ -13864,12 +13928,28 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 					AttachMetadata: &monitoringv1.AttachMetadata{Node: new(true)},
 				},
 			},
+			version:     "3.5.0",
 			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
 			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithAttachMetadata.golden",
+		},
+		{
+			name: "PodMonitor with non-default ScrapeClass AttachMetadata with support prometheus",
+			scrapeClasses: []monitoringv1.ScrapeClass{
+				{
+					Name: "test-attachmetadata-scrape-class",
+					AttachMetadata: &monitoringv1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode, monitoringv1.MetadataResourceNamespace},
+					},
+				},
+			},
+			version:     "3.6.0",
+			podMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitorWithNonDefaultScrapeClass},
+			goldenFile:  "podMonitorObjectWithNonDefaultScrapeClassWithAttachMetadataWithSupportPrometheus.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			p := defaultPrometheus()
+			p.Spec.Version = tc.version
 			p.Spec.CommonPrometheusFields.EnforcedNamespaceLabel = "namespace"
 
 			p.Spec.ScrapeClasses = tc.scrapeClasses
@@ -14924,6 +15004,19 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 				return sm
 			}(),
 			golden: "TopologySharding_ServiceMonitor_force_attach_metadata_false.golden",
+		},
+		{
+			name:   "pod_monitor_force_attach_metadata_keeps_namespace",
+			shards: 4,
+			zones:  []string{"zone-a", "zone-b"},
+			podMonitor: func() map[string]*monitoringv1.PodMonitor {
+				pm := basicPodMonitor()
+				pm["test"].Spec.AttachMetadata = &monitoringv1.AttachMetadata{
+					Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+				}
+				return pm
+			}(),
+			golden: "TopologySharding_PodMonitor_force_attach_metadata_keeps_namespace.golden",
 		},
 		// Pod topology labels (K8s >= 1.35) — no attach_metadata.node required.
 		{

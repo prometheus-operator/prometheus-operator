@@ -1405,6 +1405,102 @@ var K8STestCases = []scrapeCRDTestCase{
 		expectedError: false,
 	},
 	{
+		name: "AttachMetadata with node and namespace resources",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode, monitoringv1.MetadataResourceNamespace},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "AttachMetadata with namespace resource for the Service role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Service",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "AttachMetadata with node resource for the Service role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Service",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNode},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AttachMetadata with deprecated node for the Service role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:           "Service",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{Node: new(true)},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AttachMetadata with namespace resource for the Node role",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Node",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AttachMetadata with an unknown resource",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{"Service"},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "AttachMetadata with a duplicate resource",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role: "Pod",
+					AttachMetadata: &monitoringv1alpha1.AttachMetadata{
+						Resources: []monitoringv1.MetadataResource{monitoringv1.MetadataResourceNamespace, monitoringv1.MetadataResourceNamespace},
+					},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
 		name: "Selector with invalid role",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{

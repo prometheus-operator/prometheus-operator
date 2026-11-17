@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"slices"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
@@ -691,8 +692,67 @@ type AttachMetadata struct {
 	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
 	// with relabeling configuration.
 	//
+	// Deprecated: add `Node` to `resources` instead.
+	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
+
+	// resources defines the Kubernetes objects whose metadata Prometheus
+	// attaches to the discovered targets.
+	//
+	// The Prometheus service account must have the `list` and `watch`
+	// permissions on each listed kind of object.
+	//
+	// The metadata labels are not automatically added to scraped metrics. They
+	// are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+	// to timeseries with relabeling configuration.
+	//
+	// `Namespace` requires Prometheus >= v3.6.0.
+	//
+	// +listType=set
+	// +optional
+	Resources []MetadataResource `json:"resources,omitempty"`
+}
+
+// MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+// can attach to discovered targets.
+//
+// +kubebuilder:validation:Enum=Node;Namespace
+type MetadataResource string
+
+const (
+	// MetadataResourceNode attaches the metadata of the target's node.
+	MetadataResourceNode MetadataResource = "Node"
+	// MetadataResourceNamespace attaches the metadata of the target's namespace.
+	MetadataResourceNamespace MetadataResource = "Namespace"
+)
+
+// HasResource reports whether metadata of resource r is requested, including
+// through the deprecated `node` field.
+func (am *AttachMetadata) HasResource(r MetadataResource) bool {
+	if am == nil {
+		return false
+	}
+
+	if r == MetadataResourceNode && am.Node != nil && *am.Node {
+		return true
+	}
+
+	return slices.Contains(am.Resources, r)
+}
+
+// WithResource returns a copy of am that also requests metadata of resource r.
+func (am *AttachMetadata) WithResource(r MetadataResource) *AttachMetadata {
+	out := &AttachMetadata{}
+	if am != nil {
+		am.DeepCopyInto(out)
+	}
+
+	if !slices.Contains(out.Resources, r) {
+		out.Resources = append(out.Resources, r)
+	}
+
+	return out
 }
 
 // OAuth2 configures OAuth2 settings.
