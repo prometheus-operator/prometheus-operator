@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -219,7 +221,54 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		return fmt.Errorf("invalid writeRelabelConfigs: %w", err)
 	}
 
+	if err := validateRemoteHeaders(spec.Headers); err != nil {
+		return err
+	}
+
 	return spec.Validate()
+}
+
+// reservedRemoteHeaders is the list of HTTP headers which can't be set in the
+// remote write and remote read configurations.
+// Reference:
+// https://github.com/prometheus/prometheus/blob/v3.15.1/config/config.go#L49-L70
+var reservedRemoteHeaders = sets.New(
+	"host",
+	"content-encoding",
+	"content-length",
+	"content-type",
+	"user-agent",
+	"connection",
+	"keep-alive",
+	"proxy-authenticate",
+	"proxy-authorization",
+	"www-authenticate",
+	"accept-encoding",
+	"x-prometheus-remote-write-version",
+	"x-prometheus-remote-read-version",
+	// Added by SigV4.
+	"x-amz-date",
+	"x-amz-security-token",
+	"x-amz-content-sha256",
+)
+
+// validateRemoteHeaders returns an error if the headers of a remote write or
+// remote read configuration contain a header that Prometheus doesn't allow.
+// Prometheus refuses to load a configuration with such headers.
+func validateRemoteHeaders(headers map[string]string) error {
+	for _, header := range slices.Sorted(maps.Keys(headers)) {
+		h := strings.ToLower(header)
+
+		if h == "authorization" {
+			return fmt.Errorf("headers: %q can't be set, use the basicAuth, authorization, oauth2, sigv4 or azureAd fields instead", header)
+		}
+
+		if reservedRemoteHeaders.Has(h) {
+			return fmt.Errorf("headers: %q is a reserved header and can't be set", header)
+		}
+	}
+
+	return nil
 }
 
 func (cg *ConfigGenerator) checkAzureADManagedIdentity(mid *monitoringv1.ManagedIdentity) error {

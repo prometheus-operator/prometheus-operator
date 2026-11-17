@@ -418,6 +418,45 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "with_custom_headers",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"X-Scope-OrgID": "tenant-a",
+				},
+			},
+		},
+		{
+			name: "with_reserved_header",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"User-Agent": "custom",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_reserved_header_in_lowercase",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"x-prometheus-remote-write-version": "2.0.0",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_authorization_header",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"Authorization": "Bearer xxx",
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:    "with_writeRelabelConfigs_action_unsupported_version",
 			version: "v2.35.0",
 			spec: monitoringv1.RemoteWriteSpec{

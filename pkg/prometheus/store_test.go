@@ -67,3 +67,47 @@ func TestAddRemoteReadsToStore(t *testing.T) {
 		})
 	}
 }
+
+func TestAddRemoteReadsToStoreHeaders(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		headers   map[string]string
+		expectErr bool
+	}{
+		{
+			name: "no headers",
+		},
+		{
+			name:    "custom header",
+			headers: map[string]string{"X-Scope-OrgID": "tenant-a"},
+		},
+		{
+			name:      "reserved header",
+			headers:   map[string]string{"Content-Type": "application/json"},
+			expectErr: true,
+		},
+		{
+			name:      "authorization header",
+			headers:   map[string]string{"authorization": "Bearer xxx"},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cs := fake.NewClientset()
+			store := assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1())
+
+			err := AddRemoteReadsToStore(context.Background(), store, "default", []monitoringv1.RemoteReadSpec{
+				{
+					URL:     "http://example.com",
+					Headers: tc.headers,
+				},
+			})
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}
