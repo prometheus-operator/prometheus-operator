@@ -94,22 +94,13 @@ The status subresource reports which Prometheus, PrometheusAgent and ThanosRuler
 
 A RemoteWrite object is typically managed by a different team than the Prometheus resource and its URL is arbitrary. If it could use the credentials available to the Prometheus pod, they could be sent to any endpoint. Hence a RemoteWrite object must only rely on information from its own namespace: the Secret and ConfigMap references are resolved in the namespace of the RemoteWrite object.
 
-The RemoteWrite CRD reuses `RemoteWriteSpec` from the Prometheus CRD, but only the following fields are allowed:
-
-* `url`, `name`, `messageVersion`, `sendExemplars`, `sendNativeHistograms`, `remoteTimeout`, `headers`, `writeRelabelConfigs`, `followRedirects`, `enableHTTP2`, `roundRobinDNS`, `queueConfig` and `metadataConfig`.
-* `basicAuth`, `oauth2` (except `proxyFromEnvironment`) and `authorization` (except `credentialsFile`).
-* `sigv4` with `accessKey` and `secretKey` (`region`, `roleArn`, `externalId` and `useFIPSSTSEndpoint` are also allowed).
-* `azureAd` with `oauth` (`cloud` and `scope` are also allowed).
-* `tlsConfig` (except `caFile`, `certFile` and `keyFile`).
-* `proxyUrl`, `noProxy` and `proxyConnectHeader`.
-
-In particular, the following fields are rejected:
+The RemoteWrite CRD reuses `RemoteWriteSpec` from the Prometheus CRD, but the following fields aren't allowed:
 
 * References to files in the Prometheus container (`bearerTokenFile`, `authorization.credentialsFile`, `tlsConfig.caFile`, `tlsConfig.certFile` and `tlsConfig.keyFile`).
 * Credentials from the Prometheus pod's environment (`sigv4` without `accessKey` and `secretKey`, `sigv4.profile`, `azureAd.managedIdentity`, `azureAd.workloadIdentity`, `azureAd.sdk` and `proxyFromEnvironment`).
 * The deprecated `bearerToken` field.
 
-The fields which aren't allowed are rejected by CEL validation rules when the object is created or updated, similar to the rules of the PrometheusAgent CRD for the DaemonSet mode. The operator also checks the list of allowed fields when it selects the RemoteWrite objects. A field added to `RemoteWriteSpec` in the future is rejected until it's added to the list of allowed fields.
+These fields are rejected when the object is created or updated. A field added to `RemoteWriteSpec` in the future is rejected until it's explicitly allowed.
 
 #### Remote write name
 
