@@ -39,8 +39,6 @@ Prometheus has two APIs for integrating with remote storage: 'remote write' and 
 
 Authenticating with the identity of a service account from the RemoteWrite object's namespace (e.g. AWS IAM roles for service accounts or Azure workload identity) is out of scope for the first release.
 
-The remote write configuration of the ThanosRuler CRD isn't covered by the RemoteWrite CRD in the first release. Thanos Ruler runs in stateless mode when its remote write configuration isn't empty, so creating or deleting a RemoteWrite object would switch the ruler between the stateful and stateless modes. How to handle it needs a separate discussion.
-
 ## How
 
 ### Feature gate
@@ -90,7 +88,7 @@ type RemoteWrite struct {
 }
 ```
 
-The status subresource reports which Prometheus and PrometheusAgent resources select the object and whether it was accepted, like the other configuration resources (requires the `StatusForConfigurationResources` feature gate).
+The status subresource reports which Prometheus, PrometheusAgent and ThanosRuler resources select the object and whether it was accepted, like the other configuration resources (requires the `StatusForConfigurationResources` feature gate).
 
 #### Credentials and allowed fields
 
@@ -202,6 +200,12 @@ Without limits, a RemoteWrite object can exhaust the resources of the Prometheus
 
 The PrometheusAgent CRD also supports the RemoteWrite CRD. Everything explained about the Prometheus CRD works in the same way for the PrometheusAgent.
 
+## ThanosRuler CRD
+
+The ThanosRuler CRD also supports the RemoteWrite CRD with the same `remoteWriteSelector` and `remoteWriteNamespaceSelector` fields.
+
+Thanos Ruler runs in stateless mode when its remote write configuration isn't empty. If `remoteWriteSelector` is set, the ruler runs in stateless mode regardless of the selected RemoteWrite objects, so creating or deleting a RemoteWrite object doesn't switch the ruler between the stateful and stateless modes.
+
 ## Alternatives
 
 ### Prometheus per namespace or team
@@ -220,6 +224,7 @@ An application developer/operator will somehow share the remote_write configurat
 
 * [ ] Add the RemoteWrite CRD (not included in the default bundle) with the CEL validation rules.
 * [ ] Implement the support in the Prometheus and PrometheusAgent controllers: the selector fields, the selection and validation of RemoteWrite objects, the configuration generation and the status subresource.
+* [ ] Implement the support in the ThanosRuler controller.
 * [ ] Add the administrative limits (`remoteWriteLimits`).
 * [ ] Add end-to-end tests and the user guide.
 * [ ] Enable the feature gate by default once the feature is complete and we're confident about its stability.
