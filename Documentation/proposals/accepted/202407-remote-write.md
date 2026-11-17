@@ -39,7 +39,7 @@ Prometheus has two APIs for integrating with remote storage: 'remote write' and 
 
 Authenticating with the identity of a service account from the RemoteWrite object's namespace (e.g. AWS IAM roles for service accounts or Azure workload identity) is out of scope for the first release.
 
-The remote write configuration of the ThanosRuler CRD isn't covered by the RemoteWrite CRD.
+The remote write configuration of the ThanosRuler CRD isn't covered by the RemoteWrite CRD in the first release. Thanos Ruler runs in stateless mode when its remote write configuration isn't empty, so creating or deleting a RemoteWrite object would switch the ruler between the stateful and stateless modes. How to handle it needs a separate discussion.
 
 ## How
 
