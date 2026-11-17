@@ -55,17 +55,21 @@ type AttachMetadata struct {
 	// `Nodes` objects.
 	// Only valid for Pod, Endpoint and Endpointslice roles.
 	//
+	// Deprecated: add `Node` to `resources` instead.
+	//
 	// +optional
 	Node *bool `json:"node,omitempty"` // nolint:kubeapilinter
 
-	// namespace attaches namespace metadata to discovered targets.
-	// When set to true, Prometheus must have permissions to list/watch Namespaces.
-	// Only valid for pod, endpoints, endpointslice, service, ingress.
+	// resources defines the Kubernetes objects whose metadata Prometheus
+	// attaches to discovered targets. Prometheus must have the `list` and
+	// `watch` permissions on each listed kind of object.
+	// `Node` is only valid for the Pod, Endpoints and EndpointSlice roles.
+	// `Namespace` is only valid for the Pod, Endpoints, EndpointSlice, Service
+	// and Ingress roles, and requires Prometheus >= v3.6.0.
 	//
-	// It requires Prometheus >= v3.6.0.
-	//
+	// +listType=set
 	// +optional
-	Namespace *bool `json:"namespace,omitempty"` // nolint:kubeapilinter
+	Resources []v1.MetadataResource `json:"resources,omitempty"`
 }
 
 // Filter name and value pairs to limit the discovery process to a subset of available resources.
@@ -471,8 +475,8 @@ type HTTPSDConfig struct {
 // KubernetesSDConfig allows retrieving scrape targets from Kubernetes' REST API.
 // See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config
 // +k8s:openapi-gen=true
-// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !has(self.attachMetadata.node) || !self.attachMetadata.node || self.role in ['Pod', 'Endpoints', 'EndpointSlice']",message="attachMetadata.node is only valid for Pod, Endpoints, and EndpointSlice roles"
-// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !has(self.attachMetadata.namespace) || !self.attachMetadata.namespace || self.role in ['Pod', 'Endpoints', 'EndpointSlice', 'Service', 'Ingress']",message="attachMetadata.namespace is only valid for Pod, Endpoints, EndpointSlice, Service, and Ingress roles"
+// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !((has(self.attachMetadata.node) && self.attachMetadata.node) || (has(self.attachMetadata.resources) && 'Node' in self.attachMetadata.resources)) || self.role in ['Pod', 'Endpoints', 'EndpointSlice']",message="node metadata is only valid for Pod, Endpoints, and EndpointSlice roles"
+// +kubebuilder:validation:XValidation:rule="!has(self.attachMetadata) || !has(self.attachMetadata.resources) || !('Namespace' in self.attachMetadata.resources) || self.role in ['Pod', 'Endpoints', 'EndpointSlice', 'Service', 'Ingress']",message="namespace metadata is only valid for Pod, Endpoints, EndpointSlice, Service, and Ingress roles"
 type KubernetesSDConfig struct {
 	// apiServer defines the API server address consisting of a hostname or IP address followed
 	// by an optional port number.

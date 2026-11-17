@@ -658,10 +658,10 @@ func (in *AttachMetadata) DeepCopyInto(out *AttachMetadata) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.Namespace != nil {
-		in, out := &in.Namespace, &out.Namespace
-		*out = new(bool)
-		**out = **in
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = make([]MetadataResource, len(*in))
+		copy(*out, *in)
 	}
 }
 

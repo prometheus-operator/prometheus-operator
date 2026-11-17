@@ -8521,16 +8521,6 @@ spec:
                         When the scrape object defines its own configuration, it takes
                         precedence over the scrape class configuration.
                       properties:
-                        namespace:
-                          description: |-
-                            namespace when set to true, Prometheus attaches namespace metadata to the discovered
-                            targets.
-
-                            The Prometheus service account must have the `list` and `watch`
-                            permissions on the `Namespaces` objects.
-
-                            It requires Prometheus >= v3.6.0.
-                          type: boolean
                         node:
                           description: |-
                             node when set to true, Prometheus attaches node metadata to the discovered
@@ -8542,7 +8532,32 @@ spec:
                             Node metadata labels are not automatically added to scraped metrics. They are
                             exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
                             with relabeling configuration.
+
+                            Deprecated: add `Node` to `resources` instead.
                           type: boolean
+                        resources:
+                          description: |-
+                            resources defines the Kubernetes objects whose metadata Prometheus
+                            attaches to the discovered targets.
+
+                            The Prometheus service account must have the `list` and `watch`
+                            permissions on each listed kind of object.
+
+                            The metadata labels are not automatically added to scraped metrics. They
+                            are exposed as `__meta_kubernetes_<resource>_*` labels and can be copied
+                            to timeseries with relabeling configuration.
+
+                            `Namespace` requires Prometheus >= v3.6.0.
+                          items:
+                            description: |-
+                              MetadataResource is a kind of Kubernetes object whose metadata Prometheus
+                              can attach to discovered targets.
+                            enum:
+                            - Node
+                            - Namespace
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: set
                       type: object
                     authorization:
                       description: |-

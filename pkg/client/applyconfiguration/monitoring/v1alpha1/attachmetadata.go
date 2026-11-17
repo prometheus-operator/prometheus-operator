@@ -16,6 +16,10 @@
 
 package v1alpha1
 
+import (
+	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+)
+
 // AttachMetadataApplyConfiguration represents a declarative configuration of the AttachMetadata type for use
 // with apply.
 type AttachMetadataApplyConfiguration struct {
@@ -23,13 +27,16 @@ type AttachMetadataApplyConfiguration struct {
 	// When set to true, Prometheus must have the `list/watch` permission on the
 	// `Nodes` objects.
 	// Only valid for Pod, Endpoint and Endpointslice roles.
-	Node *bool `json:"node,omitempty"`
-	// namespace attaches namespace metadata to discovered targets.
-	// When set to true, Prometheus must have permissions to list/watch Namespaces.
-	// Only valid for pod, endpoints, endpointslice, service, ingress.
 	//
-	// It requires Prometheus >= v3.6.0.
-	Namespace *bool `json:"namespace,omitempty"`
+	// Deprecated: add `Node` to `resources` instead.
+	Node *bool `json:"node,omitempty"`
+	// resources defines the Kubernetes objects whose metadata Prometheus
+	// attaches to discovered targets. Prometheus must have the `list` and
+	// `watch` permissions on each listed kind of object.
+	// `Node` is only valid for the Pod, Endpoints and EndpointSlice roles.
+	// `Namespace` is only valid for the Pod, Endpoints, EndpointSlice, Service
+	// and Ingress roles, and requires Prometheus >= v3.6.0.
+	Resources []v1.MetadataResource `json:"resources,omitempty"`
 }
 
 // AttachMetadataApplyConfiguration constructs a declarative configuration of the AttachMetadata type for use with
@@ -46,10 +53,12 @@ func (b *AttachMetadataApplyConfiguration) WithNode(value bool) *AttachMetadataA
 	return b
 }
 
-// WithNamespace sets the Namespace field in the declarative configuration to the given value
-// and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Namespace field is set to the value of the last call.
-func (b *AttachMetadataApplyConfiguration) WithNamespace(value bool) *AttachMetadataApplyConfiguration {
-	b.Namespace = &value
+// WithResources adds the given value to the Resources field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Resources field.
+func (b *AttachMetadataApplyConfiguration) WithResources(values ...v1.MetadataResource) *AttachMetadataApplyConfiguration {
+	for i := range values {
+		b.Resources = append(b.Resources, values[i])
+	}
 	return b
 }
