@@ -158,6 +158,8 @@ The item is inserted in the first position by the operator before any other user
 
 The RemoteWrite CRD should also respect the Prometheus `.spec.excludedFromEnforcement` field. It is a list of references to objects to be excluded from `enforcedNamespaceLabel`.
 
+With remote write 1.0, Prometheus sends the metadata of all the scraped metrics without applying `write_relabel_configs`. Hence when the namespace label is enforced for a RemoteWrite object using remote write 1.0, the operator sets `metadataConfig.send` to `false` so that the metadata of other namespaces isn't sent.
+
 Without `enforcedNamespaceLabel`, a RemoteWrite object sends all the series of the Prometheus instance. It's the responsibility of the Prometheus resource's owners to select only trusted namespaces with `remoteWriteNamespaceSelector` in this case.
 
 ### Configuration generation
