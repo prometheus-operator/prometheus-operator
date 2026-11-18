@@ -66,6 +66,8 @@ const (
 	applicationNameLabelValue = "alertmanager"
 
 	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
+
+	slackBotAPIURL = "https://slack.com/api/chat.postMessage"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -1620,20 +1622,33 @@ func checkSlackConfigs(
 			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
-		if config.UpdateMessage != nil {
-			if amVersion.LT(semver.MustParse("0.32.0")) {
-				return fmt.Errorf(`'updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
-			}
-			if *config.UpdateMessage && slackAPIURL != "" {
-				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`'updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
-				}
-			}
+		if err := checkSlackBotTokenOption("updateMessage", config.UpdateMessage, "0.32.0", amVersion, slackAPIURL); err != nil {
+			return err
+		}
+
+		if err := checkSlackBotTokenOption("postUpdatesToThread", config.PostUpdatesToThread, "0.35.0", amVersion, slackAPIURL); err != nil {
+			return err
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func checkSlackBotTokenOption(name string, enabled *bool, minVersion string, amVersion semver.Version, slackAPIURL string) error {
+	if enabled == nil {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse(minVersion)) {
+		return fmt.Errorf("'%s' is available in Alertmanager >= %s only - current %s", name, minVersion, amVersion)
+	}
+
+	if *enabled && slackAPIURL != "" && slackAPIURL != slackBotAPIURL {
+		return fmt.Errorf("'%s' can only be used with bot tokens. API URL must be set to %s", name, slackBotAPIURL)
 	}
 
 	return nil

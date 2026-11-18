@@ -477,6 +477,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.32.0.
 	// +optional
 	UpdateMessage *bool `json:"updateMessage,omitempty"` // nolint:kubeapilinter
+	// postUpdatesToThread posts subsequent notifications of an alert group as
+	// replies in the thread of the initial message instead of new channel messages.
+	// Please note that Webhook URLs do not support threads.
+	// It requires Alertmanager >= v0.35.0.
+	// +optional
+	PostUpdatesToThread *bool `json:"postUpdatesToThread,omitempty"` // nolint:kubeapilinter
 }
 
 // SlackAction configures a single Slack action that is sent with each

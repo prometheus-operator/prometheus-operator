@@ -37494,6 +37494,21 @@ when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1alpha1.SlackConfirmationField">SlackConfirmationField
@@ -42255,6 +42270,21 @@ bool
 <p>updateMessage enables updating existing Slack messages instead of creating new ones
 when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 </tbody>

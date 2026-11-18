@@ -6472,6 +6472,10 @@
                             type: 'array',
                             'x-kubernetes-list-type': 'atomic',
                           },
+                          postUpdatesToThread: {
+                            description: 'postUpdatesToThread posts subsequent notifications of an alert group as\nreplies in the thread of the initial message instead of new channel messages.\nPlease note that Webhook URLs do not support threads.\nIt requires Alertmanager >= v0.35.0.',
+                            type: 'boolean',
+                          },
                           pretext: {
                             description: 'pretext defines optional text that appears above the message attachment block.',
                             minLength: 1,
