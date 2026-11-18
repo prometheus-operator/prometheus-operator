@@ -213,7 +213,7 @@ An application developer/operator will somehow share the remote_write configurat
 
 * [X] Add the `RemoteWriteCustomResourceDefinition` feature gate.
 
-  <gh pr="8395">
+  [#8395](https://github.com/prometheus-operator/prometheus-operator/pull/8395)
 
 * [ ] Add the RemoteWrite CRD (not included in the default bundle) with the CEL validation rules.
 * [ ] Implement the support in the Prometheus and PrometheusAgent controllers: the selector fields, the selection and validation of RemoteWrite objects, the configuration generation and the status subresource.
