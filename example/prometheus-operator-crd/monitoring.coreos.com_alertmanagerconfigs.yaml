@@ -6613,6 +6613,14 @@ spec:
                             - key
                             type: object
                             x-kubernetes-map-type: atomic
+                          apiURLFile:
+                            description: |-
+                              apiURLFile defines the file from which to read the Slack webhook URL.
+                              It is mutually exclusive with `apiURL`.
+
+                              It requires Alertmanager >= v0.22.0.
+                            minLength: 1
+                            type: string
                           callbackId:
                             description: callbackId defines an identifier for the
                               message used in interactive components.

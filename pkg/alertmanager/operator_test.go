@@ -1868,6 +1868,26 @@ func TestCheckAlertmanagerConfigFileSystemAccess(t *testing.T) {
 		}
 	}
 
+	// withSlackFileRef is an otherwise valid AlertmanagerConfig which
+	// references the filesystem via the Slack 'apiURLFile'.
+	withSlackFileRef := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "with-slack-file-ref",
+			Namespace: "other-ns",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "recv1",
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "recv1",
+				SlackConfigs: []monitoringv1alpha1.SlackConfig{{
+					APIURLFile: new("/etc/slack/api_url"),
+				}},
+			}},
+		},
+	}
+
 	for _, tc := range []struct {
 		name     string
 		mode     *monitoringv1.AlertmanagerConfigFileSystemMode
@@ -1875,6 +1895,18 @@ func TestCheckAlertmanagerConfigFileSystemAccess(t *testing.T) {
 		amc      *monitoringv1alpha1.AlertmanagerConfig
 		wantErr  bool
 	}{
+		{
+			name:    "AllowAll allows slack file reference",
+			mode:    ptr.To(monitoringv1.AllowAllAlertmanagerConfigFileSystemMode),
+			amc:     withSlackFileRef,
+			wantErr: false,
+		},
+		{
+			name:    "DenyAll denies slack file reference",
+			mode:    ptr.To(monitoringv1.DenyAllAlertmanagerConfigFileSystemMode),
+			amc:     withSlackFileRef,
+			wantErr: true,
+		},
 		{
 			name:    "AllowAll allows telegram file reference",
 			mode:    ptr.To(monitoringv1.AllowAllAlertmanagerConfigFileSystemMode),

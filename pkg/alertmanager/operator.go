@@ -1263,6 +1263,11 @@ func checkAlertmanagerConfigFileSystemAccess(am *monitoringv1.Alertmanager, amc 
 				return fmt.Errorf("receiver %q: pushoverConfigs[%d]: tokenFile: %w", receiver.Name, i, errFileSystemDenied)
 			}
 		}
+		for i, config := range receiver.SlackConfigs {
+			if ptr.Deref(config.APIURLFile, "") != "" {
+				return fmt.Errorf("receiver %q: slackConfigs[%d]: apiURLFile: %w", receiver.Name, i, errFileSystemDenied)
+			}
+		}
 		for i, config := range receiver.TelegramConfigs {
 			if ptr.Deref(config.BotTokenFile, "") != "" {
 				return fmt.Errorf("receiver %q: telegramConfigs[%d]: botTokenFile: %w", receiver.Name, i, errFileSystemDenied)
@@ -1616,6 +1621,10 @@ func checkSlackConfigs(
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
+		}
+
+		if config.APIURLFile != nil && amVersion.LT(semver.MustParse("0.22.0")) {
+			return fmt.Errorf(`'apiURLFile' is available in Alertmanager >= 0.22.0 only - current %s`, amVersion)
 		}
 
 		slackAPIURL := ""

@@ -406,6 +406,14 @@ type SlackConfig struct {
 	// object and accessible by the Prometheus Operator.
 	// +optional
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// apiURLFile defines the file from which to read the Slack webhook URL.
+	// It is mutually exclusive with `apiURL`.
+	//
+	// It requires Alertmanager >= v0.22.0.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	APIURLFile *string `json:"apiURLFile,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	// +kubebuilder:validation:MinLength=1
 	// +optional

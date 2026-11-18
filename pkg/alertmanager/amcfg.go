@@ -990,6 +990,10 @@ func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1
 		out.APIURL = url
 	}
 
+	if in.APIURLFile != nil {
+		out.APIURLFile = *in.APIURLFile
+	}
+
 	if in.TitleLink != "" {
 		out.TitleLink = in.TitleLink
 	}

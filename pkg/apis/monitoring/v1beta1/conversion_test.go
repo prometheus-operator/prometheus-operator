@@ -298,3 +298,17 @@ func assertJSONEqual(t *testing.T, expected, got any) {
 		t.Fatalf("wanted %s, but got %s", e, g)
 	}
 }
+
+func TestConvertSlackConfigAPIURLFile(t *testing.T) {
+	file := "/etc/slack/api_url"
+
+	from := convertSlackConfigFrom(v1alpha1.SlackConfig{APIURLFile: &file})
+	if from.APIURLFile == nil || *from.APIURLFile != file {
+		t.Fatalf("v1alpha1 to v1beta1: expected apiURLFile %q, got %v", file, from.APIURLFile)
+	}
+
+	to := convertSlackConfigTo(from)
+	if to.APIURLFile == nil || *to.APIURLFile != file {
+		t.Fatalf("v1beta1 to v1alpha1: expected apiURLFile %q, got %v", file, to.APIURLFile)
+	}
+}

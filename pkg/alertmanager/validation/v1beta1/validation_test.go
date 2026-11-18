@@ -664,6 +664,35 @@ func TestValidateSlackAlertmanagerConfig(t *testing.T) {
 		expectErr bool
 	}{
 		{
+			name: "Test validate on slack config - apiURLFile only",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{{
+						Name: "slack",
+						SlackConfigs: []monitoringv1beta1.SlackConfig{{
+							APIURLFile: new("/etc/slack/api_url"),
+						}},
+					}},
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Test validate on slack config - apiURL and apiURLFile are mutually exclusive",
+			in: &monitoringv1beta1.AlertmanagerConfig{
+				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
+					Receivers: []monitoringv1beta1.Receiver{{
+						Name: "slack",
+						SlackConfigs: []monitoringv1beta1.SlackConfig{{
+							APIURL:     &monitoringv1beta1.SecretKeySelector{Name: "s", Key: "k"},
+							APIURLFile: new("/etc/slack/api_url"),
+						}},
+					}},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name: "Test validate on slack config - all fields valid",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{

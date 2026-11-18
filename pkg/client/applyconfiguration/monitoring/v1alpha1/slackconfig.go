@@ -33,6 +33,11 @@ type SlackConfigApplyConfiguration struct {
 	// The secret needs to be in the same namespace as the AlertmanagerConfig
 	// object and accessible by the Prometheus Operator.
 	APIURL *v1.SecretKeySelector `json:"apiURL,omitempty"`
+	// apiURLFile defines the file from which to read the Slack webhook URL.
+	// It is mutually exclusive with `apiURL`.
+	//
+	// It requires Alertmanager >= v0.22.0.
+	APIURLFile *string `json:"apiURLFile,omitempty"`
 	// channel defines the channel or user to send notifications to.
 	Channel *string `json:"channel,omitempty"`
 	// username defines the slack bot user name.
@@ -116,6 +121,14 @@ func (b *SlackConfigApplyConfiguration) WithSendResolved(value bool) *SlackConfi
 // If called multiple times, the APIURL field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithAPIURL(value v1.SecretKeySelector) *SlackConfigApplyConfiguration {
 	b.APIURL = &value
+	return b
+}
+
+// WithAPIURLFile sets the APIURLFile field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the APIURLFile field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithAPIURLFile(value string) *SlackConfigApplyConfiguration {
+	b.APIURLFile = &value
 	return b
 }
 
