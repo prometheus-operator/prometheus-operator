@@ -97,10 +97,12 @@ A RemoteWrite object is typically managed by a different team than the Prometheu
 The RemoteWrite CRD reuses `RemoteWriteSpec` from the Prometheus CRD, but the following fields aren't allowed:
 
 * References to files in the Prometheus container (`bearerTokenFile`, `authorization.credentialsFile`, `tlsConfig.caFile`, `tlsConfig.certFile` and `tlsConfig.keyFile`).
-* Credentials from the Prometheus pod's environment (`sigv4` without `accessKey` and `secretKey`, `sigv4.profile`, `azureAd.managedIdentity`, `azureAd.workloadIdentity`, `azureAd.sdk` and `proxyFromEnvironment`).
+* Credentials from the Prometheus pod's environment (`sigv4` without non-empty `accessKey` and `secretKey` values or without `region`, `sigv4.profile`, `azureAd.managedIdentity`, `azureAd.workloadIdentity`, `azureAd.sdk`, `proxyFromEnvironment` and `oauth2.proxyFromEnvironment`).
 * The deprecated `bearerToken` field.
 
 These fields are rejected when the object is created or updated. A field added to `RemoteWriteSpec` in the future is rejected until it's explicitly allowed.
+
+The config reloader expands `$(VAR)` in the Prometheus configuration with the environment variables of its container. Hence a RemoteWrite object is also rejected when the generated remote write configuration, including the values resolved from Secrets and ConfigMaps, contains `$(...)`.
 
 #### Remote write name
 
