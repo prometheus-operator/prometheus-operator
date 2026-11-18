@@ -108,7 +108,7 @@ The name of the remote write configuration generated from a RemoteWrite object i
 
 Prometheus fails to load its configuration when 2 remote write configurations have the same name. When the name isn't set, Prometheus identifies a remote write configuration by the hash of its configuration in which the secret values are masked, so 2 configurations which only differ by their credentials would also conflict. Prefixing the name with the namespace ensures that a RemoteWrite object can't conflict with the ones from other namespaces.
 
-A RemoteWrite object whose name conflicts with a remote write configuration of the Prometheus resource or with another RemoteWrite object from the same namespace is rejected. The objects are processed in the order of their `<namespace>/<name>` key so that the result is deterministic.
+A RemoteWrite object whose name conflicts with a remote write configuration of the Prometheus resource is rejected. When 2 RemoteWrite objects from the same namespace conflict, the one which sets `spec.name` is rejected (`metadata.name` is unique in a namespace, so at least one of them sets it). If both set `spec.name`, the one which comes later in the order of the `<namespace>/<name>` key is rejected.
 
 #### Invalid RemoteWrite objects
 
