@@ -114,7 +114,7 @@ A RemoteWrite object whose name conflicts with a remote write configuration of t
 
 #### Invalid RemoteWrite objects
 
-An invalid RemoteWrite object must not break the Prometheus configuration. The operator applies the same validation as for the remote write configurations of the Prometheus resource (e.g. mutually exclusive authentication methods and the compatibility with the Prometheus version). Invalid objects are excluded from the configuration and the reason is reported in the status subresource and in events.
+An invalid RemoteWrite object must not break the Prometheus configuration. The operator applies the same validation as for the remote write configurations of the Prometheus resource (e.g. mutually exclusive authentication methods and the compatibility with the Prometheus version). More generally, a RemoteWrite object which Prometheus would refuse to load (e.g. reserved headers, invalid `queueConfig` values or empty credentials resolved from Secrets) is rejected. Invalid objects are excluded from the configuration and the reason is reported in the status subresource and in events.
 
 For example, a RemoteWrite object using `messageVersion: V2.0` is rejected when the Prometheus version is older than v3.4.0 because it would require the operator to enable the `metadata-wal-records` feature flag of Prometheus (and restart the pods).
 
