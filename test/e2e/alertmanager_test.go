@@ -1140,6 +1140,17 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), rocketchatSecret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	discordSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "discord",
+		},
+		Data: map[string][]byte{
+			"apiurl": []byte("https://discord.api.url"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), discordSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1331,6 +1342,13 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key:                  "token-id",
 						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
 					},
+				}},
+				DiscordConfigs: []monitoringv1alpha1.DiscordConfig{{
+					APIURL: corev1.SecretKeySelector{
+						Key:                  "apiurl",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "discord"},
+					},
+					Title: new("infra-alert"),
 				}},
 			}},
 		},
@@ -1669,6 +1687,9 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  discord_configs:
+  - webhook_url: https://discord.api.url
+    title: infra-alert
   webex_configs:
   - http_config:
       authorization:
