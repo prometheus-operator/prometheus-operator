@@ -197,6 +197,8 @@ The ThanosRuler CRD also supports the RemoteWrite CRD with the same `remoteWrite
 
 Thanos Ruler runs in stateless mode when its remote write configuration isn't empty. If `remoteWriteSelector` is set, the ruler runs in stateless mode regardless of the selected RemoteWrite objects, so creating or deleting a RemoteWrite object doesn't switch the ruler between the stateful and stateless modes.
 
+When no RemoteWrite object is selected, the ruler keeps running in stateless mode without any remote write destination and the reconciliation doesn't fail, since creating the ThanosRuler resource before the RemoteWrite objects is a normal case.
+
 ## Alternatives
 
 ### Prometheus per namespace or team
