@@ -5833,15 +5833,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionSMTPTLSConfigAllowed := semver.Version{Major: 0, Minor: 28}
 	versionSMTPTLSConfigNotAllowed := semver.Version{Major: 0, Minor: 27}
 
-	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
-	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
-
-	versionMattermostEmptyWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
-	versionMattermostEmptyWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
-
-	versionMattermostConfigTopLevelAttachmentAllowed := semver.Version{Major: 0, Minor: 32}
-	versionMattermostConfigTopLevelAttachmentNotAllowed := semver.Version{Major: 0, Minor: 31}
-
 	versionTimeoutConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionTimeoutConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
@@ -9278,6 +9269,16 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 }
 
 func TestSanitizeMattermostConfig(t *testing.T) {
+
+	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
+	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
+
+	versionMattermostEmptyWebhookURLAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostEmptyWebhookURLNotAllowed := semver.Version{Major: 0, Minor: 31}
+
+	versionMattermostConfigTopLevelAttachmentAllowed := semver.Version{Major: 0, Minor: 32}
+	versionMattermostConfigTopLevelAttachmentNotAllowed := semver.Version{Major: 0, Minor: 31}
+
 	logger := newNopLogger(t)
 	versionMattermostAllowed := semver.Version{Major: 0, Minor: 30}
 	for _, tc := range []struct {
