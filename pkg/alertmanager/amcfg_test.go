@@ -6697,196 +6697,6 @@ func TestSanitizeConfig(t *testing.T) {
 			golden: "summary_add_in_supported_versions_for_MSTeams_config.golden",
 		},
 		{
-			name:           "Test config version mattermost allowed",
-			againstVersion: versionMattermostConfigAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								Text:       "test text",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_config_version_mattermost_allowed.golden",
-		},
-		{
-			name:           "Test drop config version mattermost not allowed",
-			againstVersion: versionMattermostConfigNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								Text:       "test text",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test webhook_url takes precedence in mattermost config",
-			againstVersion: versionMattermostConfigAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL:     "http://www.test.com",
-								WebhookURLFile: "/test",
-								Text:           "test text",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
-		},
-		{
-			name:           "Test mattermost empty webhook_url supported version",
-			againstVersion: versionMattermostEmptyWebhookURLAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					MattermostWebhookURL: &commoncfg.URL{
-						URL: &url.URL{
-							Host: "www.test.com",
-						}},
-				},
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								Text: "test text",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermost_empty_webhook_url_supported_version.golden",
-		},
-		{
-			name:           "Test mattermost empty webhook_url unsupported version",
-			againstVersion: versionMattermostEmptyWebhookURLNotAllowed,
-			in: &alertmanagerConfig{
-				Global: &globalConfig{
-					MattermostWebhookURL: &commoncfg.URL{
-						URL: &url.URL{
-							Host: "www.test.com",
-						}},
-				},
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								Text: "test text",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test text is optional in mattermost config",
-			againstVersion: versionMattermostConfigAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermos_text_is_optional.golden",
-		},
-		{
-			name:           "Test mattermost top level attachmend config in supported version",
-			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								AuthorName: "test author",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermost_top_level_attachment_config_in_supported_version.golden",
-		},
-		{
-			name:           "Test mattermost top level attachmend config in unsupported version",
-			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								AuthorName: "test author",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermost_top_level_attachment_config_in_unsupported_version.golden",
-		},
-		{
-			name:           "Test mattermost top level attachmend config fields in supported version",
-			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								Fields: []mattermostField{
-									{
-										Title: "foo",
-										Value: "bar",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermost_top_level_attachment_config_fields_in_supported_version.golden",
-		},
-		{
-			name:           "Test mattermost top level attachmend config in unsupported version",
-			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						MattermostConfigs: []*mattermostConfig{
-							{
-								WebhookURL: "http://www.test.com",
-								Fields: []mattermostField{
-									{
-										Title: "foo",
-										Value: "bar",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			golden: "test_mattermost_top_level_attachment_config_fields_in_unsupported_version.golden",
-		},
-		{
 			name:           "Test timeout is dropped in pagerduty config for unsupported versions",
 			againstVersion: versionTimeoutConfigNotAllowed,
 
@@ -9477,6 +9287,196 @@ func TestSanitizeMattermostConfig(t *testing.T) {
 		golden         string
 		expectErr      bool
 	}{
+		{
+			name:           "Test config version mattermost allowed",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_config_version_mattermost_allowed.golden",
+		},
+		{
+			name:           "Test drop config version mattermost not allowed",
+			againstVersion: versionMattermostConfigNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								Text:       "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test webhook_url takes precedence in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL:     "http://www.test.com",
+								WebhookURLFile: "/test",
+								Text:           "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_webhook_url_takes_precedence_in_mattermost_config.golden",
+		},
+		{
+			name:           "Test mattermost empty webhook_url supported version",
+			againstVersion: versionMattermostEmptyWebhookURLAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_empty_webhook_url_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost empty webhook_url unsupported version",
+			againstVersion: versionMattermostEmptyWebhookURLNotAllowed,
+			in: &alertmanagerConfig{
+				Global: &globalConfig{
+					MattermostWebhookURL: &commoncfg.URL{
+						URL: &url.URL{
+							Host: "www.test.com",
+						}},
+				},
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								Text: "test text",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "Test text is optional in mattermost config",
+			againstVersion: versionMattermostConfigAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermos_text_is_optional.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								AuthorName: "test author",
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_in_unsupported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config fields in supported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_supported_version.golden",
+		},
+		{
+			name:           "Test mattermost top level attachmend config in unsupported version",
+			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						MattermostConfigs: []*mattermostConfig{
+							{
+								WebhookURL: "http://www.test.com",
+								Fields: []mattermostField{
+									{
+										Title: "foo",
+										Value: "bar",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_mattermost_top_level_attachment_config_fields_in_unsupported_version.golden",
+		},
 		{
 			name:           "mattermost_configs invalid webhook_url returns error",
 			againstVersion: versionMattermostAllowed,
