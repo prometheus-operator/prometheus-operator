@@ -2944,8 +2944,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 
 	if sc.PostUpdatesToThread != nil {
 		if lessThanV0_35 {
-			msg := "'post_updates_to_thread' supported in Alertmanager >= 0.35.0 only - dropping field from provided config"
-			logger.Warn(msg)
+			warnUnsupportedField(logger, "post_updates_to_thread", amVersion, semver.MustParse("0.35.0"))
 			sc.PostUpdatesToThread = nil
 		} else if *sc.PostUpdatesToThread && sc.APIURL != "" {
 			if sc.APIURL != slackBotAPIURL {
@@ -3335,8 +3334,7 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	if rc.MessageText != "" && amVersion.LT(semver.MustParse("0.35.0")) {
-		msg := "'message_text' supported in Alertmanager >= 0.35.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
+		warnUnsupportedField(logger, "message_text", amVersion, semver.MustParse("0.35.0"))
 		rc.MessageText = ""
 	}
 
