@@ -9269,7 +9269,6 @@ func TestSanitizeRocketChatConfig(t *testing.T) {
 }
 
 func TestSanitizeMattermostConfig(t *testing.T) {
-
 	versionMattermostConfigAllowed := semver.Version{Major: 0, Minor: 30}
 	versionMattermostConfigNotAllowed := semver.Version{Major: 0, Minor: 29}
 
