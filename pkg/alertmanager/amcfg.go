@@ -45,18 +45,6 @@ import (
 
 const inhibitRuleNamespaceKey = "namespace"
 
-const (
-	// unsupportedFieldMsg is the warning logged when a receiver field isn't
-	// supported by the Alertmanager version and is dropped from the
-	// configuration. It expects the field name and the minimum version.
-	unsupportedFieldMsg = "'%s' supported in Alertmanager >= %s only - dropping field from provided config"
-
-	// unsupportedIntegrationErrMsg is the error returned when a receiver
-	// integration isn't supported by the Alertmanager version. It expects the
-	// integration name and the minimum version.
-	unsupportedIntegrationErrMsg = "invalid syntax in receivers config; %s integration is available in Alertmanager >= %s"
-)
-
 // alertmanagerConfigFrom returns a valid alertmanagerConfig from b
 // or returns an error if
 // 1. s fails validation provided by upstream
@@ -3899,10 +3887,10 @@ func warnUnsupportedField(
 	fieldName string,
 	amVersion, supportedVersion semver.Version,
 ) {
-	msg := fmt.Sprintf(unsupportedFieldMsg, fieldName, supportedVersion.String())
+	msg := fmt.Sprintf("'%s' supported in Alertmanager >= %s only - dropping field from provided config", fieldName, supportedVersion.String())
 	logger.Warn(msg, "current_version", amVersion.String())
 }
 
 func unsupportedIntegrationErr(integration, version string) error {
-	return fmt.Errorf(unsupportedIntegrationErrMsg, integration, version)
+	return fmt.Errorf("invalid syntax in receivers config; %s integration is available in Alertmanager >= %s", integration, version)
 }
