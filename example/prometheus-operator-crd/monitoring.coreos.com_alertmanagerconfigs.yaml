@@ -7490,6 +7490,9 @@ spec:
                             minLength: 1
                             type: string
                         type: object
+                        x-kubernetes-validations:
+                        - message: apiURL and apiURLFile are mutually exclusive
+                          rule: '!(has(self.apiURL) && has(self.apiURLFile))'
                       type: array
                       x-kubernetes-list-type: atomic
                     snsConfigs:

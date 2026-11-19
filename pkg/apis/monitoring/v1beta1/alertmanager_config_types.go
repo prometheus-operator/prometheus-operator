@@ -370,6 +370,7 @@ type DiscordConfig struct {
 
 // SlackConfig configures notifications via Slack.
 // See https://prometheus.io/docs/alerting/latest/configuration/#slack_config
+// +kubebuilder:validation:XValidation:rule="!(has(self.apiURL) && has(self.apiURLFile))",message="apiURL and apiURLFile are mutually exclusive"
 type SlackConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional

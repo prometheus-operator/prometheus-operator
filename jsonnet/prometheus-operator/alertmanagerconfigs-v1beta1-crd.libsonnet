@@ -6528,6 +6528,12 @@
                           },
                         },
                         type: 'object',
+                        'x-kubernetes-validations': [
+                          {
+                            message: 'apiURL and apiURLFile are mutually exclusive',
+                            rule: '!(has(self.apiURL) && has(self.apiURLFile))',
+                          },
+                        ],
                       },
                       type: 'array',
                     },
