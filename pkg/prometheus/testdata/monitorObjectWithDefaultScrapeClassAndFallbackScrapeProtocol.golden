@@ -183,6 +183,8 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+  - target_label: enforced_label
+    replacement: enforced_value
 - job_name: scrapeConfig/default/defaultScrapeConfig
   fallback_scrape_protocol: OpenMetricsText1.0.0
   http_sd_configs:

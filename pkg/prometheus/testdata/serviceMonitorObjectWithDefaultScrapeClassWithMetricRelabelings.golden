@@ -94,6 +94,8 @@ scrape_configs:
     replacement: tenant2
   - target_label: namespace
     replacement: default
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

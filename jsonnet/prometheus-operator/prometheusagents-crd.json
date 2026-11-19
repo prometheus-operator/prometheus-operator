@@ -2702,6 +2702,75 @@
                     "description": "enableServiceLinks defines whether information about services should be injected into pod's environment variables",
                     "type": "boolean"
                   },
+                  "enforceMetricRelabelings": {
+                    "description": "enforceMetricRelabelings defines the relabeling rules to apply to all samples before ingestion.\n\nThe Operator adds the scrape class metric relabelings.\nThen the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.\nThen the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.\nThen the Operator adds the '.spec.enforceMetricRelabelings' defined here.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
+                    "items": {
+                      "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
+                      "properties": {
+                        "action": {
+                          "default": "replace",
+                          "description": "action to perform based on the regex matching.\n\n`Uppercase` and `Lowercase` actions require Prometheus >= v2.36.0.\n`DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.\n\nDefault: \"Replace\"",
+                          "enum": [
+                            "replace",
+                            "Replace",
+                            "keep",
+                            "Keep",
+                            "drop",
+                            "Drop",
+                            "hashmod",
+                            "HashMod",
+                            "labelmap",
+                            "LabelMap",
+                            "labeldrop",
+                            "LabelDrop",
+                            "labelkeep",
+                            "LabelKeep",
+                            "lowercase",
+                            "Lowercase",
+                            "uppercase",
+                            "Uppercase",
+                            "keepequal",
+                            "KeepEqual",
+                            "dropequal",
+                            "DropEqual"
+                          ],
+                          "type": "string"
+                        },
+                        "modulus": {
+                          "description": "modulus to take of the hash of the source label values.\n\nOnly applicable when the action is `HashMod`.",
+                          "format": "int64",
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "regex": {
+                          "description": "regex defines the regular expression against which the extracted value is matched.",
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "description": "replacement value against which a Replace action is performed if the\nregular expression matches.\n\nRegex capture groups are available.",
+                          "type": "string"
+                        },
+                        "separator": {
+                          "description": "separator defines the string between concatenated SourceLabels.",
+                          "type": "string"
+                        },
+                        "sourceLabels": {
+                          "description": "sourceLabels defines the source labels select values from existing labels. Their content is\nconcatenated using the configured Separator and matched against the\nconfigured regular expression.",
+                          "items": {
+                            "description": "LabelName is a valid Prometheus label name.\nFor Prometheus 3.x, a label name is valid if it contains UTF-8 characters.\nFor Prometheus 2.x, a label name is only valid if it contains ASCII characters, letters, numbers, as well as underscores.",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "targetLabel": {
+                          "description": "targetLabel defines the label to which the resulting string is written in a replacement.\n\nIt is mandatory for `Replace`, `HashMod`, `Lowercase`, `Uppercase`,\n`KeepEqual` and `DropEqual` actions.\n\nRegex capture groups are available.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "enforcedBodySizeLimit": {
                     "description": "enforcedBodySizeLimit when defined specifies a global limit on the size\nof uncompressed response body that will be accepted by Prometheus.\nTargets responding with a body larger than this many bytes will cause\nthe scrape to fail.\n\nIt requires Prometheus >= v2.28.0.\n\nWhen both `enforcedBodySizeLimit` and `bodySizeLimit` are defined and greater than zero, the following rules apply:\n* Scrape objects without a defined bodySizeLimit value will inherit the global bodySizeLimit value (Prometheus >= 2.45.0) or the enforcedBodySizeLimit value (Prometheus < v2.45.0).\n  If Prometheus version is >= 2.45.0 and the `enforcedBodySizeLimit` is greater than the `bodySizeLimit`, the `bodySizeLimit` will be set to `enforcedBodySizeLimit`.\n* Scrape objects with a bodySizeLimit value less than or equal to enforcedBodySizeLimit keep their specific value.\n* Scrape objects with a bodySizeLimit value greater than enforcedBodySizeLimit are set to enforcedBodySizeLimit.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
@@ -5863,7 +5932,7 @@
                           "type": "string"
                         },
                         "metricRelabelings": {
-                          "description": "metricRelabelings defines the relabeling rules to apply to all samples before ingestion.\n\nThe Operator adds the scrape class metric relabelings defined here.\nThen the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.\nThen the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
+                          "description": "metricRelabelings defines the relabeling rules to apply to all samples before ingestion.\n\nThe Operator adds the scrape class metric relabelings defined here.\nThen the Operator adds the target-specific metric relabelings defined in ServiceMonitors, PodMonitors, Probes and ScrapeConfigs.\nThen the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.\nThen the Operator adds the '.spec.enforceMetricRelabelings'.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs",
                           "items": {
                             "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                             "properties": {
