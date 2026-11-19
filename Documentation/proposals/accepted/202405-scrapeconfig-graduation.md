@@ -169,7 +169,7 @@ Keeping this in mind, we recommend that we make all the breaking changes in `v1a
 once there is a consensus in the community about the "readiness"/"completeness" of the`v1alpha1`, we graduate the ScrapeConfig CRD to `v1beta1`.
 Note: In this strategy, both the `v1alpha1` and `v1beta1` APIs are expected to be identical to each other, thus barring the need for a conversion webhook.
 
-From the [Kuberenetes CRD docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions),
+From the [Kubernetes CRD docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions),
 the `CustomResourceDefinition` would contain the following lines:
 
 ```
