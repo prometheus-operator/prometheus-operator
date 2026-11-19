@@ -829,6 +829,7 @@ func (cb *ConfigBuilder) convertRocketChatConfig(ctx context.Context, in monitor
 		ImageURL:     ptr.Deref(in.ImageURL, ""),
 		ThumbURL:     ptr.Deref(in.ThumbURL, ""),
 		LinkNames:    ptr.Deref(in.LinkNames, false),
+		MessageText:  ptr.Deref(in.MessageText, ""),
 	}
 
 	if in.APIURL != nil && *in.APIURL != "" {
@@ -962,22 +963,23 @@ func (cb *ConfigBuilder) convertDiscordConfig(ctx context.Context, in monitoring
 
 func (cb *ConfigBuilder) convertSlackConfig(ctx context.Context, in monitoringv1alpha1.SlackConfig, crKey types.NamespacedName) (*slackConfig, error) {
 	out := &slackConfig{
-		VSendResolved: in.SendResolved,
-		Channel:       ptr.Deref(in.Channel, ""),
-		Username:      ptr.Deref(in.Username, ""),
-		Color:         ptr.Deref(in.Color, ""),
-		Title:         ptr.Deref(in.Title, ""),
-		Pretext:       ptr.Deref(in.Pretext, ""),
-		Text:          ptr.Deref(in.Text, ""),
-		ShortFields:   ptr.Deref(in.ShortFields, false),
-		Footer:        ptr.Deref(in.Footer, ""),
-		Fallback:      ptr.Deref(in.Fallback, ""),
-		CallbackID:    ptr.Deref(in.CallbackID, ""),
-		IconEmoji:     ptr.Deref(in.IconEmoji, ""),
-		LinkNames:     ptr.Deref(in.LinkNames, false),
-		MrkdwnIn:      in.MrkdwnIn,
-		MessageText:   ptr.Deref(in.MessageText, ""),
-		UpdateMessage: in.UpdateMessage,
+		VSendResolved:       in.SendResolved,
+		Channel:             ptr.Deref(in.Channel, ""),
+		Username:            ptr.Deref(in.Username, ""),
+		Color:               ptr.Deref(in.Color, ""),
+		Title:               ptr.Deref(in.Title, ""),
+		Pretext:             ptr.Deref(in.Pretext, ""),
+		Text:                ptr.Deref(in.Text, ""),
+		ShortFields:         ptr.Deref(in.ShortFields, false),
+		Footer:              ptr.Deref(in.Footer, ""),
+		Fallback:            ptr.Deref(in.Fallback, ""),
+		CallbackID:          ptr.Deref(in.CallbackID, ""),
+		IconEmoji:           ptr.Deref(in.IconEmoji, ""),
+		LinkNames:           ptr.Deref(in.LinkNames, false),
+		MrkdwnIn:            in.MrkdwnIn,
+		MessageText:         ptr.Deref(in.MessageText, ""),
+		UpdateMessage:       in.UpdateMessage,
+		PostUpdatesToThread: in.PostUpdatesToThread,
 	}
 
 	if in.APIURL != nil {
@@ -2900,6 +2902,7 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 	lessThanV0_30 := amVersion.LT(semver.MustParse("0.30.0"))
 	lessThanV0_31 := amVersion.LT(semver.MustParse("0.31.0"))
 	lessThanV0_32 := amVersion.LT(semver.MustParse("0.32.0"))
+	lessThanV0_35 := amVersion.LT(semver.MustParse("0.35.0"))
 
 	if err := sc.HTTPConfig.sanitize(amVersion, logger); err != nil {
 		return err
@@ -2941,8 +2944,20 @@ func (sc *slackConfig) sanitize(amVersion semver.Version, logger *slog.Logger) e
 			logger.Warn(msg)
 			sc.UpdateMessage = nil
 		} else if *sc.UpdateMessage && sc.APIURL != "" {
-			if sc.APIURL != "https://slack.com/api/chat.postMessage" {
-				return fmt.Errorf(`'update_message' can only be used with bot tokens. api_url must be set to https://slack.com/api/chat.postMessage`)
+			if sc.APIURL != slackBotAPIURL {
+				return fmt.Errorf("'update_message' can only be used with bot tokens. api_url must be set to %s", slackBotAPIURL)
+			}
+		}
+	}
+
+	if sc.PostUpdatesToThread != nil {
+		if lessThanV0_35 {
+			msg := "'post_updates_to_thread' supported in Alertmanager >= 0.35.0 only - dropping field from provided config"
+			logger.Warn(msg)
+			sc.PostUpdatesToThread = nil
+		} else if *sc.PostUpdatesToThread && sc.APIURL != "" {
+			if sc.APIURL != slackBotAPIURL {
+				return fmt.Errorf("'post_updates_to_thread' can only be used with bot tokens. api_url must be set to %s", slackBotAPIURL)
 			}
 		}
 	}
@@ -3342,6 +3357,12 @@ func (rc *rocketChatConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 				return fmt.Errorf("invalid 'image_url' in actions[%d]: %w", i, err)
 			}
 		}
+	}
+
+	if rc.MessageText != "" && amVersion.LT(semver.MustParse("0.35.0")) {
+		msg := "'message_text' supported in Alertmanager >= 0.35.0 only - dropping field from provided config"
+		logger.Warn(msg, "current_version", amVersion.String())
+		rc.MessageText = ""
 	}
 
 	return rc.HTTPConfig.sanitize(amVersion, logger)

@@ -32,6 +32,7 @@ type AlertmanagerWebSpecApplyConfiguration struct {
 	// allowed to call the API from a browser. This corresponds to the
 	// Alertmanager's `--web.cors.origin` flag.
 	// It requires Alertmanager >= v0.34.2.
+	//
 	CORSOrigin *string `json:"corsOrigin,omitempty"`
 }
 

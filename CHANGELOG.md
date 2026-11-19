@@ -1,3 +1,7 @@
+## 0.95.2 / 2026-11-10
+
+* [BUGFIX] Fix container images for all platforms/architectures other than `linux/amd64`. #8971
+
 ## 0.95.1 / 2026-11-05
 
 Maintenance release because the CI workflow failed to publish the `v0.95.0` container images.

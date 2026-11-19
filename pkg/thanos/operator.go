@@ -993,67 +993,13 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 				}
 			}
 		}
-		// Thanos v0.38.0 is equivalent to Prometheus v3.1.0.
-		if version.LT(semver.MustParse("0.38.0")) {
-			reset := resetFieldFn("0.38.0")
-			reset("roundRobinDNS", &rw.RoundRobinDNS) // requires >= 3.1.0
-		}
-
-		// Thanos v0.37.0 is equivalent to Prometheus v2.55.1.
-		if version.LT(semver.MustParse("0.37.0")) {
-			reset := resetFieldFn("0.37.0")
-			reset("messageVersion", &rw.MessageVersion) // requires >= 2.54.0
-		}
-
-		// Thanos v0.36.0 is equivalent to Prometheus v2.52.2.
-		if version.LT(semver.MustParse("0.36.0")) {
-			reset := resetFieldFn("0.36.0")
-			if rw.AzureAD != nil {
-				reset("azureAD.sdk", &rw.AzureAD.SDK) // requires >= v2.52.2
-			}
-		}
-
-		// Thanos v0.32.0 is equivalent to Prometheus v2.48.0.
-		if version.LT(semver.MustParse("0.32.0")) {
-			reset := resetFieldFn("0.32.0")
-			if rw.QueueConfig != nil {
-				reset("queueConfig.sampleAgeLimit", &rw.QueueConfig.SampleAgeLimit) // requires >= v2.50.0
-			}
-			reset("noProxy", &rw.NoProxy)                           // requires >= v2.48.0
-			reset("proxyFromEnvironment", &rw.ProxyFromEnvironment) // requires >= v2.48.0
-			reset("proxyConnectHeader", &rw.ProxyConnectHeader)     // requires >= v2.48.0
-		}
-
-		// Thanos v0.31.0 is equivalent to Prometheus v2.42.0.
-		if version.LT(semver.MustParse("0.31.0")) {
-			reset := resetFieldFn("0.31.0")
-			if rw.AzureAD != nil {
-				reset("azureAD.oauth", &rw.AzureAD.OAuth) // requires >= v2.48.0
-			}
-			reset("azureAD", &rw.AzureAD) // requires >= v2.45.0
-		}
-
-		// Thanos v0.30.0 is equivalent to Prometheus v2.40.7.
-		if version.LT(semver.MustParse("0.30.0")) {
-			reset := resetFieldFn("0.30.0")
-			if rw.TLSConfig != nil {
-				reset("tlsConfig.maxVersion", &rw.TLSConfig.MaxVersion) // requires >= v2.41.0
-			}
-			reset("sendNativeHistograms", &rw.SendNativeHistograms) // requires >= v2.40.0
-		}
-
-		// Thanos v0.28.0 is equivalent to Prometheus v2.38.0.
-		if version.LT(semver.MustParse("0.28.0")) {
-			reset := resetFieldFn("0.28.0")
-			if rw.TLSConfig != nil {
-				reset("tlsConfig.minVersion", &rw.TLSConfig.MinVersion) // >= requires v2.35.0
-			}
-		}
-
-		// Thanos v0.24.0 is equivalent to Prometheus v2.32.0.
 	}
 
-	cg, err := prompkg.NewConfigGenerator(o.logger, nil, prompkg.WithoutVersionCheck())
+	cg, err := prompkg.NewConfigGenerator(
+		o.logger,
+		nil,
+		prompkg.WithPrometheusVersion(operator.PrometheusVersionForThanos(version)),
+	)
 	if err != nil {
 		return err
 	}

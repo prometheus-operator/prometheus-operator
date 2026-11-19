@@ -1128,6 +1128,29 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2Secret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	rocketchatSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":    []byte("abcdef"),
+			"token-id": []byte("abcdef12345"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), rocketchatSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	discordSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "discord",
+		},
+		Data: map[string][]byte{
+			"apiurl": []byte("https://discord.api.url"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), discordSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1308,6 +1331,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: "webhook-url",
 					},
 					Title: new("Alert"),
+				}},
+				RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
+					Token: corev1.SecretKeySelector{
+						Key:                  "token",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+					TokenID: corev1.SecretKeySelector{
+						Key:                  "token-id",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+				}},
+				DiscordConfigs: []monitoringv1alpha1.DiscordConfig{{
+					APIURL: corev1.SecretKeySelector{
+						Key:                  "apiurl",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "discord"},
+					},
+					Title: new("infra-alert"),
 				}},
 			}},
 		},
@@ -1646,6 +1687,9 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  discord_configs:
+  - webhook_url: https://discord.api.url
+    title: infra-alert
   webex_configs:
   - http_config:
       authorization:
@@ -1660,6 +1704,12 @@ receivers:
   msteamsv2_configs:
   - webhook_url: https://msteamsv2.webhook.url
     title: Alert
+  rocketchat_configs:
+  - api_url: https://rocketchat.api.url
+    token_id: abcdef12345
+    token: abcdef
+    short_fields: false
+    link_names: false
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url

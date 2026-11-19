@@ -1,0 +1,9 @@
+remote_write:
+- url: http://example.com
+  send_native_histograms: true
+  tls_config:
+    min_version: TLS12
+  proxy_url: http://proxy:3128
+  enable_http2: true
+  queue_config:
+    capacity: 100
