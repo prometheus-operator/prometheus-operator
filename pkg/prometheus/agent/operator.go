@@ -121,6 +121,17 @@ func (s *selectedConfigResources) Len() int {
 	return len(s.sMons) + len(s.pMons) + len(s.bMons) + len(s.scrapeConfigs)
 }
 
+// validResources returns the valid configuration resources used to generate
+// the configuration.
+func (s *selectedConfigResources) validResources() prompkg.ConfigResources {
+	return prompkg.ConfigResources{
+		ServiceMonitors: s.sMons.ValidResources(),
+		PodMonitors:     s.pMons.ValidResources(),
+		Probes:          s.bMons.ValidResources(),
+		ScrapeConfigs:   s.scrapeConfigs.ValidResources(),
+	}
+}
+
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
 func WithEndpointSlice() ControllerOption {
 	return func(o *Operator) {
@@ -1030,10 +1041,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		resources.sMons.ValidResources(),
-		resources.pMons.ValidResources(),
-		resources.bMons.ValidResources(),
-		resources.scrapeConfigs.ValidResources(),
+		resources.validResources(),
 		store,
 		additionalScrapeConfigs,
 	)

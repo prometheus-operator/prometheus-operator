@@ -25,10 +25,12 @@ type TopologyShardingStrategyApplyConfiguration struct {
 	// to communicate the topology zone assigned to the Prometheus instance.
 	// If not defined, it defaults to "zone".
 	// If set to the empty string, no external label is added to the Prometheus configuration.
+	//
 	ExternalLabelName *string `json:"externalLabelName,omitempty"`
 	// values defines the list of topology values (e.g. zone names) to be used
 	// for sharding. The configured number of shards must be greater than or
 	// equal to the number of values.
+	//
 	Values []string `json:"values,omitempty"`
 }
 

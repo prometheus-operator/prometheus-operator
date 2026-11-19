@@ -28,6 +28,7 @@ type GlobalJiraConfigApplyConfiguration struct {
 	// apiURL defines the default Jira API URL.
 	//
 	// It requires Alertmanager >= v0.28.0.
+	//
 	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
 }
 

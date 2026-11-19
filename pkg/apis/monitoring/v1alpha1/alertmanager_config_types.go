@@ -504,6 +504,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.32.0.
 	// +optional
 	UpdateMessage *bool `json:"updateMessage,omitempty"` // nolint:kubeapilinter
+	// postUpdatesToThread posts subsequent notifications of an alert group as
+	// replies in the thread of the initial message instead of new channel messages.
+	// Please note that Webhook URLs do not support threads.
+	// It requires Alertmanager >= v0.35.0.
+	// +optional
+	PostUpdatesToThread *bool `json:"postUpdatesToThread,omitempty"` // nolint:kubeapilinter
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -1345,6 +1351,13 @@ type RocketChatConfig struct {
 	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// messageText is a top-level message text, shown above the attachment
+	// and used in desktop and push notifications.
+	// If unset, notifications show only a generic placeholder.
+	// It requires Alertmanager >= v0.35.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 	// httpConfig defines the HTTP client configuration for RocketChat API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`

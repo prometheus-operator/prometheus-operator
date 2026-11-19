@@ -22,7 +22,7 @@ import (
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
-	DefaultAlertmanagerVersion = "v0.34.2"
+	DefaultAlertmanagerVersion = "v0.35.0"
 	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager.
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager.
@@ -119,6 +119,12 @@ var (
 		"v3.13.4",
 		"v3.13.5",
 		"v3.14.0",
+		// Notice: v3.15.x built with Go 1.27 lose HTTP/2 ALPN negotiation over
+		// TLS and fall back to HTTP/1.1, fixed in v3.16.0.
+		// See https://github.com/prometheus/prometheus/issues/19807
+		"v3.15.0",
+		"v3.15.1",
+		"v3.16.0",
 	}
 )
 

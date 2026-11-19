@@ -80,6 +80,21 @@ func TestAlertmanagerConfigConversion(t *testing.T) {
 			},
 		},
 		{
+			name: "rocketchat with message text",
+			v1beta1Spec: AlertmanagerConfigSpec{
+				Receivers: []Receiver{{
+					Name:              "rocketchat",
+					RocketChatConfigs: []RocketChatConfig{{MessageText: new("{{ .CommonAnnotations.summary }}")}},
+				}},
+			},
+			v1alpha1Spec: v1alpha1.AlertmanagerConfigSpec{
+				Receivers: []v1alpha1.Receiver{{
+					Name:              "rocketchat",
+					RocketChatConfigs: []v1alpha1.RocketChatConfig{{MessageText: new("{{ .CommonAnnotations.summary }}")}},
+				}},
+			},
+		},
+		{
 			name: "all receiver types with optional fields unset",
 			v1beta1Spec: AlertmanagerConfigSpec{
 				Receivers: []Receiver{{

@@ -124,7 +124,7 @@ func TestAdmitBadRuleWithBooleanInAnnotations(t *testing.T) {
 	}
 
 	if resp.Response.Result.Details.Causes[0].Message !=
-		`json: cannot unmarshal bool into Go struct field Rule.spec.groups.rules.annotations of type string` {
+		`json: cannot unmarshal bool into Go struct field PrometheusRule.spec.groups.0.rules.0.annotations.badBoolean of type string` {
 		t.Error("Expected error about inability to parse query")
 	}
 }

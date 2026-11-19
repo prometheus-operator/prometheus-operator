@@ -58,10 +58,14 @@ func (tr *TLSReferences) GetMountParameters(volumePrefix string) ([]corev1.Volum
 		err     error
 	)
 
-	prefix := volumePrefix + "secret-key-"
-	volumes, mounts, err = tr.mountParamsForSecret(volumes, mounts, tr.keySecret, prefix, tr.GetKeyMountPath())
-	if err != nil {
-		return nil, nil, err
+	// The private key can be provided as a file path (keyFile) instead of a
+	// secret reference, in which case there is no secret to mount.
+	if tr.keySecret.Name != "" {
+		prefix := volumePrefix + "secret-key-"
+		volumes, mounts, err = tr.mountParamsForSecret(volumes, mounts, tr.keySecret, prefix, tr.GetKeyMountPath())
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	switch {

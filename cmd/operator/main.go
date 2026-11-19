@@ -542,9 +542,9 @@ func start() int {
 		if !allowed {
 			for _, reason := range errs {
 				logger.Error("missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
-				cancel()
-				return 1
 			}
+			cancel()
+			return 1
 		}
 	}
 

@@ -81,6 +81,160 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			golden: "v0.24.0_remote_write_config_unsupported_fields.golden",
 		},
 		{
+			name:    "with v0.30.0 dropping unsupported fields",
+			version: "v0.30.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:                  "http://example.com",
+					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+					SendNativeHistograms: new(true),
+					RoundRobinDNS:        new(true),
+					EnableHttp2:          new(true),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							MinVersion: ptr.To(monitoringv1.TLSVersion12),
+							MaxVersion: ptr.To(monitoringv1.TLSVersion13),
+						},
+					},
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL: new("http://proxy:3128"),
+						NoProxy:  new(".internal"),
+					},
+					QueueConfig: &monitoringv1.QueueConfig{
+						Capacity:       100,
+						MaxRetries:     3,
+						SampleAgeLimit: ptr.To(monitoringv1.Duration("30m")),
+					},
+					AzureAD: &monitoringv1.AzureAD{
+						ManagedIdentity: &monitoringv1.ManagedIdentity{
+							ClientID: new("client-id"),
+						},
+					},
+				},
+			},
+			golden: "v0.30.0_remote_write_config_unsupported_fields.golden",
+		},
+		{
+			name:    "with v0.31.0 dropping unsupported fields",
+			version: "v0.31.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							MaxVersion: ptr.To(monitoringv1.TLSVersion13),
+						},
+					},
+					AzureAD: &monitoringv1.AzureAD{
+						ManagedIdentity: &monitoringv1.ManagedIdentity{
+							ClientID: new("client-id"),
+						},
+					},
+				},
+			},
+			golden: "v0.31.0_remote_write_config_unsupported_fields.golden",
+		},
+		{
+			name:    "remote write with azureAD.sdk not supported by the thanos version",
+			version: "v0.31.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					AzureAD: &monitoringv1.AzureAD{
+						SDK: &monitoringv1.AzureSDK{
+							TenantID: new("tenant"),
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:    "with v0.36.0 dropping unsupported fields",
+			version: "v0.36.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:                  "http://example.com",
+					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+					SendNativeHistograms: new(true),
+					RoundRobinDNS:        new(true),
+					EnableHttp2:          new(true),
+					TLSConfig: &monitoringv1.TLSConfig{
+						SafeTLSConfig: monitoringv1.SafeTLSConfig{
+							MaxVersion: ptr.To(monitoringv1.TLSVersion13),
+						},
+					},
+					ProxyConfig: monitoringv1.ProxyConfig{
+						ProxyURL: new("http://proxy:3128"),
+						NoProxy:  new(".internal"),
+					},
+					QueueConfig: &monitoringv1.QueueConfig{
+						Capacity:       100,
+						MaxRetries:     3,
+						SampleAgeLimit: ptr.To(monitoringv1.Duration("30m")),
+					},
+					AzureAD: &monitoringv1.AzureAD{
+						SDK: &monitoringv1.AzureSDK{
+							TenantID: new("tenant"),
+						},
+					},
+				},
+			},
+			golden: "v0.36.0_remote_write_config_unsupported_fields.golden",
+		},
+		{
+			name:    "remote write with invalid write relabel config regex",
+			version: operator.DefaultThanosVersion,
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					WriteRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							SourceLabels: []monitoringv1.LabelName{"__name__"},
+							Regex:        "(ab",
+							TargetLabel:  "job",
+							Action:       "replace",
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:    "remote write with valid write relabel configs",
+			version: operator.DefaultThanosVersion,
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					WriteRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							SourceLabels: []monitoringv1.LabelName{"__name__"},
+							TargetLabel:  "job",
+							Action:       "lowercase",
+						},
+					},
+				},
+			},
+			golden: "write_relabel_configs_remote_write_config.golden",
+		},
+		{
+			name:    "remote write with write relabel config action not supported by the thanos version",
+			version: "v0.24.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL: "http://example.com",
+					WriteRelabelConfigs: []monitoringv1.RelabelConfig{
+						{
+							SourceLabels: []monitoringv1.LabelName{"__name__"},
+							TargetLabel:  "job",
+							Action:       "lowercase",
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:    "sigv4 external_id not support in any thanos version",
 			version: operator.DefaultThanosVersion,
 			remoteWrite: []monitoringv1.RemoteWriteSpec{

@@ -1,0 +1,14 @@
+remote_write:
+- url: http://example.com
+  send_native_histograms: true
+  tls_config:
+    max_version: TLS13
+  proxy_url: http://proxy:3128
+  no_proxy: .internal
+  azuread:
+    sdk:
+      tenant_id: tenant
+  enable_http2: true
+  queue_config:
+    capacity: 100
+    sample_age_limit: 30m
