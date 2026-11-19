@@ -282,7 +282,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
-		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,
+		"RulesConfigMapLifecycle":                   testRulesConfigMapLifecycle,
 		"PromRulesMustBeAnnotated":                  testPromRulesMustBeAnnotated,
 		"PromtestInvalidRulesAreRejected":           testInvalidRulesAreRejected,
 		"PromOnlyUpdatedOnRelevantChanges":          testPromOnlyUpdatedOnRelevantChanges,

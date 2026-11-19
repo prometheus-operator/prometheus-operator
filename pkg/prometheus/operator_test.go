@@ -418,6 +418,45 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "with_custom_headers",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"X-Scope-OrgID": "tenant-a",
+				},
+			},
+		},
+		{
+			name: "with_reserved_header",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"User-Agent": "custom",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_reserved_header_in_lowercase",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"x-prometheus-remote-write-version": "2.0.0",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_authorization_header",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				Headers: map[string]string{
+					"Authorization": "Bearer xxx",
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:    "with_writeRelabelConfigs_action_unsupported_version",
 			version: "v2.35.0",
 			spec: monitoringv1.RemoteWriteSpec{
@@ -486,7 +525,9 @@ func (rcg *fakeReconciledConditionGetter) GetCondition(_ string, n int64) monito
 
 type fakeDeletionChecker struct{}
 
-func (dc *fakeDeletionChecker) DeletionInProgress(_ metav1.Object) bool { return false }
+func (dc *fakeDeletionChecker) DeletionInProgress(o metav1.Object) bool {
+	return o.GetDeletionTimestamp() != nil
+}
 
 func fakeStatefulSet(name string) appsv1.StatefulSet {
 	return appsv1.StatefulSet{
@@ -697,6 +738,120 @@ func TestStatefulSetReporterProcess(t *testing.T) {
 						ShardID: "0",
 					},
 				},
+			},
+		},
+		{
+			// The StatefulSet left over from a deleted Prometheus with the same
+			// name is still terminating (e.g. held by a finalizer) while its pod
+			// is still ready.
+			name: "prometheus with (replicas=1,shards=1) and a terminating statefulset",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{},
+			},
+			ssets: []appsv1.StatefulSet{
+				func() appsv1.StatefulSet {
+					sset := fakeStatefulSet("prometheus-test")
+					sset.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+					return sset
+				}(),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "StatefulSetDeletionInProgress",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID: "0",
+					},
+				},
+			},
+		},
+		{
+			name: "prometheus with (replicas=2,shards=3) with healthy, degraded and terminating statefulsets",
+			p: monitoringv1.Prometheus{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "test",
+					Namespace:  "ns",
+					Generation: 42,
+				},
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Replicas: new(int32(2)),
+						Shards:   new(int32(3)),
+					},
+				},
+			},
+			ssets: []appsv1.StatefulSet{
+				fakeStatefulSet("prometheus-test"),
+				fakeStatefulSet("prometheus-test-shard-1"),
+				func() appsv1.StatefulSet {
+					sset := fakeStatefulSet("prometheus-test-shard-2")
+					sset.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+					return sset
+				}(),
+			},
+			pods: []corev1.Pod{
+				fakeReadyPod("prometheus-test", 0, true),
+				fakeReadyPod("prometheus-test", 1, true),
+				fakeReadyPod("prometheus-test-shard-1", 0, true),
+				fakeReadyPod("prometheus-test-shard-1", 1, false),
+				fakeReadyPod("prometheus-test-shard-2", 0, true),
+				fakeReadyPod("prometheus-test-shard-2", 1, true),
+			},
+			exp: &monitoringv1.PrometheusStatus{
+				Conditions: []monitoringv1.Condition{
+					{
+						Type:               monitoringv1.Available,
+						Status:             monitoringv1.ConditionFalse,
+						Reason:             "SomePodsNotReadyAndStatefulSetDeletionInProgress",
+						ObservedGeneration: 42,
+					},
+					{
+						Type:               monitoringv1.Reconciled,
+						Status:             monitoringv1.ConditionTrue,
+						ObservedGeneration: 42,
+					},
+				},
+				ShardStatuses: []monitoringv1.ShardStatus{
+					{
+						ShardID:           "0",
+						Replicas:          2,
+						UpdatedReplicas:   2,
+						AvailableReplicas: 2,
+					},
+					{
+						ShardID:             "1",
+						Replicas:            2,
+						UpdatedReplicas:     2,
+						AvailableReplicas:   1,
+						UnavailableReplicas: 1,
+					},
+					{
+						ShardID: "2",
+					},
+				},
+				Replicas:            4,
+				UpdatedReplicas:     4,
+				AvailableReplicas:   3,
+				UnavailableReplicas: 1,
 			},
 		},
 		{

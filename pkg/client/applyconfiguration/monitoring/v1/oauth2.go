@@ -33,17 +33,22 @@ type OAuth2ApplyConfiguration struct {
 	// client's secret.
 	ClientSecret *corev1.SecretKeySelector `json:"clientSecret,omitempty"`
 	// tokenUrl defines the URL to fetch the token from.
+	//
 	TokenURL *monitoringv1.URL `json:"tokenUrl,omitempty"`
 	// scopes defines the OAuth2 scopes used for the token request.
+	//
 	Scopes []string `json:"scopes,omitempty"`
 	// endpointParams configures the HTTP parameters to append to the token
 	// URL.
+	//
 	EndpointParams map[string]string `json:"endpointParams,omitempty"`
 	// tlsConfig defines the TLS configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
+	//
 	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// Proxy configuration to use when connecting to the OAuth2 server.
 	// It requires Prometheus >= v2.43.0.
+	//
 	ProxyConfigApplyConfiguration `json:""`
 }
 

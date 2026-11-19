@@ -1912,7 +1912,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid:       false,
+			valid:       true,
 			promVersion: "2.29.0",
 		},
 		{
@@ -1958,7 +1958,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 					},
 				}
 			},
-			valid:       false,
+			valid:       true,
 			promVersion: "2.29.0",
 		},
 		{
@@ -2247,7 +2247,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid:       true,
 		},
 		{
-			scenario: "Kubernetes SD config with Role Pod but wrong version",
+			scenario: "Kubernetes SD config with Role Pod in older Prometheus version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -2256,7 +2256,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.31.0",
-			valid:       false,
+			valid:       true,
 		},
 		{
 			scenario: "Kubernetes SD config with Role Endpoint",
@@ -2271,7 +2271,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid:       true,
 		},
 		{
-			scenario: "Kubernetes SD config with Role Endpoint but wrong version",
+			scenario: "Kubernetes SD config with Role Endpoint in older Prometheus version",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.KubernetesSDConfigs = []monitoringv1alpha1.KubernetesSDConfig{
 					{
@@ -2280,7 +2280,7 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				}
 			},
 			promVersion: "2.31.0",
-			valid:       false,
+			valid:       true,
 		},
 		{
 			scenario: "Kubernetes SD config with Role EndpointSlice",
@@ -4738,6 +4738,182 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			valid:       true,
 			scrapeClass: new("existent"),
 		},
+		// Version-gated SD validators must not reject scrape configs that
+		// don't use the gated SD mechanism.
+		{
+			scenario: "static config only in Prometheus version older than all version-gated SD configs",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.StaticConfigs = []monitoringv1alpha1.StaticConfig{
+					{
+						Targets: []monitoringv1alpha1.Target{"localhost:9090"},
+					},
+				}
+			},
+			promVersion: "2.19.0",
+			valid:       true,
+		},
+		{
+			scenario: "Linode SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LinodeSDConfigs = []monitoringv1alpha1.LinodeSDConfig{{}}
+			},
+			promVersion: "2.27.0",
+			valid:       false,
+		},
+		{
+			scenario: "Linode SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LinodeSDConfigs = []monitoringv1alpha1.LinodeSDConfig{{}}
+			},
+			promVersion: "2.28.0",
+			valid:       true,
+		},
+		{
+			scenario: "DockerSwarm SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{{}}
+			},
+			promVersion: "2.19.0",
+			valid:       false,
+		},
+		{
+			scenario: "DockerSwarm SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.DockerSwarmSDConfigs = []monitoringv1alpha1.DockerSwarmSDConfig{{}}
+			},
+			promVersion: "2.20.0",
+			valid:       true,
+		},
+		{
+			scenario: "PuppetDB SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.PuppetDBSDConfigs = []monitoringv1alpha1.PuppetDBSDConfig{
+					{URL: "https://example.com"},
+				}
+			},
+			promVersion: "2.30.0",
+			valid:       false,
+		},
+		{
+			scenario: "PuppetDB SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.PuppetDBSDConfigs = []monitoringv1alpha1.PuppetDBSDConfig{
+					{URL: "https://example.com"},
+				}
+			},
+			promVersion: "2.31.0",
+			valid:       true,
+		},
+		{
+			scenario: "LightSail SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{{}}
+			},
+			promVersion: "2.26.0",
+			valid:       false,
+		},
+		{
+			scenario: "LightSail SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.LightSailSDConfigs = []monitoringv1alpha1.LightSailSDConfig{{}}
+			},
+			promVersion: "2.27.0",
+			valid:       true,
+		},
+		{
+			scenario: "OVHCloud SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OVHCloudSDConfigs = []monitoringv1alpha1.OVHCloudSDConfig{
+					{
+						ApplicationKey: "ApplicationKey",
+						ApplicationSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key1",
+						},
+						ConsumerKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key2",
+						},
+						Service: monitoringv1alpha1.OVHServiceVPS,
+					},
+				}
+			},
+			promVersion: "2.39.0",
+			valid:       false,
+		},
+		{
+			scenario: "OVHCloud SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.OVHCloudSDConfigs = []monitoringv1alpha1.OVHCloudSDConfig{
+					{
+						ApplicationKey: "ApplicationKey",
+						ApplicationSecret: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key1",
+						},
+						ConsumerKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key2",
+						},
+						Service: monitoringv1alpha1.OVHServiceVPS,
+					},
+				}
+			},
+			promVersion: "2.40.0",
+			valid:       true,
+		},
+		{
+			scenario: "Scaleway SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "AccessKey",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key1",
+						},
+						ProjectID: "1",
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					},
+				}
+			},
+			promVersion: "2.25.0",
+			valid:       false,
+		},
+		{
+			scenario: "Scaleway SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ScalewaySDConfigs = []monitoringv1alpha1.ScalewaySDConfig{
+					{
+						AccessKey: "AccessKey",
+						SecretKey: corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+							Key:                  "key1",
+						},
+						ProjectID: "1",
+						Role:      monitoringv1alpha1.ScalewayRoleInstance,
+					},
+				}
+			},
+			promVersion: "2.26.0",
+			valid:       true,
+		},
+		{
+			scenario: "Ionos SD config in unsupported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{{}}
+			},
+			promVersion: "2.35.0",
+			valid:       false,
+		},
+		{
+			scenario: "Ionos SD config in minimum supported Prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.IonosSDConfigs = []monitoringv1alpha1.IonosSDConfig{{}}
+			},
+			promVersion: "2.36.0",
+			valid:       true,
+		},
 	} {
 		t.Run(tc.scenario, func(t *testing.T) {
 			cs := fake.NewClientset(
@@ -4810,6 +4986,9 @@ func TestSelectScrapeConfigs(t *testing.T) {
 				return nil
 			})
 
+			if err != nil {
+				t.Logf("err: %s", err)
+			}
 			require.NoError(t, err)
 			require.Len(t, sms, 1)
 

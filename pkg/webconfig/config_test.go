@@ -321,6 +321,34 @@ func TestGetMountParameters(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Certificate and key provided as file paths: no secret to mount
+			// for the key.
+			webConfigFileFields: monitoringv1.WebConfigFileFields{
+				TLSConfig: &monitoringv1.WebTLSConfig{
+					KeyFile:  new("/etc/tls/tls.key"),
+					CertFile: new("/etc/tls/tls.crt"),
+				},
+			},
+			expectedVolumes: []corev1.Volume{
+				{
+					Name: "web-config",
+					VolumeSource: corev1.VolumeSource{
+						Secret: &corev1.SecretVolumeSource{
+							SecretName: "web-config",
+						},
+					},
+				},
+			},
+			expectedMounts: []corev1.VolumeMount{
+				{
+					Name:      "web-config",
+					ReadOnly:  true,
+					MountPath: "/etc/prometheus/web_config/web-config.yaml",
+					SubPath:   "web-config.yaml",
+				},
+			},
+		},
 	}
 
 	for _, tt := range ts {

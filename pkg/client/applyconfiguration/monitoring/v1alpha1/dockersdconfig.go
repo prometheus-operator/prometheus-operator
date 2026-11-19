@@ -44,6 +44,7 @@ type DockerSDConfigApplyConfiguration struct {
 	// matchFirstNetwork defines whether to match the first network if the container has multiple networks defined.
 	// If unset, Prometheus uses true by default.
 	// It requires Prometheus >= v2.54.1.
+	//
 	MatchFirstNetwork *bool `json:"matchFirstNetwork,omitempty"`
 	// filters defines filters to limit the discovery process to a subset of the available resources.
 	Filters *monitoringv1alpha1.Filters `json:"filters,omitempty"`
