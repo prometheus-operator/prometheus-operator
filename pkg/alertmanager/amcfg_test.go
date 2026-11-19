@@ -9456,7 +9456,7 @@ func TestSanitizeMattermostConfig(t *testing.T) {
 			golden: "test_mattermost_top_level_attachment_config_fields_in_supported_version.golden",
 		},
 		{
-			name:           "Test mattermost top level attachmend config in unsupported version",
+			name:           "Test mattermost top level attachmend config fields in unsupported version",
 			againstVersion: versionMattermostConfigTopLevelAttachmentNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
