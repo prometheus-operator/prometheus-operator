@@ -287,6 +287,7 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromtestInvalidRulesAreRejected":           testInvalidRulesAreRejected,
 		"PromOnlyUpdatedOnRelevantChanges":          testPromOnlyUpdatedOnRelevantChanges,
 		"PromWhenDeleteCRDCleanUpViaOwnerRef":       testPromWhenDeleteCRDCleanUpViaOwnerRef,
+		"PromStatefulSetOwnerRefAfterRecreation":    testPromStatefulSetOwnerRefAfterRecreation,
 		"PromDiscovery":                             testPromDiscovery,
 		"ShardingProvisioning":                      testShardingProvisioning,
 		"Resharding":                                testResharding,

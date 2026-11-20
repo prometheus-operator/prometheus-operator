@@ -930,12 +930,12 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-			logger.Debug("new statefulset generation inputs match current, skipping any actions")
+		if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, p) {
+			logger.Debug("statefulset is up to date, skipping any actions")
 			continue
 		}
 
-		logger.Debug("updating current statefulset because of hash divergence",
+		logger.Debug("updating current statefulset",
 			"new_hash", newSSetInputHash,
 			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)

@@ -2150,6 +2150,60 @@ func testPromWhenDeleteCRDCleanUpViaOwnerRef(t *testing.T) {
 	}
 }
 
+// testPromStatefulSetOwnerRefAfterRecreation ensures that the operator
+// reconciles the controller owner reference of an existing StatefulSet when
+// the Prometheus resource is deleted with the orphan propagation policy and
+// then re-created with the same name and spec.
+// See https://github.com/prometheus-operator/prometheus-operator/issues/8960.
+func testPromStatefulSetOwnerRefAfterRecreation(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+	ssetName := fmt.Sprintf("prometheus-%s", name)
+
+	p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	require.NoError(t, err)
+
+	sset, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.True(t, metav1.IsControlledBy(sset, p), "expected the StatefulSet to be controlled by the Prometheus resource")
+	originalUID := sset.UID
+
+	// Deleting the Prometheus resource with the orphan propagation policy
+	// leaves the StatefulSet behind without any controller owner reference.
+	require.NoError(t, framework.MonClientV1.Prometheuses(ns).Delete(ctx, name, metav1.DeleteOptions{
+		PropagationPolicy: ptr.To(metav1.DeletePropagationOrphan),
+	}))
+
+	err = wait.PollUntilContextTimeout(ctx, time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
+		_, err := framework.MonClientV1.Prometheuses(ns).Get(ctx, name, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return true, nil
+		}
+		return false, err
+	})
+	require.NoError(t, err)
+
+	sset, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Nil(t, metav1.GetControllerOf(sset), "expected the StatefulSet to be orphaned")
+
+	// Re-creating the same Prometheus resource doesn't change the input hash
+	// of the StatefulSet but the controller owner reference must be updated.
+	p, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, framework.MakeBasicPrometheus(ns, name, name, 1))
+	require.NoError(t, err)
+
+	sset, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, originalUID, sset.UID, "expected the original StatefulSet to be retained")
+	require.True(t, metav1.IsControlledBy(sset, p), "expected the StatefulSet to be controlled by the re-created Prometheus resource")
+}
+
 func testPromDiscovery(t *testing.T) {
 	for _, tc := range []struct {
 		role *monitoringv1.ServiceDiscoveryRole

@@ -16,6 +16,7 @@ package operator
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 )
@@ -38,4 +39,16 @@ func UpdateStrategyForStatefulSet(updateStrategy *monitoringv1.StatefulSetUpdate
 	}
 
 	return converted
+}
+
+// IsStatefulSetUpToDate returns true when the StatefulSet's input hash matches
+// the expected value and the StatefulSet is controlled by the given owner.
+//
+// The owner reference is checked separately because the input hash doesn't
+// contain the owner's UID. When an owner is deleted and re-created with the
+// same name and spec (for instance because its deletion was blocked), the
+// hash of the desired StatefulSet doesn't change but the existing StatefulSet
+// still references the previous owner.
+func IsStatefulSetUpToDate(sset *appsv1.StatefulSet, inputHash string, owner metav1.Object) bool {
+	return sset.Annotations[InputHashAnnotationKey] == inputHash && metav1.IsControlledBy(sset, owner)
 }

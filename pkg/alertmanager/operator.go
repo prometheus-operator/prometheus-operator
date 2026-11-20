@@ -736,8 +736,8 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions")
+	if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, am) {
+		logger.Debug("statefulset is up to date, skipping any actions")
 		return closure, nil
 	}
 
