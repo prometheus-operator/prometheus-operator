@@ -281,10 +281,6 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		Name:      amConfig.Name,
 	}
 
-	if err := checkAlertmanagerConfigResource(ctx, cb.am, amConfig, cb.amVersion, cb.store); err != nil {
-		return err
-	}
-
 	if err := cb.checkAlertmanagerGlobalConfigResource(ctx, globalConfig, crKey.Namespace); err != nil {
 		return err
 	}
@@ -300,6 +296,10 @@ func (cb *ConfigBuilder) initializeFromAlertmanagerConfig(ctx context.Context, g
 		cb.cfg = &alertmanagerConfig{
 			Global: global,
 		}
+	}
+
+	if err := checkAlertmanagerConfigResource(ctx, cb, amConfig); err != nil {
+		return err
 	}
 
 	// Add inhibitRules to globalAlertmanagerConfig.InhibitRules without enforce namespace
@@ -1287,18 +1287,6 @@ func (cb *ConfigBuilder) convertEmailConfig(ctx context.Context, in monitoringv1
 		ForceImplicitTLS: in.ForceImplicitTLS,
 	}
 
-	if ptr.Deref(in.Smarthost, "") == "" {
-		if cb.cfg.Global == nil || cb.cfg.Global.SMTPSmarthost.Host == "" {
-			return nil, fmt.Errorf("SMTP smarthost is a mandatory field, it is neither specified at global config nor at receiver level")
-		}
-	}
-
-	if ptr.Deref(in.From, "") == "" {
-		if cb.cfg.Global == nil || cb.cfg.Global.SMTPFrom == "" {
-			return nil, fmt.Errorf("SMTP from is a mandatory field, it is neither specified at global config nor at receiver level")
-		}
-	}
-
 	if ptr.Deref(in.Smarthost, "") != "" {
 		host, port, err := net.SplitHostPort(*in.Smarthost)
 		if err != nil {
@@ -1512,16 +1500,6 @@ func (cb *ConfigBuilder) convertTelegramConfig(ctx context.Context, in monitorin
 			return nil, fmt.Errorf("failed to get bot token: %w", err)
 		}
 		out.BotToken = botToken
-	}
-
-	// Confirm botToken is specified for either global or receiver
-	if out.BotToken == "" && out.BotTokenFile == "" {
-		if cb.cfg.Global == nil || (cb.cfg.Global.TelegramBotToken == "" && cb.cfg.Global.TelegramBotTokenFile == "") {
-			if cb.amVersion.LT(semver.MustParse("0.26.0")) {
-				return nil, errors.New(`missing mandatory field 'botToken'`)
-			}
-			return nil, errors.New(`missing mandatory field 'botToken' or 'botTokenFile'`)
-		}
 	}
 
 	return out, nil
