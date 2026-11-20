@@ -20,6 +20,7 @@ import (
 	"maps"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -342,6 +343,32 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		if !limits.MaxPerSilenceBytes.IsEmpty() {
 			vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
 			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
+		}
+	}
+
+	autoGomemlimit := a.Spec.AutoGomemlimit
+	if version.GTE(semver.MustParse("0.35.0")) && autoGomemlimit != nil {
+		switch {
+		case ptr.Deref(autoGomemlimit.Enabled, false):
+			// The boolean flag doesn't accept a value (kingpin rejects
+			// `--auto-gomemlimit=true`), hence the empty value which renders
+			// as `--auto-gomemlimit`.
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit", Value: ""})
+
+			if autoGomemlimit.Ratio != nil {
+				// Render the ratio as a plain decimal (e.g. "700m" -> "0.7").
+				ratio := autoGomemlimit.Ratio.AsDec().String()
+				if f, err := strconv.ParseFloat(ratio, 64); err == nil {
+					ratio = strconv.FormatFloat(f, 'f', -1, 64)
+				}
+				amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit.ratio", Value: ratio})
+			}
+
+			if autoGomemlimit.RefreshInterval != nil {
+				amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit.refresh-interval", Value: string(*autoGomemlimit.RefreshInterval)})
+			}
+		case autoGomemlimit.Enabled != nil:
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "no-auto-gomemlimit", Value: ""})
 		}
 	}
 

@@ -3412,6 +3412,35 @@ func testAMScaleUpWithoutLabels(t *testing.T) {
 	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
 }
 
+func testAlertmanagerAutoGomemlimit(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AutoGomemlimit = &monitoringv1.AutoGomemlimitSpec{
+		Enabled:         new(true),
+		Ratio:           new(resource.MustParse("0.7")),
+		RefreshInterval: new(monitoringv1.GoDuration("5m")),
+	}
+	// Set a memory limit so that Alertmanager can detect it from the cgroup.
+	am.Spec.Resources = corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	require.NoError(t, framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name))
+}
+
 func testAlertmanagerZeroDuration(t *testing.T) {
 	tests := []struct {
 		name  string

@@ -307,6 +307,11 @@ type AlertmanagerSpecApplyConfiguration struct {
 	Web *AlertmanagerWebSpecApplyConfiguration `json:"web,omitempty"`
 	// limits defines the limits command line flags when starting Alertmanager.
 	Limits *AlertmanagerLimitsSpecApplyConfiguration `json:"limits,omitempty"`
+	// autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+	// starting Alertmanager.
+	//
+	// It requires Alertmanager >= v0.35.0.
+	AutoGomemlimit *AutoGomemlimitSpecApplyConfiguration `json:"autoGomemlimit,omitempty"`
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
 	// It requires Alertmanager >= 0.24.0.
@@ -850,6 +855,14 @@ func (b *AlertmanagerSpecApplyConfiguration) WithWeb(value *AlertmanagerWebSpecA
 // If called multiple times, the Limits field is set to the value of the last call.
 func (b *AlertmanagerSpecApplyConfiguration) WithLimits(value *AlertmanagerLimitsSpecApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
 	b.Limits = value
+	return b
+}
+
+// WithAutoGomemlimit sets the AutoGomemlimit field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the AutoGomemlimit field is set to the value of the last call.
+func (b *AlertmanagerSpecApplyConfiguration) WithAutoGomemlimit(value *AutoGomemlimitSpecApplyConfiguration) *AlertmanagerSpecApplyConfiguration {
+	b.AutoGomemlimit = value
 	return b
 }
 

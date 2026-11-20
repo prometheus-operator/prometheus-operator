@@ -257,6 +257,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMServiceName":                           testAlertManagerServiceName,
 		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
 		"AMZeroDuration":                          testAlertmanagerZeroDuration,
+		"AMAutoGomemlimit":                        testAlertmanagerAutoGomemlimit,
 	}
 
 	for name, f := range testFuncs {

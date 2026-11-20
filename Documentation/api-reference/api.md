@@ -990,6 +990,22 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -7785,6 +7801,22 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -8260,6 +8292,73 @@ string
 <td>
 <em>(Optional)</em>
 <p>credentialsFile defines the file to read a secret from, mutually exclusive with <code>credentials</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AutoGomemlimitSpec defines the automatic GOMEMLIMIT command line flags when starting Alertmanager.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled sets GOMEMLIMIT to match the
+Linux container or system memory limit. This corresponds to the
+Alertmanager&rsquo;s <code>--auto-gomemlimit</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ratio</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+maximum container or system memory. The value must be greater than 0 and
+less than or equal to 1. This corresponds to the Alertmanager&rsquo;s
+<code>--auto-gomemlimit.ratio</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>refreshInterval defines the interval at which to re-detect the container
+or system memory limit and update GOMEMLIMIT accordingly. It is useful
+when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+This corresponds to the Alertmanager&rsquo;s <code>--auto-gomemlimit.refresh-interval</code> flag.</p>
 </td>
 </tr>
 </tbody>
@@ -12370,7 +12469,7 @@ URL
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec</a>)
 </p>
 <div>
 <p>GoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.

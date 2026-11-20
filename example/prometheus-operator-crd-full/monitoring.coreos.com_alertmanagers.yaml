@@ -2551,6 +2551,45 @@ spec:
                       type: object
                     type: array
                 type: object
+              autoGomemlimit:
+                description: |-
+                  autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+                  starting Alertmanager.
+
+                  It requires Alertmanager >= v0.35.0.
+                properties:
+                  enabled:
+                    description: |-
+                      enabled sets GOMEMLIMIT to match the
+                      Linux container or system memory limit. This corresponds to the
+                      Alertmanager's `--auto-gomemlimit` flag.
+                    type: boolean
+                  ratio:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+                      maximum container or system memory. The value must be greater than 0 and
+                      less than or equal to 1. This corresponds to the Alertmanager's
+                      `--auto-gomemlimit.ratio` flag.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  refreshInterval:
+                    description: |-
+                      refreshInterval defines the interval at which to re-detect the container
+                      or system memory limit and update GOMEMLIMIT accordingly. It is useful
+                      when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+                      This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
+                    pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: ratio must be greater than 0 and less than or equal to
+                    1
+                  rule: '!has(self.ratio) || (quantity(string(self.ratio)).compareTo(quantity(''0''))
+                    > 0 && quantity(string(self.ratio)).compareTo(quantity(''1''))
+                    <= 0)'
               automountServiceAccountToken:
                 description: |-
                   automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
