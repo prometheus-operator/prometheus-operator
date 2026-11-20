@@ -3874,5 +3874,5 @@ func warnUnsupportedField(
 }
 
 func unsupportedIntegrationErr(integration, version string) error {
-	return fmt.Errorf("invalid syntax in receivers config; %s integration is available in Alertmanager >= %s", integration, version)
+	return fmt.Errorf("%s integration requires Alertmanager version greater than or equal to %s", integration, version)
 }
