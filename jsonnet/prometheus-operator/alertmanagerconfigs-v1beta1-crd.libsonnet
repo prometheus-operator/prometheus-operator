@@ -5747,6 +5747,11 @@
                             ],
                             type: 'object',
                           },
+                          apiURLFile: {
+                            description: 'apiURLFile defines the file from which to read the Slack webhook URL.\nIt is mutually exclusive with `apiURL`.\n\nIt requires Alertmanager >= v0.22.0.',
+                            minLength: 1,
+                            type: 'string',
+                          },
                           callbackId: {
                             description: 'callbackId defines an identifier for the message used in interactive components.',
                             minLength: 1,
@@ -6523,6 +6528,12 @@
                           },
                         },
                         type: 'object',
+                        'x-kubernetes-validations': [
+                          {
+                            message: 'apiURL and apiURLFile are mutually exclusive',
+                            rule: '!(has(self.apiURL) && has(self.apiURLFile))',
+                          },
+                        ],
                       },
                       type: 'array',
                     },
