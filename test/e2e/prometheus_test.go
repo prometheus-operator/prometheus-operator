@@ -2123,6 +2123,7 @@ func testPromStatefulSetOwnerRefAfterRecreation(t *testing.T) {
 	sset, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.True(t, metav1.IsControlledBy(sset, p), "expected the StatefulSet to be controlled by the Prometheus resource")
+	originalUID := sset.UID
 
 	// Deleting the Prometheus resource with the orphan propagation policy
 	// leaves the StatefulSet behind without any controller owner reference.
@@ -2148,14 +2149,10 @@ func testPromStatefulSetOwnerRefAfterRecreation(t *testing.T) {
 	p, err = framework.CreatePrometheusAndWaitUntilReady(ctx, ns, framework.MakeBasicPrometheus(ns, name, name, 1))
 	require.NoError(t, err)
 
-	err = wait.PollUntilContextTimeout(ctx, time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-		sset, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		return metav1.IsControlledBy(sset, p), nil
-	})
-	require.NoError(t, err, "expected the StatefulSet controller owner reference to be updated to the re-created Prometheus resource")
+	sset, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, ssetName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, originalUID, sset.UID, "expected the original StatefulSet to be retained")
+	require.True(t, metav1.IsControlledBy(sset, p), "expected the StatefulSet to be controlled by the re-created Prometheus resource")
 }
 
 func testPromDiscovery(t *testing.T) {
