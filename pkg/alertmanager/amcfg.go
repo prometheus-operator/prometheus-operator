@@ -3869,7 +3869,7 @@ func warnUnsupportedField(
 	fieldName string,
 	amVersion, supportedVersion semver.Version,
 ) {
-	msg := fmt.Sprintf("'%s' supported in Alertmanager >= %s only - dropping field from provided config", fieldName, supportedVersion.String())
+	msg := fmt.Sprintf("dropping field '%s' because it requires Alertmanager version greater than or equal to %s", fieldName, supportedVersion.String())
 	logger.Warn(msg, "current_version", amVersion.String())
 }
 
