@@ -75,7 +75,7 @@ Arguments:
     	  PrometheusShardRetentionPolicy: Enables shard retention policy for Prometheus (enabled: true)
     	  PrometheusTopologySharding: Enables the zone aware sharding for Prometheus (enabled: true)
     	  RemoteWriteCustomResourceDefinition: Enables the RemoteWrite CRD support (enabled: false)
-    	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: false)
+    	  StatusForConfigurationResources: Updates the status subresource for configuration resources (enabled: true)
   -key-file string
     	- NOT RECOMMENDED FOR PRODUCTION - Path to private TLS certificate file.
   -kubelet-endpoints
