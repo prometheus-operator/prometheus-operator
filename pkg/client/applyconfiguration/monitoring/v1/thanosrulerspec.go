@@ -179,6 +179,16 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// the same namespace as the ThanosRuler object is in is used.
 	//
 	RuleNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleNamespaceSelector,omitempty"`
+	// ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+	// mounted in each Thanos Ruler Pod. Unused volumes reference ConfigMaps that do
+	// not exist and are mounted with optional: true.
+	// Reserving volumes avoids a Pod rollout when the number of generated rule
+	// ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+	// are still deleted.
+	// All generated rule ConfigMaps are mounted even if their count exceeds this
+	// value. Changing the number of mounted volumes triggers a Pod rollout.
+	// Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+	RuleConfigMapsMinimumCount *int32 `json:"ruleConfigMapsMinimumCount,omitempty"`
 	// enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 	// and metric that is user created. The label value will always be the namespace of the object that is
 	// being created.
@@ -670,6 +680,14 @@ func (b *ThanosRulerSpecApplyConfiguration) WithRuleSelector(value *metav1.Label
 // If called multiple times, the RuleNamespaceSelector field is set to the value of the last call.
 func (b *ThanosRulerSpecApplyConfiguration) WithRuleNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *ThanosRulerSpecApplyConfiguration {
 	b.RuleNamespaceSelector = value
+	return b
+}
+
+// WithRuleConfigMapsMinimumCount sets the RuleConfigMapsMinimumCount field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RuleConfigMapsMinimumCount field is set to the value of the last call.
+func (b *ThanosRulerSpecApplyConfiguration) WithRuleConfigMapsMinimumCount(value int32) *ThanosRulerSpecApplyConfiguration {
+	b.RuleConfigMapsMinimumCount = &value
 	return b
 }
 

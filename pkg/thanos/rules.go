@@ -97,10 +97,10 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		},
 	)
 
-	configMaps, err := prs.Sync(ctx, rules.RuleFiles())
+	configMapNames, err := prs.Sync(ctx, rules.RuleFiles())
 	if err != nil {
 		return nil, err
 	}
 
-	return configMaps, nil
+	return prs.AppendConfigMapNames(configMapNames, int(ptr.Deref(t.Spec.RuleConfigMapsMinimumCount, 3))), nil
 }
