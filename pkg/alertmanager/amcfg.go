@@ -2694,18 +2694,18 @@ func (ogc *opsgenieConfig) sanitize(amVersion semver.Version, logger *slog.Logge
 	lessThanV0_24 := amVersion.LT(semver.MustParse("0.24.0"))
 
 	if ogc.Actions != "" && lessThanV0_24 {
-		msg := "opsgenie_config 'actions' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
+		msg := "'actions' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		ogc.Actions = ""
 	}
 
 	if ogc.Entity != "" && lessThanV0_24 {
-		msg := "opsgenie_config 'entity' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
+		msg := "'entity' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		ogc.Entity = ""
 	}
 	if ogc.UpdateAlerts != nil && lessThanV0_24 {
-		msg := "update_alerts 'entity' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
+		msg := "'update_alerts' supported in Alertmanager >= 0.24.0 only - dropping field from provided config"
 		logger.Warn(msg, "current_version", amVersion.String())
 		ogc.UpdateAlerts = nil
 	}

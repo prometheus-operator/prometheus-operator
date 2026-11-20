@@ -2136,6 +2136,144 @@ func TestCheckOpsGenieAlertmanagerConfig(t *testing.T) {
 			version: &version23,
 			ok:      false,
 		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-update-alerts",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								UpdateAlerts: new(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version24,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-update-alerts-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								UpdateAlerts: new(true),
+							},
+						},
+					}},
+				},
+			},
+			version: &version23,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-entity",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								Entity: new("my-entity"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version24,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-entity-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								Entity: new("my-entity"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version23,
+			ok:      false,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-actions",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								Actions: new("action1,action2"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version24,
+			ok:      true,
+		},
+		{
+			amConfig: &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "opsgenie-actions-not-supported",
+					Namespace: "ns1",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "recv1",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{{
+						Name: "recv1",
+						OpsGenieConfigs: []monitoringv1alpha1.OpsGenieConfig{
+							{
+								Actions: new("action1,action2"),
+							},
+						},
+					}},
+				},
+			},
+			version: &version23,
+			ok:      false,
+		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())

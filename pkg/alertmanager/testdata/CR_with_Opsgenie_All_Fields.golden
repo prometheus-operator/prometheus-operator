@@ -1,0 +1,35 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  opsgenie_configs:
+  - send_resolved: true
+    api_key: 1234abc
+    api_url: https://example.com/
+    message: test message
+    description: test description
+    source: test source
+    details:
+      foo: bar
+    responders:
+    - id: abcde12345
+      type: team
+    - name: myschedule
+      type: schedule
+    - username: myuser
+      type: user
+    - name: myteams
+      type: teams
+    tags: tag1,tag2
+    note: test note
+    priority: P1
+    update_alerts: true
+    entity: test entity
+    actions: action1,action2
+templates: []
