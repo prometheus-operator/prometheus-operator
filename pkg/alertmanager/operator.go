@@ -1345,6 +1345,13 @@ func checkGlobalConfigFields(cb *ConfigBuilder, amc *monitoringv1alpha1.Alertman
 			}
 		}
 
+		for i, c := range receiver.TelegramConfigs {
+			if c.BotToken == nil && ptr.Deref(c.BotTokenFile, "") == "" &&
+				global.TelegramBotToken == "" && global.TelegramBotTokenFile == "" {
+				return fmt.Errorf("receiver %q: telegramConfigs[%d]: botToken or botTokenFile is neither specified at receiver level nor in the global configuration", receiver.Name, i)
+			}
+		}
+
 		for i, c := range receiver.WeChatConfigs {
 			if c.APISecret == nil && global.WeChatAPISecret == "" && global.WeChatAPISecretFile == "" {
 				return fmt.Errorf("receiver %q: weChatConfigs[%d]: apiSecret is neither specified at receiver level nor in the global configuration", receiver.Name, i)

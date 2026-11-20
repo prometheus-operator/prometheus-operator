@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/blang/semver/v4"
-	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/alertmanager/config/common"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -2534,7 +2534,7 @@ func TestCheckRocketChatAlertmanagerConfig(t *testing.T) {
 				amVersion = *tc.version
 			}
 
-			err := checkAlertmanagerConfigResource(context.Background(), allowAllFileSystemAM(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{am: allowAllFileSystemAM(), amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -3029,7 +3029,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-			err := checkAlertmanagerConfigResource(context.Background(), allowAllFileSystemAM(), tc.amConfig, amVersion, store)
+			err := checkAlertmanagerConfigResource(context.Background(), &ConfigBuilder{am: allowAllFileSystemAM(), amVersion: amVersion, store: store, cfg: &alertmanagerConfig{Global: globalWithDefaults()}}, tc.amConfig)
 			if tc.ok {
 				require.NoError(t, err)
 				return
@@ -3050,13 +3050,14 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 // depend on it.
 func globalWithDefaults() *globalConfig {
 	return &globalConfig{
-		SMTPFrom:        "a@example.com",
-		SMTPSmarthost:   config.HostPort{Host: "smtp.example.com", Port: "25"},
-		SlackAPIURLFile: "/etc/slack",
-		OpsGenieAPIKey:  "key",
-		VictorOpsAPIKey: "key",
-		WeChatAPISecret: "secret",
-		WeChatAPICorpID: "corp",
+		SMTPFrom:         "a@example.com",
+		SMTPSmarthost:    common.HostPort{Host: "smtp.example.com", Port: "25"},
+		SlackAPIURLFile:  "/etc/slack",
+		OpsGenieAPIKey:   "key",
+		VictorOpsAPIKey:  "key",
+		WeChatAPISecret:  "secret",
+		TelegramBotToken: "token",
+		WeChatAPICorpID:  "corp",
 	}
 }
 
@@ -3142,6 +3143,24 @@ func TestCheckGlobalConfigFields(t *testing.T) {
 			global:   &globalConfig{WeChatAPISecret: "secret", WeChatAPICorpID: "corp"},
 		},
 		{
+			name:     "telegram without botToken and without global",
+			receiver: monitoringv1alpha1.Receiver{TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{ChatID: 1}}},
+			err:      "telegramConfigs[0]: botToken or botTokenFile",
+		},
+		{
+			name:     "telegram with botToken",
+			receiver: monitoringv1alpha1.Receiver{TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{ChatID: 1, BotToken: secret}}},
+		},
+		{
+			name:     "telegram with botTokenFile",
+			receiver: monitoringv1alpha1.Receiver{TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{ChatID: 1, BotTokenFile: new("/etc/token")}}},
+		},
+		{
+			name:     "telegram with global bot token file",
+			receiver: monitoringv1alpha1.Receiver{TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{ChatID: 1}}},
+			global:   &globalConfig{TelegramBotTokenFile: "/etc/token"},
+		},
+		{
 			name:     "email without smarthost and without global",
 			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{From: new("a@example.com")}}},
 			err:      "emailConfigs[0]: smarthost",
@@ -3154,7 +3173,7 @@ func TestCheckGlobalConfigFields(t *testing.T) {
 		{
 			name:     "email with global smarthost and from",
 			receiver: monitoringv1alpha1.Receiver{EmailConfigs: []monitoringv1alpha1.EmailConfig{{}}},
-			global:   &globalConfig{SMTPFrom: "a@example.com", SMTPSmarthost: config.HostPort{Host: "smtp.example.com", Port: "25"}},
+			global:   &globalConfig{SMTPFrom: "a@example.com", SMTPSmarthost: common.HostPort{Host: "smtp.example.com", Port: "25"}},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
