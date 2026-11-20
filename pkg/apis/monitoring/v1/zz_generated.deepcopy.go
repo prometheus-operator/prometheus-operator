@@ -4158,6 +4158,11 @@ func (in *ThanosRulerSpec) DeepCopyInto(out *ThanosRulerSpec) {
 		*out = new(metav1.LabelSelector)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.RuleConfigMapsMinimumCount != nil {
+		in, out := &in.RuleConfigMapsMinimumCount, &out.RuleConfigMapsMinimumCount
+		*out = new(int32)
+		**out = **in
+	}
 	if in.ExcludedFromEnforcement != nil {
 		in, out := &in.ExcludedFromEnforcement, &out.ExcludedFromEnforcement
 		*out = make([]ObjectReference, len(*in))

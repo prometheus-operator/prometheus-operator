@@ -345,6 +345,7 @@ func testAllNSThanosRuler(t *testing.T) {
 		"ThanosRulerCreateDeleteCluster":                testThanosRulerCreateDeleteCluster,
 		"ThanosRulerWithStatefulsetCreationFailure":     testThanosRulerWithStatefulsetCreationFailure,
 		"ThanosRulerPrometheusRuleInDifferentNamespace": testThanosRulerPrometheusRuleInDifferentNamespace,
+		"ThanosRulerRulesConfigMapLifecycle":            testThanosRulerRulesConfigMapLifecycle,
 		"ThanosRulerPreserveUserAddedMetadata":          testTRPreserveUserAddedMetadata,
 		"ThanosRulerMinReadySeconds":                    testTRMinReadySeconds,
 		"ThanosRulerAlertmanagerConfig":                 testTRAlertmanagerConfig,
