@@ -3454,8 +3454,7 @@ func (ic *incidentioConfig) sanitize(amVersion semver.Version, logger *slog.Logg
 	}
 
 	if ic.Metadata != nil && amVersion.LT(semver.MustParse("0.35.0")) {
-		msg := "'metadata' supported in Alertmanager >= 0.35.0 only - dropping field from provided config"
-		logger.Warn(msg, "current_version", amVersion.String())
+		warnUnsupportedField(logger, "metadata", amVersion, semver.MustParse("0.35.0"))
 		ic.Metadata = nil
 	}
 
