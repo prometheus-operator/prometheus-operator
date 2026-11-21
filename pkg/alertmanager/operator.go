@@ -1875,16 +1875,20 @@ func checkPushoverConfigs(
 			}
 		}
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.UserKeyFile != nil {
-			return fmt.Errorf(`'userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
-		}
+		version26 := semver.MustParse("0.26.0")
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.TokenFile != nil {
-			return fmt.Errorf(`'tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
-		}
+		if amVersion.LT(version26) {
+			if config.UserKeyFile != nil {
+				return unsupportedCRFieldErr("userKeyFile", amVersion, version26)
+			}
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
-			return fmt.Errorf(`'device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			if config.TokenFile != nil {
+				return unsupportedCRFieldErr("tokenFile", amVersion, version26)
+			}
+
+			if config.Device != nil {
+				return unsupportedCRFieldErr("device", amVersion, version26)
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1903,8 +1907,9 @@ func checkSnsConfigs(
 	amVersion semver.Version,
 ) error {
 	for _, config := range configs {
-		if amVersion.LT(semver.MustParse("0.33.0")) && config.UseAWSHTTPClient != nil {
-			return fmt.Errorf(`'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
+		version33 := semver.MustParse("0.33.0")
+		if amVersion.LT(version33) && config.UseAWSHTTPClient != nil {
+			return unsupportedCRFieldErr("useAWSHTTPClient", amVersion, version33)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -2004,7 +2009,7 @@ func checkMSTeamsV2Configs(
 	}
 
 	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+		return unsupportedCRIntegrationErr("msteamsv2", "0.28.0")
 	}
 
 	for _, config := range configs {
@@ -2218,4 +2223,12 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	}
 
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+}
+
+func unsupportedCRFieldErr(fieldName string, currentVersion, supportedVersion semver.Version) error {
+	return fmt.Errorf("field '%s' requires Alertmanager version greater than or equal to %s, current version %s", fieldName, supportedVersion.String(), currentVersion.String())
+}
+
+func unsupportedCRIntegrationErr(integration, version string) error {
+	return fmt.Errorf("%s integration requires Alertmanager version greater than or equal to %s", integration, version)
 }
