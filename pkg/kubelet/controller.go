@@ -27,6 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -74,6 +75,11 @@ type Controller struct {
 	manageEndpointSlice bool
 	manageEndpoints     bool
 	syncPeriod          time.Duration
+
+	// legacyEndpointsChecked is true once a leftover Endpoints object (from
+	// running with endpoints management enabled) has been excluded from
+	// EndpointSlice mirroring, or found to not exist.
+	legacyEndpointsChecked bool
 
 	// httpMetricsEnabled controls whether to include the insecure HTTP metrics
 	// port (10255) in the kubelet Service. Set to false when the cluster has
@@ -452,7 +458,54 @@ func (c *Controller) sync(ctx context.Context) {
 			c.nodeEndpointSyncErrors.WithLabelValues(endpointSliceLabel).Inc()
 			c.logger.Error("Failed to synchronize kubelet endpointslice", "err", err)
 		}
+
+		if !c.manageEndpoints && !c.legacyEndpointsChecked {
+			if err = c.skipMirrorLegacyEndpoints(ctx); err != nil {
+				c.logger.Warn("Failed to exclude the leftover kubelet Endpoints object from EndpointSlice mirroring", "err", err)
+			} else {
+				c.legacyEndpointsChecked = true
+			}
+		}
 	}
+}
+
+// skipMirrorLegacyEndpoints labels the kubelet Endpoints object left over
+// from running with endpoints management enabled so that the EndpointSlice
+// mirroring controller stops mirroring it. Nothing updates that object
+// anymore, so its mirrored EndpointSlice would otherwise keep the addresses of
+// nodes that have been removed.
+func (c *Controller) skipMirrorLegacyEndpoints(ctx context.Context) error {
+	//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
+	client := c.kclient.CoreV1().Endpoints(c.kubeletObjectNamespace)
+
+	eps, err := client.Get(ctx, c.kubeletObjectName, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	if eps.Labels[discoveryv1.LabelSkipMirror] == "true" {
+		return nil
+	}
+
+	if eps.Labels == nil {
+		eps.Labels = map[string]string{}
+	}
+	eps.Labels[discoveryv1.LabelSkipMirror] = "true"
+
+	if _, err = client.Update(ctx, eps, metav1.UpdateOptions{}); err != nil {
+		return err
+	}
+
+	c.logger.Info(
+		"Excluded the leftover kubelet Endpoints object from EndpointSlice mirroring, it can be deleted",
+		"namespace", c.kubeletObjectNamespace,
+		"name", c.kubeletObjectName,
+	)
+
+	return nil
 }
 
 // singleAddressPerNode returns one address per node, preferring the service's
