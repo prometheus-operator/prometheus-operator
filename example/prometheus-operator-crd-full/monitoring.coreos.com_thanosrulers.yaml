@@ -4745,6 +4745,10 @@ spec:
                 - info
                 - warn
                 - error
+                - Debug
+                - Info
+                - Warn
+                - Error
                 type: string
               minReadySeconds:
                 description: |-

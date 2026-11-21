@@ -5630,7 +5630,11 @@
                       "debug",
                       "info",
                       "warn",
-                      "error"
+                      "error",
+                      "Debug",
+                      "Info",
+                      "Warn",
+                      "Error"
                     ],
                     "type": "string"
                   },
