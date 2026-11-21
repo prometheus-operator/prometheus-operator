@@ -35,7 +35,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// name is used in metrics and logging in order to differentiate queues.
 	//
 	// It requires Prometheus >= v2.15.0 or Thanos >= 0.24.0.
-	//
 	Name *string `json:"name,omitempty"`
 	// messageVersion defines the Remote Write message's version to use when writing to the endpoint.
 	//
@@ -49,20 +48,17 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// what message version it supports.
 	//
 	// It requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.
-	//
 	MessageVersion *monitoringv1.RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
 	// sendExemplars enables sending of exemplars over remote write. Note that
 	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
 	// option for exemplars to be scraped in the first place.
 	//
 	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
-	//
 	SendExemplars *bool `json:"sendExemplars,omitempty"`
 	// sendNativeHistograms enables sending of native histograms, also known as sparse histograms
 	// over remote write.
 	//
 	// It requires Prometheus >= v2.40.0 or Thanos >= v0.30.0.
-	//
 	SendNativeHistograms *bool `json:"sendNativeHistograms,omitempty"`
 	// remoteTimeout defines the timeout for requests to the remote write endpoint.
 	RemoteTimeout *monitoringv1.Duration `json:"remoteTimeout,omitempty"`
@@ -70,7 +66,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// Be aware that headers that are set by Prometheus itself can't be overwritten.
 	//
 	// It requires Prometheus >= v2.25.0 or Thanos >= v0.24.0.
-	//
 	Headers map[string]string `json:"headers,omitempty"`
 	// writeRelabelConfigs defines the list of remote write relabel configurations.
 	WriteRelabelConfigs []RelabelConfigApplyConfiguration `json:"writeRelabelConfigs,omitempty"`
@@ -83,7 +78,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// basicAuth configuration for the URL.
 	//
 	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
-	//
 	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// bearerTokenFile defines the file from which to read bearer token for the URL.
 	//
@@ -94,26 +88,22 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
-	//
 	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// sigv4 defines the AWS's Signature Verification 4 for the URL.
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
-	//
 	Sigv4 *Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
 	// azureAd for the URL.
 	//
 	// It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 	//
 	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
-	//
 	AzureAD *AzureADApplyConfiguration `json:"azureAd,omitempty"`
 	// bearerToken is deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
-	//
 	BearerToken *string `json:"bearerToken,omitempty"`
 	// tlsConfig to use for the URL.
 	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
@@ -122,7 +112,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
-	//
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// queueConfig allows tuning of the remote write queue parameters.
 	QueueConfig *QueueConfigApplyConfiguration `json:"queueConfig,omitempty"`
@@ -130,7 +119,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	//
 	// When the field is empty, **no metadata** is sent. But when the field is
 	// null, metadata is sent.
-	//
 	MetadataConfig *MetadataConfigApplyConfiguration `json:"metadataConfig,omitempty"`
 	// enableHTTP2 defines whether to enable HTTP2.
 	EnableHttp2 *bool `json:"enableHTTP2,omitempty"`
@@ -148,7 +136,6 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// If disabled, the timeout is distributed across all connection attempts.
 	//
 	// It requires Prometheus >= v3.1.0 or Thanos >= v0.38.0.
-	//
 	RoundRobinDNS *bool `json:"roundRobinDNS,omitempty"`
 }
 

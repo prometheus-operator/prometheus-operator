@@ -1,0 +1,9 @@
+receivers:
+- name: ""
+  incidentio_configs:
+  - url: http://example.com
+    alert_source_token: token123
+    metadata:
+      service: '{{ .CommonLabels.service }}'
+      team: platform
+templates: []

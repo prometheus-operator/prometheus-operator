@@ -114,7 +114,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// The default behavior is all PVCs are retained.
 	// This is an alpha field from kubernetes 1.23 until 1.26 and a beta field from 1.26.
 	// It requires enabling the StatefulSetAutoDeletePVC feature gate.
-	//
 	PersistentVolumeClaimRetentionPolicy *appsv1.StatefulSetPersistentVolumeClaimRetentionPolicy `json:"persistentVolumeClaimRetentionPolicy,omitempty"`
 	// externalUrl defines the URL used to access the Alertmanager web service. This is
 	// necessary to generate correct URLs. This is necessary if Alertmanager is not
@@ -144,10 +143,8 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 	// dnsPolicy defines the DNS policy for the pods.
-	//
 	DNSPolicy *monitoringv1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// dnsConfig defines the DNS configuration for the pods.
-	//
 	DNSConfig *PodDNSConfigApplyConfiguration `json:"dnsConfig,omitempty"`
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
@@ -173,14 +170,12 @@ type AlertmanagerSpecApplyConfiguration struct {
 	//
 	// Note that updating this value implies the recreation of the StatefulSet
 	// which incurs a service outage.
-	//
 	PodManagementPolicy *monitoringv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 	// updateStrategy indicates the strategy that will be employed to update
 	// Pods in the StatefulSet when a revision is made to statefulset's Pod
 	// Template.
 	//
 	// The default strategy is RollingUpdate.
-	//
 	UpdateStrategy *StatefulSetUpdateStrategyApplyConfiguration `json:"updateStrategy,omitempty"`
 	// containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
@@ -196,7 +191,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	//
 	// Overriding containers which are managed by the operator require careful
 	// testing, especially when upgrading to a new version of the operator.
-	//
 	Containers []corev1.Container `json:"containers,omitempty"`
 	// initContainers allows injecting initContainers to the Pod definition. Those
 	// can be used to e.g.  fetch secrets for injection into the Prometheus
@@ -213,7 +207,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// Overriding init containers which are managed by the operator require
 	// careful testing, especially when upgrading to a new version of the
 	// operator.
-	//
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 	// priorityClassName assigned to the Pods
 	PriorityClassName *string `json:"priorityClassName,omitempty"`
@@ -275,7 +268,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// - "AllowAll" allows any AlertmanagerConfig resource to reference files from the container's filesystem (use with caution).
 	//
 	// By default, the operator uses the "FromAlertmanagerConfigMatcherStrategy" mode.
-	//
 	AlertmanagerConfigFileSystemMode *monitoringv1.AlertmanagerConfigFileSystemMode `json:"alertmanagerConfigFileSystemMode,omitempty"`
 	// minReadySeconds defines the minimum number of seconds for which a newly
 	// created pod should be ready without any of its container crashing for it
@@ -289,7 +281,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// the Prometheus instances to Alertmanager after a roll-out. It is
 	// possible to override this behavior passing a custom value via
 	// `.spec.additionalArgs`.
-	//
 	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 	// hostAliases Pods configuration
 	HostAliases []HostAliasApplyConfiguration `json:"hostAliases,omitempty"`
@@ -301,7 +292,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// When hostNetwork is enabled, this will set the DNS policy to
 	// `ClusterFirstWithHostNet` automatically (unless `.spec.dnsPolicy` is set
 	// to a different value).
-	//
 	HostNetwork *bool `json:"hostNetwork,omitempty"`
 	// web defines the web command line flags when starting Alertmanager.
 	Web *AlertmanagerWebSpecApplyConfiguration `json:"web,omitempty"`
@@ -322,7 +312,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	//
 	// This is an *experimental feature*, it may change in any upcoming release
 	// in a breaking way.
-	//
 	AlertmanagerConfiguration *AlertmanagerConfigurationApplyConfiguration `json:"alertmanagerConfiguration,omitempty"`
 	// automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
 	// If the service account has `automountServiceAccountToken: true`, set the field to `false` to opt out of automounting API credentials.
@@ -345,7 +334,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	// the kill signal (no opportunity to shut down) which may lead to data corruption.
 	//
 	// Defaults to 120 seconds.
-	//
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 	// hostUsers supports the user space in Kubernetes.
 	//
@@ -353,7 +341,6 @@ type AlertmanagerSpecApplyConfiguration struct {
 	//
 	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
 	// Starting Kubernetes 1.33, the feature is enabled by default.
-	//
 	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 

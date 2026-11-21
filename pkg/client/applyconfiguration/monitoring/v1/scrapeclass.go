@@ -24,13 +24,11 @@ import (
 // with apply.
 type ScrapeClassApplyConfiguration struct {
 	// name of the scrape class.
-	//
 	Name *string `json:"name,omitempty"`
 	// default defines that the scrape applies to all scrape objects that
 	// don't configure an explicit scrape class name.
 	//
 	// Only one scrape class can be set as the default.
-	//
 	Default *bool `json:"default,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	// It will only apply if the scrape resource doesn't specify any FallbackScrapeProtocol
@@ -42,7 +40,6 @@ type ScrapeClassApplyConfiguration struct {
 	// precedence over the corresponding scrape class fields.
 	//
 	// For now only the `caFile`, `certFile` and `keyFile` fields are supported.
-	//
 	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// authorization section for the ScrapeClass.
 	// It will only apply if the scrape resource doesn't specify any Authorization.
@@ -55,7 +52,6 @@ type ScrapeClassApplyConfiguration struct {
 	// Then the Operator adds the target-specific relabelings defined in the scrape object.
 	//
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	//
 	Relabelings []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
 	// metricRelabelings defines the relabeling rules to apply to all samples before ingestion.
 	//
@@ -64,12 +60,10 @@ type ScrapeClassApplyConfiguration struct {
 	// Then the Operator adds namespace enforcement relabeling rule, specified in '.spec.enforcedNamespaceLabel'.
 	//
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#metric_relabel_configs
-	//
 	MetricRelabelings []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	// attachMetadata defines additional metadata to the discovered targets.
 	// When the scrape object defines its own configuration, it takes
 	// precedence over the scrape class configuration.
-	//
 	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 }
 

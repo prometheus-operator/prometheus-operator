@@ -40,14 +40,12 @@ type EndpointApplyConfiguration struct {
 	//
 	// Because it relies on Pod metadata, endpoints which aren't backed by Pods
 	// are never scraped when `targetPort` is used.
-	//
 	TargetPort *intstr.IntOrString `json:"targetPort,omitempty"`
 	// path defines the HTTP path from which to scrape for metrics.
 	//
 	// If empty, Prometheus uses the default value (e.g. `/metrics`).
 	Path *string `json:"path,omitempty"`
 	// scheme defines the HTTP scheme to use when scraping the metrics.
-	//
 	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
 	// params define optional HTTP URL parameters.
 	Params map[string][]string `json:"params,omitempty"`
@@ -66,18 +64,15 @@ type EndpointApplyConfiguration struct {
 	HonorLabels *bool `json:"honorLabels,omitempty"`
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
-	//
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
 	// trackTimestampsStaleness defines whether Prometheus tracks staleness of
 	// the metrics that have an explicit timestamp present in scraped data.
 	// Has no effect if `honorTimestamps` is false.
 	//
 	// It requires Prometheus >= v2.48.0.
-	//
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// metricRelabelings defines the relabeling rules to apply to the
 	// samples before ingestion.
-	//
 	MetricRelabelConfigs []RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
 	// relabelings defines the relabeling rules to apply the target's
 	// metadata labels.
@@ -87,7 +82,6 @@ type EndpointApplyConfiguration struct {
 	// The original scrape job's name is available via the `__tmp_prometheus_job_name` label.
 	//
 	// More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config
-	//
 	RelabelConfigs []RelabelConfigApplyConfiguration `json:"relabelings,omitempty"`
 	// filterRunning when true, the pods which are not running (e.g. either in Failed or
 	// Succeeded state) are dropped during the target discovery.
@@ -95,7 +89,6 @@ type EndpointApplyConfiguration struct {
 	// If unset, the filtering is enabled.
 	//
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase
-	//
 	FilterRunning *bool `json:"filterRunning,omitempty"`
 	// bearerTokenFile defines the file to read bearer token for scraping the target.
 	//

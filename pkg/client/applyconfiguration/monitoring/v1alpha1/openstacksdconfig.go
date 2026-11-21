@@ -32,7 +32,6 @@ type OpenStackSDConfigApplyConfiguration struct {
 	// role defines the OpenStack role of entities that should be discovered.
 	//
 	// Note: The `LoadBalancer` role requires Prometheus >= v3.2.0.
-	//
 	Role *monitoringv1alpha1.OpenStackRole `json:"role,omitempty"`
 	// region defines the OpenStack Region.
 	Region *string `json:"region,omitempty"`

@@ -10015,6 +10015,66 @@ func TestSanitizeIncidentioConfig(t *testing.T) {
 			},
 			golden: "incidentio_configs_with_http_authorization.golden",
 		},
+		{
+			name:           "incidentio_configs metadata dropped for unsupported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 34},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+								Metadata: map[string]string{
+									"team":    "platform",
+									"service": "{{ .CommonLabels.service }}",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "incidentio_configs_metadata_unsupported_version.golden",
+		},
+		{
+			name:           "incidentio_configs metadata kept for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 35},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+								Metadata: map[string]string{
+									"team":    "platform",
+									"service": "{{ .CommonLabels.service }}",
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "incidentio_configs_metadata_supported_version.golden",
+		},
+		{
+			name:           "incidentio_configs metadata kept for supported versions",
+			againstVersion: semver.Version{Major: 0, Minor: 35},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						IncidentioConfigs: []*incidentioConfig{
+							{
+								URL:              "http://example.com",
+								AlertSourceToken: "token123",
+								Metadata:         map[string]string{},
+							},
+						},
+					},
+				},
+			},
+			golden: "incidentio_configs_metadata_empty_unsupported_version.golden",
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)

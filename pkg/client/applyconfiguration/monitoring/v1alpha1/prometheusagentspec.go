@@ -34,7 +34,6 @@ type PrometheusAgentSpecApplyConfiguration struct {
 	// mode defines how the Prometheus operator deploys the PrometheusAgent pod(s).
 	//
 	// (Alpha) Using this field requires the `PrometheusAgentDaemonSet` feature gate to be enabled.
-	//
 	Mode                                        *monitoringv1alpha1.PrometheusAgentMode `json:"mode,omitempty"`
 	v1.CommonPrometheusFieldsApplyConfiguration `json:""`
 }

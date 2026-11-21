@@ -597,6 +597,7 @@ type incidentioConfig struct {
 	AlertSourceTokenFile string            `yaml:"alert_source_token_file,omitempty"`
 	MaxAlerts            *int32            `yaml:"max_alerts,omitempty"`
 	Timeout              *model.Duration   `yaml:"timeout,omitempty"`
+	Metadata             map[string]string `yaml:"metadata,omitempty"`
 }
 
 type timeInterval config.TimeInterval
