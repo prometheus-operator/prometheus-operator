@@ -33,7 +33,6 @@ type RollingUpdateStatefulSetStrategyApplyConfiguration struct {
 	// MaxUnavailableStatefulSet feature. The field applies to all pods in the
 	// range 0 to Replicas-1.  That means if there is any unavailable pod in
 	// the range 0 to Replicas-1, it will be counted towards MaxUnavailable.
-	//
 	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 }
 

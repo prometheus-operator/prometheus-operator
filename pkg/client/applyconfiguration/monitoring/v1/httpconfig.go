@@ -28,7 +28,6 @@ import (
 type HTTPConfigApplyConfiguration struct {
 	HTTPConfigWithoutTLSApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration used by the client.
-	//
 	TLSConfig *SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 }
 

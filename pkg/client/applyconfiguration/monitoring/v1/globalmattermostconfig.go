@@ -28,7 +28,6 @@ type GlobalMattermostConfigApplyConfiguration struct {
 	// webhookURL defines the default Mattermost Webhook URL.
 	//
 	// It requires Alertmanager >= v0.32.0.
-	//
 	WebhookURL *corev1.SecretKeySelector `json:"webhookURL,omitempty"`
 }
 

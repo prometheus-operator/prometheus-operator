@@ -30,10 +30,8 @@ type StatefulSetUpdateStrategyApplyConfiguration struct {
 	// type indicates the type of the StatefulSetUpdateStrategy.
 	//
 	// Default is RollingUpdate.
-	//
 	Type *monitoringv1.StatefulSetUpdateStrategyType `json:"type,omitempty"`
 	// rollingUpdate is used to communicate parameters when type is RollingUpdate.
-	//
 	RollingUpdate *RollingUpdateStatefulSetStrategyApplyConfiguration `json:"rollingUpdate,omitempty"`
 }
 

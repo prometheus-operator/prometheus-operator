@@ -28,12 +28,10 @@ type AlertmanagerLimitsSpecApplyConfiguration struct {
 	// maxSilences defines the maximum number active and pending silences. This corresponds to the
 	// Alertmanager's `--silences.max-silences` flag.
 	// It requires Alertmanager >= v0.28.0.
-	//
 	MaxSilences *int32 `json:"maxSilences,omitempty"`
 	// maxPerSilenceBytes defines the maximum size of an individual silence as stored on disk. This corresponds to the Alertmanager's
 	// `--silences.max-per-silence-bytes` flag.
 	// It requires Alertmanager >= v0.28.0.
-	//
 	MaxPerSilenceBytes *monitoringv1.ByteSize `json:"maxPerSilenceBytes,omitempty"`
 }
 

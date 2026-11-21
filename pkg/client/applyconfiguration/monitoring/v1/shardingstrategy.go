@@ -34,7 +34,6 @@ type ShardingStrategyApplyConfiguration struct {
 	// specific topology zone and only scrapes targets in that zone.
 	// (Alpha) Using the 'Topology' mode requires the `PrometheusTopologySharding`
 	// feature gate to be enabled.
-	//
 	Mode *monitoringv1.ShardingStrategyMode `json:"mode,omitempty"`
 	// topology defines the configuration for topology-aware sharding.
 	// This field is only valid when mode is set to 'Topology'.

@@ -25,7 +25,6 @@ import (
 type RetainConfigApplyConfiguration struct {
 	// retentionPeriod defines how long the scaled-down shard(s) need to be
 	// kept before being deleted.
-	//
 	RetentionPeriod *monitoringv1.Duration `json:"retentionPeriod,omitempty"`
 }
 

@@ -31,7 +31,6 @@ type RelabelConfigApplyConfiguration struct {
 	// sourceLabels defines the source labels select values from existing labels. Their content is
 	// concatenated using the configured Separator and matched against the
 	// configured regular expression.
-	//
 	SourceLabels []monitoringv1.LabelName `json:"sourceLabels,omitempty"`
 	// separator defines the string between concatenated SourceLabels.
 	Separator *string `json:"separator,omitempty"`
@@ -52,7 +51,6 @@ type RelabelConfigApplyConfiguration struct {
 	// regular expression matches.
 	//
 	// Regex capture groups are available.
-	//
 	Replacement *string `json:"replacement,omitempty"`
 	// action to perform based on the regex matching.
 	//
@@ -60,7 +58,6 @@ type RelabelConfigApplyConfiguration struct {
 	// `DropEqual` and `KeepEqual` actions require Prometheus >= v2.41.0.
 	//
 	// Default: "Replace"
-	//
 	Action *string `json:"action,omitempty"`
 }
 
