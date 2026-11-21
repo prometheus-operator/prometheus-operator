@@ -66,6 +66,8 @@ const (
 	applicationNameLabelValue = "alertmanager"
 
 	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
+
+	slackBotAPIURL = "https://slack.com/api/chat.postMessage"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -734,8 +736,8 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions")
+	if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, am) {
+		logger.Debug("statefulset is up to date, skipping any actions")
 		return closure, nil
 	}
 
@@ -1098,7 +1100,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
-		return fmt.Errorf("couldnt gzip config: %w", err)
+		return fmt.Errorf("could not gzip config: %w", err)
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
@@ -1540,6 +1542,18 @@ func checkDiscordConfigs(
 			return err
 		}
 
+		if amVersion.LT(semver.MustParse("0.28.0")) {
+			if ptr.Deref(config.Content, "") != "" {
+				return fmt.Errorf(`'content' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+			if ptr.Deref(config.Username, "") != "" {
+				return fmt.Errorf(`'username' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+			if ptr.Deref(config.AvatarURL, "") != "" {
+				return fmt.Errorf(`'avatarURL' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+			}
+		}
+
 		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
 		if err != nil {
 			return fmt.Errorf("failed to retrieve API URL: %w", err)
@@ -1583,6 +1597,10 @@ func checkRocketChatConfigs(
 		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
+
+		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.35.0")) {
+			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.35.0 only - current %s`, amVersion)
+		}
 	}
 
 	return nil
@@ -1616,20 +1634,33 @@ func checkSlackConfigs(
 			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
 		}
 
-		if config.UpdateMessage != nil {
-			if amVersion.LT(semver.MustParse("0.32.0")) {
-				return fmt.Errorf(`'updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
-			}
-			if *config.UpdateMessage && slackAPIURL != "" {
-				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`'updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
-				}
-			}
+		if err := checkSlackBotTokenOption("updateMessage", config.UpdateMessage, "0.32.0", amVersion, slackAPIURL); err != nil {
+			return err
+		}
+
+		if err := checkSlackBotTokenOption("postUpdatesToThread", config.PostUpdatesToThread, "0.35.0", amVersion, slackAPIURL); err != nil {
+			return err
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func checkSlackBotTokenOption(name string, enabled *bool, minVersion string, amVersion semver.Version, slackAPIURL string) error {
+	if enabled == nil {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse(minVersion)) {
+		return fmt.Errorf("'%s' is available in Alertmanager >= %s only - current %s", name, minVersion, amVersion)
+	}
+
+	if *enabled && slackAPIURL != "" && slackAPIURL != slackBotAPIURL {
+		return fmt.Errorf("'%s' can only be used with bot tokens. API URL must be set to %s", name, slackBotAPIURL)
 	}
 
 	return nil
@@ -1949,8 +1980,8 @@ func checkMSTeamsConfigs(
 			return err
 		}
 
-		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
-			return err
+		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL, validation.NotEmpty); err != nil {
+			return fmt.Errorf("webhookURL: %w", err)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {

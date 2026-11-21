@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -568,6 +569,110 @@ func TestMakeStatefulSetSpecWebCORSOrigin(t *testing.T) {
 			if ts.expectCORSOrigin {
 				require.Contains(t, args, ts.expectCORSArgValue)
 			}
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecAutoGomemlimit(t *testing.T) {
+	tt := []struct {
+		scenario       string
+		version        string
+		autoGomemlimit *monitoringv1.AutoGomemlimitSpec
+		expectedArgs   []string
+	}{
+		{
+			scenario:       "no auto-gomemlimit args by default",
+			version:        "v0.35.0",
+			autoGomemlimit: nil,
+			expectedArgs:   nil,
+		},
+		{
+			scenario: "no auto-gomemlimit args for old version",
+			version:  "v0.34.2",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(true),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: nil,
+		},
+		{
+			scenario: "no auto-gomemlimit args when not enabled",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: nil,
+		},
+		{
+			scenario: "auto-gomemlimit explicitly disabled",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(false),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: []string{"--no-auto-gomemlimit"},
+		},
+		{
+			scenario: "auto-gomemlimit enabled without ratio and refresh interval",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled: new(true),
+			},
+			expectedArgs: []string{"--auto-gomemlimit"},
+		},
+		{
+			scenario: "auto-gomemlimit with ratio and refresh interval",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(true),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: []string{
+				"--auto-gomemlimit",
+				"--auto-gomemlimit.ratio=0.7",
+				"--auto-gomemlimit.refresh-interval=5m",
+			},
+		},
+		{
+			// The API server stores quantities in canonical form ("0.7" is
+			// returned as "700m"), the rendered flag value must stay a plain
+			// decimal number.
+			scenario: "auto-gomemlimit ratio in canonical quantity form",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled: new(true),
+				Ratio:   new(resource.MustParse("700m")),
+			},
+			expectedArgs: []string{
+				"--auto-gomemlimit",
+				"--auto-gomemlimit.ratio=0.7",
+			},
+		},
+	}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = new(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.AutoGomemlimit = ts.autoGomemlimit
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			gotArgs := make([]string, 0)
+			for _, arg := range args {
+				if strings.Contains(arg, "auto-gomemlimit") {
+					gotArgs = append(gotArgs, arg)
+				}
+			}
+			require.ElementsMatch(t, ts.expectedArgs, gotArgs, "expected alertmanager args %v to contain %v but got %v", args, ts.expectedArgs, gotArgs)
 		})
 	}
 }

@@ -990,6 +990,22 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -4038,6 +4054,26 @@ Kubernetes meta/v1.LabelSelector
 <p>ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
 </td>
 </tr>
 <tr>
@@ -7765,6 +7801,22 @@ AlertmanagerLimitsSpec
 </tr>
 <tr>
 <td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>clusterTLS</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.ClusterTLSConfig">
@@ -8240,6 +8292,73 @@ string
 <td>
 <em>(Optional)</em>
 <p>credentialsFile defines the file to read a secret from, mutually exclusive with <code>credentials</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AutoGomemlimitSpec defines the automatic GOMEMLIMIT command line flags when starting Alertmanager.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled sets GOMEMLIMIT to match the
+Linux container or system memory limit. This corresponds to the
+Alertmanager&rsquo;s <code>--auto-gomemlimit</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ratio</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+maximum container or system memory. The value must be greater than 0 and
+less than or equal to 1. This corresponds to the Alertmanager&rsquo;s
+<code>--auto-gomemlimit.ratio</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>refreshInterval defines the interval at which to re-detect the container
+or system memory limit and update GOMEMLIMIT accordingly. It is useful
+when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+This corresponds to the Alertmanager&rsquo;s <code>--auto-gomemlimit.refresh-interval</code> flag.</p>
 </td>
 </tr>
 </tbody>
@@ -12350,7 +12469,7 @@ URL
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec</a>)
 </p>
 <div>
 <p>GoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.
@@ -17501,6 +17620,26 @@ Kubernetes meta/v1.LabelSelector
 <p>ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
 matches all namespaces. A null label selector matches the current
 namespace only.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
 </td>
 </tr>
 <tr>
@@ -35418,6 +35557,21 @@ These appear as buttons that users can click to trigger responses.</p>
 </tr>
 <tr>
 <td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -37437,6 +37591,21 @@ bool
 <p>updateMessage enables updating existing Slack messages instead of creating new ones
 when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 </tbody>
@@ -41280,6 +41449,21 @@ These appear as buttons that users can click to trigger responses.</p>
 </tr>
 <tr>
 <td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
@@ -42185,6 +42369,21 @@ bool
 <p>updateMessage enables updating existing Slack messages instead of creating new ones
 when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 </tbody>

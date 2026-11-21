@@ -257,6 +257,7 @@ func testAllNSAlertmanager(t *testing.T) {
 		"AMServiceName":                           testAlertManagerServiceName,
 		"AMScaleUpWithoutLabels":                  testAMScaleUpWithoutLabels,
 		"AMZeroDuration":                          testAlertmanagerZeroDuration,
+		"AMAutoGomemlimit":                        testAlertmanagerAutoGomemlimit,
 	}
 
 	for name, f := range testFuncs {
@@ -282,11 +283,12 @@ func testAllNSPrometheus(t *testing.T) {
 		"PromRuleWithParserOptions":                 testPrometheusRuleWithParserOptions,
 		"PromMultiplePrometheusRulesSameNS":         testPromMultiplePrometheusRulesSameNS,
 		"PromMultiplePrometheusRulesDifferentNS":    testPromMultiplePrometheusRulesDifferentNS,
-		"PromRulesExceedingConfigMapLimit":          testPromRulesExceedingConfigMapLimit,
+		"RulesConfigMapLifecycle":                   testRulesConfigMapLifecycle,
 		"PromRulesMustBeAnnotated":                  testPromRulesMustBeAnnotated,
 		"PromtestInvalidRulesAreRejected":           testInvalidRulesAreRejected,
 		"PromOnlyUpdatedOnRelevantChanges":          testPromOnlyUpdatedOnRelevantChanges,
 		"PromWhenDeleteCRDCleanUpViaOwnerRef":       testPromWhenDeleteCRDCleanUpViaOwnerRef,
+		"PromStatefulSetOwnerRefAfterRecreation":    testPromStatefulSetOwnerRefAfterRecreation,
 		"PromDiscovery":                             testPromDiscovery,
 		"ShardingProvisioning":                      testShardingProvisioning,
 		"Resharding":                                testResharding,

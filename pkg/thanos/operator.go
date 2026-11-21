@@ -607,12 +607,12 @@ func (o *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		return closure, nil
 	}
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions", "hash", newSSetInputHash)
+	if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, tr) {
+		logger.Debug("statefulset is up to date, skipping any actions")
 		return closure, nil
 	}
 
-	logger.Debug("new hash differs from the existing value", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
+	logger.Debug("updating current statefulset", "new", newSSetInputHash, "existing", existingStatefulSet.Annotations[operator.InputHashAnnotationKey])
 	if err = k8s.ForceUpdateStatefulSet(ctx, ssetClient, sset, func(reason string) {
 		o.metrics.StsDeleteCreateCounter().Inc()
 		logger.Info("recreating StatefulSet because the update operation wasn't possible", "reason", reason)

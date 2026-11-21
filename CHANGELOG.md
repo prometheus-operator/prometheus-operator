@@ -1,3 +1,7 @@
+## UNRELEASED
+
+* [FEATURE] Add `autoGomemlimit` field to the `Alertmanager` CRD to configure the `--auto-gomemlimit` command-line flags. It requires Alertmanager >= v0.35.0.
+
 ## 0.95.2 / 2026-11-10
 
 * [BUGFIX] Fix container images for all platforms/architectures other than `linux/amd64`. #8971

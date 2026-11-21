@@ -59,6 +59,7 @@ type ProbeSpecApplyConfiguration struct {
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
+	//
 	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
@@ -69,6 +70,7 @@ type ProbeSpecApplyConfiguration struct {
 	// These metrics help monitor how close targets are to their configured limits.
 	//
 	// It requires Prometheus >= v3.10.0.
+	//
 	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	// Only valid in Prometheus versions 2.27.0 and newer.
@@ -84,6 +86,7 @@ type ProbeSpecApplyConfiguration struct {
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
+	//
 	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// scrapeClass defines the scrape class to apply.
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`

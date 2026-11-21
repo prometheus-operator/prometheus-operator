@@ -1128,6 +1128,29 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2Secret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	rocketchatSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":    []byte("abcdef"),
+			"token-id": []byte("abcdef12345"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), rocketchatSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	discordSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "discord",
+		},
+		Data: map[string][]byte{
+			"apiurl": []byte("https://discord.api.url"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), discordSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1308,6 +1331,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: "webhook-url",
 					},
 					Title: new("Alert"),
+				}},
+				RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
+					Token: corev1.SecretKeySelector{
+						Key:                  "token",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+					TokenID: corev1.SecretKeySelector{
+						Key:                  "token-id",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+				}},
+				DiscordConfigs: []monitoringv1alpha1.DiscordConfig{{
+					APIURL: corev1.SecretKeySelector{
+						Key:                  "apiurl",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "discord"},
+					},
+					Title: new("infra-alert"),
 				}},
 			}},
 		},
@@ -1646,6 +1687,9 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  discord_configs:
+  - webhook_url: https://discord.api.url
+    title: infra-alert
   webex_configs:
   - http_config:
       authorization:
@@ -1660,6 +1704,12 @@ receivers:
   msteamsv2_configs:
   - webhook_url: https://msteamsv2.webhook.url
     title: Alert
+  rocketchat_configs:
+  - api_url: https://rocketchat.api.url
+    token_id: abcdef12345
+    token: abcdef
+    short_fields: false
+    link_names: false
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -3360,6 +3410,35 @@ func testAMScaleUpWithoutLabels(t *testing.T) {
 	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}
+
+func testAlertmanagerAutoGomemlimit(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AutoGomemlimit = &monitoringv1.AutoGomemlimitSpec{
+		Enabled:         new(true),
+		Ratio:           new(resource.MustParse("0.7")),
+		RefreshInterval: new(monitoringv1.GoDuration("5m")),
+	}
+	// Set a memory limit so that Alertmanager can detect it from the cgroup.
+	am.Spec.Resources = corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	require.NoError(t, framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name))
 }
 
 func testAlertmanagerZeroDuration(t *testing.T) {

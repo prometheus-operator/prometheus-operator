@@ -36,6 +36,7 @@ type RemoteReadSpecApplyConfiguration struct {
 	// configurations.
 	//
 	// It requires Prometheus >= v2.15.0.
+	//
 	Name *string `json:"name,omitempty"`
 	// requiredMatchers defines an optional list of equality matchers which have to be present
 	// in a selector to query the remote read endpoint.
@@ -54,10 +55,12 @@ type RemoteReadSpecApplyConfiguration struct {
 	// It requires Prometheus >= v2.27.0.
 	//
 	// Cannot be set at the same time as `authorization`, or `basicAuth`.
+	//
 	OAuth2 *OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	// basicAuth configuration for the URL.
 	//
 	// Cannot be set at the same time as `authorization`, or `oauth2`.
+	//
 	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// bearerTokenFile defines the file from which to read the bearer token for the URL.
 	//
@@ -68,10 +71,12 @@ type RemoteReadSpecApplyConfiguration struct {
 	// It requires Prometheus >= v2.26.0.
 	//
 	// Cannot be set at the same time as `basicAuth`, or `oauth2`.
+	//
 	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// bearerToken is deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
+	//
 	BearerToken *string `json:"bearerToken,omitempty"`
 	// tlsConfig to use for the URL.
 	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
@@ -80,10 +85,12 @@ type RemoteReadSpecApplyConfiguration struct {
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	//
 	// It requires Prometheus >= v2.26.0.
+	//
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// filterExternalLabels defines whether to use the external labels as selectors for the remote read endpoint.
 	//
 	// It requires Prometheus >= v2.34.0.
+	//
 	FilterExternalLabels *bool `json:"filterExternalLabels,omitempty"`
 }
 

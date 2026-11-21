@@ -16,6 +16,7 @@ package alertmanager
 
 import (
 	"github.com/prometheus/alertmanager/config"
+	"github.com/prometheus/alertmanager/config/common"
 	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 )
@@ -45,7 +46,7 @@ type globalConfig struct {
 
 	SMTPFrom                 string          `yaml:"smtp_from,omitempty"`
 	SMTPHello                string          `yaml:"smtp_hello,omitempty"`
-	SMTPSmarthost            config.HostPort `yaml:"smtp_smarthost,omitempty"`
+	SMTPSmarthost            common.HostPort `yaml:"smtp_smarthost,omitempty"`
 	SMTPAuthUsername         string          `yaml:"smtp_auth_username,omitempty"`
 	SMTPAuthPassword         string          `yaml:"smtp_auth_password,omitempty"`
 	SMTPAuthPasswordFile     string          `yaml:"smtp_auth_password_file,omitempty"`
@@ -202,35 +203,36 @@ type weChatConfig struct {
 }
 
 type slackConfig struct {
-	VSendResolved *bool             `yaml:"send_resolved,omitempty"`
-	HTTPConfig    *httpClientConfig `yaml:"http_config,omitempty"`
-	APIURL        string            `yaml:"api_url,omitempty"`
-	APIURLFile    string            `yaml:"api_url_file,omitempty"`
-	AppToken      string            `yaml:"app_token,omitempty"`
-	AppTokenFile  string            `yaml:"app_token_file,omitempty"`
-	AppURL        string            `yaml:"app_url,omitempty"`
-	Channel       string            `yaml:"channel,omitempty"`
-	Username      string            `yaml:"username,omitempty"`
-	Color         string            `yaml:"color,omitempty"`
-	Title         string            `yaml:"title,omitempty"`
-	TitleLink     string            `yaml:"title_link,omitempty"`
-	Pretext       string            `yaml:"pretext,omitempty"`
-	Text          string            `yaml:"text,omitempty"`
-	Fields        []slackField      `yaml:"fields,omitempty"`
-	ShortFields   bool              `yaml:"short_fields,omitempty"`
-	Footer        string            `yaml:"footer,omitempty"`
-	Fallback      string            `yaml:"fallback,omitempty"`
-	CallbackID    string            `yaml:"callback_id,omitempty"`
-	IconEmoji     string            `yaml:"icon_emoji,omitempty"`
-	IconURL       string            `yaml:"icon_url,omitempty"`
-	ImageURL      string            `yaml:"image_url,omitempty"`
-	ThumbURL      string            `yaml:"thumb_url,omitempty"`
-	LinkNames     bool              `yaml:"link_names,omitempty"`
-	MrkdwnIn      []string          `yaml:"mrkdwn_in,omitempty"`
-	Actions       []slackAction     `yaml:"actions,omitempty"`
-	Timeout       *model.Duration   `yaml:"timeout,omitempty"`
-	MessageText   string            `yaml:"message_text,omitempty"`
-	UpdateMessage *bool             `yaml:"update_message,omitempty"`
+	VSendResolved       *bool             `yaml:"send_resolved,omitempty"`
+	HTTPConfig          *httpClientConfig `yaml:"http_config,omitempty"`
+	APIURL              string            `yaml:"api_url,omitempty"`
+	APIURLFile          string            `yaml:"api_url_file,omitempty"`
+	AppToken            string            `yaml:"app_token,omitempty"`
+	AppTokenFile        string            `yaml:"app_token_file,omitempty"`
+	AppURL              string            `yaml:"app_url,omitempty"`
+	Channel             string            `yaml:"channel,omitempty"`
+	Username            string            `yaml:"username,omitempty"`
+	Color               string            `yaml:"color,omitempty"`
+	Title               string            `yaml:"title,omitempty"`
+	TitleLink           string            `yaml:"title_link,omitempty"`
+	Pretext             string            `yaml:"pretext,omitempty"`
+	Text                string            `yaml:"text,omitempty"`
+	Fields              []slackField      `yaml:"fields,omitempty"`
+	ShortFields         bool              `yaml:"short_fields,omitempty"`
+	Footer              string            `yaml:"footer,omitempty"`
+	Fallback            string            `yaml:"fallback,omitempty"`
+	CallbackID          string            `yaml:"callback_id,omitempty"`
+	IconEmoji           string            `yaml:"icon_emoji,omitempty"`
+	IconURL             string            `yaml:"icon_url,omitempty"`
+	ImageURL            string            `yaml:"image_url,omitempty"`
+	ThumbURL            string            `yaml:"thumb_url,omitempty"`
+	LinkNames           bool              `yaml:"link_names,omitempty"`
+	MrkdwnIn            []string          `yaml:"mrkdwn_in,omitempty"`
+	Actions             []slackAction     `yaml:"actions,omitempty"`
+	Timeout             *model.Duration   `yaml:"timeout,omitempty"`
+	MessageText         string            `yaml:"message_text,omitempty"`
+	UpdateMessage       *bool             `yaml:"update_message,omitempty"`
+	PostUpdatesToThread *bool             `yaml:"post_updates_to_thread,omitempty"`
 }
 
 type httpClientConfig struct {
@@ -333,7 +335,7 @@ type emailConfig struct {
 	To               string                `yaml:"to,omitempty"`
 	From             string                `yaml:"from,omitempty"`
 	Hello            string                `yaml:"hello,omitempty"`
-	Smarthost        config.HostPort       `yaml:"smarthost,omitempty"`
+	Smarthost        common.HostPort       `yaml:"smarthost,omitempty"`
 	AuthUsername     string                `yaml:"auth_username,omitempty"`
 	AuthPassword     string                `yaml:"auth_password,omitempty"`
 	AuthPasswordFile string                `yaml:"auth_password_file,omitempty"`
@@ -522,6 +524,7 @@ type rocketChatConfig struct {
 	ThumbURL    string                        `yaml:"thumb_url,omitempty"`
 	LinkNames   bool                          `yaml:"link_names"`
 	Actions     []*rocketchatAttachmentAction `yaml:"actions,omitempty"`
+	MessageText string                        `yaml:"message_text,omitempty"`
 }
 
 type mattermostConfig struct {

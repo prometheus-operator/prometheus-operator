@@ -89,6 +89,11 @@ type SlackConfigApplyConfiguration struct {
 	// when alert state changes. Please note that Webhook URLs do not support updates.
 	// It requires Alertmanager >= v0.32.0.
 	UpdateMessage *bool `json:"updateMessage,omitempty"`
+	// postUpdatesToThread posts subsequent notifications of an alert group as
+	// replies in the thread of the initial message instead of new channel messages.
+	// Please note that Webhook URLs do not support threads.
+	// It requires Alertmanager >= v0.35.0.
+	PostUpdatesToThread *bool `json:"postUpdatesToThread,omitempty"`
 }
 
 // SlackConfigApplyConfiguration constructs a declarative configuration of the SlackConfig type for use with
@@ -306,5 +311,13 @@ func (b *SlackConfigApplyConfiguration) WithMessageText(value string) *SlackConf
 // If called multiple times, the UpdateMessage field is set to the value of the last call.
 func (b *SlackConfigApplyConfiguration) WithUpdateMessage(value bool) *SlackConfigApplyConfiguration {
 	b.UpdateMessage = &value
+	return b
+}
+
+// WithPostUpdatesToThread sets the PostUpdatesToThread field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PostUpdatesToThread field is set to the value of the last call.
+func (b *SlackConfigApplyConfiguration) WithPostUpdatesToThread(value bool) *SlackConfigApplyConfiguration {
+	b.PostUpdatesToThread = &value
 	return b
 }

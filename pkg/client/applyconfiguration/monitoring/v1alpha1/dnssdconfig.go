@@ -38,6 +38,7 @@ type DNSSDConfigApplyConfiguration struct {
 	//
 	// When set to NS, it requires Prometheus >= v2.49.0.
 	// When set to MX, it requires Prometheus >= v2.38.0
+	//
 	Type *monitoringv1alpha1.DNSRecordType `json:"type,omitempty"`
 	// port defines the port to scrape metrics from. If using the public IP address, this must
 	// Ignored for SRV records
