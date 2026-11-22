@@ -90,9 +90,24 @@ type RemoteWrite struct {
 
 The status subresource reports which Prometheus, PrometheusAgent and ThanosRuler resources select the object and whether it was accepted, like the other configuration resources (requires the `StatusForConfigurationResources` feature gate).
 
+#### What users who can manage RemoteWrite objects can and can't do
+
+The owners of the Prometheus, PrometheusAgent and ThanosRuler resources and the users who manage RemoteWrite objects are typically different. The permission to manage RemoteWrite objects in a namespace selected by one of these resources allows a user to:
+
+* Send the series of the instance to any endpoint: only the series of their namespace when `enforcedNamespaceLabel` is set, all the series otherwise.
+* Make the instance send HTTP requests to any URL from its pod (e.g. the remote write URL, the OAuth2 token URL and the proxy URL). This includes the endpoints of the instance itself (e.g. the lifecycle and admin APIs or the remote write receiver when they're enabled) and the services which network policies wouldn't allow the user to reach otherwise.
+* Use the Secrets and ConfigMaps of their namespace, even without the permission to read them, since the operator resolves the references.
+
+It doesn't allow them to use what belongs to the owners of these resources:
+
+* The files, the environment variables and the credentials of the service account of the pod.
+* The Secrets and ConfigMaps of other namespaces, including the ones referenced by these resources.
+
+The URL and the headers of a RemoteWrite object are visible to anyone who can read the Prometheus configuration, so credentials should be passed with the fields referencing Secrets.
+
 #### Credentials and allowed fields
 
-A RemoteWrite object is typically managed by a different team than the Prometheus resource and its URL is arbitrary. If it could use the credentials available to the Prometheus pod, they could be sent to any endpoint. Hence a RemoteWrite object must only rely on information from its own namespace: the Secret and ConfigMap references are resolved in the namespace of the RemoteWrite object.
+Since the URL of a RemoteWrite object is arbitrary, if it could use the credentials available to the Prometheus pod, they could be sent to any endpoint. Hence a RemoteWrite object must only rely on information from its own namespace: the Secret and ConfigMap references are resolved in the namespace of the RemoteWrite object.
 
 The RemoteWrite CRD reuses `RemoteWriteSpec` from the Prometheus CRD, but the following fields aren't allowed:
 
