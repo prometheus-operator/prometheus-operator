@@ -163,7 +163,7 @@ The object’s namespace is added as the first item in the `write_relabel_config
 ```yaml
 write_relabel_configs:
 - source_labels:
-  - namespace
+  - <enforcedNamespaceLabel>
   regex: <namespace>
   action: keep
   ...
