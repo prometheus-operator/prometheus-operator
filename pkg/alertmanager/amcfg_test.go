@@ -5878,271 +5878,149 @@ func TestGenerateConfigMattermostReceiver(t *testing.T) {
 	version32, err := semver.ParseTolerant("v0.32.0")
 	require.NoError(t, err)
 
+	mattermostSecret := func() *corev1.Secret {
+		return &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "mattermost-secret",
+				Namespace: "mynamespace",
+			},
+			Data: map[string][]byte{
+				"url": []byte("https://mattermost.example.com"),
+			},
+		}
+	}
+
+	amBaseConfig := func() alertmanagerConfig {
+		return alertmanagerConfig{
+			Route: &route{
+				Receiver: "null",
+			},
+			Receivers: []*receiver{{Name: "null"}},
+		}
+	}
+
+	amConfigWithMattermost := func(mattermostConfig ...monitoringv1alpha1.MattermostConfig) map[string]*monitoringv1alpha1.AlertmanagerConfig {
+		return map[string]*monitoringv1alpha1.AlertmanagerConfig{
+			"mynamespace": {
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "myamc",
+					Namespace: "mynamespace",
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "test",
+					},
+					Receivers: []monitoringv1alpha1.Receiver{
+						{
+							Name:              "test",
+							MattermostConfigs: mattermostConfig,
+						},
+					},
+				},
+			},
+		}
+	}
+
 	testCases := []testCase{
 		{
-			name:      "CR with Mattermost Receiver Bare Minimum",
-			amVersion: &version30,
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "mattermost-secret",
-						Namespace: "mynamespace",
-					},
-					Data: map[string][]byte{
-						"url": []byte("https://mattermost.example.com"),
+			name:       "CR with Mattermost Receiver Bare Minimum",
+			amVersion:  &version30,
+			kclient:    fake.NewSimpleClientset(mattermostSecret()),
+			baseConfig: amBaseConfig(),
+			amConfigs: amConfigWithMattermost(
+				monitoringv1alpha1.MattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost-secret",
+						},
 					},
 				},
 			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
-									{
-										WebhookURL: &corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "mattermost-secret",
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			golden: "CR_with_Mattermost_Reeceiver_Bare_Minimum.golden",
 		},
 		{
-			name:      "CR with Mattermost Receiver Unsupported Version",
-			amVersion: &version28,
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "mattermost-secret",
-						Namespace: "mynamespace",
+			name:       "CR with Mattermost Receiver Unsupported Version",
+			amVersion:  &version28,
+			kclient:    fake.NewSimpleClientset(mattermostSecret()),
+			baseConfig: amBaseConfig(),
+			amConfigs: amConfigWithMattermost(
+				monitoringv1alpha1.MattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost-secret",
+						},
 					},
-					Data: map[string][]byte{
-						"url": []byte("https://mattermost.example.com"),
-					},
+					Text: new("test text"),
 				},
 			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
-									{
-										WebhookURL: &corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "mattermost-secret",
-											},
-										},
-										Text: new("test text"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			expectedError: true,
 		},
 		{
-			name:      "CR with Mattermost Receiver with Attachment",
-			amVersion: &version30,
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "mattermost-secret",
-						Namespace: "mynamespace",
+			name:       "CR with Mattermost Receiver with Attachment",
+			amVersion:  &version30,
+			kclient:    fake.NewSimpleClientset(mattermostSecret()),
+			baseConfig: amBaseConfig(),
+			amConfigs: amConfigWithMattermost(
+				monitoringv1alpha1.MattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost-secret",
+						},
 					},
-					Data: map[string][]byte{
-						"url": []byte("https://mattermost.example.com"),
+					Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
+						{
+							Fallback: new("abc"),
+							Pretext:  new("abc"),
+							Title:    new("abc"),
+						},
 					},
 				},
 			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
-									{
-										WebhookURL: &corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "mattermost-secret",
-											},
-										},
-										Attachments: []monitoringv1alpha1.MattermostAttachmentConfig{
-											{
-												Fallback: new("abc"),
-												Pretext:  new("abc"),
-												Title:    new("abc"),
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			golden: "CR_with_Mattermost_Reeceiver_with_Attachment.golden",
 		},
 		{
-			name:      "CR with Mattermost Receiver with Priority",
-			amVersion: &version30,
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "mattermost-secret",
-						Namespace: "mynamespace",
+			name:       "CR with Mattermost Receiver with Priority",
+			amVersion:  &version30,
+			kclient:    fake.NewSimpleClientset(mattermostSecret()),
+			baseConfig: amBaseConfig(),
+			amConfigs: amConfigWithMattermost(
+				monitoringv1alpha1.MattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost-secret",
+						},
 					},
-					Data: map[string][]byte{
-						"url": []byte("https://mattermost.example.com"),
+					Priority: &monitoringv1alpha1.MattermostPriorityConfig{
+						Priority:                "urgent",
+						RequestedAck:            new(true),
+						PersistentNotifications: new(true),
 					},
 				},
 			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
-									{
-										WebhookURL: &corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "mattermost-secret",
-											},
-										},
-										Priority: &monitoringv1alpha1.MattermostPriorityConfig{
-											Priority:                "urgent",
-											RequestedAck:            new(true),
-											PersistentNotifications: new(true),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			golden: "CR_with_Mattermost_Reeceiver_with_Priority.golden",
 		},
 		{
-			name:      "CR with Mattermost Receiver with Top-level Attachment",
-			amVersion: &version32,
-			kclient: fake.NewSimpleClientset(
-				&corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "mattermost-secret",
-						Namespace: "mynamespace",
+			name:       "CR with Mattermost Receiver with Top-level Attachment",
+			amVersion:  &version32,
+			kclient:    fake.NewSimpleClientset(mattermostSecret()),
+			baseConfig: amBaseConfig(),
+			amConfigs: amConfigWithMattermost(
+				monitoringv1alpha1.MattermostConfig{
+					WebhookURL: &corev1.SecretKeySelector{
+						Key: "url",
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "mattermost-secret",
+						},
 					},
-					Data: map[string][]byte{
-						"url": []byte("https://mattermost.example.com"),
-					},
+					Fallback: new("abc"),
+					Pretext:  new("abc"),
+					Title:    new("abc"),
 				},
 			),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								MattermostConfigs: []monitoringv1alpha1.MattermostConfig{
-									{
-										WebhookURL: &corev1.SecretKeySelector{
-											Key: "url",
-											LocalObjectReference: corev1.LocalObjectReference{
-												Name: "mattermost-secret",
-											},
-										},
-										Fallback: new("abc"),
-										Pretext:  new("abc"),
-										Title:    new("abc"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			golden: "CR_with_Mattermost_Reeceiver_with_Top-level_Attachment.golden",
 		},
 	}
