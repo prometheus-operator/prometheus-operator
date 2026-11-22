@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -7459,6 +7459,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -8482,6 +8490,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -20836,6 +20851,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -21844,6 +21867,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.

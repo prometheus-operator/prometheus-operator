@@ -26,6 +26,7 @@ type ExemplarsApplyConfiguration struct {
 	//
 	// If not set, Prometheus uses its default value. A value of zero or less
 	// than zero disables the storage.
+	//
 	MaxSize *int64 `json:"maxSize,omitempty"`
 }
 

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -7459,6 +7459,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -8482,6 +8490,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -13630,7 +13645,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -16177,6 +16192,45 @@ spec:
                       type: object
                     type: array
                 type: object
+              autoGomemlimit:
+                description: |-
+                  autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+                  starting Alertmanager.
+
+                  It requires Alertmanager >= v0.35.0.
+                properties:
+                  enabled:
+                    description: |-
+                      enabled sets GOMEMLIMIT to match the
+                      Linux container or system memory limit. This corresponds to the
+                      Alertmanager's `--auto-gomemlimit` flag.
+                    type: boolean
+                  ratio:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+                      maximum container or system memory. The value must be greater than 0 and
+                      less than or equal to 1. This corresponds to the Alertmanager's
+                      `--auto-gomemlimit.ratio` flag.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  refreshInterval:
+                    description: |-
+                      refreshInterval defines the interval at which to re-detect the container
+                      or system memory limit and update GOMEMLIMIT accordingly. It is useful
+                      when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+                      This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
+                    pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: ratio must be greater than 0 and less than or equal to
+                    1
+                  rule: '!has(self.ratio) || (quantity(string(self.ratio)).compareTo(quantity(''0''))
+                    > 0 && quantity(string(self.ratio)).compareTo(quantity(''1''))
+                    <= 0)'
               automountServiceAccountToken:
                 description: |-
                   automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
@@ -24063,7 +24117,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -25493,7 +25547,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -26937,7 +26991,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -38872,7 +38926,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -47383,6 +47437,20 @@ spec:
                   the server serves requests under a different route prefix. For example
                   for use with `kubectl proxy`.
                 type: string
+              ruleConfigMapsMinimumCount:
+                description: |-
+                  ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+                  mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+                  not exist and are mounted with optional: true.
+                  Reserving volumes avoids a Pod rollout when the number of generated rule
+                  ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+                  are still deleted.
+                  All generated rule ConfigMaps are mounted even if their count exceeds this
+                  value. Changing the number of mounted volumes triggers a Pod rollout.
+                  Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+                format: int32
+                minimum: 0
+                type: integer
               ruleNamespaceSelector:
                 description: |-
                   ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
@@ -53177,7 +53245,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -53444,7 +53512,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -66559,7 +66627,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -68017,7 +68085,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.23.0
-    operator.prometheus.io/version: 0.95.1
+    operator.prometheus.io/version: 0.95.2
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -78129,7 +78197,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.95.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -78146,7 +78214,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.95.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -78298,7 +78366,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.95.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 spec:
@@ -78314,13 +78382,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.95.1
+        app.kubernetes.io/version: 0.95.2
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.95.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.95.2
         - --watch-referenced-objects-in-all-namespaces=true
         - --disable-unmanaged-prometheus-configuration=true
         - --kubelet-endpoints=true
@@ -78328,7 +78396,7 @@ spec:
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.95.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.95.2
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -78362,7 +78430,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.95.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 ---
@@ -78372,7 +78440,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.95.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 spec:

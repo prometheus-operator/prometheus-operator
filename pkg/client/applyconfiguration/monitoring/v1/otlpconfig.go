@@ -37,6 +37,7 @@ type OTLPConfigApplyConfiguration struct {
 	IgnoreResourceAttributes []string `json:"ignoreResourceAttributes,omitempty"`
 	// promoteResourceAttributes defines the list of OpenTelemetry Attributes that should be promoted to metric labels, defaults to none.
 	// Cannot be defined when `promoteAllResourceAttributes` is true.
+	//
 	PromoteResourceAttributes []string `json:"promoteResourceAttributes,omitempty"`
 	// translationStrategy defines how the OTLP receiver endpoint translates the incoming metrics.
 	//

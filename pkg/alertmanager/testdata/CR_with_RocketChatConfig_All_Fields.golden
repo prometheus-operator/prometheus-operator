@@ -1,0 +1,34 @@
+route:
+  receiver: "null"
+  routes:
+  - receiver: mynamespace/myamc/test
+    matchers:
+    - namespace="mynamespace"
+    continue: true
+receivers:
+- name: "null"
+- name: mynamespace/myamc/test
+  rocketchat_configs:
+  - send_resolved: true
+    api_url: https://rocketchat.example.com
+    token_id: my-token-id
+    token: my-token
+    channel: '#alerts'
+    color: red
+    title: '{{ .CommonLabels.alertname }}'
+    title_link: https://example.com/alerts
+    text: '{{ .CommonAnnotations.description }}'
+    fields:
+    - short: true
+      title: Severity
+      value: '{{ .CommonLabels.severity }}'
+    - short: null
+      title: Instance
+      value: '{{ .CommonLabels.instance }}'
+    short_fields: true
+    emoji: ':warning:'
+    icon_url: https://example.com/icon.png
+    image_url: https://example.com/image.png
+    thumb_url: https://example.com/thumb.png
+    link_names: true
+templates: []

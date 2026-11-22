@@ -17,6 +17,7 @@ package v1
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -431,6 +432,12 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+	// autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+	// starting Alertmanager.
+	//
+	// It requires Alertmanager >= v0.35.0.
+	// +optional
+	AutoGomemlimit *AutoGomemlimitSpec `json:"autoGomemlimit,omitempty"`
 
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
@@ -712,6 +719,33 @@ type AlertmanagerLimitsSpec struct {
 	//
 	// +optional
 	MaxPerSilenceBytes *ByteSize `json:"maxPerSilenceBytes,omitempty"`
+}
+
+// AutoGomemlimitSpec defines the automatic GOMEMLIMIT command line flags when starting Alertmanager.
+// It requires Alertmanager >= v0.35.0.
+// +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="!has(self.ratio) || (quantity(string(self.ratio)).compareTo(quantity('0')) > 0 && quantity(string(self.ratio)).compareTo(quantity('1')) <= 0)",message="ratio must be greater than 0 and less than or equal to 1"
+type AutoGomemlimitSpec struct {
+	// enabled sets GOMEMLIMIT to match the
+	// Linux container or system memory limit. This corresponds to the
+	// Alertmanager's `--auto-gomemlimit` flag.
+	//
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"` // nolint:kubeapilinter
+	// ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+	// maximum container or system memory. The value must be greater than 0 and
+	// less than or equal to 1. This corresponds to the Alertmanager's
+	// `--auto-gomemlimit.ratio` flag.
+	//
+	// +optional
+	Ratio *resource.Quantity `json:"ratio,omitempty"`
+	// refreshInterval defines the interval at which to re-detect the container
+	// or system memory limit and update GOMEMLIMIT accordingly. It is useful
+	// when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+	// This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
+	//
+	// +optional
+	RefreshInterval *GoDuration `json:"refreshInterval,omitempty"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

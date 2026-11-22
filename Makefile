@@ -4,8 +4,10 @@ GOOS?=$(shell go env GOOS)
 GOARCH?=$(shell go env GOARCH)
 ifeq ($(GOARCH),arm)
 	ARCH=armv7
+	PLATFORM=$(strip $(GOOS))/arm/v7
 else
 	ARCH=$(GOARCH)
+	PLATFORM=$(strip $(GOOS))/$(GOARCH)
 endif
 SHELLCHECK_ARCH=$(GOARCH)
 ifeq ($(GOARCH),amd64)
@@ -214,15 +216,15 @@ image: operator-image prometheus-config-reloader-image admission-webhook-image
 
 .PHONY: operator-image
 operator-image: ## Build the operator container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG) .
 
 .PHONY: prometheus-config-reloader-image
 prometheus-config-reloader-image: ## Build the prometheus-config-reloader container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG) -f cmd/prometheus-config-reloader/Dockerfile .
 
 .PHONY: admission-webhook-image
 admission-webhook-image: ## Build the admission-webhook container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG) -f cmd/admission-webhook/Dockerfile .
 
 .PHONY: distroless-image
 distroless-image: GOOS := linux ## Set GOOS to linux for building distroless docker images.
@@ -230,15 +232,15 @@ distroless-image: operator-distroless-image prometheus-config-reloader-distroles
 
 .PHONY: operator-distroless-image
 operator-distroless-image: ## Build the distroless operator container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG)-distroless -f Dockerfile.distroless .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_OPERATOR):$(TAG)-distroless -f Dockerfile.distroless .
 
 .PHONY: prometheus-config-reloader-distroless-image
 prometheus-config-reloader-distroless-image: ## Build the distroless prometheus-config-reloader container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG)-distroless -f cmd/prometheus-config-reloader/Dockerfile.distroless .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_RELOADER):$(TAG)-distroless -f cmd/prometheus-config-reloader/Dockerfile.distroless .
 
 .PHONY: admission-webhook-distroless-image
 admission-webhook-distroless-image: ## Build the distroless admission-webhook container image.
-	$(CONTAINER_CLI) build --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG)-distroless -f cmd/admission-webhook/Dockerfile.distroless .
+	$(CONTAINER_CLI) build --platform $(PLATFORM) --build-arg ARCH=$(ARCH) --build-arg GOARCH=$(GOARCH) --build-arg OS=$(GOOS) -t $(IMAGE_WEBHOOK):$(TAG)-distroless -f cmd/admission-webhook/Dockerfile.distroless .
 
 .PHONY: update-go-deps
 update-go-deps: ## Update Go dependencies.

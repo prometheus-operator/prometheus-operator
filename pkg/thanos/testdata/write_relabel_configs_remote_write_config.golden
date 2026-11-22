@@ -1,0 +1,7 @@
+remote_write:
+- url: http://example.com
+  write_relabel_configs:
+  - source_labels:
+    - __name__
+    target_label: job
+    action: lowercase

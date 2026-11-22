@@ -24,6 +24,7 @@ import (
 // with apply.
 type ProxyConfigApplyConfiguration struct {
 	// proxyUrl defines the HTTP proxy server to use.
+	//
 	ProxyURL *string `json:"proxyUrl,omitempty"`
 	// noProxy defines a comma-separated string that can contain IPs, CIDR notation, domain names
 	// that should be excluded from proxying. IP and domain names can

@@ -30,6 +30,7 @@ type AzureADApplyConfiguration struct {
 	// Cannot be set at the same time as `managedIdentity`, `sdk` or `workloadIdentity`.
 	//
 	// It requires Prometheus >= v2.48.0 or Thanos >= v0.31.0.
+	//
 	OAuth *AzureOAuthApplyConfiguration `json:"oauth,omitempty"`
 	// sdk defines the Azure SDK config that is being used to authenticate.
 	// See https://learn.microsoft.com/en-us/azure/developer/go/azure-sdk-authentication

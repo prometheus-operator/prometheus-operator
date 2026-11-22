@@ -29,6 +29,7 @@ type GlobalWebexConfigApplyConfiguration struct {
 	// apiURL defines the is the default Webex API URL.
 	//
 	// It requires Alertmanager >= v0.25.0.
+	//
 	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
 }
 

@@ -354,7 +354,7 @@ func start() int {
 		logger.Info("Disabling support for unmanaged Prometheus configurations")
 		promControllerOptions = append(promControllerOptions, prometheuscontroller.WithoutUnmanagedConfiguration())
 	}
-	// Check if we can read the storage classs
+	// Check if we can read the storage class
 	canReadStorageClass, err := checkPrerequisites(
 		ctx,
 		logger,
@@ -542,9 +542,9 @@ func start() int {
 		if !allowed {
 			for _, reason := range errs {
 				logger.Error("missing permissions to manage Daemonset resource for Prometheus Agent", "reason", reason)
-				cancel()
-				return 1
 			}
+			cancel()
+			return 1
 		}
 	}
 

@@ -28,6 +28,7 @@ type AlertmanagerConfigMatcherStrategyApplyConfiguration struct {
 	// rules.
 	//
 	// The default value is `OnNamespace`.
+	//
 	Type *monitoringv1.AlertmanagerConfigMatcherStrategyType `json:"type,omitempty"`
 }
 

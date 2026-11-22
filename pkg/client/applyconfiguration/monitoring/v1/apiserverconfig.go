@@ -34,6 +34,7 @@ type APIServerConfigApplyConfiguration struct {
 	//
 	// Cannot be set at the same time as `authorization`, `bearerToken`, or
 	// `bearerTokenFile`.
+	//
 	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// bearerTokenFile defines the file to read bearer token for accessing apiserver.
 	//
@@ -42,15 +43,18 @@ type APIServerConfigApplyConfiguration struct {
 	// Deprecated: this will be removed in a future release. Prefer using `authorization`.
 	BearerTokenFile *string `json:"bearerTokenFile,omitempty"`
 	// tlsConfig to use for the API server.
+	//
 	TLSConfig *TLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// authorization section for the API server.
 	//
 	// Cannot be set at the same time as `basicAuth`, `bearerToken`, or
 	// `bearerTokenFile`.
+	//
 	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// bearerToken is deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
+	//
 	BearerToken *string `json:"bearerToken,omitempty"`
 	// Optional ProxyConfig.
 	ProxyConfigApplyConfiguration `json:""`
