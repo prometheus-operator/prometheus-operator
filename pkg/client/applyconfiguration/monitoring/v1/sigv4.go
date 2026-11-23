@@ -51,6 +51,7 @@ type Sigv4ApplyConfiguration struct {
 	// for Prometheus (AMP) or `s3` for S3-compatible remote write.
 	// It requires Prometheus >= v3.5.0 or Thanos >= v0.40.0.
 	// It is currently not supported by Alertmanager.
+	//
 	ServiceName *string `json:"serviceName,omitempty"`
 }
 
