@@ -30,19 +30,16 @@ type AutoGomemlimitSpecApplyConfiguration struct {
 	// enabled sets GOMEMLIMIT to match the
 	// Linux container or system memory limit. This corresponds to the
 	// Alertmanager's `--auto-gomemlimit` flag.
-	//
 	Enabled *bool `json:"enabled,omitempty"`
 	// ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
 	// maximum container or system memory. The value must be greater than 0 and
 	// less than or equal to 1. This corresponds to the Alertmanager's
 	// `--auto-gomemlimit.ratio` flag.
-	//
 	Ratio *resource.Quantity `json:"ratio,omitempty"`
 	// refreshInterval defines the interval at which to re-detect the container
 	// or system memory limit and update GOMEMLIMIT accordingly. It is useful
 	// when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
 	// This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
-	//
 	RefreshInterval *monitoringv1.GoDuration `json:"refreshInterval,omitempty"`
 }
 
