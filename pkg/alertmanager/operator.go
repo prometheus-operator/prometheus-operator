@@ -1529,8 +1529,9 @@ func checkDiscordConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`'discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	version25 := semver.MustParse("0.25.0")
+	if amVersion.LT(version25) {
+		return unsupportedCRIntegrationErr("discord", amVersion, version25)
 	}
 
 	for _, config := range configs {
@@ -1542,15 +1543,16 @@ func checkDiscordConfigs(
 			return err
 		}
 
-		if amVersion.LT(semver.MustParse("0.28.0")) {
+		version28 := semver.MustParse("0.28.0")
+		if amVersion.LT(version28) {
 			if ptr.Deref(config.Content, "") != "" {
-				return fmt.Errorf(`'content' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+				return unsupportedCRFieldErr("content", amVersion, version28)
 			}
 			if ptr.Deref(config.Username, "") != "" {
-				return fmt.Errorf(`'username' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+				return unsupportedCRFieldErr("username", amVersion, version28)
 			}
 			if ptr.Deref(config.AvatarURL, "") != "" {
-				return fmt.Errorf(`'avatarURL' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+				return unsupportedCRFieldErr("avatarURL", amVersion, version28)
 			}
 		}
 
@@ -1577,8 +1579,9 @@ func checkRocketChatConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`'rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	version28 := semver.MustParse("0.28.0")
+	if amVersion.LT(version28) {
+		return unsupportedCRIntegrationErr("rocketchat", amVersion, version28)
 	}
 
 	for _, config := range configs {
@@ -1598,8 +1601,9 @@ func checkRocketChatConfigs(
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
 		}
 
-		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.35.0")) {
-			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.35.0 only - current %s`, amVersion)
+		version35 := semver.MustParse("0.35.0")
+		if config.MessageText != nil && amVersion.LT(version35) {
+			return unsupportedCRFieldErr("messageText", amVersion, version35)
 		}
 	}
 
@@ -1630,8 +1634,9 @@ func checkSlackConfigs(
 			}
 		}
 
-		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`'messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		version31 := semver.MustParse("0.31.0")
+		if config.MessageText != nil && amVersion.LT(version31) {
+			return unsupportedCRFieldErr("messageText", amVersion, version31)
 		}
 
 		if err := checkSlackBotTokenOption("updateMessage", config.UpdateMessage, "0.32.0", amVersion, slackAPIURL); err != nil {
@@ -1655,8 +1660,8 @@ func checkSlackBotTokenOption(name string, enabled *bool, minVersion string, amV
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse(minVersion)) {
-		return fmt.Errorf("'%s' is available in Alertmanager >= %s only - current %s", name, minVersion, amVersion)
+	if v := semver.MustParse(minVersion); amVersion.LT(v) {
+		return unsupportedCRFieldErr(name, amVersion, v)
 	}
 
 	if *enabled && slackAPIURL != "" && slackAPIURL != slackBotAPIURL {
@@ -1689,8 +1694,9 @@ func checkWebhookConfigs(
 			}
 		}
 
-		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
-			return fmt.Errorf(`'payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+		version32 := semver.MustParse("0.32.0")
+		if config.Payload != nil && amVersion.LT(version32) {
+			return unsupportedCRFieldErr("payload", amVersion, version32)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1738,8 +1744,9 @@ func checkWebexConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`'webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	version25 := semver.MustParse("0.25.0")
+	if amVersion.LT(version25) {
+		return unsupportedCRIntegrationErr("webex", amVersion, version25)
 	}
 
 	for _, config := range configs {
@@ -1793,12 +1800,14 @@ func checkEmailConfigs(
 			return err
 		}
 
-		if config.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`'forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		version31 := semver.MustParse("0.31.0")
+		if config.ForceImplicitTLS != nil && amVersion.LT(version31) {
+			return unsupportedCRFieldErr("forceImplicitTLS", amVersion, version31)
 		}
 
-		if config.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
-			return fmt.Errorf(`'threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
+		version30 := semver.MustParse("0.30.0")
+		if config.Threading != nil && amVersion.LT(version30) {
+			return unsupportedCRFieldErr("threading", amVersion, version30)
 		}
 	}
 
@@ -1875,16 +1884,20 @@ func checkPushoverConfigs(
 			}
 		}
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.UserKeyFile != nil {
-			return fmt.Errorf(`'userKeyFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
-		}
+		version26 := semver.MustParse("0.26.0")
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.TokenFile != nil {
-			return fmt.Errorf(`'tokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
-		}
+		if amVersion.LT(version26) {
+			if config.UserKeyFile != nil {
+				return unsupportedCRFieldErr("userKeyFile", amVersion, version26)
+			}
 
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.Device != nil {
-			return fmt.Errorf(`'device' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+			if config.TokenFile != nil {
+				return unsupportedCRFieldErr("tokenFile", amVersion, version26)
+			}
+
+			if config.Device != nil {
+				return unsupportedCRFieldErr("device", amVersion, version26)
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1903,8 +1916,9 @@ func checkSnsConfigs(
 	amVersion semver.Version,
 ) error {
 	for _, config := range configs {
-		if amVersion.LT(semver.MustParse("0.33.0")) && config.UseAWSHTTPClient != nil {
-			return fmt.Errorf(`'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
+		version33 := semver.MustParse("0.33.0")
+		if amVersion.LT(version33) && config.UseAWSHTTPClient != nil {
+			return unsupportedCRFieldErr("useAWSHTTPClient", amVersion, version33)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1933,13 +1947,15 @@ func checkTelegramConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`'telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+	version24 := semver.MustParse("0.24.0")
+	if amVersion.LT(version24) {
+		return unsupportedCRIntegrationErr("telegram", amVersion, version24)
 	}
 
 	for _, config := range configs {
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.BotTokenFile != nil {
-			return fmt.Errorf(`'botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		version26 := semver.MustParse("0.26.0")
+		if amVersion.LT(version26) && config.BotTokenFile != nil {
+			return unsupportedCRFieldErr("botTokenFile", amVersion, version26)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1971,8 +1987,9 @@ func checkMSTeamsConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.26.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
+	version26 := semver.MustParse("0.26.0")
+	if amVersion.LT(version26) {
+		return unsupportedCRIntegrationErr("msteams", amVersion, version26)
 	}
 
 	for _, config := range configs {
@@ -2003,8 +2020,9 @@ func checkMSTeamsV2Configs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	version28 := semver.MustParse("0.28.0")
+	if amVersion.LT(version28) {
+		return unsupportedCRIntegrationErr("msteamsv2", amVersion, version28)
 	}
 
 	for _, config := range configs {
@@ -2218,4 +2236,16 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	}
 
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+}
+
+func unsupportedCRFieldErr(fieldName string, currentVersion, supportedVersion semver.Version) error {
+	return fmt.Errorf("field '%s' requires Alertmanager version greater than or equal to %s, current version %s", fieldName, supportedVersion.String(), currentVersion.String())
+}
+
+// unsupportedCRIntegrationErr is a helper function for emitting error
+// when the integration is added in the unsupported version. The integrationName
+// in the input is the ingeration name, not integration field name.
+func unsupportedCRIntegrationErr(integrationName string, currentVersion, supportedVersion semver.Version) error {
+	// Integration field is the integration name, not the field name.
+	return fmt.Errorf("%s integration requires Alertmanager version greater than or equal to %s, current version %s", integrationName, supportedVersion, currentVersion)
 }

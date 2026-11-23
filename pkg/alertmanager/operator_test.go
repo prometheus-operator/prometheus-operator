@@ -2507,7 +2507,7 @@ func TestCheckRocketChatAlertmanagerConfig(t *testing.T) {
 			}),
 			version: &version34,
 			ok:      false,
-			errMsg:  new("'messageText' is available in Alertmanager >= 0.35.0 only - current 0.34.0"),
+			errMsg:  new("field 'messageText' requires Alertmanager version greater than or equal to 0.35.0, current version 0.34.0"),
 		},
 		{
 			amConfig: newAMConfig("rocketchat-message-text-supported-version", monitoringv1alpha1.RocketChatConfig{
@@ -3018,7 +3018,7 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 			},
 			version: &version32,
 			ok:      false,
-			errMsg:  new("'useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current 0.32.0"),
+			errMsg:  new("field 'useAWSHTTPClient' requires Alertmanager version greater than or equal to 0.33.0, current version 0.32.0"),
 		},
 	} {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
