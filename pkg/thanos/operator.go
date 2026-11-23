@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"reflect"
 	"strings"
 	"time"
 
@@ -948,50 +947,6 @@ func (o *Operator) createOrUpdateRulerConfigSecret(ctx context.Context, store *a
 	if len(tr.Spec.RemoteWrite) > 0 {
 		if version.LT(minRemoteWriteVersion) {
 			return fmt.Errorf("thanos remote-write configuration requires at least version %q: current version %q", minRemoteWriteVersion, version)
-		}
-	}
-
-	// resetFieldFn resets the value of a field in the RemoteWriteSpec struct
-	// if the field isn't supported by the current version.
-	// It also logs a warning message reporting the minimum version required.
-	resetFieldFn := func(minVersion string) func(string, any) {
-		return func(field string, v any) {
-			elem := reflect.ValueOf(v).Elem()
-			if elem.IsNil() {
-				return
-			}
-			o.logger.Warn(fmt.Sprintf("ignoring %q not supported by Thanos", field), "minimum_version", minVersion)
-			elem.Set(reflect.Zero(elem.Type()))
-		}
-	}
-
-	for i := range tr.Spec.RemoteWrite {
-		rw := &tr.Spec.RemoteWrite[i]
-		// Thanos does not support azureAD.workloadIdentity in any version
-		if rw.AzureAD != nil && rw.AzureAD.WorkloadIdentity != nil {
-			reset := resetFieldFn("none")
-			reset("azureAD.workloadIdentity", &rw.AzureAD.WorkloadIdentity)
-		}
-
-		// Thanos does not support azureAD.scope in any version
-		if rw.AzureAD != nil && rw.AzureAD.Scope != nil {
-			reset := resetFieldFn("none")
-			reset("azureAD.scope", &rw.AzureAD.Scope)
-		}
-
-		// Thanos does not support sigv4.externalId in any version
-		if rw.Sigv4 != nil && rw.Sigv4.ExternalID != "" {
-			o.logger.Warn("ignoring \"sigv4.externalId\" not supported by Thanos", "minimum_version", "none")
-			rw.Sigv4.ExternalID = ""
-		}
-
-		// Thanos v0.40.0 is equivalent to Prometheus v3.5.1 which allows empty clientId values.
-		if version.LT(semver.MustParse("0.40.0")) {
-			if rw.AzureAD != nil && rw.AzureAD.ManagedIdentity != nil {
-				if ptr.Deref(rw.AzureAD.ManagedIdentity.ClientID, "") == "" {
-					return fmt.Errorf("remoteWrite[%d]: azureAD.managedIdentity.clientId is required with Thanos < 0.40.0, current = %s", i, version)
-				}
-			}
 		}
 	}
 
