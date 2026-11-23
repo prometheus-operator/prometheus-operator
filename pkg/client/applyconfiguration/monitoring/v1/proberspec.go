@@ -31,11 +31,14 @@ type ProberSpecApplyConfiguration struct {
 	// Unlike what the name indicates, the value should be in the form of
 	// `address:port` without any scheme which should be specified in the
 	// `scheme` field.
+	//
 	URL *string `json:"url,omitempty"`
 	// scheme defines the HTTP scheme to use when scraping the prober.
+	//
 	Scheme *monitoringv1.Scheme `json:"scheme,omitempty"`
 	// path to collect metrics from.
 	// Defaults to `/probe`.
+	//
 	Path                          *string `json:"path,omitempty"`
 	ProxyConfigApplyConfiguration `json:""`
 }

@@ -24,6 +24,7 @@ type FilterApplyConfiguration struct {
 	// name of the Filter.
 	Name *string `json:"name,omitempty"`
 	// values defines values to filter on.
+	//
 	Values []string `json:"values,omitempty"`
 }
 

@@ -23,6 +23,7 @@ type AttachMetadataApplyConfiguration struct {
 	// When set to true, Prometheus must have the `get` permission on the
 	// `Nodes` objects.
 	// Only valid for Pod, Endpoint and Endpointslice roles.
+	//
 	Node *bool `json:"node,omitempty"`
 }
 

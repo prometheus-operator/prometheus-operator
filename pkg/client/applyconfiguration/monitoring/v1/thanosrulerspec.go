@@ -70,8 +70,10 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// This defaults to the default PodSecurityContext.
 	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 	// dnsPolicy defines the DNS policy for the pods.
+	//
 	DNSPolicy *monitoringv1.DNSPolicy `json:"dnsPolicy,omitempty"`
 	// dnsConfig defines Defines the DNS configuration for the pods.
+	//
 	DNSConfig *PodDNSConfigApplyConfiguration `json:"dnsConfig,omitempty"`
 	// enableServiceLinks defines whether information about services should be injected into pod's environment variables
 	EnableServiceLinks *bool `json:"enableServiceLinks,omitempty"`
@@ -100,6 +102,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration.
 	//
 	// `objectStorageConfigFile` takes precedence over this field.
+	//
 	ObjectStorageConfig *corev1.SecretKeySelector `json:"objectStorageConfig,omitempty"`
 	// objectStorageConfigFile defines the path of the object storage configuration file.
 	//
@@ -108,6 +111,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration file.
 	//
 	// This field takes precedence over `objectStorageConfig`.
+	//
 	ObjectStorageConfigFile *string `json:"objectStorageConfigFile,omitempty"`
 	// listenLocal defines the Thanos ruler listen on loopback, so that it
 	// does not bind against the Pod IP.
@@ -121,18 +125,21 @@ type ThanosRulerSpecApplyConfiguration struct {
 	//
 	// Note that updating this value implies the recreation of the StatefulSet
 	// which incurs a service outage.
+	//
 	PodManagementPolicy *monitoringv1.PodManagementPolicyType `json:"podManagementPolicy,omitempty"`
 	// updateStrategy indicates the strategy that will be employed to update
 	// Pods in the StatefulSet when a revision is made to statefulset's Pod
 	// Template.
 	//
 	// The default strategy is RollingUpdate.
+	//
 	UpdateStrategy *StatefulSetUpdateStrategyApplyConfiguration `json:"updateStrategy,omitempty"`
 	// queryEndpoints defines the list of Thanos Query endpoints from which to query metrics.
 	//
 	// For Thanos >= v0.11.0, it is recommended to use `queryConfig` instead.
 	//
 	// `queryConfig` takes precedence over this field.
+	//
 	QueryEndpoints []string `json:"queryEndpoints,omitempty"`
 	// queryConfig defines the list of Thanos Query endpoints from which to query metrics.
 	//
@@ -143,12 +150,14 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration.
 	//
 	// This field takes precedence over `queryEndpoints`.
+	//
 	QueryConfig *corev1.SecretKeySelector `json:"queryConfig,omitempty"`
 	// alertmanagersUrl defines the list of Alertmanager endpoints to send alerts to.
 	//
 	// For Thanos >= v0.10.0, it is recommended to use `alertmanagersConfig` instead.
 	//
 	// `alertmanagersConfig` takes precedence over this field.
+	//
 	AlertManagersURL []string `json:"alertmanagersUrl,omitempty"`
 	// alertmanagersConfig defines the list of Alertmanager endpoints to send alerts to.
 	//
@@ -159,13 +168,16 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration.
 	//
 	// This field takes precedence over `alertmanagersUrl`.
+	//
 	AlertManagersConfig *corev1.SecretKeySelector `json:"alertmanagersConfig,omitempty"`
 	// ruleSelector defines the PrometheusRule objects to be selected for rule evaluation. An empty
 	// label selector matches all objects. A null label selector matches no
 	// objects.
+	//
 	RuleSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleSelector,omitempty"`
 	// ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
 	// the same namespace as the ThanosRuler object is in is used.
+	//
 	RuleNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleNamespaceSelector,omitempty"`
 	// enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 	// and metric that is user created. The label value will always be the namespace of the object that is
@@ -199,10 +211,12 @@ type ThanosRulerSpecApplyConfiguration struct {
 	RuleQueryOffset *monitoringv1.Duration `json:"ruleQueryOffset,omitempty"`
 	// ruleConcurrentEval defines how many rules can be evaluated concurrently.
 	// It requires Thanos >= v0.37.0.
+	//
 	RuleConcurrentEval *int32 `json:"ruleConcurrentEval,omitempty"`
 	// ruleGracePeriod defines the minimum duration between alert and restored "for" state.
 	// This is maintained only for alerts with configured "for" time greater than grace period.
 	// It requires Thanos >= v0.30.0.
+	//
 	RuleGracePeriod *monitoringv1.Duration `json:"ruleGracePeriod,omitempty"`
 	// retention defines the time duration ThanosRuler shall retain data for. Default is '24h', and
 	// must match the regular expression `[0-9]+(ms|s|m|h|d|w|y)` (milliseconds
@@ -210,6 +224,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	//
 	// The field has no effect when remote-write is configured since the Ruler
 	// operates in stateless mode.
+	//
 	Retention *monitoringv1.Duration `json:"retention,omitempty"`
 	// containers allows injecting additional containers or modifying operator
 	// generated containers. This can be used to allow adding an authentication
@@ -224,12 +239,14 @@ type ThanosRulerSpecApplyConfiguration struct {
 	//
 	// Overriding containers which are managed by the operator require careful
 	// testing, especially when upgrading to a new version of the operator.
+	//
 	Containers []corev1.Container `json:"containers,omitempty"`
 	// initContainers allows injecting initContainers to the Pod definition.
 	// Those can be used to e.g. fetch secrets for injection into the
 	// configuration from external sources. Any errors during the execution of
 	// an initContainer will lead to a restart of the Pod. More info:
 	// https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
+	//
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 	// tracingConfig defines the tracing configuration.
 	//
@@ -241,6 +258,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration.
 	//
 	// `tracingConfigFile` takes precedence over this field.
+	//
 	TracingConfig *corev1.SecretKeySelector `json:"tracingConfig,omitempty"`
 	// tracingConfigFile defines the path of the tracing configuration file.
 	//
@@ -252,16 +270,19 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration file.
 	//
 	// This field takes precedence over `tracingConfig`.
+	//
 	TracingConfigFile *string `json:"tracingConfigFile,omitempty"`
 	// labels defines the external label pairs of the ThanosRuler resource.
 	//
 	// A default replica label `thanos_ruler_replica` will be always added as a
 	// label with the value of the pod's name.
+	//
 	Labels map[string]string `json:"labels,omitempty"`
 	// alertDropLabels defines the label names which should be dropped in Thanos Ruler
 	// alerts.
 	//
 	// The replica label `thanos_ruler_replica` will always be dropped from the alerts.
+	//
 	AlertDropLabels []string `json:"alertDropLabels,omitempty"`
 	// externalPrefix defines the Thanos Ruler instances will be available under. This is
 	// necessary to generate correct URLs. This is necessary if Thanos Ruler is not
@@ -273,6 +294,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// recorded rule data.
 	//
 	// Note: Currently only the `minVersion`, `caFile`, `certFile`, `keyFile`, `cipherSuites` and `curves` fields are supported.
+	//
 	GRPCServerTLSConfig *GRPCServerTLSConfigApplyConfiguration `json:"grpcServerTlsConfig,omitempty"`
 	// alertQueryUrl defines how Thanos Ruler will set in the 'Source' field
 	// of all alerts.
@@ -282,6 +304,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// without any of its container crashing for it to be considered available.
 	//
 	// If unset, pods will be considered available as soon as they are ready.
+	//
 	MinReadySeconds *int32 `json:"minReadySeconds,omitempty"`
 	// alertRelabelConfigs defines the alert relabeling in Thanos Ruler.
 	//
@@ -292,6 +315,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration.
 	//
 	// `alertRelabelConfigFile` takes precedence over this field.
+	//
 	AlertRelabelConfigs *corev1.SecretKeySelector `json:"alertRelabelConfigs,omitempty"`
 	// alertRelabelConfigFile defines the path to the alert relabeling configuration file.
 	//
@@ -302,6 +326,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// The operator performs no validation of the configuration file.
 	//
 	// This field takes precedence over `alertRelabelConfig`.
+	//
 	AlertRelabelConfigFile *string `json:"alertRelabelConfigFile,omitempty"`
 	// hostAliases defines pods' hostAliases configuration
 	HostAliases []HostAliasApplyConfiguration `json:"hostAliases,omitempty"`
@@ -321,12 +346,14 @@ type ThanosRulerSpecApplyConfiguration struct {
 	// When the list isn't empty, the ruler is configured with stateless mode.
 	//
 	// It requires Thanos >= 0.24.0.
+	//
 	RemoteWrite []RemoteWriteSpecApplyConfiguration `json:"remoteWrite,omitempty"`
 	// terminationGracePeriodSeconds defines the optional duration in seconds the pod needs to terminate gracefully.
 	// Value must be non-negative integer. The value zero indicates stop immediately via
 	// the kill signal (no opportunity to shut down) which may lead to data corruption.
 	//
 	// Defaults to 120 seconds.
+	//
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 	// enableFeatures defines how to setup Thanos Ruler feature flags. By default, no features are enabled.
 	//
@@ -344,6 +371,7 @@ type ThanosRulerSpecApplyConfiguration struct {
 	//
 	// The feature requires at least Kubernetes 1.28 with the `UserNamespacesSupport` feature gate enabled.
 	// Starting Kubernetes 1.33, the feature is enabled by default.
+	//
 	HostUsers *bool `json:"hostUsers,omitempty"`
 }
 

@@ -32,6 +32,7 @@ type ArbitraryFSAccessThroughSMsConfigApplyConfiguration struct {
 	// When true, service monitors cannot use file-based configurations like BearerTokenFile
 	// that could potentially access sensitive files. When false (default), such access is allowed.
 	// Setting this to true enhances security by preventing potential credential theft attacks.
+	//
 	Deny *bool `json:"deny,omitempty"`
 }
 
