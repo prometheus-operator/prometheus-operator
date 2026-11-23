@@ -27,6 +27,18 @@ This document tracks people and use cases for the Prometheus Operator in product
 
 Go ahead and [add your organization](https://github.com/prometheus-operator/prometheus-operator/edit/main/ADOPTERS.md) to the list.
 
+## Amavie
+
+[amavie.ai](https://amavie.ai/)
+
+Environments: Google Cloud
+
+Uses [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus): No (kube-prometheus-stack Helm chart)
+
+Details (optional):
+- Prometheus Operator on GKE, deployed with the kube-prometheus-stack Helm chart through Argo CD.
+  ServiceMonitors cover the backend services of an AI character app; Alertmanager routes the alerts.
+
 ## AuthZed
 
 [authzed.com](https://authzed.com)
