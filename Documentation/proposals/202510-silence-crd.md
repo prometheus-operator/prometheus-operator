@@ -239,7 +239,7 @@ The operator's write path reaches only the Kubernetes API (to read and write the
 | RBAC denies the operator write access to the Secret | `SecretWriteDenied` | none                |
 | Effective `endsAt` already passed                   | `SilenceExpired`    | none                |
 
-Retryable failures are requeued with the workqueue's exponential backoff. The rest are not: the fix is a change to the Silence or the Alertmanager resource. They are still re-attempted on the ordinary resync and whenever either resource changes, so a corrected configuration recovers without the controller tracking what it gave up on.
+Retryable failures are requeued with the workqueue's exponential backoff. The rest are not: the fix is a change to the Silence or the Alertmanager resource. They are re-attempted whenever the Silence or Alertmanager resource changes (including on controller restart), so a corrected configuration eventually recovers without the controller tracking what it gave up on.
 
 **Sidecar (Alertmanager API) failures** are reported through sidecar metrics rather than Silence status conditions. See [Observability](#observability).
 
@@ -272,8 +272,8 @@ The sidecar reconciles on two triggers: process start, and whenever the mounted 
 1. Read and unmarshal `silences.json` from the mounted path. If the file is absent or empty, treat it as an empty list (all operator-managed silences should be deleted).
 2. List all Alertmanager silences carrying the `monitoring.coreos.com/silence-uid` annotation.
 3. For each entry in the file: look up the Alertmanager silence by annotation UID.
-   - If **absent**: create a new silence, setting the annotation to the entry's `uid` and storing the entry's `generation` in the silence's comment metadata.
-   - If **present but different**: check the generation. If the AM silence was created from a newer generation than the file entry, skip the update (stale Secret content). Otherwise, update the silence.
+   - If **absent**: create a new silence, setting the annotations `monitoring.coreos.com/silence-uid` to the entry's `uid` and `monitoring.coreos.com/silence-generation` to the entry's `generation`.
+   - If **present but different**: check the generation annotation. If the AM silence's `monitoring.coreos.com/silence-generation` annotation is greater than the file entry's `generation`, skip the update (stale Secret content). Otherwise, update the silence and its generation annotation.
    - If **matching**: no write.
 4. **Orphan pass**: delete any Alertmanager silence whose `monitoring.coreos.com/silence-uid` annotation does not appear in the file. This handles Silence CR deletion without requiring a finalizer on the Kubernetes resource.
 
@@ -301,13 +301,14 @@ The `silence-sidecar` is delivered as a separate binary within the prometheus-op
 
 Silence identity in Alertmanager is tracked via annotations, using the annotation support added in [alertmanager PR #4965](https://github.com/prometheus/alertmanager/pull/4965). This requires **Alertmanager >= 0.32.0**.
 
-When the sidecar creates or updates a silence it sets:
+When the sidecar creates or updates a silence it sets two annotations:
 
 ```
 monitoring.coreos.com/silence-uid: <Silence CR UID>
+monitoring.coreos.com/silence-generation: <Silence CR generation>
 ```
 
-The annotation is the key used by the reconcile loop (described in [silence-sidecar § Reconcile loop](#reconcile-loop)) to create, update, and orphan-delete silences without touching anything the operator did not create.
+The UID annotation is the key used by the reconcile loop (described in [silence-sidecar § Reconcile loop](#reconcile-loop)) to identify which Alertmanager silences were created by the operator. The generation annotation enables stale-write detection: when multiple sidecar pods receive Secret updates at slightly different times, the generation prevents an older Secret from overwriting a silence already updated from a newer one.
 
 **The sidecar only touches silences it created.** Silences without the `monitoring.coreos.com/silence-uid` annotation — created through the UI, `amtool`, or any other client — are never examined, modified or deleted. Declarative management and ad-hoc silences coexist on the same Alertmanager without interference.
 
