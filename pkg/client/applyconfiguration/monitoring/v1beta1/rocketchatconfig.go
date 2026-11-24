@@ -81,6 +81,11 @@ type RocketChatConfigApplyConfiguration struct {
 	// actions defines interactive actions to include in the message.
 	// These appear as buttons that users can click to trigger responses.
 	Actions []RocketChatActionConfigApplyConfiguration `json:"actions,omitempty"`
+	// messageText is a top-level message text, shown above the attachment
+	// and used in desktop and push notifications.
+	// If unset, notifications show only a generic placeholder.
+	// It requires Alertmanager >= v0.35.0.
+	MessageText *string `json:"messageText,omitempty"`
 	// httpConfig defines the HTTP client configuration for RocketChat API requests.
 	HTTPConfig *HTTPConfigApplyConfiguration `json:"httpConfig,omitempty"`
 }
@@ -234,6 +239,14 @@ func (b *RocketChatConfigApplyConfiguration) WithActions(values ...*RocketChatAc
 		}
 		b.Actions = append(b.Actions, *values[i])
 	}
+	return b
+}
+
+// WithMessageText sets the MessageText field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MessageText field is set to the value of the last call.
+func (b *RocketChatConfigApplyConfiguration) WithMessageText(value string) *RocketChatConfigApplyConfiguration {
+	b.MessageText = &value
 	return b
 }
 

@@ -64,6 +64,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &monitoringv1.AttachMetadataApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("Authorization"):
 		return &monitoringv1.AuthorizationApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("AutoGomemlimitSpec"):
+		return &monitoringv1.AutoGomemlimitSpecApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureAD"):
 		return &monitoringv1.AzureADApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("AzureOAuth"):

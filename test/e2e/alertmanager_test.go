@@ -356,7 +356,6 @@ func testAMClusterGossipSilences(t *testing.T) {
 	secretName := "cluster-tls-creds"
 	testcase := []struct {
 		name             string
-		clusterSize      int
 		clusterTLSConfig *monitoringv1.ClusterTLSConfig
 	}{
 		{
@@ -436,30 +435,77 @@ func testAMClusterGossipSilences(t *testing.T) {
 			_, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
 			require.NoError(t, err)
 
-			silID, err := framework.CreateSilence(context.Background(), ns, "alertmanager-test-0")
-			require.NoError(t, err)
-
-			for i := 0; i < tc.clusterSize; i++ {
-				err = wait.PollUntilContextTimeout(context.Background(), time.Second, framework.DefaultTimeout, false, func(ctx context.Context) (bool, error) {
-					silences, err := framework.GetSilences(ctx, ns, "alertmanager-"+alertmanager.Name+"-"+strconv.Itoa(i))
-					if err != nil {
-						return false, err
-					}
-
-					if len(silences) != 1 {
-						return false, nil
-					}
-
-					if *silences[0].ID != silID {
-						return false, fmt.Errorf("expected silence id on alertmanager %v to match id of created silence '%v' but got %v", i, silID, *silences[0].ID)
-					}
-
-					return true, nil
-				})
-				require.NoError(t, err)
-			}
+			require.NoError(t, framework.CheckGossipReplication(context.Background(), alertmanager))
 		})
 	}
+}
+
+func testAMGossipTLSConfigurationRollout(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	const secretName = "cluster-tls-creds"
+	createMutualTLSSecret(t, secretName, ns)
+	ca := monitoringv1.SecretOrConfigMap{
+		Secret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+			Key:                  "ca.crt",
+		},
+	}
+	cert := monitoringv1.SecretOrConfigMap{
+		Secret: &corev1.SecretKeySelector{
+			LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+			Key:                  "cert.pem",
+		},
+	}
+	key := corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
+		Key:                  "key.pem",
+	}
+
+	const clusterSize = 3
+	am := framework.MakeBasicAlertmanager(ns, "gossip-tls-rollout", clusterSize)
+	am.Spec.ClusterTLS = &monitoringv1.ClusterTLSConfig{
+		ServerTLS: monitoringv1.WebTLSConfig{
+			ClientCA:       ca,
+			Cert:           cert,
+			KeySecret:      key,
+			ClientAuthType: new(monitoringv1.RequireAndVerifyClientCert),
+		},
+		ClientTLS: monitoringv1.SafeTLSConfig{
+			CA:         ca,
+			Cert:       cert,
+			KeySecret:  &key,
+			ServerName: new("InvalidName"),
+		},
+	}
+
+	am, err := framework.CreateAlertmanager(ctx, am)
+	require.NoError(t, err)
+	am, err = framework.WaitForAlertmanagerAvailable(ctx, am)
+	require.NoError(t, err)
+
+	// The pods are available, but the invalid server name prevents them from
+	// joining each other: each pod only sees itself as a cluster peer.
+	for i := range clusterSize {
+		pod := fmt.Sprintf("alertmanager-%s-%d", am.Name, i)
+		status, err := framework.GetAlertmanagerPodStatus(ctx, ns, pod, false)
+		require.NoError(t, err)
+		require.NotNil(t, status.Cluster, "pod %s", pod)
+		require.Len(t, status.Cluster.Peers, 1, "pod %s should be isolated", pod)
+	}
+
+	am.Spec.ClusterTLS.ClientTLS.ServerName = new("PrometheusRemoteWriteClient")
+	am, err = framework.PatchAlertmanagerAndWaitUntilReady(ctx, am.Name, ns, monitoringv1.AlertmanagerSpec{
+		ClusterTLS: am.Spec.ClusterTLS,
+	})
+	require.NoError(t, err)
+	require.NoError(t, framework.CheckGossipReplication(ctx, am))
 }
 
 func testAMReloadConfig(t *testing.T) {
@@ -1082,6 +1128,29 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), msteamsv2Secret, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	rocketchatSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "rocketchat",
+		},
+		Data: map[string][]byte{
+			"token":    []byte("abcdef"),
+			"token-id": []byte("abcdef12345"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), rocketchatSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	discordSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "discord",
+		},
+		Data: map[string][]byte{
+			"apiurl": []byte("https://discord.api.url"),
+		},
+	}
+	_, err = framework.KubeClient.CoreV1().Secrets(configNs).Create(context.Background(), discordSecret, metav1.CreateOptions{})
+	require.NoError(t, err)
+
 	// A valid AlertmanagerConfig resource with many receivers.
 	configCR := &monitoringv1alpha1.AlertmanagerConfig{
 		ObjectMeta: metav1.ObjectMeta{
@@ -1262,6 +1331,24 @@ func testAlertmanagerConfigCRD(t *testing.T) {
 						Key: "webhook-url",
 					},
 					Title: new("Alert"),
+				}},
+				RocketChatConfigs: []monitoringv1alpha1.RocketChatConfig{{
+					APIURL: ptr.To(monitoringv1alpha1.URL("https://rocketchat.api.url")),
+					Token: corev1.SecretKeySelector{
+						Key:                  "token",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+					TokenID: corev1.SecretKeySelector{
+						Key:                  "token-id",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "rocketchat"},
+					},
+				}},
+				DiscordConfigs: []monitoringv1alpha1.DiscordConfig{{
+					APIURL: corev1.SecretKeySelector{
+						Key:                  "apiurl",
+						LocalObjectReference: corev1.LocalObjectReference{Name: "discord"},
+					},
+					Title: new("infra-alert"),
 				}},
 			}},
 		},
@@ -1600,6 +1687,9 @@ receivers:
   - api_url: https://telegram.api.url
     bot_token: bipbop
     chat_id: 12345
+  discord_configs:
+  - webhook_url: https://discord.api.url
+    title: infra-alert
   webex_configs:
   - http_config:
       authorization:
@@ -1614,6 +1704,12 @@ receivers:
   msteamsv2_configs:
   - webhook_url: https://msteamsv2.webhook.url
     title: Alert
+  rocketchat_configs:
+  - api_url: https://rocketchat.api.url
+    token_id: abcdef12345
+    token: abcdef
+    short_fields: false
+    link_names: false
 - name: %s/e2e-test-amconfig-sub-routes/e2e
   webhook_configs:
   - url: http://test.url
@@ -1692,7 +1788,7 @@ templates: []
 	require.NoError(t, err)
 }
 
-func testAlertmanagerConfigCRDValidation(t *testing.T) {
+func testAlertmanagerConfigRouteValidation(t *testing.T) {
 	t.Parallel()
 	name := "test"
 
@@ -1842,6 +1938,111 @@ func testAlertmanagerConfigCRDValidation(t *testing.T) {
 				}
 				if !apierrors.IsInvalid(err) {
 					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error but got %v", err)
+			}
+		})
+	}
+}
+
+func testAlertmanagerConfigReceiverValidation(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	webexAuthMsg := "httpConfig.authorization or httpConfig.bearerTokenSecret is required"
+	webexToken := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "webex-api-token"},
+		Key:                  "api-token",
+	}
+
+	tests := []struct {
+		name          string
+		receivers     []monitoringv1alpha1.Receiver
+		expectedError bool
+		errorMessage  string
+	}{
+		//
+		// Webex credentials validation:
+		//
+		{
+			name: "invalid-webex-without-http-config",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name:         "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{RoomID: "room-1"}},
+			}},
+			expectedError: true,
+			errorMessage:  webexAuthMsg,
+		},
+		{
+			name: "invalid-webex-http-config-without-credentials",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID:     "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{FollowRedirects: new(true)},
+				}},
+			}},
+			expectedError: true,
+			errorMessage:  webexAuthMsg,
+		},
+		{
+			name: "valid-webex-with-authorization",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID: "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{
+						Authorization: &monitoringv1.SafeAuthorization{Credentials: webexToken},
+					},
+				}},
+			}},
+		},
+		{
+			name: "valid-webex-with-bearer-token-secret",
+			receivers: []monitoringv1alpha1.Receiver{{
+				Name: "e2e",
+				WebexConfigs: []monitoringv1alpha1.WebexConfig{{
+					RoomID:     "room-1",
+					HTTPConfig: &monitoringv1alpha1.HTTPConfig{BearerTokenSecret: webexToken},
+				}},
+			}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(context.Background(), t, testCtx)
+
+			amConfig := &monitoringv1alpha1.AlertmanagerConfig{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+				Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+					Route: &monitoringv1alpha1.Route{
+						Receiver: "e2e",
+					},
+					Receivers: test.receivers,
+				},
+			}
+
+			_, err := framework.MonClientV1alpha1.AlertmanagerConfigs(ns).Create(context.Background(), amConfig, metav1.CreateOptions{})
+
+			if test.expectedError {
+				if err == nil {
+					t.Fatal("expected error but got nil")
+				}
+				if !apierrors.IsInvalid(err) {
+					t.Fatalf("expected Invalid error but got %v", err)
+				}
+				if !strings.Contains(err.Error(), test.errorMessage) {
+					t.Fatalf("expected error to contain %q but got %v", test.errorMessage, err)
 				}
 				return
 			}
@@ -2843,6 +3044,59 @@ func testAlertmanagerCRDValidation(t *testing.T) {
 			},
 			expectedError: true,
 		},
+		//
+		// Web CORS Origin Validation:
+		//
+		{
+			name: "valid-cors-origin",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+				Web: &monitoringv1.AlertmanagerWebSpec{
+					CORSOrigin: new(`https://example\.com`),
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "valid-cors-origin-alternation",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+				Web: &monitoringv1.AlertmanagerWebSpec{
+					CORSOrigin: new(`https?://(foo|bar)\.example\.com`),
+				},
+			},
+			expectedError: false,
+		},
+		{
+			name: "invalid-cors-origin-empty",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+				Web: &monitoringv1.AlertmanagerWebSpec{
+					CORSOrigin: new(``), // Empty string violates MinLength constraint
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-cors-origin-unclosed-group",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+				Web: &monitoringv1.AlertmanagerWebSpec{
+					CORSOrigin: new(`https://(foo`), // Not a valid regular expression
+				},
+			},
+			expectedError: true,
+		},
+		{
+			name: "invalid-cors-origin-bad-char-class",
+			alertmanagerSpec: monitoringv1.AlertmanagerSpec{
+				Replicas: &replicas,
+				Web: &monitoringv1.AlertmanagerWebSpec{
+					CORSOrigin: new(`[a-`), // Not a valid regular expression
+				},
+			},
+			expectedError: true,
+		},
 	}
 
 	for _, test := range tests {
@@ -3007,6 +3261,78 @@ templates: []
 	require.NoError(t, err)
 }
 
+func testAlertmanagerConfigRouteLabels(t *testing.T) {
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(context.Background(), t, testCtx)
+	framework.SetupPrometheusRBAC(context.Background(), t, testCtx, ns)
+
+	amName := "amconfigroutelabels"
+	alertmanager := framework.MakeBasicAlertmanager(ns, amName, 1)
+	alertmanager.Spec.AlertmanagerConfigSelector = &metav1.LabelSelector{}
+	alertmanager, err := framework.CreateAlertmanagerAndWaitUntilReady(context.Background(), alertmanager)
+	require.NoError(t, err)
+
+	amcfgV1alpha1 := &monitoringv1alpha1.AlertmanagerConfig{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "amcfg-route-labels",
+		},
+		Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+			Route: &monitoringv1alpha1.Route{
+				Receiver: "webhook",
+				Matchers: []monitoringv1alpha1.Matcher{{
+					Name:  "team",
+					Value: "ops",
+				}},
+				Labels: []monitoringv1alpha1.KeyValue{
+					{Key: "env", Value: "production"},
+				},
+			},
+			Receivers: []monitoringv1alpha1.Receiver{{
+				Name: "webhook",
+			}},
+		},
+	}
+	_, err = framework.MonClientV1alpha1.AlertmanagerConfigs(alertmanager.Namespace).Create(context.Background(), amcfgV1alpha1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	// Wait for the change above to take effect.
+	var lastErr error
+	amConfigSecretName := fmt.Sprintf("alertmanager-%s-generated", alertmanager.Name)
+	err = wait.PollUntilContextTimeout(context.Background(), 5*time.Second, 2*time.Minute, false, func(ctx context.Context) (bool, error) {
+		cfgSecret, err := framework.KubeClient.CoreV1().Secrets(ns).Get(ctx, amConfigSecretName, metav1.GetOptions{})
+		if err != nil {
+			lastErr = fmt.Errorf("failed to get generated configuration secret: %w", err)
+			return false, nil
+		}
+
+		if cfgSecret.Data["alertmanager.yaml.gz"] == nil {
+			lastErr = errors.New("'alertmanager.yaml.gz' key is missing in generated configuration secret")
+			return false, nil
+		}
+
+		uncompressed, err := operator.GunzipConfig(cfgSecret.Data["alertmanager.yaml.gz"])
+		require.NoError(t, err)
+
+		// Check if the labels are present in the generated config
+		if !strings.Contains(uncompressed, "labels:") {
+			lastErr = fmt.Errorf("generated config does not contain 'labels' field, got:\n%s", uncompressed)
+			return false, nil
+		}
+
+		if !strings.Contains(uncompressed, "env: production") {
+			lastErr = fmt.Errorf("generated config does not contain expected label 'env: production', got:\n%s", uncompressed)
+			return false, nil
+		}
+
+		return true, nil
+	})
+	require.NoError(t, err, "waiting for generated alertmanager configuration: %v: %v", err, lastErr)
+
+	err = framework.DeleteAlertmanagerAndWaitUntilGone(context.Background(), ns, amName)
+	require.NoError(t, err)
+}
+
 func testAlertManagerServiceName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -3084,6 +3410,35 @@ func testAMScaleUpWithoutLabels(t *testing.T) {
 	sts, err := stsClient.Get(ctx, stsName, metav1.GetOptions{})
 	require.NoError(t, err)
 	require.NotEmpty(t, sts.GetLabels(), "expected labels to be restored on the StatefulSet by the operator")
+}
+
+func testAlertmanagerAutoGomemlimit(t *testing.T) {
+	// Don't run Alertmanager tests in parallel. See
+	// https://github.com/prometheus/alertmanager/issues/1835 for details.
+	ctx := context.Background()
+	testCtx := framework.NewTestCtx(t)
+	defer testCtx.Cleanup(t)
+	ns := framework.CreateNamespace(ctx, t, testCtx)
+	framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+	name := "test"
+	am := framework.MakeBasicAlertmanager(ns, name, 1)
+	am.Spec.AutoGomemlimit = &monitoringv1.AutoGomemlimitSpec{
+		Enabled:         new(true),
+		Ratio:           new(resource.MustParse("0.7")),
+		RefreshInterval: new(monitoringv1.GoDuration("5m")),
+	}
+	// Set a memory limit so that Alertmanager can detect it from the cgroup.
+	am.Spec.Resources = corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceMemory: resource.MustParse("200Mi"),
+		},
+	}
+
+	_, err := framework.CreateAlertmanagerAndWaitUntilReady(ctx, am)
+	require.NoError(t, err)
+
+	require.NoError(t, framework.DeleteAlertmanagerAndWaitUntilGone(ctx, ns, name))
 }
 
 func testAlertmanagerZeroDuration(t *testing.T) {

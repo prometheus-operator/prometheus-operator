@@ -33,6 +33,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// The `job_name` field in the rendered scrape configuration is always controlled by the
 	// operator to prevent duplicate job names, which Prometheus does not allow. Instead the
 	// `job` label is set by means of relabeling configs.
+	//
 	JobName *string `json:"jobName,omitempty"`
 	// staticConfigs defines a list of static targets with a common label set.
 	StaticConfigs []StaticConfigApplyConfiguration `json:"staticConfigs,omitempty"`
@@ -98,11 +99,19 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
+	//
 	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
 	// It requires Prometheus >= v3.0.0.
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	//
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	HonorTimestamps *bool `json:"honorTimestamps,omitempty"`
@@ -110,6 +119,7 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// the metrics that have an explicit timestamp present in scraped data.
 	// Has no effect if `honorTimestamps` is false.
 	// It requires Prometheus >= v2.48.0.
+	//
 	TrackTimestampsStaleness *bool `json:"trackTimestampsStaleness,omitempty"`
 	// honorLabels defines when true the metric's labels when they collide
 	// with the target's labels.
@@ -152,12 +162,14 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// a body larger than this many bytes will cause the scrape to fail.
 	//
 	// It requires Prometheus >= v2.28.0.
+	//
 	BodySizeLimit                              *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
 	v1.NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
+	//
 	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// metricRelabelings defines the metricRelabelings to apply to samples before ingestion.
 	MetricRelabelConfigs []v1.RelabelConfigApplyConfiguration `json:"metricRelabelings,omitempty"`
@@ -166,10 +178,12 @@ type ScrapeConfigSpecApplyConfiguration struct {
 	// nameValidationScheme defines the validation scheme for metric and label names.
 	//
 	// It requires Prometheus >= v3.0.0.
+	//
 	NameValidationScheme *monitoringv1.NameValidationSchemeOptions `json:"nameValidationScheme,omitempty"`
 	// nameEscapingScheme defines the metric name escaping mode to request through content negotiation.
 	//
 	// It requires Prometheus >= v3.4.0.
+	//
 	NameEscapingScheme *monitoringv1.NameEscapingSchemeOptions `json:"nameEscapingScheme,omitempty"`
 	// scrapeClass defines the scrape class to apply.
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
@@ -540,6 +554,14 @@ func (b *ScrapeConfigSpecApplyConfiguration) WithScrapeProtocols(values ...monit
 // If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
 func (b *ScrapeConfigSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *ScrapeConfigSpecApplyConfiguration {
 	b.FallbackScrapeProtocol = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *ScrapeConfigSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *ScrapeConfigSpecApplyConfiguration {
+	b.ExtraScrapeMetrics = &value
 	return b
 }
 

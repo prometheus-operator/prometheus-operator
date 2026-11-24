@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/utils/ptr"
 
 	"github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring"
@@ -357,10 +359,7 @@ func TestGlobalSettings(t *testing.T) {
 		t.Run(fmt.Sprintf("case %s", tc.Scenario), func(t *testing.T) {
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{},
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -464,10 +463,7 @@ func TestTopologyZoneExternalLabel(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{},
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -667,46 +663,45 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
-							Targets: []string{
-								"prometheus.io",
-								"promcon.io",
-							},
-							Labels: map[string]string{
-								"namespace": "custom",
-								"static":    "label",
-							},
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
 						},
 					},
-					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-						{
-							Regex:  "noisy_labels.*",
-							Action: "labeldrop",
+					Spec: monitoringv1.ProbeSpec{
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Module: "http_2xx",
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{
+									"prometheus.io",
+									"promcon.io",
+								},
+								Labels: map[string]string{
+									"namespace": "custom",
+									"static":    "label",
+								},
+							},
+						},
+						MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+							{
+								Regex:  "noisy_labels.*",
+								Action: "labeldrop",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -723,37 +718,36 @@ func TestProbeStaticTargetsConfigGenerationWithJobName(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					JobName: "blackbox",
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
-							Targets: []string{
-								"prometheus.io",
-								"promcon.io",
+					Spec: monitoringv1.ProbeSpec{
+						JobName: "blackbox",
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Module: "http_2xx",
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{
+									"prometheus.io",
+									"promcon.io",
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -770,36 +764,35 @@ func TestProbeStaticTargetsConfigGenerationWithoutModule(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					JobName: "blackbox",
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Targets: monitoringv1.ProbeTargets{
-						StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
-							Targets: []string{
-								"prometheus.io",
-								"promcon.io",
+					Spec: monitoringv1.ProbeSpec{
+						JobName: "blackbox",
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Targets: monitoringv1.ProbeTargets{
+							StaticConfig: &monitoringv1.ProbeTargetStaticConfig{
+								Targets: []string{
+									"prometheus.io",
+									"promcon.io",
+								},
 							},
 						},
 					},
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -816,39 +809,39 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						Ingress: &monitoringv1.ProbeTargetIngress{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"prometheus.io/probe": "true",
+					Spec: monitoringv1.ProbeSpec{
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Module: "http_2xx",
+						Targets: monitoringv1.ProbeTargets{
+							Ingress: &monitoringv1.ProbeTargetIngress{
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
 								},
-							},
-							NamespaceSelector: monitoringv1.NamespaceSelector{
-								Any: true,
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									TargetLabel: "foo",
-									Replacement: new("bar"),
-									Action:      "replace",
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										TargetLabel: "foo",
+										Replacement: new("bar"),
+										Action:      "replace",
+									},
 								},
 							},
 						},
@@ -856,7 +849,6 @@ func TestProbeIngressSDConfigGeneration(t *testing.T) {
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -875,39 +867,39 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						Ingress: &monitoringv1.ProbeTargetIngress{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"prometheus.io/probe": "true",
+					Spec: monitoringv1.ProbeSpec{
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Module: "http_2xx",
+						Targets: monitoringv1.ProbeTargets{
+							Ingress: &monitoringv1.ProbeTargetIngress{
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
 								},
-							},
-							NamespaceSelector: monitoringv1.NamespaceSelector{
-								Any: true,
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									TargetLabel: "foo",
-									Replacement: new("bar"),
-									Action:      "replace",
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										TargetLabel: "foo",
+										Replacement: new("bar"),
+										Action:      "replace",
+									},
 								},
 							},
 						},
@@ -915,7 +907,6 @@ func TestProbeIngressSDConfigGenerationWithShards(t *testing.T) {
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -933,39 +924,39 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testprobe1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testprobe1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ProbeSpec{
-					ProberSpec: monitoringv1.ProberSpec{
-						Scheme: ptr.To(monitoringv1.SchemeHTTP),
-						URL:    "blackbox.exporter.io",
-						Path:   "/probe",
-					},
-					Module: "http_2xx",
-					Targets: monitoringv1.ProbeTargets{
-						Ingress: &monitoringv1.ProbeTargetIngress{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"prometheus.io/probe": "true",
+					Spec: monitoringv1.ProbeSpec{
+						ProberSpec: monitoringv1.ProberSpec{
+							Scheme: ptr.To(monitoringv1.SchemeHTTP),
+							URL:    "blackbox.exporter.io",
+							Path:   "/probe",
+						},
+						Module: "http_2xx",
+						Targets: monitoringv1.ProbeTargets{
+							Ingress: &monitoringv1.ProbeTargetIngress{
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"prometheus.io/probe": "true",
+									},
 								},
-							},
-							NamespaceSelector: monitoringv1.NamespaceSelector{
-								Any: true,
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									TargetLabel: "foo",
-									Replacement: new("bar"),
-									Action:      "replace",
+								NamespaceSelector: monitoringv1.NamespaceSelector{
+									Any: true,
+								},
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										TargetLabel: "foo",
+										Replacement: new("bar"),
+										Action:      "replace",
+									},
 								},
 							},
 						},
@@ -973,7 +964,6 @@ func TestProbeIngressSDConfigGenerationWithLabelEnforce(t *testing.T) {
 				},
 			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -995,12 +985,11 @@ func TestProbeWithHttp2Disabled(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		map[string]*monitoringv1.Probe{
-			"probe1": probe,
+		ConfigResources{
+			Probes: map[string]*monitoringv1.Probe{
+				"probe1": probe,
+			},
 		},
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -1173,10 +1162,7 @@ func TestAlertmanagerBearerToken(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		nil,
-		nil,
+		ConfigResources{},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -1245,10 +1231,7 @@ func TestAlertmanagerBasicAuth(t *testing.T) {
 
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			nil,
-			nil,
-			nil,
+			ConfigResources{},
 			assets.NewTestStoreBuilder(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1321,10 +1304,7 @@ func TestAlertmanagerSigv4(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			nil,
-			nil,
-			nil,
+			ConfigResources{},
 			assets.NewTestStoreBuilder(
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
@@ -1456,10 +1436,7 @@ func TestAlertmanagerAPIVersion(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -1489,10 +1466,7 @@ func TestAlertmanagerTimeoutConfig(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		nil,
-		nil,
+		ConfigResources{},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -1547,10 +1521,7 @@ func TestAlertmanagerEnableHttp2(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -1598,10 +1569,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			nil,
-			nil,
-			nil,
+			ConfigResources{},
 			&assets.StoreBuilder{},
 			nil,
 			nil,
@@ -1653,10 +1621,7 @@ func TestAlertmanagerAlertRelabelConfigs(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -1677,10 +1642,7 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			nil,
-			nil,
-			nil,
+			ConfigResources{},
 			&assets.StoreBuilder{},
 			golden.Get(t, "input/TestAdditionalScrapeConfigsAdditionalScrapeConfig.golden"),
 			nil,
@@ -1721,6 +1683,48 @@ func TestAdditionalScrapeConfigs(t *testing.T) {
 	}
 }
 
+func TestAdditionalScrapeConfigsInvalidRelabelConfigs(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		config string
+		errMsg string
+	}{
+		{
+			name: "relabel_configs is not a list",
+			config: `- job_name: foo
+  relabel_configs:
+    action: keep
+`,
+			errMsg: "error parsing relabel configs: expected a list, got yaml.MapSlice",
+		},
+		{
+			name: "relabel config is not a map",
+			config: `- job_name: foo
+  relabel_configs:
+  - keep
+`,
+			errMsg: "error parsing relabel config: expected a map, got string",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.Shards = new(int32(2))
+
+			cg := mustNewConfigGenerator(t, p)
+			_, err := cg.GenerateServerConfiguration(
+				p,
+				ConfigResources{},
+				&assets.StoreBuilder{},
+				[]byte(tc.config),
+				nil,
+				nil,
+				nil,
+			)
+			require.EqualError(t, err, "generate additional scrape configs: "+tc.errMsg)
+		})
+	}
+}
+
 func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	p := defaultPrometheus()
 	p.Spec.Alerting = &monitoringv1.AlertingSpec{
@@ -1736,10 +1740,7 @@ func TestAdditionalAlertRelabelConfigs(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		nil,
-		nil,
+		ConfigResources{},
 		&assets.StoreBuilder{},
 		nil,
 		golden.Get(t, "input/AdditionalAlertRelabelConfigs.golden"),
@@ -1756,42 +1757,44 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
 					},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:        "https-metrics",
-							HonorLabels: true,
-							Interval:    "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
-									SourceLabels: []monitoringv1.LabelName{"__name__"},
-								},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
 							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.+)(?::d+)",
-									Replacement:  new("$1:9537"),
-									SourceLabels: []monitoringv1.LabelName{"__address__"},
-									TargetLabel:  "__address__",
+						},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:        "https-metrics",
+								HonorLabels: true,
+								Interval:    "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "drop",
+										Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
+										SourceLabels: []monitoringv1.LabelName{"__name__"},
+									},
 								},
-								{
-									Action:      "replace",
-									Replacement: new("crio"),
-									TargetLabel: "job",
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "replace",
+										Regex:        "(.+)(?::d+)",
+										Replacement:  new("$1:9537"),
+										SourceLabels: []monitoringv1.LabelName{"__address__"},
+										TargetLabel:  "__address__",
+									},
+									{
+										Action:      "replace",
+										Replacement: new("crio"),
+										TargetLabel: "job",
+									},
 								},
 							},
 						},
@@ -1799,9 +1802,6 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -1882,12 +1882,11 @@ func TestServiceMonitorWithServiceDiscoveryRole(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p, WithEndpointSliceSupport())
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"test": smon,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"test": smon,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -1907,37 +1906,38 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "pod-monitor-ns",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "pod-monitor-ns",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							Port:     new("web"),
-							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "my-ns",
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:     new("web"),
+								Interval: "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "drop",
+										Regex:        "my-job-pod-.+",
+										SourceLabels: []monitoringv1.LabelName{"pod_name"},
+										TargetLabel:  "my-ns",
+									},
 								},
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  new("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-									TargetLabel:  "pod_ready",
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "replace",
+										Regex:        "(.*)",
+										Replacement:  new("$1"),
+										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+										TargetLabel:  "pod_ready",
+									},
 								},
 							},
 						},
@@ -1945,8 +1945,6 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -1971,41 +1969,42 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "pod-monitor-ns",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "pod-monitor-ns",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
-					Kind:       monitoringv1.PodMonitorsKind,
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							Port:     new("web"),
-							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "my-ns",
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+						Kind:       monitoringv1.PodMonitorsKind,
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:     new("web"),
+								Interval: "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "drop",
+										Regex:        "my-job-pod-.+",
+										SourceLabels: []monitoringv1.LabelName{"pod_name"},
+										TargetLabel:  "my-ns",
+									},
 								},
-							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  new("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-									TargetLabel:  "pod_ready",
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "replace",
+										Regex:        "(.*)",
+										Replacement:  new("$1"),
+										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+										TargetLabel:  "pod_ready",
+									},
 								},
 							},
 						},
@@ -2013,8 +2012,6 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2032,44 +2029,46 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "alpha",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"beta", "gamma"},
-							},
-						},
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
 					},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "web",
-							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+							MatchExpressions: []metav1.LabelSelectorRequirement{
 								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns-key",
+									Key:      "alpha",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"beta", "gamma"},
 								},
 							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  new("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-									TargetLabel:  "pod_ready",
+						},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "web",
+								Interval: "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "drop",
+										Regex:        "my-job-pod-.+",
+										SourceLabels: []monitoringv1.LabelName{"pod_name"},
+										TargetLabel:  "ns-key",
+									},
+								},
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "replace",
+										Regex:        "(.*)",
+										Replacement:  new("$1"),
+										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+										TargetLabel:  "pod_ready",
+									},
 								},
 							},
 						},
@@ -2077,9 +2076,6 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2104,44 +2100,46 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "servicemonitor1",
-					Namespace: "service-monitor-ns",
-					Labels: map[string]string{
-						"group": "group1",
-					},
-				},
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
-					Kind:       monitoringv1.ServiceMonitorsKind,
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "servicemonitor1",
+						Namespace: "service-monitor-ns",
+						Labels: map[string]string{
+							"group": "group1",
 						},
 					},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "web",
-							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "drop",
-									Regex:        "my-job-pod-.+",
-									SourceLabels: []monitoringv1.LabelName{"pod_name"},
-									TargetLabel:  "ns-key",
-								},
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: monitoring.GroupName + "/" + monitoringv1.Version,
+						Kind:       monitoringv1.ServiceMonitorsKind,
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
 							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "replace",
-									Regex:        "(.*)",
-									Replacement:  new("$1"),
-									SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
-									TargetLabel:  "pod_ready",
+						},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "web",
+								Interval: "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "drop",
+										Regex:        "my-job-pod-.+",
+										SourceLabels: []monitoringv1.LabelName{"pod_name"},
+										TargetLabel:  "ns-key",
+									},
+								},
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "replace",
+										Regex:        "(.*)",
+										Replacement:  new("$1"),
+										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
+										TargetLabel:  "pod_ready",
+									},
 								},
 							},
 						},
@@ -2149,9 +2147,6 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2178,10 +2173,7 @@ func TestAdditionalAlertmanagers(t *testing.T) {
 
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		nil,
-		nil,
+		ConfigResources{},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2201,27 +2193,26 @@ func TestSettingHonorTimestampsInServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							HonorTimestamps: new(false),
-							Port:            "web",
-							Interval:        "30s",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								HonorTimestamps: new(false),
+								Port:            "web",
+								Interval:        "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2238,27 +2229,26 @@ func TestSettingHonorTimestampsInPodMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							HonorTimestamps: new(false),
-							Port:            new("web"),
-							Interval:        "30s",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								HonorTimestamps: new(false),
+								Port:            new("web"),
+								Interval:        "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2275,27 +2265,26 @@ func TestSettingTrackTimestampsStalenessInServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							TrackTimestampsStaleness: new(false),
-							Port:                     "web",
-							Interval:                 "30s",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								TrackTimestampsStaleness: new(false),
+								Port:                     "web",
+								Interval:                 "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2312,27 +2301,26 @@ func TestSettingTrackTimestampsStalenessInPodMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							TrackTimestampsStaleness: new(false),
-							Port:                     new("web"),
-							Interval:                 "30s",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								TrackTimestampsStaleness: new(false),
+								Port:                     new("web"),
+								Interval:                 "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2376,28 +2364,84 @@ func TestSettingScrapeProtocolsInServiceMonitor(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": {
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "testservicemonitor1",
-							Namespace: "default",
-						},
-						Spec: monitoringv1.ServiceMonitorSpec{
-							TargetLabels:    []string{"example", "env"},
-							ScrapeProtocols: tc.scrape,
-							Endpoints: []monitoringv1.Endpoint{
-								{
-									HonorTimestamps: new(false),
-									Port:            "web",
-									Interval:        "30s",
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "testservicemonitor1",
+								Namespace: "default",
+							},
+							Spec: monitoringv1.ServiceMonitorSpec{
+								TargetLabels:    []string{"example", "env"},
+								ScrapeProtocols: tc.scrape,
+								Endpoints: []monitoringv1.Endpoint{
+									{
+										HonorTimestamps: new(false),
+										Port:            "web",
+										Interval:        "30s",
+									},
 								},
 							},
 						},
 					},
 				},
+				&assets.StoreBuilder{},
 				nil,
 				nil,
 				nil,
+				nil,
+			)
+			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.golden)
+		})
+	}
+}
+
+func TestSettingExtraScrapeMetricsInServiceMonitor(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		version string
+		golden  string
+	}{
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus old version",
+			version: "v3.9.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_OldVersion.golden",
+		},
+		{
+			name:    "setting ExtraScrapeMetrics in ServiceMonitor endpoint with prometheus new version",
+			version: "v3.10.0",
+			golden:  "SettingExtraScrapeMetricsInServiceMonitor_NewVersion.golden",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.version
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "testservicemonitor1",
+								Namespace: "default",
+							},
+							Spec: monitoringv1.ServiceMonitorSpec{
+								TargetLabels:       []string{"example", "env"},
+								ExtraScrapeMetrics: new(true),
+								Endpoints: []monitoringv1.Endpoint{
+									{
+										HonorTimestamps: new(false),
+										Port:            "web",
+										Interval:        "30s",
+									},
+								},
+							},
+						},
+					},
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -2437,28 +2481,27 @@ func TestSettingScrapeFallbackProtocolInServiceMonitor(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": {
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "testservicemonitor1",
-							Namespace: "default",
-						},
-						Spec: monitoringv1.ServiceMonitorSpec{
-							TargetLabels:           []string{"example", "env"},
-							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
-							Endpoints: []monitoringv1.Endpoint{
-								{
-									HonorTimestamps: new(false),
-									Port:            "web",
-									Interval:        "30s",
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "testservicemonitor1",
+								Namespace: "default",
+							},
+							Spec: monitoringv1.ServiceMonitorSpec{
+								TargetLabels:           []string{"example", "env"},
+								FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
+								Endpoints: []monitoringv1.Endpoint{
+									{
+										HonorTimestamps: new(false),
+										Port:            "web",
+										Interval:        "30s",
+									},
 								},
 							},
 						},
 					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -2504,28 +2547,27 @@ func TestSettingScrapeProtocolsInPodMonitor(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{
-					"testpodmonitor1": {
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "testpodmonitor1",
-							Namespace: "default",
-						},
-						Spec: monitoringv1.PodMonitorSpec{
-							PodTargetLabels: []string{"example", "env"},
-							ScrapeProtocols: tc.scrape,
-							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-								{
-									TrackTimestampsStaleness: new(false),
-									Port:                     new("web"),
-									Interval:                 "30s",
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{
+						"testpodmonitor1": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "testpodmonitor1",
+								Namespace: "default",
+							},
+							Spec: monitoringv1.PodMonitorSpec{
+								PodTargetLabels: []string{"example", "env"},
+								ScrapeProtocols: tc.scrape,
+								PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+									{
+										TrackTimestampsStaleness: new(false),
+										Port:                     new("web"),
+										Interval:                 "30s",
+									},
 								},
 							},
 						},
 					},
 				},
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -2565,28 +2607,27 @@ func TestSettingScrapeFallbackProtocolInPodMonitor(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{
-					"testpodmonitor1": {
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "testpodmonitor1",
-							Namespace: "default",
-						},
-						Spec: monitoringv1.PodMonitorSpec{
-							PodTargetLabels:        []string{"example", "env"},
-							FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
-							PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-								{
-									TrackTimestampsStaleness: new(false),
-									Port:                     new("web"),
-									Interval:                 "30s",
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{
+						"testpodmonitor1": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "testpodmonitor1",
+								Namespace: "default",
+							},
+							Spec: monitoringv1.PodMonitorSpec{
+								PodTargetLabels:        []string{"example", "env"},
+								FallbackScrapeProtocol: tc.fallbackScrapeProtocol,
+								PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+									{
+										TrackTimestampsStaleness: new(false),
+										Port:                     new("web"),
+										Interval:                 "30s",
+									},
 								},
 							},
 						},
 					},
 				},
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -2606,27 +2647,26 @@ func TestHonorTimestampsOverriding(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							HonorTimestamps: new(true),
-							Port:            "web",
-							Interval:        "30s",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								HonorTimestamps: new(true),
+								Port:            "web",
+								Interval:        "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2643,30 +2683,29 @@ func TestSettingHonorLabels(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							HonorLabels: true,
-							Port:        "web",
-							Interval:    "30s",
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								HonorLabels: true,
+								Port:        "web",
+								Interval:    "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2684,30 +2723,29 @@ func TestHonorLabelsOverriding(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							HonorLabels: true,
-							Port:        "web",
-							Interval:    "30s",
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								HonorLabels: true,
+								Port:        "web",
+								Interval:    "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2724,26 +2762,25 @@ func TestTargetLabels(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					TargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "web",
-							Interval: "30s",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						TargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "web",
+								Interval: "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -2948,10 +2985,11 @@ func TestEndpointOAuth2(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tt.sMons,
-				tt.pMons,
-				tt.probes,
-				nil,
+				ConfigResources{
+					ServiceMonitors: tt.sMons,
+					PodMonitors:     tt.pMons,
+					Probes:          tt.probes,
+				},
 				s,
 				nil,
 				nil,
@@ -2970,29 +3008,28 @@ func TestPodTargetLabels(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"testservicemonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testservicemonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"testservicemonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testservicemonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "web",
-							Interval: "30s",
+					Spec: monitoringv1.ServiceMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "web",
+								Interval: "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -3009,29 +3046,28 @@ func TestPodTargetLabelsFromPodMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"example", "env"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							Port:     new("web"),
-							Interval: "30s",
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"example", "env"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:     new("web"),
+								Interval: "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -3049,29 +3085,28 @@ func TestPodTargetLabelsFromPodMonitorAndGlobal(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodTargetLabels: []string{"local"},
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							Port:     new("web"),
-							Interval: "30s",
+					Spec: monitoringv1.PodMonitorSpec{
+						PodTargetLabels: []string{"local"},
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								Port:     new("web"),
+								Interval: "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -3088,28 +3123,27 @@ func TestEmptyEndpointPorts(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
 					},
-					Endpoints: []monitoringv1.Endpoint{
-						// Add a single endpoint with empty configuration.
-						{},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
+							},
+						},
+						Endpoints: []monitoringv1.Endpoint{
+							// Add a single endpoint with empty configuration.
+							{},
+						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -3177,10 +3211,10 @@ func generateTestConfig(t *testing.T, version string) ([]byte, error) {
 	cg := mustNewConfigGenerator(t, p)
 	return cg.GenerateServerConfiguration(
 		p,
-		makeServiceMonitors(),
-		makePodMonitors(),
-		nil,
-		nil,
+		ConfigResources{
+			ServiceMonitors: makeServiceMonitors(),
+			PodMonitors:     makePodMonitors(),
+		},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -3745,12 +3779,11 @@ func TestSampleLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -3852,12 +3885,11 @@ func TestTargetLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -4064,10 +4096,7 @@ func TestRemoteReadConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				s,
 				nil,
 				nil,
@@ -4839,10 +4868,7 @@ func TestRemoteWriteConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				store,
 				nil,
 				nil,
@@ -4951,12 +4977,11 @@ func TestLabelLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5057,12 +5082,11 @@ func TestLabelNameLengthLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{
-					"testpodmonitor1": &podMonitor,
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{
+						"testpodmonitor1": &podMonitor,
+					},
 				},
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5201,12 +5225,11 @@ func TestLabelValueLengthLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				map[string]*monitoringv1.Probe{
-					"testprobe1": &probe,
+				ConfigResources{
+					Probes: map[string]*monitoringv1.Probe{
+						"testprobe1": &probe,
+					},
 				},
-				nil,
 				s,
 				nil,
 				nil,
@@ -5274,12 +5297,11 @@ func TestKeepDroppedTargets(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5405,12 +5427,11 @@ func TestNativeHistogramConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5484,12 +5505,11 @@ func TestBodySizeLimits(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5530,11 +5550,10 @@ func TestScrapeConfigBodySizeLimit(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		nil,
-		nil,
-		map[string]*monitoringv1alpha1.ScrapeConfig{
-			"testscrapeconfig1": &scrapeConfig,
+		ConfigResources{
+			ScrapeConfigs: map[string]*monitoringv1alpha1.ScrapeConfig{
+				"testscrapeconfig1": &scrapeConfig,
+			},
 		},
 		&assets.StoreBuilder{},
 		nil,
@@ -5553,34 +5572,33 @@ func TestMatchExpressionsServiceMonitor(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchExpressions: []metav1.LabelSelectorRequirement{
-							{
-								Key:      "alpha",
-								Operator: metav1.LabelSelectorOpIn,
-								Values:   []string{"beta", "gamma"},
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
+					},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchExpressions: []metav1.LabelSelectorRequirement{
+								{
+									Key:      "alpha",
+									Operator: metav1.LabelSelectorOpIn,
+									Values:   []string{"beta", "gamma"},
+								},
 							},
 						},
-					},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "web",
-							Interval: "30s",
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "web",
+								Interval: "30s",
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -5652,12 +5670,11 @@ func TestServiceMonitorEndpointFollowRedirects(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5730,12 +5747,11 @@ func TestPodMonitorEndpointFollowRedirects(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{
-					"testpodmonitor1": &podMonitor,
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{
+						"testpodmonitor1": &podMonitor,
+					},
 				},
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5807,12 +5823,11 @@ func TestServiceMonitorEndpointEnableHttp2(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"testservicemonitor1": &serviceMonitor,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"testservicemonitor1": &serviceMonitor,
+					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5831,28 +5846,27 @@ func TestPodMonitorPhaseFilter(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{
-			"testpodmonitor1": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "testpodmonitor1",
-					Namespace: "default",
-					Labels: map[string]string{
-						"group": "group1",
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{
+				"testpodmonitor1": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "testpodmonitor1",
+						Namespace: "default",
+						Labels: map[string]string{
+							"group": "group1",
+						},
 					},
-				},
-				Spec: monitoringv1.PodMonitorSpec{
-					PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-						{
-							FilterRunning: new(false),
-							Port:          new("test"),
+					Spec: monitoringv1.PodMonitorSpec{
+						PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+							{
+								FilterRunning: new(false),
+								Port:          new("test"),
+							},
 						},
 					},
 				},
 			},
 		},
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -5922,12 +5936,11 @@ func TestPodMonitorEndpointEnableHttp2(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{
-					"testpodmonitor1": &podMonitor,
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{
+						"testpodmonitor1": &podMonitor,
+					},
 				},
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5978,10 +5991,7 @@ func TestRuntimeConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -5989,6 +5999,110 @@ func TestRuntimeConfig(t *testing.T) {
 				nil,
 			)
 			require.NoError(t, err)
+			golden.Assert(t, string(cfg), tc.Golden)
+		})
+	}
+}
+
+func TestBuildCommonPrometheusArgsLogLevel(t *testing.T) {
+	for _, tc := range []struct {
+		version      string
+		logLevelFlag bool
+	}{
+		{version: "v2.53.0", logLevelFlag: true},
+		{version: "v3.14.1", logLevelFlag: true},
+		{version: "v3.15.0", logLevelFlag: false},
+		{version: "v3.16.0", logLevelFlag: false},
+	} {
+		for _, logLevel := range []string{"", "debug", "info", "warn", "error"} {
+			t.Run(fmt.Sprintf("%s/logLevel=%s", tc.version, logLevel), func(t *testing.T) {
+				p := defaultPrometheus()
+				p.Spec.Version = tc.version
+				p.Spec.LogLevel = logLevel
+
+				cg := mustNewConfigGenerator(t, p)
+				var logLevelArgs []monitoringv1.Argument
+				for _, arg := range cg.BuildCommonPrometheusArgs() {
+					if arg.Name == "log.level" {
+						logLevelArgs = append(logLevelArgs, arg)
+					}
+				}
+
+				if tc.logLevelFlag && logLevel != "" {
+					require.Equal(t, []monitoringv1.Argument{{Name: "log.level", Value: logLevel}}, logLevelArgs)
+				} else {
+					require.Empty(t, logLevelArgs)
+				}
+			})
+		}
+	}
+}
+
+func TestLogLevelVersionSwitch(t *testing.T) {
+	for _, tc := range []struct {
+		Scenario     string
+		Version      string
+		LogLevel     string
+		Golden       string
+		Runtime      *monitoringv1.RuntimeConfig
+		LogLevelFlag bool
+	}{
+		{
+			Scenario:     "before Prometheus 3.15.0 uses command line flag",
+			Version:      "v3.14.1",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Flag_Debug.golden",
+			LogLevelFlag: true,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 uses runtime config without runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Golden:       "LogLevel_Runtime_Debug.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Prometheus 3.15.0 preserves other runtime options",
+			Version:      "v3.15.0",
+			LogLevel:     "debug",
+			Runtime:      &monitoringv1.RuntimeConfig{GoGC: new(int32(25))},
+			Golden:       "LogLevel_Runtime_Debug_With_GoGC.golden",
+			LogLevelFlag: false,
+		},
+		{
+			Scenario:     "Info level is set explicitly",
+			Version:      "v3.15.0",
+			LogLevel:     "info",
+			Golden:       "LogLevel_Default_Info.golden",
+			LogLevelFlag: false,
+		},
+	} {
+		t.Run(tc.Scenario, func(t *testing.T) {
+			p := defaultPrometheus()
+			p.Spec.CommonPrometheusFields.Version = tc.Version
+			p.Spec.CommonPrometheusFields.LogLevel = tc.LogLevel
+			p.Spec.Runtime = tc.Runtime
+
+			cg := mustNewConfigGenerator(t, p)
+			cfg, err := cg.GenerateServerConfiguration(
+				p,
+				ConfigResources{},
+				&assets.StoreBuilder{},
+				nil,
+				nil,
+				nil,
+				nil,
+			)
+			hasLogLevelFlag := false
+			args := cg.BuildCommonPrometheusArgs()
+			for _, arg := range args {
+				if arg.Name == "log.level" && arg.Value == tc.LogLevel {
+					hasLogLevelFlag = true
+					break
+				}
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.LogLevelFlag, hasLogLevelFlag)
 			golden.Assert(t, string(cfg), tc.Golden)
 		})
 	}
@@ -6033,10 +6147,7 @@ func TestStorageSettingMaxExemplars(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -6185,10 +6296,7 @@ func TestTSDBConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -6295,10 +6403,7 @@ func TestRetentionConfigFile(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -6420,10 +6525,7 @@ func TestTSDBConfigPrometheusAgent(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateAgentConfiguration(
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 			)
@@ -6481,10 +6583,7 @@ func TestScrapeFailureLogFilePrometheusAgent(t *testing.T) {
 
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateAgentConfiguration(
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 			)
@@ -6502,10 +6601,9 @@ func TestPromAgentDaemonSetPodMonitorConfig(t *testing.T) {
 		"pm": defaultPodMonitor(),
 	}
 	cfg, err := cg.GenerateAgentConfiguration(
-		nil,
-		pmons,
-		nil,
-		nil,
+		ConfigResources{
+			PodMonitors: pmons,
+		},
 		&assets.StoreBuilder{},
 		nil,
 	)
@@ -6519,58 +6617,60 @@ func TestGenerateRelabelConfig(t *testing.T) {
 	cg := mustNewConfigGenerator(t, p)
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{
-			"test": {
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "test",
-					Namespace: "default",
-				},
-				Spec: monitoringv1.ServiceMonitorSpec{
-					Selector: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"foo": "bar",
-						},
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+				"test": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "test",
+						Namespace: "default",
 					},
-					Endpoints: []monitoringv1.Endpoint{
-						{
-							Port:     "https-metrics",
-							Interval: "30s",
-							MetricRelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "Drop",
-									Regex:        "container_fs*",
-									SourceLabels: []monitoringv1.LabelName{"__name__"},
-								},
-								{
-									// Test empty replacement
-									Action:      "Replace",
-									Replacement: new(""),
-									TargetLabel: "job",
-								},
+					Spec: monitoringv1.ServiceMonitorSpec{
+						Selector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"foo": "bar",
 							},
-							RelabelConfigs: []monitoringv1.RelabelConfig{
-								{
-									Action:       "Uppercase",
-									SourceLabels: []monitoringv1.LabelName{"instance"},
-									TargetLabel:  "instance",
+						},
+						Endpoints: []monitoringv1.Endpoint{
+							{
+								Port:     "https-metrics",
+								Interval: "30s",
+								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "Drop",
+										Regex:        "container_fs*",
+										SourceLabels: []monitoringv1.LabelName{"__name__"},
+									},
+									{
+										// Test empty replacement
+										Action:      "Replace",
+										Replacement: new(""),
+										TargetLabel: "job",
+									},
 								},
-								{
-									Action:       "Replace",
-									Regex:        "(.+)(?::d+)",
-									Replacement:  new("$1:9537"),
-									SourceLabels: []monitoringv1.LabelName{"__address__"},
-									TargetLabel:  "__address__",
-								},
-								{
-									Action:      "Replace",
-									Replacement: new("crio"),
-									TargetLabel: "job",
-								},
-								{
-									// Test empty replacement
-									Action:      "Replace",
-									Replacement: new(""),
-									TargetLabel: "job",
+								RelabelConfigs: []monitoringv1.RelabelConfig{
+									{
+										Action:       "Uppercase",
+										SourceLabels: []monitoringv1.LabelName{"instance"},
+										TargetLabel:  "instance",
+									},
+									{
+										Action:       "Replace",
+										Regex:        "(.+)(?::d+)",
+										Replacement:  new("$1:9537"),
+										SourceLabels: []monitoringv1.LabelName{"__address__"},
+										TargetLabel:  "__address__",
+									},
+									{
+										Action:      "Replace",
+										Replacement: new("crio"),
+										TargetLabel: "job",
+									},
+									{
+										// Test empty replacement
+										Action:      "Replace",
+										Replacement: new(""),
+										TargetLabel: "job",
+									},
 								},
 							},
 						},
@@ -6578,9 +6678,6 @@ func TestGenerateRelabelConfig(t *testing.T) {
 				},
 			},
 		},
-		nil,
-		nil,
-		nil,
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -6747,10 +6844,9 @@ func TestProbeSpecConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				pbs,
-				nil,
+				ConfigResources{
+					Probes: pbs,
+				},
 				s,
 				nil,
 				nil,
@@ -7626,10 +7722,9 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -7836,10 +7931,9 @@ func TestScrapeConfigSpecConfigWithHTTPSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -8145,10 +8239,9 @@ func TestScrapeConfigSpecConfigWithKubernetesSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -8464,10 +8557,9 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -8739,10 +8831,9 @@ func TestScrapeConfigSpecConfigWithEC2SD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
@@ -8883,6 +8974,31 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 				},
 			},
 			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_http_config.golden",
+		},
+		{
+			name: "azure_sd_config_with_environment_and_http_config",
+			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
+				AzureSDConfigs: []monitoringv1alpha1.AzureSDConfig{
+					{
+						Environment:          new("AzurePublicCloud"),
+						SubscriptionID:       "11AAAA11-A11A-111A-A111-1111A1111A11",
+						AuthenticationMethod: ptr.To(monitoringv1alpha1.AuthMethodTypeSDK),
+						Authorization: &monitoringv1.SafeAuthorization{
+							Credentials: &corev1.SecretKeySelector{
+								LocalObjectReference: corev1.LocalObjectReference{
+									Name: "secret",
+								},
+								Key: "credential",
+							},
+						},
+						ProxyConfig: monitoringv1.ProxyConfig{
+							ProxyURL: new("http://no-proxy.com"),
+						},
+						FollowRedirects: new(false),
+					},
+				},
+			},
+			golden: "ScrapeConfigSpecConfig_AzureSDConfigValid_environment_and_http_config.golden",
 		},
 		{
 			name: "azure_sd_config_with_http_config_basic_auth_and_tls",
@@ -9047,10 +9163,9 @@ func TestScrapeConfigSpecConfigWithAzureSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -9139,10 +9254,9 @@ func TestScrapeConfigSpecConfigWithGCESD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				assets.NewTestStoreBuilder(),
 				nil,
 				nil,
@@ -9240,10 +9354,9 @@ func TestScrapeConfigSpecConfigWithOpenStackSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				assets.NewTestStoreBuilder(sec),
 				nil,
 				nil,
@@ -9427,10 +9540,9 @@ func TestScrapeConfigSpecConfigWithDigitalOceanSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -9804,10 +9916,9 @@ func TestScrapeConfigSpecConfigWithDockerSDConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -9995,10 +10106,9 @@ func TestScrapeConfigSpecConfigWithLinodeSDConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -10272,10 +10382,9 @@ func TestScrapeConfigSpecConfigWithHetznerSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -10333,10 +10442,7 @@ func TestAppendNameValidationScheme(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -10389,10 +10495,7 @@ func TestAppendNameEscapingScheme(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -10445,10 +10548,7 @@ func TestAppendConvertClassicHistogramsToNHCB(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -10701,10 +10801,7 @@ func TestOTLPConfig(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				store,
 				nil,
 				nil,
@@ -10765,10 +10862,7 @@ func TestTracingConfig(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				store,
 				nil,
 				nil,
@@ -10996,10 +11090,9 @@ func TestScrapeConfigSpecConfigWithKumaSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -11192,10 +11285,12 @@ func TestScrapeClass(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-				map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-				map[string]*monitoringv1.Probe{"monitor": probe},
-				map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfig},
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+					PodMonitors:     map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+					Probes:          map[string]*monitoringv1.Probe{"monitor": probe},
+					ScrapeConfigs:   map[string]*monitoringv1alpha1.ScrapeConfig{"monitor": scrapeConfig},
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -11309,10 +11404,9 @@ func TestServiceMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-			nil,
-			nil,
-			nil,
+			ConfigResources{
+				ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+			},
 			&assets.StoreBuilder{},
 			nil,
 			nil,
@@ -11420,10 +11514,9 @@ func TestPodMonitorScrapeClassWithDefaultTLS(t *testing.T) {
 
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-			nil,
-			nil,
+			ConfigResources{
+				PodMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+			},
 			&assets.StoreBuilder{},
 			nil,
 			nil,
@@ -11481,10 +11574,9 @@ func TestPodMonitorPortNumber(t *testing.T) {
 
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			nil,
-			map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-			nil,
-			nil,
+			ConfigResources{
+				PodMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+			},
 			&assets.StoreBuilder{},
 			nil,
 			nil,
@@ -11783,10 +11875,9 @@ func TestScrapeConfigSpecConfigWithEurekaSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -11968,10 +12059,9 @@ func TestScrapeConfigSpecConfigWithNomadSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -12203,10 +12293,9 @@ func TestScrapeConfigSpecConfigWithDockerswarmSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -12432,10 +12521,9 @@ func TestScrapeConfigSpecConfigWithPuppetDBSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -12714,10 +12802,9 @@ func TestScrapeConfigSpecConfigWithLightSailSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -12792,10 +12879,9 @@ func TestScrapeConfigSpecConfigWithOVHCloudSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -12945,10 +13031,9 @@ func TestScrapeConfigSpecConfigWithScalewaySD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -13129,10 +13214,9 @@ func TestScrapeConfigSpecConfigWithIonosSD(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				scs,
+				ConfigResources{
+					ScrapeConfigs: scs,
+				},
 				store,
 				nil,
 				nil,
@@ -13177,10 +13261,9 @@ func TestServiceMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-		nil,
-		nil,
-		nil,
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -13211,10 +13294,9 @@ func TestServiceMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
-		nil,
-		nil,
-		nil,
+		ConfigResources{
+			ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": serviceMonitor},
+		},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -13257,10 +13339,9 @@ func TestPodMonitorWithDefaultScrapeClassRelabelings(t *testing.T) {
 
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-		nil,
-		nil,
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -13291,10 +13372,9 @@ func TestPodMonitorWithNonDefaultScrapeClassRelabelings(t *testing.T) {
 
 	cfg, err := cg.GenerateServerConfiguration(
 		p,
-		nil,
-		map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
-		nil,
-		nil,
+		ConfigResources{
+			PodMonitors: map[string]*monitoringv1.PodMonitor{"monitor": podMonitor},
+		},
 		&assets.StoreBuilder{},
 		nil,
 		nil,
@@ -13429,10 +13509,12 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tc.serviceMonitors,
-				tc.podMonitors,
-				tc.probes,
-				tc.scrapeConfigs,
+				ConfigResources{
+					ServiceMonitors: tc.serviceMonitors,
+					PodMonitors:     tc.podMonitors,
+					Probes:          tc.probes,
+					ScrapeConfigs:   tc.scrapeConfigs,
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -13702,10 +13784,12 @@ func TestScrapeClassAuthorization(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tc.serviceMonitors,
-				tc.podMonitors,
-				tc.probes,
-				tc.scrapeConfigs,
+				ConfigResources{
+					ServiceMonitors: tc.serviceMonitors,
+					PodMonitors:     tc.podMonitors,
+					Probes:          tc.probes,
+					ScrapeConfigs:   tc.scrapeConfigs,
+				},
 				tc.storeBuilder,
 				nil,
 				nil,
@@ -13793,10 +13877,12 @@ func TestScrapeClassAttachMetadata(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tc.serviceMonitors,
-				tc.podMonitors,
-				tc.probes,
-				tc.scrapeConfigs,
+				ConfigResources{
+					ServiceMonitors: tc.serviceMonitors,
+					PodMonitors:     tc.podMonitors,
+					Probes:          tc.probes,
+					ScrapeConfigs:   tc.scrapeConfigs,
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -13930,10 +14016,12 @@ func TestScrapeClassFallbackScrapeProtocol(t *testing.T) {
 
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tc.serviceMonitors,
-				tc.podMonitors,
-				tc.probes,
-				tc.scrapeConfigs,
+				ConfigResources{
+					ServiceMonitors: tc.serviceMonitors,
+					PodMonitors:     tc.podMonitors,
+					Probes:          tc.probes,
+					ScrapeConfigs:   tc.scrapeConfigs,
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -14105,10 +14193,7 @@ func TestGenerateAlertmanagerConfig(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{},
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				assets.NewTestStoreBuilder(
 					&corev1.Secret{
 						ObjectMeta: metav1.ObjectMeta{
@@ -14323,10 +14408,7 @@ func TestAlertmanagerTLSConfig(t *testing.T) {
 		cg := mustNewConfigGenerator(t, p)
 		cfg, err := cg.GenerateServerConfiguration(
 			p,
-			map[string]*monitoringv1.ServiceMonitor{},
-			nil,
-			nil,
-			nil,
+			ConfigResources{},
 			assets.NewTestStoreBuilder(),
 			nil,
 			nil,
@@ -14476,10 +14558,9 @@ func TestServiceMonitorSelectors(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{"monitor": tc.serviceMonitor},
-				nil,
-				nil,
-				nil,
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{"monitor": tc.serviceMonitor},
+				},
 				assets.NewTestStoreBuilder(),
 				nil,
 				nil,
@@ -14627,10 +14708,9 @@ func TestPodMonitorSelectors(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				map[string]*monitoringv1.PodMonitor{"monitor": tc.podMonitor},
-				nil,
-				nil,
+				ConfigResources{
+					PodMonitors: map[string]*monitoringv1.PodMonitor{"monitor": tc.podMonitor},
+				},
 				assets.NewTestStoreBuilder(),
 				nil,
 				nil,
@@ -14682,10 +14762,7 @@ func TestAppendConvertScrapeClassicHistograms(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -14738,10 +14815,7 @@ func TestAppendScrapeNativeHistograms(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				nil,
-				nil,
-				nil,
-				nil,
+				ConfigResources{},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -14905,10 +14979,10 @@ func TestTopologyShardingRelabeling(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p, opts...)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				tc.serviceMonitor,
-				tc.podMonitor,
-				nil,
-				nil,
+				ConfigResources{
+					ServiceMonitors: tc.serviceMonitor,
+					PodMonitors:     tc.podMonitor,
+				},
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -14959,30 +15033,29 @@ func TestShardingRelabelConfigsWithRetention(t *testing.T) {
 			cg := mustNewConfigGenerator(t, p, opts...)
 			cfg, err := cg.GenerateServerConfiguration(
 				p,
-				map[string]*monitoringv1.ServiceMonitor{
-					"test": {
-						ObjectMeta: metav1.ObjectMeta{
-							Name:      "test",
-							Namespace: "default",
-						},
-						Spec: monitoringv1.ServiceMonitorSpec{
-							Selector: metav1.LabelSelector{
-								MatchLabels: map[string]string{
-									"foo": "bar",
-								},
+				ConfigResources{
+					ServiceMonitors: map[string]*monitoringv1.ServiceMonitor{
+						"test": {
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "test",
+								Namespace: "default",
 							},
-							Endpoints: []monitoringv1.Endpoint{
-								{
-									Port:     "web",
-									Interval: "30s",
+							Spec: monitoringv1.ServiceMonitorSpec{
+								Selector: metav1.LabelSelector{
+									MatchLabels: map[string]string{
+										"foo": "bar",
+									},
+								},
+								Endpoints: []monitoringv1.Endpoint{
+									{
+										Port:     "web",
+										Interval: "30s",
+									},
 								},
 							},
 						},
 					},
 				},
-				nil,
-				nil,
-				nil,
 				&assets.StoreBuilder{},
 				nil,
 				nil,
@@ -15161,6 +15234,53 @@ func TestInzoneShardForShard(t *testing.T) {
 			for i, exp := range tc.expected {
 				require.Equal(t, exp, cg.InzoneShardForShard(int32(i)))
 			}
+		})
+	}
+}
+
+func TestAddRemoteWriteToStore(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		names     []*string
+		expectErr bool
+	}{
+		{
+			name:  "no names",
+			names: []*string{nil, nil},
+		},
+		{
+			name:  "empty names",
+			names: []*string{new(""), new("")},
+		},
+		{
+			name:  "unique names",
+			names: []*string{new("a"), new("b"), nil},
+		},
+		{
+			name:      "duplicate names",
+			names:     []*string{new("a"), nil, new("a")},
+			expectErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cs := fake.NewClientset()
+			store := assets.NewStoreBuilder(cs.CoreV1(), cs.CoreV1())
+
+			rws := make([]monitoringv1.RemoteWriteSpec, 0, len(tc.names))
+			for _, name := range tc.names {
+				rws = append(rws, monitoringv1.RemoteWriteSpec{
+					URL:  "http://example.com",
+					Name: name,
+				})
+			}
+
+			err := mustNewConfigGenerator(t, nil).AddRemoteWriteToStore(context.Background(), store, "default", rws)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
 		})
 	}
 }

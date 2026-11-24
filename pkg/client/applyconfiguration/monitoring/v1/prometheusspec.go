@@ -55,6 +55,7 @@ type PrometheusSpecApplyConfiguration struct {
 	// shardRetentionPolicy defines the retention policy for the Prometheus shards.
 	//
 	// (Beta) Using this mode requires the `PrometheusShardRetentionPolicy` feature gate (enabled by default).
+	//
 	ShardRetentionPolicy *ShardRetentionPolicyApplyConfiguration `json:"shardRetentionPolicy,omitempty"`
 	// disableCompaction when true, the Prometheus compaction is disabled.
 	//
@@ -82,6 +83,16 @@ type PrometheusSpecApplyConfiguration struct {
 	// matches all namespaces. A null label selector matches the current
 	// namespace only.
 	RuleNamespaceSelector *metav1.LabelSelectorApplyConfiguration `json:"ruleNamespaceSelector,omitempty"`
+	// ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+	// mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+	// not exist and are mounted with optional: true.
+	// Reserving volumes avoids a Pod rollout when the number of generated rule
+	// ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+	// are still deleted.
+	// All generated rule ConfigMaps are mounted even if their count exceeds this
+	// value. Changing the number of mounted volumes triggers a Pod rollout.
+	// Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+	RuleConfigMapsMinimumCount *int32 `json:"ruleConfigMapsMinimumCount,omitempty"`
 	// query defines the configuration of the Prometheus query service.
 	Query *QuerySpecApplyConfiguration `json:"query,omitempty"`
 	// alerting defines the settings related to Alertmanager.
@@ -94,7 +105,7 @@ type PrometheusSpecApplyConfiguration struct {
 	//
 	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alert_relabel_configs
 	//
-	// # The user is responsible for making sure that the configurations are valid
+	// The user is responsible for making sure that the configurations are valid
 	//
 	// Note that using this feature may expose the possibility to break
 	// upgrades of Prometheus. It is advised to review Prometheus release notes
@@ -109,7 +120,7 @@ type PrometheusSpecApplyConfiguration struct {
 	//
 	// https://prometheus.io/docs/prometheus/latest/configuration/configuration/#alertmanager_config
 	//
-	// # The user is responsible for making sure that the configurations are valid
+	// The user is responsible for making sure that the configurations are valid
 	//
 	// Note that using this feature may expose the possibility to break
 	// upgrades of Prometheus. It is advised to review Prometheus release notes
@@ -119,6 +130,7 @@ type PrometheusSpecApplyConfiguration struct {
 	// remoteRead defines the list of remote read configurations.
 	RemoteRead []RemoteReadSpecApplyConfiguration `json:"remoteRead,omitempty"`
 	// thanos defines the configuration of the optional Thanos sidecar.
+	//
 	Thanos *ThanosSpecApplyConfiguration `json:"thanos,omitempty"`
 	// queryLogFile specifies where the file to which PromQL queries are logged.
 	//
@@ -1160,6 +1172,14 @@ func (b *PrometheusSpecApplyConfiguration) WithRuleSelector(value *metav1.LabelS
 // If called multiple times, the RuleNamespaceSelector field is set to the value of the last call.
 func (b *PrometheusSpecApplyConfiguration) WithRuleNamespaceSelector(value *metav1.LabelSelectorApplyConfiguration) *PrometheusSpecApplyConfiguration {
 	b.RuleNamespaceSelector = value
+	return b
+}
+
+// WithRuleConfigMapsMinimumCount sets the RuleConfigMapsMinimumCount field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the RuleConfigMapsMinimumCount field is set to the value of the last call.
+func (b *PrometheusSpecApplyConfiguration) WithRuleConfigMapsMinimumCount(value int32) *PrometheusSpecApplyConfiguration {
+	b.RuleConfigMapsMinimumCount = &value
 	return b
 }
 

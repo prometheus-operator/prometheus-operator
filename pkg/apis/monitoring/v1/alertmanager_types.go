@@ -17,6 +17,7 @@ package v1
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -372,6 +373,27 @@ type AlertmanagerSpec struct {
 	// +optional
 	AlertmanagerConfigMatcherStrategy AlertmanagerConfigMatcherStrategy `json:"alertmanagerConfigMatcherStrategy,omitempty"`
 
+	// alertmanagerConfigFileSystemMode defines how the operator handles
+	// AlertmanagerConfig resources which have references to the Alertmanager
+	// container's filesystem (as opposed to secret key references). Users
+	// controlling the receiver's service may create an AlertmanagerConfig
+	// resource with a reference to a container's file (for instance using
+	// `botTokenFile` for the Telegram receiver) and exfiltrate sensitive
+	// content from files located in the Alertmanager container.
+	//
+	// Supported values are:
+	// - "DenyAll" denies any AlertmanagerConfig resource referencing files from the container's filesystem, non-compliant resources are rejected.
+	// - "FromAlertmanagerConfigMatcherStrategy" uses the `alertmanagerConfigNamespaceSelector` field to make a decision
+	//   - When `alertmanagerConfigNamespaceSelector` is "None", it is equivalent to "AllowAll"
+	//   - When `alertmanagerConfigNamespaceSelector` is "OnNamespaceExceptForAlertmanagerNamespace", it is equivalent to "AllowAll" for the AlertmanagerConfig resources located in the Alertmanager's namespace and "DenyAll" for all other resources.
+	//   - When `alertmanagerConfigNamespaceSelector` is "OnNamespace", it is equivalent to "AllowAll" for the main AlertmanagerConfig resource (defined in `.spec.alertmanagerConfig.name`) and "DenyAll" for all other resources.
+	// - "AllowAll" allows any AlertmanagerConfig resource to reference files from the container's filesystem (use with caution).
+	//
+	// By default, the operator uses the "FromAlertmanagerConfigMatcherStrategy" mode.
+	//
+	// +optional
+	AlertmanagerConfigFileSystemMode *AlertmanagerConfigFileSystemMode `json:"alertmanagerConfigFileSystemMode,omitempty"`
+
 	// minReadySeconds defines the minimum number of seconds for which a newly
 	// created pod should be ready without any of its container crashing for it
 	// to be considered available.
@@ -410,6 +432,12 @@ type AlertmanagerSpec struct {
 	// limits defines the limits command line flags when starting Alertmanager.
 	// +optional
 	Limits *AlertmanagerLimitsSpec `json:"limits,omitempty"`
+	// autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+	// starting Alertmanager.
+	//
+	// It requires Alertmanager >= v0.35.0.
+	// +optional
+	AutoGomemlimit *AutoGomemlimitSpec `json:"autoGomemlimit,omitempty"`
 
 	// clusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
 	//
@@ -497,6 +525,28 @@ const (
 	// With `None`, the route and inhibition rules of an AlertmanagerConfig
 	// object process all incoming alerts.
 	NoneConfigMatcherStrategyType AlertmanagerConfigMatcherStrategyType = "None"
+)
+
+// +kubebuilder:validation:Enum="AllowAll";"FromAlertmanagerConfigMatcherStrategy";"DenyAll"
+type AlertmanagerConfigFileSystemMode string
+
+const (
+	// DenyAllAlertmanagerConfigFileSystemMode ("DenyAll") denies any
+	// AlertmanagerConfig resource which references files from the Alertmanager
+	// container's filesystem.
+	DenyAllAlertmanagerConfigFileSystemMode AlertmanagerConfigFileSystemMode = "DenyAll"
+
+	// AllowAllAlertmanagerConfigFileSystemMode ("AllowAll") allows any
+	// AlertmanagerConfig resource to reference files from the Alertmanager
+	// container's filesystem.
+	AllowAllAlertmanagerConfigFileSystemMode AlertmanagerConfigFileSystemMode = "AllowAll"
+
+	// FromAlertmanagerConfigMatcherStrategyAlertmanagerConfigFileSystemMode
+	// ("FromAlertmanagerConfigMatcherStrategy") uses the
+	// `alertmanagerConfigNamespaceSelector` field to make a decision on
+	// denying/allowing AlertmanagerConfig resources which reference files from
+	// the Alertmanager container's filesystem.
+	FromAlertmanagerConfigMatcherStrategyAlertmanagerConfigFileSystemMode AlertmanagerConfigFileSystemMode = "FromAlertmanagerConfigMatcherStrategy"
 )
 
 // AlertmanagerConfiguration defines the Alertmanager configuration.
@@ -642,6 +692,15 @@ type AlertmanagerWebSpec struct {
 	// +kubebuilder:validation:Minimum:=0
 	// +optional
 	Timeout *uint32 `json:"timeout,omitempty"`
+	// corsOrigin is a fully anchored regular expression matching the origins
+	// allowed to call the API from a browser. This corresponds to the
+	// Alertmanager's `--web.cors.origin` flag.
+	// It requires Alertmanager >= v0.34.2.
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:XValidation:rule="''.matches('^(?:'+self+')$') || !''.matches('^(?:'+self+')$')",message="corsOrigin must be a valid regular expression"
+	// +optional
+	CORSOrigin *string `json:"corsOrigin,omitempty"`
 }
 
 // AlertmanagerLimitsSpec defines the limits command line flags when starting Alertmanager.
@@ -660,6 +719,33 @@ type AlertmanagerLimitsSpec struct {
 	//
 	// +optional
 	MaxPerSilenceBytes *ByteSize `json:"maxPerSilenceBytes,omitempty"`
+}
+
+// AutoGomemlimitSpec defines the automatic GOMEMLIMIT command line flags when starting Alertmanager.
+// It requires Alertmanager >= v0.35.0.
+// +k8s:openapi-gen=true
+// +kubebuilder:validation:XValidation:rule="!has(self.ratio) || (quantity(string(self.ratio)).compareTo(quantity('0')) > 0 && quantity(string(self.ratio)).compareTo(quantity('1')) <= 0)",message="ratio must be greater than 0 and less than or equal to 1"
+type AutoGomemlimitSpec struct {
+	// enabled sets GOMEMLIMIT to match the
+	// Linux container or system memory limit. This corresponds to the
+	// Alertmanager's `--auto-gomemlimit` flag.
+	//
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"` // nolint:kubeapilinter
+	// ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+	// maximum container or system memory. The value must be greater than 0 and
+	// less than or equal to 1. This corresponds to the Alertmanager's
+	// `--auto-gomemlimit.ratio` flag.
+	//
+	// +optional
+	Ratio *resource.Quantity `json:"ratio,omitempty"`
+	// refreshInterval defines the interval at which to re-detect the container
+	// or system memory limit and update GOMEMLIMIT accordingly. It is useful
+	// when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+	// This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
+	//
+	// +optional
+	RefreshInterval *GoDuration `json:"refreshInterval,omitempty"`
 }
 
 // GlobalSMTPConfig configures global SMTP parameters.

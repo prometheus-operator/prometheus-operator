@@ -279,6 +279,15 @@ type ScrapeConfigSpec struct {
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	FallbackScrapeProtocol *v1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	//
+	// +optional
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"` // nolint:kubeapilinter
 	// honorTimestamps defines whether Prometheus preserves the timestamps
 	// when exposed by the target.
 	// +optional

@@ -28,6 +28,12 @@ type AlertmanagerWebSpecApplyConfiguration struct {
 	// timeout for HTTP requests. This corresponds to the Alertmanager's
 	// `--web.timeout` flag.
 	Timeout *uint32 `json:"timeout,omitempty"`
+	// corsOrigin is a fully anchored regular expression matching the origins
+	// allowed to call the API from a browser. This corresponds to the
+	// Alertmanager's `--web.cors.origin` flag.
+	// It requires Alertmanager >= v0.34.2.
+	//
+	CORSOrigin *string `json:"corsOrigin,omitempty"`
 }
 
 // AlertmanagerWebSpecApplyConfiguration constructs a declarative configuration of the AlertmanagerWebSpec type for use with
@@ -65,5 +71,13 @@ func (b *AlertmanagerWebSpecApplyConfiguration) WithGetConcurrency(value uint32)
 // If called multiple times, the Timeout field is set to the value of the last call.
 func (b *AlertmanagerWebSpecApplyConfiguration) WithTimeout(value uint32) *AlertmanagerWebSpecApplyConfiguration {
 	b.Timeout = &value
+	return b
+}
+
+// WithCORSOrigin sets the CORSOrigin field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the CORSOrigin field is set to the value of the last call.
+func (b *AlertmanagerWebSpecApplyConfiguration) WithCORSOrigin(value string) *AlertmanagerWebSpecApplyConfiguration {
+	b.CORSOrigin = &value
 	return b
 }

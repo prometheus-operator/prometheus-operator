@@ -22,14 +22,14 @@ import (
 
 const (
 	// DefaultAlertmanagerVersion is a default image tag for the prometheus alertmanager.
-	DefaultAlertmanagerVersion = "v0.34.0"
+	DefaultAlertmanagerVersion = "v0.35.0"
 	// DefaultAlertmanagerBaseImage is a base container registry address for the prometheus alertmanager.
 	DefaultAlertmanagerBaseImage = "quay.io/prometheus/alertmanager"
 	// DefaultAlertmanagerImage is a default image pulling address for the prometheus alertmanager.
 	DefaultAlertmanagerImage = DefaultAlertmanagerBaseImage + ":" + DefaultAlertmanagerVersion
 
 	// DefaultThanosVersion is a default image tag for the Thanos long-term prometheus storage collector.
-	DefaultThanosVersion = "v0.42.4"
+	DefaultThanosVersion = "v0.42.5"
 	// DefaultThanosBaseImage is a base container registry address for the Thanos long-term prometheus
 	// storage collector.
 	DefaultThanosBaseImage = "quay.io/thanos/thanos"
@@ -117,7 +117,14 @@ var (
 		"v3.13.2",
 		"v3.13.3",
 		"v3.13.4",
+		"v3.13.5",
 		"v3.14.0",
+		// Notice: v3.15.x built with Go 1.27 lose HTTP/2 ALPN negotiation over
+		// TLS and fall back to HTTP/1.1, fixed in v3.16.0.
+		// See https://github.com/prometheus/prometheus/issues/19807
+		"v3.15.0",
+		"v3.15.1",
+		"v3.16.0",
 	}
 )
 

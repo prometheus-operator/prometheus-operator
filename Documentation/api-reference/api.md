@@ -882,6 +882,34 @@ process incoming alerts.</p>
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigFileSystemMode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigFileSystemMode">
+AlertmanagerConfigFileSystemMode
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>alertmanagerConfigFileSystemMode defines how the operator handles
+AlertmanagerConfig resources which have references to the Alertmanager
+container&rsquo;s filesystem (as opposed to secret key references). Users
+controlling the receiver&rsquo;s service may create an AlertmanagerConfig
+resource with a reference to a container&rsquo;s file (for instance using
+<code>botTokenFile</code> for the Telegram receiver) and exfiltrate sensitive
+content from files located in the Alertmanager container.</p>
+<p>Supported values are:
+- &ldquo;DenyAll&rdquo; denies any AlertmanagerConfig resource referencing files from the container&rsquo;s filesystem, non-compliant resources are rejected.
+- &ldquo;FromAlertmanagerConfigMatcherStrategy&rdquo; uses the <code>alertmanagerConfigNamespaceSelector</code> field to make a decision
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;None&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo;
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;OnNamespaceExceptForAlertmanagerNamespace&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo; for the AlertmanagerConfig resources located in the Alertmanager&rsquo;s namespace and &ldquo;DenyAll&rdquo; for all other resources.
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;OnNamespace&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo; for the main AlertmanagerConfig resource (defined in <code>.spec.alertmanagerConfig.name</code>) and &ldquo;DenyAll&rdquo; for all other resources.
+- &ldquo;AllowAll&rdquo; allows any AlertmanagerConfig resource to reference files from the container&rsquo;s filesystem (use with caution).</p>
+<p>By default, the operator uses the &ldquo;FromAlertmanagerConfigMatcherStrategy&rdquo; mode.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -958,6 +986,22 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -1304,6 +1348,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -1728,6 +1787,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -3998,6 +4072,26 @@ namespace only.</p>
 </tr>
 <tr>
 <td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>query</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.QuerySpec">
@@ -4327,6 +4421,12 @@ Among other things, it allows to specify:
 * Authentication credentials to use.
 * Target and metric relabeling.</p>
 <p><code>Prometheus</code> and <code>PrometheusAgent</code> objects select <code>ServiceMonitor</code> objects using label and namespace selectors.</p>
+<p>Service targets that aren&rsquo;t backed by Pods (for instance manually managed
+Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+the service port with <code>port</code> instead of <code>targetPort</code> and <code>filterRunning</code> is
+set to <code>false</code>. Manually created Pods have no such restriction.</p>
+<p>For targets that aren&rsquo;t backed by Pods, you can also consider using the
+<code>ScrapeConfig</code> CRD.</p>
 </div>
 <table>
 <thead>
@@ -4533,6 +4633,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -6086,6 +6201,39 @@ proxies during CONNECT requests.</p>
 <td></td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.AlertmanagerConfigFileSystemMode">AlertmanagerConfigFileSystemMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;AllowAll&#34;</p></td>
+<td><p>AllowAllAlertmanagerConfigFileSystemMode (&ldquo;AllowAll&rdquo;) allows any
+AlertmanagerConfig resource to reference files from the Alertmanager
+container&rsquo;s filesystem.</p>
+</td>
+</tr><tr><td><p>&#34;DenyAll&#34;</p></td>
+<td><p>DenyAllAlertmanagerConfigFileSystemMode (&ldquo;DenyAll&rdquo;) denies any
+AlertmanagerConfig resource which references files from the Alertmanager
+container&rsquo;s filesystem.</p>
+</td>
+</tr><tr><td><p>&#34;FromAlertmanagerConfigMatcherStrategy&#34;</p></td>
+<td><p>FromAlertmanagerConfigMatcherStrategyAlertmanagerConfigFileSystemMode
+(&ldquo;FromAlertmanagerConfigMatcherStrategy&rdquo;) uses the
+<code>alertmanagerConfigNamespaceSelector</code> field to make a decision on
+denying/allowing AlertmanagerConfig resources which reference files from
+the Alertmanager container&rsquo;s filesystem.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.AlertmanagerConfigMatcherStrategy">AlertmanagerConfigMatcherStrategy
 </h3>
 <p>
@@ -7559,6 +7707,34 @@ process incoming alerts.</p>
 </tr>
 <tr>
 <td>
+<code>alertmanagerConfigFileSystemMode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AlertmanagerConfigFileSystemMode">
+AlertmanagerConfigFileSystemMode
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>alertmanagerConfigFileSystemMode defines how the operator handles
+AlertmanagerConfig resources which have references to the Alertmanager
+container&rsquo;s filesystem (as opposed to secret key references). Users
+controlling the receiver&rsquo;s service may create an AlertmanagerConfig
+resource with a reference to a container&rsquo;s file (for instance using
+<code>botTokenFile</code> for the Telegram receiver) and exfiltrate sensitive
+content from files located in the Alertmanager container.</p>
+<p>Supported values are:
+- &ldquo;DenyAll&rdquo; denies any AlertmanagerConfig resource referencing files from the container&rsquo;s filesystem, non-compliant resources are rejected.
+- &ldquo;FromAlertmanagerConfigMatcherStrategy&rdquo; uses the <code>alertmanagerConfigNamespaceSelector</code> field to make a decision
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;None&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo;
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;OnNamespaceExceptForAlertmanagerNamespace&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo; for the AlertmanagerConfig resources located in the Alertmanager&rsquo;s namespace and &ldquo;DenyAll&rdquo; for all other resources.
+- When <code>alertmanagerConfigNamespaceSelector</code> is &ldquo;OnNamespace&rdquo;, it is equivalent to &ldquo;AllowAll&rdquo; for the main AlertmanagerConfig resource (defined in <code>.spec.alertmanagerConfig.name</code>) and &ldquo;DenyAll&rdquo; for all other resources.
+- &ldquo;AllowAll&rdquo; allows any AlertmanagerConfig resource to reference files from the container&rsquo;s filesystem (use with caution).</p>
+<p>By default, the operator uses the &ldquo;FromAlertmanagerConfigMatcherStrategy&rdquo; mode.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>minReadySeconds</code><br/>
 <em>
 int32
@@ -7635,6 +7811,22 @@ AlertmanagerLimitsSpec
 <td>
 <em>(Optional)</em>
 <p>limits defines the limits command line flags when starting Alertmanager.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>autoGomemlimit</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">
+AutoGomemlimitSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+starting Alertmanager.</p>
+<p>It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 <tr>
@@ -7928,6 +8120,21 @@ uint32
 <code>--web.timeout</code> flag.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>corsOrigin</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>corsOrigin is a fully anchored regular expression matching the origins
+allowed to call the API from a browser. This corresponds to the
+Alertmanager&rsquo;s <code>--web.cors.origin</code> flag.
+It requires Alertmanager &gt;= v0.34.2.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="monitoring.coreos.com/v1.ArbitraryFSAccessThroughSMsConfig">ArbitraryFSAccessThroughSMsConfig
@@ -8099,6 +8306,73 @@ string
 <td>
 <em>(Optional)</em>
 <p>credentialsFile defines the file to read a secret from, mutually exclusive with <code>credentials</code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+</p>
+<div>
+<p>AutoGomemlimitSpec defines the automatic GOMEMLIMIT command line flags when starting Alertmanager.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>enabled sets GOMEMLIMIT to match the
+Linux container or system memory limit. This corresponds to the
+Alertmanager&rsquo;s <code>--auto-gomemlimit</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ratio</code><br/>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity">
+k8s.io/apimachinery/pkg/api/resource.Quantity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+maximum container or system memory. The value must be greater than 0 and
+less than or equal to 1. This corresponds to the Alertmanager&rsquo;s
+<code>--auto-gomemlimit.ratio</code> flag.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>refreshInterval</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoDuration">
+GoDuration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>refreshInterval defines the interval at which to re-detect the container
+or system memory limit and update GOMEMLIMIT accordingly. It is useful
+when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+This corresponds to the Alertmanager&rsquo;s <code>--auto-gomemlimit.refresh-interval</code> flag.</p>
 </td>
 </tr>
 </tbody>
@@ -11164,6 +11438,8 @@ k8s.io/apimachinery/pkg/util/intstr.IntOrString
 by the Service.
 If a name, it matches against <code>.spec.containers[].ports[].name</code> of the Pods.
 If a number, it matches against <code>.spec.containers[].ports[].containerPort</code> of the Pods.</p>
+<p>Because it relies on Pod metadata, endpoints which aren&rsquo;t backed by Pods
+are never scraped when <code>targetPort</code> is used.</p>
 </td>
 </tr>
 <tr>
@@ -12221,7 +12497,7 @@ URL
 <h3 id="monitoring.coreos.com/v1.GoDuration">GoDuration
 (<code>string</code> alias)</h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.AlertmanagerSpec">AlertmanagerSpec</a>, <a href="#monitoring.coreos.com/v1.AutoGomemlimitSpec">AutoGomemlimitSpec</a>)
 </p>
 <div>
 <p>GoDuration is a valid time duration that can be parsed by Go&rsquo;s time.ParseDuration() function.
@@ -14526,6 +14802,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>labelLimit</code><br/>
 <em>
 int64
@@ -14918,6 +15209,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -17487,6 +17793,26 @@ namespace only.</p>
 </tr>
 <tr>
 <td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>query</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1.QuerySpec">
@@ -20044,6 +20370,21 @@ ScrapeProtocol
 <em>(Optional)</em>
 <p>fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.</p>
 <p>It requires Prometheus &gt;= v3.0.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
 </td>
 </tr>
 <tr>
@@ -25906,6 +26247,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorTimestamps</code><br/>
 <em>
 bool
@@ -29845,7 +30201,7 @@ e.g: <code>metadata.name=foobar</code></p>
 <h3 id="monitoring.coreos.com/v1alpha1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1alpha1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1alpha1.Route">Route</a>, <a href="#monitoring.coreos.com/v1alpha1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -35384,6 +35740,21 @@ These appear as buttons that users can click to trigger responses.</p>
 </tr>
 <tr>
 <td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1alpha1.HTTPConfig">
@@ -35612,6 +35983,23 @@ route by the Prometheus operator.</p>
 <td>
 <em>(Optional)</em>
 <p>activeTimeIntervals is a list of MuteTimeInterval names when this route should be active.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1alpha1.KeyValue">
+[]KeyValue
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
+<p>It requires Alertmanager &gt;= 0.34.0.</p>
 </td>
 </tr>
 </tbody>
@@ -36496,6 +36884,21 @@ ScrapeProtocol
 </tr>
 <tr>
 <td>
+<code>extraScrapeMetrics</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>extraScrapeMetrics defines whether to store additional time series for each scrape:
+<code>scrape_timeout_seconds</code>, <code>scrape_sample_limit</code> and <code>scrape_body_size_bytes</code>.
+These metrics help monitor how close targets are to their configured limits.</p>
+<p>It requires Prometheus &gt;= v3.10.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>honorTimestamps</code><br/>
 <em>
 bool
@@ -37371,6 +37774,21 @@ bool
 <p>updateMessage enables updating existing Slack messages instead of creating new ones
 when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 </tbody>
@@ -39391,7 +39809,7 @@ for the inhibition to take effect. This ensures related alerts are properly grou
 <h3 id="monitoring.coreos.com/v1beta1.KeyValue">KeyValue
 </h3>
 <p>
-(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1beta1.EmailConfig">EmailConfig</a>, <a href="#monitoring.coreos.com/v1beta1.OpsGenieConfig">OpsGenieConfig</a>, <a href="#monitoring.coreos.com/v1beta1.PagerDutyConfig">PagerDutyConfig</a>, <a href="#monitoring.coreos.com/v1beta1.Route">Route</a>, <a href="#monitoring.coreos.com/v1beta1.VictorOpsConfig">VictorOpsConfig</a>)
 </p>
 <div>
 <p>KeyValue defines a (key, value) tuple.</p>
@@ -41228,6 +41646,21 @@ These appear as buttons that users can click to trigger responses.</p>
 </tr>
 <tr>
 <td>
+<code>messageText</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>messageText is a top-level message text, shown above the attachment
+and used in desktop and push notifications.
+If unset, notifications show only a generic placeholder.
+It requires Alertmanager &gt;= v0.35.0.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>httpConfig</code><br/>
 <em>
 <a href="#monitoring.coreos.com/v1beta1.HTTPConfig">
@@ -41456,6 +41889,23 @@ route by the Prometheus operator.</p>
 <td>
 <em>(Optional)</em>
 <p>activeTimeIntervals is a list of TimeInterval names when this route should be active.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1beta1.KeyValue">
+[]KeyValue
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>labels defines the list of labels that will be attached to the alerts matching this route.
+They can be inherited by child routes and can be overridden by child routes.
+The values support template expressions.</p>
+<p>It requires Alertmanager &gt;= 0.34.0.</p>
 </td>
 </tr>
 </tbody>
@@ -42116,6 +42566,21 @@ bool
 <p>updateMessage enables updating existing Slack messages instead of creating new ones
 when alert state changes. Please note that Webhook URLs do not support updates.
 It requires Alertmanager &gt;= v0.32.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>postUpdatesToThread</code><br/>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>postUpdatesToThread posts subsequent notifications of an alert group as
+replies in the thread of the initial message instead of new channel messages.
+Please note that Webhook URLs do not support threads.
+It requires Alertmanager &gt;= v0.35.0.</p>
 </td>
 </tr>
 </tbody>

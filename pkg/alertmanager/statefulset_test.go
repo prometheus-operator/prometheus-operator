@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -82,7 +83,7 @@ func TestStatefulSetLabelingAndAnnotations(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "abc", &operator.ShardedSecret{})
+	}, defaultTestConfig, "abc", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -108,7 +109,7 @@ func TestStatefulSetStoragePath(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -137,7 +138,7 @@ func TestPodLabelsAnnotations(t *testing.T) {
 				Labels:      labels,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	valLabels, ok := sset.Spec.Template.ObjectMeta.Labels["testlabel"]
@@ -158,7 +159,7 @@ func TestPodLabelsShouldNotBeSelectorLabels(t *testing.T) {
 				Labels: labels,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -195,7 +196,7 @@ func TestStatefulSetPVC(t *testing.T) {
 				VolumeClaimTemplate: pvc,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetPvc := sset.Spec.VolumeClaimTemplates[0]
@@ -224,7 +225,7 @@ func TestStatefulEmptyDir(t *testing.T) {
 				EmptyDir: &emptyDir,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -261,7 +262,7 @@ func TestStatefulSetEphemeral(t *testing.T) {
 				Ephemeral: &ephemeral,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 	ssetVolumes := sset.Spec.Template.Spec.Volumes
@@ -274,7 +275,7 @@ func TestListenLocal(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ListenLocal: true,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	found := false
@@ -323,7 +324,7 @@ func TestListenTLS(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	expectedProbeHandler := func(probePath string) corev1.ProbeHandler {
@@ -398,7 +399,7 @@ func TestMakeStatefulSetSpecSingleDoubleDashedArgs(t *testing.T) {
 		replicas := int32(3)
 		a.Spec.Replicas = &replicas
 
-		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -415,7 +416,7 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -466,7 +467,7 @@ func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -512,12 +513,166 @@ func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Web = ts.web
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
 			got := slices.ContainsFunc(args, containsString("-web.get-concurrency"))
 			require.Equal(t, ts.expectGetConcurrencyArg, got, "expected alertmanager args %v web.get-concurrency to be %v but is %v", args, ts.expectGetConcurrencyArg, got)
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecWebCORSOrigin(t *testing.T) {
+	tt := []struct {
+		scenario           string
+		version            string
+		web                *monitoringv1.AlertmanagerWebSpec
+		expectCORSOrigin   bool
+		expectCORSArgValue string
+	}{{
+		scenario:         "no cors origin by default",
+		version:          "v0.34.2",
+		web:              nil,
+		expectCORSOrigin: false,
+	}, {
+		scenario: "no cors origin for old version",
+		version:  "v0.34.1",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			CORSOrigin: new(string(`https://example\.com`)),
+		},
+		expectCORSOrigin: false,
+	}, {
+		scenario: "cors origin arg set if specified",
+		version:  "v0.34.2",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			CORSOrigin: new(string(`https://example\.com`)),
+		},
+		expectCORSOrigin:   true,
+		expectCORSArgValue: `--web.cors.origin=https://example\.com`,
+	}}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = new(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Web = ts.web
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			got := slices.ContainsFunc(args, containsString("-web.cors.origin"))
+			require.Equal(t, ts.expectCORSOrigin, got, "expected alertmanager args %v web.cors.origin to be %v but is %v", args, ts.expectCORSOrigin, got)
+			if ts.expectCORSOrigin {
+				require.Contains(t, args, ts.expectCORSArgValue)
+			}
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecAutoGomemlimit(t *testing.T) {
+	tt := []struct {
+		scenario       string
+		version        string
+		autoGomemlimit *monitoringv1.AutoGomemlimitSpec
+		expectedArgs   []string
+	}{
+		{
+			scenario:       "no auto-gomemlimit args by default",
+			version:        "v0.35.0",
+			autoGomemlimit: nil,
+			expectedArgs:   nil,
+		},
+		{
+			scenario: "no auto-gomemlimit args for old version",
+			version:  "v0.34.2",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(true),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: nil,
+		},
+		{
+			scenario: "no auto-gomemlimit args when not enabled",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: nil,
+		},
+		{
+			scenario: "auto-gomemlimit explicitly disabled",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(false),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: []string{"--no-auto-gomemlimit"},
+		},
+		{
+			scenario: "auto-gomemlimit enabled without ratio and refresh interval",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled: new(true),
+			},
+			expectedArgs: []string{"--auto-gomemlimit"},
+		},
+		{
+			scenario: "auto-gomemlimit with ratio and refresh interval",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled:         new(true),
+				Ratio:           new(resource.MustParse("0.7")),
+				RefreshInterval: new(monitoringv1.GoDuration("5m")),
+			},
+			expectedArgs: []string{
+				"--auto-gomemlimit",
+				"--auto-gomemlimit.ratio=0.7",
+				"--auto-gomemlimit.refresh-interval=5m",
+			},
+		},
+		{
+			// The API server stores quantities in canonical form ("0.7" is
+			// returned as "700m"), the rendered flag value must stay a plain
+			// decimal number.
+			scenario: "auto-gomemlimit ratio in canonical quantity form",
+			version:  "v0.35.0",
+			autoGomemlimit: &monitoringv1.AutoGomemlimitSpec{
+				Enabled: new(true),
+				Ratio:   new(resource.MustParse("700m")),
+			},
+			expectedArgs: []string{
+				"--auto-gomemlimit",
+				"--auto-gomemlimit.ratio=0.7",
+			},
+		},
+	}
+
+	for _, ts := range tt {
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = new(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.AutoGomemlimit = ts.autoGomemlimit
+
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			args := ss.Template.Spec.Containers[0].Args
+			gotArgs := make([]string, 0)
+			for _, arg := range args {
+				if strings.Contains(arg, "auto-gomemlimit") {
+					gotArgs = append(gotArgs, arg)
+				}
+			}
+			require.ElementsMatch(t, ts.expectedArgs, gotArgs, "expected alertmanager args %v to contain %v but got %v", args, ts.expectedArgs, gotArgs)
 		})
 	}
 }
@@ -559,7 +714,7 @@ func TestMakeStatefulSetSpecMaxSilences(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -606,7 +761,7 @@ func TestMakeStatefulSetSpecMaxPerSilenceBytes(t *testing.T) {
 			a.Spec.Version = ts.version
 			a.Spec.Limits = ts.limits
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -629,7 +784,7 @@ func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 		},
 	}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	found := false
@@ -660,7 +815,7 @@ func TestMakeStatefulSetSpecPeersWithClusterDomain(t *testing.T) {
 	configWithClusterDomain := defaultTestConfig
 	configWithClusterDomain.ClusterDomain = "custom.cluster"
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, configWithClusterDomain, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -714,7 +869,7 @@ func TestMakeStatefulSetSpecPeerName(t *testing.T) {
 				},
 			}
 
-			statefulSet, err := makeStatefulSetSpec(nil, &a, Config{}, &operator.ShardedSecret{})
+			statefulSet, err := makeStatefulSetSpec(nil, &a, Config{}, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -754,7 +909,7 @@ func TestMakeStatefulSetSpecWithCustomServiceName(t *testing.T) {
 	cfg := defaultTestConfig
 	cfg.ClusterDomain = "cluster.local"
 
-	spec, err := makeStatefulSetSpec(nil, am, cfg, &operator.ShardedSecret{})
+	spec, err := makeStatefulSetSpec(nil, am, cfg, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	// Check StatefulSet.Spec.ServiceName
@@ -783,7 +938,7 @@ func TestMakeStatefulSetSpecWithDefaultServiceName(t *testing.T) {
 	cfg := defaultTestConfig
 	cfg.ClusterDomain = "cluster.local"
 
-	spec, err := makeStatefulSetSpec(nil, am, cfg, &operator.ShardedSecret{})
+	spec, err := makeStatefulSetSpec(nil, am, cfg, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	defaultServiceName := "alertmanager-operated"
@@ -804,7 +959,7 @@ func TestMakeStatefulSetSpecAdditionalPeers(t *testing.T) {
 	a.Spec.Replicas = &replicas
 	a.Spec.AdditionalPeers = []string{"example.com"}
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	peerFound := false
@@ -837,7 +992,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 			},
 		},
 	}
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	var foundConfigReloaderVM, foundVM, foundV bool
@@ -891,7 +1046,7 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			Secrets: secrets,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	secret1Found := false
@@ -941,7 +1096,7 @@ func TestAlertManagerDefaultBaseImageFlag(t *testing.T) {
 			Labels:      labels,
 			Annotations: annotations,
 		},
-	}, alertManagerBaseImageConfig, "", &operator.ShardedSecret{})
+	}, alertManagerBaseImageConfig, "", "", &operator.ShardedSecret{})
 
 	require.NoError(t, err)
 
@@ -957,7 +1112,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
@@ -971,7 +1126,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		image := sset.Spec.Template.Spec.Containers[0].Image
@@ -987,7 +1142,7 @@ func TestSHAAndTagAndVersion(t *testing.T) {
 				Version: "v0.15.3",
 				Image:   &image,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		resultImage := sset.Spec.Template.Spec.Containers[0].Image
@@ -1010,7 +1165,7 @@ func TestRetention(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				Retention: test.specRetention,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		amArgs := sset.Spec.Template.Spec.Containers[0].Args
@@ -1136,7 +1291,7 @@ func TestAdditionalConfigMap(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			ConfigMaps: []string{"test-cm1"},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	cmVolumeFound := false
@@ -1168,7 +1323,7 @@ func TestSidecarResources(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{},
 		}
 
-		sset, err := makeStatefulSet(nil, am, testConfig, "", &operator.ShardedSecret{})
+		sset, err := makeStatefulSet(nil, am, testConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 		return sset
 	})
@@ -1177,7 +1332,7 @@ func TestSidecarResources(t *testing.T) {
 func TestTerminationPolicy(t *testing.T) {
 	sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 		Spec: monitoringv1.AlertmanagerSpec{},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	for _, c := range sset.Spec.Template.Spec.Containers {
@@ -1193,7 +1348,7 @@ func TestClusterListenAddressForSingleReplica(t *testing.T) {
 
 	a.Spec.ForceEnableClusterMode = false
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -1208,7 +1363,7 @@ func TestClusterListenAddressForSingleReplicaWithForceEnableClusterMode(t *testi
 	a.Spec.Replicas = &replicas
 	a.Spec.ForceEnableClusterMode = true
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -1230,7 +1385,7 @@ func TestClusterListenAddressForMultiReplica(t *testing.T) {
 	a.Spec.Version = operator.DefaultAlertmanagerVersion
 	a.Spec.Replicas = &replicas
 
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	amArgs := statefulSet.Template.Spec.Containers[0].Args
@@ -1252,13 +1407,13 @@ func TestExpectStatefulSetMinReadySeconds(t *testing.T) {
 	a.Spec.Replicas = new(int32(3))
 
 	// assert defaults to zero if nil
-	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(0), statefulSet.MinReadySeconds)
 
 	// assert set correctly if not nil
 	a.Spec.MinReadySeconds = new(int32(5))
-	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+	statefulSet, err = makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 	require.Equal(t, int32(5), statefulSet.MinReadySeconds)
 }
@@ -1325,7 +1480,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			HostUsers:          new(true),
 			HostNetwork:        hostNetwork,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, sset.Spec.Template.Spec.NodeSelector, nodeSelector, "expected node selector to match, want %v, got %v", nodeSelector, sset.Spec.Template.Spec.NodeSelector)
@@ -1354,7 +1509,7 @@ func TestPodHostNetworkConfig(t *testing.T) {
 		Spec: monitoringv1.AlertmanagerSpec{
 			HostNetwork: true,
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.True(t, sset.Spec.Template.Spec.HostNetwork, "expected hostNetwork to be true")
@@ -1363,7 +1518,7 @@ func TestPodHostNetworkConfig(t *testing.T) {
 }
 
 func TestConfigReloader(t *testing.T) {
-	baseSet, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{}, defaultTestConfig, "", &operator.ShardedSecret{})
+	baseSet, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	expectedArgsConfigReloader := []string{
@@ -1402,7 +1557,7 @@ func TestAutomountServiceAccountToken(t *testing.T) {
 			Spec: monitoringv1.AlertmanagerSpec{
 				AutomountServiceAccountToken: &automountServiceAccountToken,
 			},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 		require.Equal(t, *sset.Spec.Template.Spec.AutomountServiceAccountToken, automountServiceAccountToken, "AutomountServiceAccountToken not found")
 	}
@@ -1446,7 +1601,7 @@ func TestClusterLabel(t *testing.T) {
 				a.Spec.ClusterLabel = &ts.customClusterLabel
 			}
 
-			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			ss, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			args := ss.Template.Spec.Containers[0].Args
@@ -1550,7 +1705,7 @@ func TestMakeStatefulSetSpecTemplatesUniqueness(t *testing.T) {
 	logger := slog.New(slog.DiscardHandler)
 
 	for _, test := range tt {
-		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, &operator.ShardedSecret{})
+		statefulSpec, err := makeStatefulSetSpec(logger, &test.a, defaultTestConfig, "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 		volumes := statefulSpec.Template.Spec.Volumes
 		for _, volume := range volumes {
@@ -1602,7 +1757,7 @@ func TestEnableFeatures(t *testing.T) {
 					Replicas:       new(int32(1)),
 					EnableFeatures: test.features,
 				},
-			}, defaultTestConfig, &operator.ShardedSecret{})
+			}, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			expectedFeatures := make([]string, 0)
@@ -1627,7 +1782,7 @@ func TestValidateAdditionalArgs(t *testing.T) {
 			Replicas:       new(int32(1)),
 			AdditionalArgs: additionalArgs,
 		},
-	}, defaultTestConfig, &operator.ShardedSecret{})
+	}, defaultTestConfig, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	actualArgs := statefulSpec.Template.Spec.Containers[0].Args
@@ -1653,7 +1808,7 @@ func TestStatefulSetDNSPolicyAndDNSConfig(t *testing.T) {
 				},
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, corev1.DNSClusterFirst, sset.Spec.Template.Spec.DNSPolicy, "expected dns policy to match")
@@ -1679,7 +1834,7 @@ func TestPersistentVolumeClaimRetentionPolicy(t *testing.T) {
 				WhenScaled:  appsv1.DeletePersistentVolumeClaimRetentionPolicyType,
 			},
 		},
-	}, defaultTestConfig, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	if sset.Spec.PersistentVolumeClaimRetentionPolicy.WhenDeleted != appsv1.DeletePersistentVolumeClaimRetentionPolicyType {
@@ -1705,7 +1860,7 @@ func TestStatefulSetEnableServiceLinks(t *testing.T) {
 		sset, err := makeStatefulSet(nil, &monitoringv1.Alertmanager{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec:       monitoringv1.AlertmanagerSpec{EnableServiceLinks: test.expectedEnableService},
-		}, defaultTestConfig, "", &operator.ShardedSecret{})
+		}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 		require.NoError(t, err)
 
 		if test.expectedEnableService != nil {
@@ -1740,7 +1895,7 @@ func TestStatefulSetPodManagementPolicy(t *testing.T) {
 				Spec: monitoringv1.AlertmanagerSpec{
 					PodManagementPolicy: tc.podManagementPolicy,
 				},
-			}, defaultTestConfig, "", &operator.ShardedSecret{})
+			}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 			require.NoError(t, err)
 			require.Equal(t, tc.exp, sset.Spec.PodManagementPolicy)
@@ -1795,7 +1950,7 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 				Spec: monitoringv1.AlertmanagerSpec{
 					UpdateStrategy: tc.updateStrategy,
 				},
-			}, defaultTestConfig, "", &operator.ShardedSecret{})
+			}, defaultTestConfig, "", "", &operator.ShardedSecret{})
 
 			require.NoError(t, err)
 			require.Equal(t, tc.exp, sset.Spec.UpdateStrategy)
@@ -1848,7 +2003,7 @@ func TestMakeStatefulSetSpecDispatchStartDelay(t *testing.T) {
 				},
 			}
 
-			statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, &operator.ShardedSecret{})
+			statefulSet, err := makeStatefulSetSpec(nil, &a, defaultTestConfig, "", &operator.ShardedSecret{})
 			require.NoError(t, err)
 
 			if tc.expContains != "" {

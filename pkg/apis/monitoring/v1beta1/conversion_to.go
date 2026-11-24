@@ -40,6 +40,7 @@ func convertRouteTo(in *Route) (*v1alpha1.Route, error) {
 		Matchers:            convertMatchersTo(in.Matchers),
 		MuteTimeIntervals:   in.MuteTimeIntervals,
 		ActiveTimeIntervals: in.ActiveTimeIntervals,
+		Labels:              convertKeyValuesTo(in.Labels),
 	}
 
 	// Deserialize child routes to convert them to v1alpha1 and serialize back.
@@ -150,6 +151,9 @@ func convertHTTPConfigTo(in *HTTPConfig) *v1alpha1.HTTPConfig {
 }
 
 func convertKeyValuesTo(in []KeyValue) []v1alpha1.KeyValue {
+	if in == nil {
+		return nil
+	}
 	out := make([]v1alpha1.KeyValue, len(in))
 
 	for i := range in {
@@ -321,6 +325,7 @@ func convertRocketchatConfigTo(in RocketChatConfig) v1alpha1.RocketChatConfig {
 		ThumbURL:     in.ThumbURL,
 		LinkNames:    in.LinkNames,
 		Actions:      convertRocketChatActionConfigsTo(in.Actions),
+		MessageText:  in.MessageText,
 		HTTPConfig:   convertHTTPConfigTo(in.HTTPConfig),
 	}
 }
@@ -366,31 +371,32 @@ func convertSlackActionsTo(in []SlackAction) []v1alpha1.SlackAction {
 
 func convertSlackConfigTo(in SlackConfig) v1alpha1.SlackConfig {
 	return v1alpha1.SlackConfig{
-		SendResolved:  in.SendResolved,
-		APIURL:        convertSecretKeySelectorTo(in.APIURL),
-		Channel:       in.Channel,
-		Username:      in.Username,
-		Color:         in.Color,
-		Title:         in.Title,
-		TitleLink:     in.TitleLink,
-		Pretext:       in.Pretext,
-		Text:          in.Text,
-		Fields:        convertSlackFieldsTo(in.Fields),
-		ShortFields:   in.ShortFields,
-		Footer:        in.Footer,
-		Fallback:      in.Fallback,
-		CallbackID:    in.CallbackID,
-		IconEmoji:     in.IconEmoji,
-		IconURL:       in.IconURL,
-		ImageURL:      in.ImageURL,
-		ThumbURL:      in.ThumbURL,
-		LinkNames:     in.LinkNames,
-		MrkdwnIn:      in.MrkdwnIn,
-		Actions:       convertSlackActionsTo(in.Actions),
-		HTTPConfig:    convertHTTPConfigTo(in.HTTPConfig),
-		Timeout:       in.Timeout,
-		MessageText:   in.MessageText,
-		UpdateMessage: in.UpdateMessage,
+		SendResolved:        in.SendResolved,
+		APIURL:              convertSecretKeySelectorTo(in.APIURL),
+		Channel:             in.Channel,
+		Username:            in.Username,
+		Color:               in.Color,
+		Title:               in.Title,
+		TitleLink:           in.TitleLink,
+		Pretext:             in.Pretext,
+		Text:                in.Text,
+		Fields:              convertSlackFieldsTo(in.Fields),
+		ShortFields:         in.ShortFields,
+		Footer:              in.Footer,
+		Fallback:            in.Fallback,
+		CallbackID:          in.CallbackID,
+		IconEmoji:           in.IconEmoji,
+		IconURL:             in.IconURL,
+		ImageURL:            in.ImageURL,
+		ThumbURL:            in.ThumbURL,
+		LinkNames:           in.LinkNames,
+		MrkdwnIn:            in.MrkdwnIn,
+		Actions:             convertSlackActionsTo(in.Actions),
+		HTTPConfig:          convertHTTPConfigTo(in.HTTPConfig),
+		Timeout:             in.Timeout,
+		MessageText:         in.MessageText,
+		UpdateMessage:       in.UpdateMessage,
+		PostUpdatesToThread: in.PostUpdatesToThread,
 	}
 }
 

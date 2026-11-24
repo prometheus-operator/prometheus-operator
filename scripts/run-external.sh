@@ -134,6 +134,7 @@ run_operator() {
 	run ./operator \
 		--repair-policy-for-statefulsets="$REPAIR_POLICY" \
 		--as="$IMPERSONATE_USER" \
+		--disable-pprof \
 		--apiserver="$API_SERVER" \
 		--ca-file="$CA_FILE" \
 		--cert-file="$CERT_FILE" \

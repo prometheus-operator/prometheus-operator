@@ -432,6 +432,7 @@
     "nattapong",
     "AWSHTTP",
     "nodev",
-    "nosuid"
+    "nosuid",
+    "distroless"
   ]
 }

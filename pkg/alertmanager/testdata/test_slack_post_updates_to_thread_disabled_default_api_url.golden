@@ -1,0 +1,5 @@
+receivers:
+- name: ""
+  slack_configs:
+  - post_updates_to_thread: false
+templates: []

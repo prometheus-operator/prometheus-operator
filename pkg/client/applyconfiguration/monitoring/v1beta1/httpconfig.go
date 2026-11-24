@@ -46,12 +46,14 @@ type HTTPConfigApplyConfiguration struct {
 	TLSConfig *v1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
 	// proxyURL defines an optional proxy URL for HTTP requests.
 	// If defined, this field takes precedence over `proxyUrl`.
+	//
 	ProxyURLOriginal                 *string `json:"proxyURL,omitempty"`
 	v1.ProxyConfigApplyConfiguration `json:""`
 	// followRedirects defines whether HTTP requests follow HTTP 3xx redirects.
 	// When true, the client will automatically follow redirect responses.
 	FollowRedirects *bool `json:"followRedirects,omitempty"`
 	// enableHttp2 can be used to disable HTTP2.
+	//
 	EnableHTTP2 *bool `json:"enableHttp2,omitempty"`
 	// httpHeaders can be used to specify HTTP headers.
 	HTTPHeaders []v1.HTTPHeaderApplyConfiguration `json:"httpHeaders,omitempty"`

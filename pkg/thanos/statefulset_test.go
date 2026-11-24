@@ -904,6 +904,8 @@ func TestPodTemplateConfig(t *testing.T) {
 	schedulerName := "my-scheduler"
 	hostUsers := true
 
+	// thanos-ruler sset will only have a configReloader side car
+	// if it has to mount a ConfigMap
 	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
 		ObjectMeta: metav1.ObjectMeta{},
 		Spec: monitoringv1.ThanosRulerSpec{
@@ -921,7 +923,7 @@ func TestPodTemplateConfig(t *testing.T) {
 			SchedulerName:      schedulerName,
 			HostUsers:          new(true),
 		},
-	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	}, defaultTestConfig, []string{"my-configmap"}, "", &operator.ShardedSecret{})
 	require.NoError(t, err)
 
 	require.Equal(t, nodeSelector, sset.Spec.Template.Spec.NodeSelector)
@@ -937,10 +939,12 @@ func TestPodTemplateConfig(t *testing.T) {
 	for _, initContainer := range sset.Spec.Template.Spec.InitContainers {
 		require.Equal(t, imagePullPolicy, initContainer.ImagePullPolicy)
 	}
+	require.Len(t, sset.Spec.Template.Spec.Containers, 2)
+	require.Equal(t, "config-reloader", sset.Spec.Template.Spec.Containers[1].Name)
 	for _, container := range sset.Spec.Template.Spec.Containers {
 		require.Equal(t, imagePullPolicy, container.ImagePullPolicy)
 	}
-	require.Contains(t, sset.Spec.Template.Spec.Containers[0].Args[len(sset.Spec.Template.Spec.Containers[0].Args)-1], "--additional.arg=additional-arg-value")
+	require.Contains(t, sset.Spec.Template.Spec.Containers[0].Args, "--additional.arg=additional-arg-value")
 	require.Equal(t, "rule", sset.Spec.Template.Spec.Containers[0].Args[0])
 }
 

@@ -21,12 +21,12 @@ jobs:
         cat ".github/env" >> "$GITHUB_ENV"
         echo "E2E_DIAGNOSTIC_DIRECTORY=$(mktemp -d)" >> "$GITHUB_ENV"
     - name: Install Go
-      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
     - name: Start KinD
-      uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
+      uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
       with:
         version: ${{ env.kind-version }}
         node_image: ${{ env.kind-image }}

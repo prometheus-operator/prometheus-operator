@@ -17,7 +17,7 @@ draft: false
 * Related Tickets:
   * [Graduate The `ScrapeConfig` CRD To `v1beta1`](https://github.com/prometheus-operator/prometheus-operator/issues/6697)
 * Other docs:
-  * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/202212-scrape-config.md)
+  * [ScrapeConfig Design Proposal](https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/proposals/implemented/202212-scrape-config.md)
   * [Kubernetes API versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning)
 
 ## Why
@@ -169,7 +169,7 @@ Keeping this in mind, we recommend that we make all the breaking changes in `v1a
 once there is a consensus in the community about the "readiness"/"completeness" of the`v1alpha1`, we graduate the ScrapeConfig CRD to `v1beta1`.
 Note: In this strategy, both the `v1alpha1` and `v1beta1` APIs are expected to be identical to each other, thus barring the need for a conversion webhook.
 
-From the [Kuberenetes CRD docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions),
+From the [Kubernetes CRD docs](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#specify-multiple-versions),
 the `CustomResourceDefinition` would contain the following lines:
 
 ```

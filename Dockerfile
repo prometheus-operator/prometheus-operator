@@ -1,8 +1,8 @@
 ARG ARCH=amd64
 ARG OS=linux
-ARG GOLANG_BUILDER=1.26
+ARG GOLANG_BUILDER=1.27
 
-FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
+FROM --platform=$BUILDPLATFORM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
 WORKDIR /workspace
 
 COPY . .
@@ -25,6 +25,7 @@ USER 65534
 LABEL org.opencontainers.image.source="https://github.com/prometheus-operator/prometheus-operator" \
     org.opencontainers.image.url="https://prometheus-operator.dev/" \
     org.opencontainers.image.documentation="https://prometheus-operator.dev/" \
-    org.opencontainers.image.licenses="Apache-2.0"
+    org.opencontainers.image.licenses="Apache-2.0" \
+    io.prometheus.image.variant="busybox"
 
 ENTRYPOINT ["/bin/operator"]

@@ -116,6 +116,24 @@
             },
             'for': '5m',
           },
+        ] + [
+          {
+            local metricResource = if resource == 'ThanosRuler' then 'thanos_ruler' else if resource == 'PrometheusAgent' then 'prometheus_agent' else std.asciiLower(resource),
+            alert: 'PrometheusOperatorResourceError',
+            expr: |||
+              max by(name,namespace,condition,status) (last_over_time(prometheus_operator_%(metricResource)s_status_condition{status!="True",%(prometheusOperatorSelector)s}[5m]) == 1)
+            ||| % $._config { metricResource: metricResource },
+            labels: {
+              severity: 'warning',
+              resource: resource,
+            },
+            annotations: {
+              description: '{{ $labels.resource }} resource {{ $labels.namespace }}/{{ $labels.name }} has an unexpected {{ $labels.condition }}={{ $labels.status }} status condition.',
+              summary: '%s resource with status condition error' % resource,
+            },
+            'for': '5m',
+          }
+          for resource in $._config.workloadResources
         ],
       },
       {

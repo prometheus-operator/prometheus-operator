@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -6771,6 +6771,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -7848,6 +7856,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -11350,6 +11365,11 @@ spec:
                         required:
                         - roomID
                         type: object
+                        x-kubernetes-validations:
+                        - message: httpConfig.authorization or httpConfig.bearerTokenSecret
+                            is required
+                          rule: has(self.httpConfig) && (has(self.httpConfig.authorization)
+                            || has(self.httpConfig.bearerTokenSecret))
                       type: array
                       x-kubernetes-list-type: atomic
                     webhookConfigs:
@@ -13100,6 +13120,35 @@ spec:
                     minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  labels:
+                    description: |-
+                      labels defines the list of labels that will be attached to the alerts matching this route.
+                      They can be inherited by child routes and can be overridden by child routes.
+                      The values support template expressions.
+
+                      It requires Alertmanager >= 0.34.0.
+                    items:
+                      description: KeyValue defines a (key, value) tuple.
+                      properties:
+                        key:
+                          description: |-
+                            key defines the key of the tuple.
+                            This is the identifier or name part of the key-value pair.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: |-
+                            value defines the value of the tuple.
+                            This is the data or content associated with the key.
+                          type: string
+                      required:
+                      - key
+                      - value
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - key
+                    x-kubernetes-list-type: map
                   matchers:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
@@ -19812,6 +19861,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -20874,6 +20931,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -24332,6 +24396,11 @@ spec:
                         required:
                         - roomID
                         type: object
+                        x-kubernetes-validations:
+                        - message: httpConfig.authorization or httpConfig.bearerTokenSecret
+                            is required
+                          rule: has(self.httpConfig) && (has(self.httpConfig.authorization)
+                            || has(self.httpConfig.bearerTokenSecret))
                       type: array
                     webhookConfigs:
                       description: webhookConfigs defines the List of webhook configurations.
@@ -26046,6 +26115,35 @@ spec:
                     minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  labels:
+                    description: |-
+                      labels defines the list of labels that will be attached to the alerts matching this route.
+                      They can be inherited by child routes and can be overridden by child routes.
+                      The values support template expressions.
+
+                      It requires Alertmanager >= 0.34.0.
+                    items:
+                      description: KeyValue defines a (key, value) tuple.
+                      properties:
+                        key:
+                          description: |-
+                            key defines the key of the tuple.
+                            This is the identifier or name part of the key-value pair.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: |-
+                            value defines the value of the tuple.
+                            This is the data or content associated with the key.
+                          type: string
+                      required:
+                      - key
+                      - value
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - key
+                    x-kubernetes-list-type: map
                   matchers:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first

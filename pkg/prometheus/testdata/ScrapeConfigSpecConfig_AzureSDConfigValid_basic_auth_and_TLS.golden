@@ -12,6 +12,10 @@ scrape_configs:
       password: value
     authentication_method: SDK
     subscription_id: 11AAAA11-A11A-111A-A111-1111A1111A11
+    tls_config:
+      ca_file: /etc/prometheus/certs/0_default_tls_ca
+      cert_file: /etc/prometheus/certs/0_default_tls_cert
+      key_file: /etc/prometheus/certs/0_default_tls_key
   relabel_configs:
   - source_labels:
     - job

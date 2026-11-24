@@ -38,6 +38,14 @@ const (
 // * Target and metric relabeling.
 //
 // `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+//
+// Service targets that aren't backed by Pods (for instance manually managed
+// Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+// the service port with `port` instead of `targetPort` and `filterRunning` is
+// set to `false`. Manually created Pods have no such restriction.
+//
+// For targets that aren't backed by Pods, you can also consider using the
+// `ScrapeConfig` CRD.
 type ServiceMonitor struct {
 	// TypeMeta defines the versioned schema of this representation of an object.
 	metav1.TypeMeta `json:",inline"`
@@ -142,6 +150,15 @@ type ServiceMonitorSpec struct {
 	// It requires Prometheus >= v3.0.0.
 	// +optional
 	FallbackScrapeProtocol *ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	//
+	// +optional
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"` // nolint:kubeapilinter
 
 	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.

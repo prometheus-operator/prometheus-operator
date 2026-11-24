@@ -3,8 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -6771,6 +6771,14 @@ spec:
                               linkNames defines whether to enable automatic linking of usernames and channels.
                               When true, @username and #channel references become clickable links.
                             type: boolean
+                          messageText:
+                            description: |-
+                              messageText is a top-level message text, shown above the attachment
+                              and used in desktop and push notifications.
+                              If unset, notifications show only a generic placeholder.
+                              It requires Alertmanager >= v0.35.0.
+                            minLength: 1
+                            type: string
                           sendResolved:
                             description: sendResolved defines whether or not to notify
                               about resolved alerts.
@@ -7848,6 +7856,13 @@ spec:
                             minItems: 1
                             type: array
                             x-kubernetes-list-type: atomic
+                          postUpdatesToThread:
+                            description: |-
+                              postUpdatesToThread posts subsequent notifications of an alert group as
+                              replies in the thread of the initial message instead of new channel messages.
+                              Please note that Webhook URLs do not support threads.
+                              It requires Alertmanager >= v0.35.0.
+                            type: boolean
                           pretext:
                             description: pretext defines optional text that appears
                               above the message attachment block.
@@ -11350,6 +11365,11 @@ spec:
                         required:
                         - roomID
                         type: object
+                        x-kubernetes-validations:
+                        - message: httpConfig.authorization or httpConfig.bearerTokenSecret
+                            is required
+                          rule: has(self.httpConfig) && (has(self.httpConfig.authorization)
+                            || has(self.httpConfig.bearerTokenSecret))
                       type: array
                       x-kubernetes-list-type: atomic
                     webhookConfigs:
@@ -13100,6 +13120,35 @@ spec:
                     minLength: 1
                     pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                     type: string
+                  labels:
+                    description: |-
+                      labels defines the list of labels that will be attached to the alerts matching this route.
+                      They can be inherited by child routes and can be overridden by child routes.
+                      The values support template expressions.
+
+                      It requires Alertmanager >= 0.34.0.
+                    items:
+                      description: KeyValue defines a (key, value) tuple.
+                      properties:
+                        key:
+                          description: |-
+                            key defines the key of the tuple.
+                            This is the identifier or name part of the key-value pair.
+                          minLength: 1
+                          type: string
+                        value:
+                          description: |-
+                            value defines the value of the tuple.
+                            This is the data or content associated with the key.
+                          type: string
+                      required:
+                      - key
+                      - value
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - key
+                    x-kubernetes-list-type: map
                   matchers:
                     description: |-
                       matchers defines the list of matchers that the alert's labels should match. For the first
@@ -13285,8 +13334,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -14300,6 +14349,30 @@ spec:
                         x-kubernetes-list-type: atomic
                     type: object
                 type: object
+              alertmanagerConfigFileSystemMode:
+                description: |-
+                  alertmanagerConfigFileSystemMode defines how the operator handles
+                  AlertmanagerConfig resources which have references to the Alertmanager
+                  container's filesystem (as opposed to secret key references). Users
+                  controlling the receiver's service may create an AlertmanagerConfig
+                  resource with a reference to a container's file (for instance using
+                  `botTokenFile` for the Telegram receiver) and exfiltrate sensitive
+                  content from files located in the Alertmanager container.
+
+                  Supported values are:
+                  - "DenyAll" denies any AlertmanagerConfig resource referencing files from the container's filesystem, non-compliant resources are rejected.
+                  - "FromAlertmanagerConfigMatcherStrategy" uses the `alertmanagerConfigNamespaceSelector` field to make a decision
+                    - When `alertmanagerConfigNamespaceSelector` is "None", it is equivalent to "AllowAll"
+                    - When `alertmanagerConfigNamespaceSelector` is "OnNamespaceExceptForAlertmanagerNamespace", it is equivalent to "AllowAll" for the AlertmanagerConfig resources located in the Alertmanager's namespace and "DenyAll" for all other resources.
+                    - When `alertmanagerConfigNamespaceSelector` is "OnNamespace", it is equivalent to "AllowAll" for the main AlertmanagerConfig resource (defined in `.spec.alertmanagerConfig.name`) and "DenyAll" for all other resources.
+                  - "AllowAll" allows any AlertmanagerConfig resource to reference files from the container's filesystem (use with caution).
+
+                  By default, the operator uses the "FromAlertmanagerConfigMatcherStrategy" mode.
+                enum:
+                - AllowAll
+                - FromAlertmanagerConfigMatcherStrategy
+                - DenyAll
+                type: string
               alertmanagerConfigMatcherStrategy:
                 description: |-
                   alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
@@ -15861,6 +15934,45 @@ spec:
                       type: object
                     type: array
                 type: object
+              autoGomemlimit:
+                description: |-
+                  autoGomemlimit defines the automatic GOMEMLIMIT command line flags when
+                  starting Alertmanager.
+
+                  It requires Alertmanager >= v0.35.0.
+                properties:
+                  enabled:
+                    description: |-
+                      enabled sets GOMEMLIMIT to match the
+                      Linux container or system memory limit. This corresponds to the
+                      Alertmanager's `--auto-gomemlimit` flag.
+                    type: boolean
+                  ratio:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      ratio defines the ratio of reserved GOMEMLIMIT memory to the detected
+                      maximum container or system memory. The value must be greater than 0 and
+                      less than or equal to 1. This corresponds to the Alertmanager's
+                      `--auto-gomemlimit.ratio` flag.
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                  refreshInterval:
+                    description: |-
+                      refreshInterval defines the interval at which to re-detect the container
+                      or system memory limit and update GOMEMLIMIT accordingly. It is useful
+                      when the limit can change at runtime, e.g. with a Vertical Pod Autoscaler.
+                      This corresponds to the Alertmanager's `--auto-gomemlimit.refresh-interval` flag.
+                    pattern: ^(0|(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                    type: string
+                type: object
+                x-kubernetes-validations:
+                - message: ratio must be greater than 0 and less than or equal to
+                    1
+                  rule: '!has(self.ratio) || (quantity(string(self.ratio)).compareTo(quantity(''0''))
+                    > 0 && quantity(string(self.ratio)).compareTo(quantity(''1''))
+                    <= 0)'
               automountServiceAccountToken:
                 description: |-
                   automountServiceAccountToken defines whether a service account token should be automatically mounted in the pod.
@@ -20911,6 +21023,7 @@ spec:
                                         reason is a brief CamelCase machine-parseable reason.
                                         Together with status it forms the unique identity of a condition entry.
                                         Maximum permitted length of a reason is 256 bytes.
+                                      minLength: 1
                                       type: string
                                     status:
                                       description: |-
@@ -20923,11 +21036,13 @@ spec:
                                       - DataLoss
                                       - Degraded
                                       - Inaccessible
+                                      minLength: 1
                                       type: string
                                   required:
                                   - reason
                                   - status
                                   type: object
+                                maxItems: 16
                                 type: array
                                 x-kubernetes-list-map-keys:
                                 - status
@@ -23336,6 +23451,17 @@ spec:
                 description: web defines the web command line flags when starting
                   Alertmanager.
                 properties:
+                  corsOrigin:
+                    description: |-
+                      corsOrigin is a fully anchored regular expression matching the origins
+                      allowed to call the API from a browser. This corresponds to the
+                      Alertmanager's `--web.cors.origin` flag.
+                      It requires Alertmanager >= v0.34.2.
+                    minLength: 1
+                    type: string
+                    x-kubernetes-validations:
+                    - message: corsOrigin must be a valid regular expression
+                      rule: '''''.matches(''^(?:''+self+'')$'') || !''''.matches(''^(?:''+self+'')$'')'
                   getConcurrency:
                     description: |-
                       getConcurrency defines the maximum number of GET requests processed concurrently. This corresponds to the
@@ -23732,8 +23858,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -23814,6 +23940,14 @@ spec:
                 description: |-
                   convertClassicHistogramsToNHCB defines whether to convert all scraped classic histograms into a native histogram with custom buckets.
                   It requires Prometheus >= v3.0.0.
+                type: boolean
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
@@ -25205,8 +25339,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -25393,6 +25527,14 @@ spec:
                 type: boolean
               enableHttp2:
                 description: enableHttp2 can be used to disable HTTP2.
+                type: boolean
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
                 type: boolean
               fallbackScrapeProtocol:
                 description: |-
@@ -26692,8 +26834,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -35402,6 +35544,7 @@ spec:
                                         reason is a brief CamelCase machine-parseable reason.
                                         Together with status it forms the unique identity of a condition entry.
                                         Maximum permitted length of a reason is 256 bytes.
+                                      minLength: 1
                                       type: string
                                     status:
                                       description: |-
@@ -35414,11 +35557,13 @@ spec:
                                       - DataLoss
                                       - Degraded
                                       - Inaccessible
+                                      minLength: 1
                                       type: string
                                   required:
                                   - reason
                                   - status
                                   type: object
+                                maxItems: 16
                                 type: array
                                 x-kubernetes-list-map-keys:
                                 - status
@@ -38624,8 +38769,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -47136,6 +47281,20 @@ spec:
                   the server serves requests under a different route prefix. For example
                   for use with `kubectl proxy`.
                 type: string
+              ruleConfigMapsMinimumCount:
+                description: |-
+                  ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+                  mounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do
+                  not exist and are mounted with optional: true.
+                  Reserving volumes avoids a Pod rollout when the number of generated rule
+                  ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+                  are still deleted.
+                  All generated rule ConfigMaps are mounted even if their count exceeds this
+                  value. Changing the number of mounted volumes triggers a Pod rollout.
+                  Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+                format: int32
+                minimum: 0
+                type: integer
               ruleNamespaceSelector:
                 description: |-
                   ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector
@@ -49160,6 +49319,7 @@ spec:
                                         reason is a brief CamelCase machine-parseable reason.
                                         Together with status it forms the unique identity of a condition entry.
                                         Maximum permitted length of a reason is 256 bytes.
+                                      minLength: 1
                                       type: string
                                     status:
                                       description: |-
@@ -49172,11 +49332,13 @@ spec:
                                       - DataLoss
                                       - Degraded
                                       - Inaccessible
+                                      minLength: 1
                                       type: string
                                   required:
                                   - reason
                                   - status
                                   type: object
+                                maxItems: 16
                                 type: array
                                 x-kubernetes-list-map-keys:
                                 - status
@@ -52926,8 +53088,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -53193,8 +53355,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -58085,6 +58247,14 @@ spec:
                   - server
                   type: object
                 type: array
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -66300,8 +66470,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -66328,6 +66498,14 @@ spec:
           * Target and metric relabeling.
 
           `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+
+          Service targets that aren't backed by Pods (for instance manually managed
+          Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+          the service port with `port` instead of `targetPort` and `filterRunning` is
+          set to `false`. Manually created Pods have no such restriction.
+
+          For targets that aren't backed by Pods, you can also consider using the
+          `ScrapeConfig` CRD.
         properties:
           apiVersion:
             description: |-
@@ -67242,6 +67420,9 @@ spec:
                         by the Service.
                         If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
                         If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+
+                        Because it relies on Pod metadata, endpoints which aren't backed by Pods
+                        are never scraped when `targetPort` is used.
                       x-kubernetes-int-or-string: true
                     tlsConfig:
                       description: tlsConfig defines TLS configuration used by the
@@ -67437,6 +67618,14 @@ spec:
                       type: boolean
                   type: object
                 type: array
+              extraScrapeMetrics:
+                description: |-
+                  extraScrapeMetrics defines whether to store additional time series for each scrape:
+                  `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+                  These metrics help monitor how close targets are to their configured limits.
+
+                  It requires Prometheus >= v3.10.0.
+                type: boolean
               fallbackScrapeProtocol:
                 description: |-
                   fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -67790,8 +67979,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.22.0
-    operator.prometheus.io/version: 0.94.1
+    controller-gen.kubebuilder.io/version: v0.23.0
+    operator.prometheus.io/version: 0.95.2
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -75061,6 +75250,7 @@ spec:
                                         reason is a brief CamelCase machine-parseable reason.
                                         Together with status it forms the unique identity of a condition entry.
                                         Maximum permitted length of a reason is 256 bytes.
+                                      minLength: 1
                                       type: string
                                     status:
                                       description: |-
@@ -75073,11 +75263,13 @@ spec:
                                       - DataLoss
                                       - Degraded
                                       - Inaccessible
+                                      minLength: 1
                                       type: string
                                   required:
                                   - reason
                                   - status
                                   type: object
+                                maxItems: 16
                                 type: array
                                 x-kubernetes-list-map-keys:
                                 - status
@@ -77900,7 +78092,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -77917,7 +78109,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
 rules:
 - apiGroups:
@@ -78069,7 +78261,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 spec:
@@ -78085,13 +78277,13 @@ spec:
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/name: prometheus-operator
-        app.kubernetes.io/version: 0.94.1
+        app.kubernetes.io/version: 0.95.2
     spec:
       automountServiceAccountToken: true
       containers:
       - args:
         - --kubelet-service=kube-system/kubelet
-        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.94.1
+        - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.95.2
         - --watch-referenced-objects-in-all-namespaces=true
         - --disable-unmanaged-prometheus-configuration=true
         - --kubelet-endpoints=true
@@ -78099,7 +78291,7 @@ spec:
         env:
         - name: GOGC
           value: "30"
-        image: quay.io/prometheus-operator/prometheus-operator:v0.94.1
+        image: quay.io/prometheus-operator/prometheus-operator:v0.95.2
         name: prometheus-operator
         ports:
         - containerPort: 8080
@@ -78133,7 +78325,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 ---
@@ -78143,7 +78335,7 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: 0.94.1
+    app.kubernetes.io/version: 0.95.2
   name: prometheus-operator
   namespace: default
 spec:

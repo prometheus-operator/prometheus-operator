@@ -18,6 +18,8 @@ scrape_configs:
       - value
     authentication_method: SDK
     subscription_id: 11AAAA11-A11A-111A-A111-1111A1111A11
+    follow_redirects: true
+    enable_http2: true
   relabel_configs:
   - source_labels:
     - job

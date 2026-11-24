@@ -820,7 +820,7 @@ func (rs *ResourceSelector) validateConsulSDConfigs(ctx context.Context, sc *mon
 }
 
 func (rs *ResourceSelector) validateHTTPSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.28.0")) {
+	if len(sc.Spec.HTTPSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.28.0")) {
 		return fmt.Errorf("HTTP SD configuration is only supported for Prometheus version >= 2.28.0")
 	}
 
@@ -976,7 +976,7 @@ func (rs *ResourceSelector) validateOpenStackSDConfigs(ctx context.Context, sc *
 }
 
 func (rs *ResourceSelector) validateDigitalOceanSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.20.0")) {
+	if len(sc.Spec.DigitalOceanSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.20.0")) {
 		return fmt.Errorf("service discovery for Digital Ocean is only supported for Prometheus version >= 2.20.0")
 	}
 
@@ -1036,7 +1036,7 @@ func (rs *ResourceSelector) validateDockerSDConfigs(ctx context.Context, sc *mon
 	return nil
 }
 func (rs *ResourceSelector) validateLinodeSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if !rs.version.GTE(semver.MustParse("2.28.0")) {
+	if len(sc.Spec.LinodeSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.28.0")) {
 		return fmt.Errorf("linode SD configuration is only supported for Prometheus version >= 2.28.0")
 	}
 
@@ -1181,7 +1181,7 @@ func (rs *ResourceSelector) validateNomadSDConfigs(ctx context.Context, sc *moni
 }
 
 func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.20.0")) {
+	if len(sc.Spec.DockerSwarmSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.20.0")) {
 		return fmt.Errorf("dockerswarm SD configuration is only supported for Prometheus version >= 2.20.0")
 	}
 
@@ -1215,7 +1215,7 @@ func (rs *ResourceSelector) validateDockerSwarmSDConfigs(ctx context.Context, sc
 }
 
 func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.31.0")) {
+	if len(sc.Spec.PuppetDBSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.31.0")) {
 		return fmt.Errorf("puppetDB SD configuration is only supported for Prometheus version >= 2.31.0")
 	}
 
@@ -1256,7 +1256,7 @@ func (rs *ResourceSelector) validatePuppetDBSDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.27.0")) {
+	if len(sc.Spec.LightSailSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.27.0")) {
 		return fmt.Errorf("lightSail SD configuration is only supported for Prometheus version >= 2.27.0")
 	}
 
@@ -1297,7 +1297,7 @@ func (rs *ResourceSelector) validateLightSailSDConfigs(ctx context.Context, sc *
 }
 
 func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.40.0")) {
+	if len(sc.Spec.OVHCloudSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.40.0")) {
 		return fmt.Errorf("OVHCloud SD configuration is only supported for Prometheus version >= 2.40.0")
 	}
 
@@ -1314,7 +1314,7 @@ func (rs *ResourceSelector) validateOVHCloudSDConfigs(ctx context.Context, sc *m
 }
 
 func (rs *ResourceSelector) validateScalewaySDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.26.0")) {
+	if len(sc.Spec.ScalewaySDConfigs) > 0 && rs.version.LT(semver.MustParse("2.26.0")) {
 		return fmt.Errorf("ScaleWay SD configuration is only supported for Prometheus version >= 2.26.0")
 	}
 
@@ -1346,7 +1346,7 @@ func (rs *ResourceSelector) validateStaticConfig(sc *monitoringv1alpha1.ScrapeCo
 }
 
 func (rs *ResourceSelector) validateIonosSDConfigs(ctx context.Context, sc *monitoringv1alpha1.ScrapeConfig) error {
-	if rs.version.LT(semver.MustParse("2.36.0")) {
+	if len(sc.Spec.IonosSDConfigs) > 0 && rs.version.LT(semver.MustParse("2.36.0")) {
 		return fmt.Errorf("IONOS SD configuration is only supported for Prometheus version >= 2.36.0")
 	}
 

@@ -66,6 +66,18 @@ func ValidateTemplateURLPtr(url *string) error {
 	return validateStringPtr(url, ValidateTemplateURL)
 }
 
+// ValidateLabelValueTemplate validates a label value which can be a Go
+// template expression.
+func ValidateLabelValueTemplate(value string) error {
+	if strings.Contains(value, "{{") {
+		if _, err := template.New("").Parse(value); err != nil {
+			return fmt.Errorf("%q is not a valid template: %w", value, err)
+		}
+	}
+
+	return nil
+}
+
 // ValidateTemplateURL validates a URL string against the config.URL.
 // If the value is a Go template then the function ensures that the template
 // definition is valid.

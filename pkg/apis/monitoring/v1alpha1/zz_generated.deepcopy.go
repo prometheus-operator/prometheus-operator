@@ -2589,6 +2589,11 @@ func (in *RocketChatConfig) DeepCopyInto(out *RocketChatConfig) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.MessageText != nil {
+		in, out := &in.MessageText, &out.MessageText
+		*out = new(string)
+		**out = **in
+	}
 	if in.HTTPConfig != nil {
 		in, out := &in.HTTPConfig, &out.HTTPConfig
 		*out = new(HTTPConfig)
@@ -2679,6 +2684,11 @@ func (in *Route) DeepCopyInto(out *Route) {
 	if in.ActiveTimeIntervals != nil {
 		in, out := &in.ActiveTimeIntervals, &out.ActiveTimeIntervals
 		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.Labels != nil {
+		in, out := &in.Labels, &out.Labels
+		*out = make([]KeyValue, len(*in))
 		copy(*out, *in)
 	}
 }
@@ -3071,6 +3081,11 @@ func (in *ScrapeConfigSpec) DeepCopyInto(out *ScrapeConfigSpec) {
 		*out = new(v1.ScrapeProtocol)
 		**out = **in
 	}
+	if in.ExtraScrapeMetrics != nil {
+		in, out := &in.ExtraScrapeMetrics, &out.ExtraScrapeMetrics
+		*out = new(bool)
+		**out = **in
+	}
 	if in.HonorTimestamps != nil {
 		in, out := &in.HonorTimestamps, &out.HonorTimestamps
 		*out = new(bool)
@@ -3352,6 +3367,11 @@ func (in *SlackConfig) DeepCopyInto(out *SlackConfig) {
 	}
 	if in.UpdateMessage != nil {
 		in, out := &in.UpdateMessage, &out.UpdateMessage
+		*out = new(bool)
+		**out = **in
+	}
+	if in.PostUpdatesToThread != nil {
+		in, out := &in.PostUpdatesToThread, &out.PostUpdatesToThread
 		*out = new(bool)
 		**out = **in
 	}

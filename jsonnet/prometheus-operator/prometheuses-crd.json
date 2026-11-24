@@ -3,8 +3,8 @@
   "kind": "CustomResourceDefinition",
   "metadata": {
     "annotations": {
-      "controller-gen.kubebuilder.io/version": "v0.22.0",
-      "operator.prometheus.io/version": "0.94.1"
+      "controller-gen.kubebuilder.io/version": "v0.23.0",
+      "operator.prometheus.io/version": "0.95.2"
     },
     "name": "prometheuses.monitoring.coreos.com"
   },
@@ -7198,6 +7198,12 @@
                     "description": "routePrefix defines the route prefix Prometheus registers HTTP handlers for.\n\nThis is useful when using `spec.externalURL`, and a proxy is rewriting\nHTTP routes of a request, and the actual ExternalURL is still true, but\nthe server serves requests under a different route prefix. For example\nfor use with `kubectl proxy`.",
                     "type": "string"
                   },
+                  "ruleConfigMapsMinimumCount": {
+                    "description": "ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes\nmounted in each Prometheus Pod. Unused volumes reference ConfigMaps that do\nnot exist and are mounted with optional: true.\nReserving volumes avoids a Pod rollout when the number of generated rule\nConfigMaps changes within this minimum. ConfigMaps that are no longer needed\nare still deleted.\nAll generated rule ConfigMaps are mounted even if their count exceeds this\nvalue. Changing the number of mounted volumes triggers a Pod rollout.\nDefaults to 3. Set to 0 to mount only the generated rule ConfigMaps.",
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
                   "ruleNamespaceSelector": {
                     "description": "ruleNamespaceSelector defines the namespaces to match for PrometheusRule discovery. An empty label selector\nmatches all namespaces. A null label selector matches the current\nnamespace only.",
                     "properties": {
@@ -8729,6 +8735,7 @@
                                         },
                                         "reason": {
                                           "description": "reason is a brief CamelCase machine-parseable reason.\nTogether with status it forms the unique identity of a condition entry.\nMaximum permitted length of a reason is 256 bytes.",
+                                          "minLength": 1,
                                           "type": "string"
                                         },
                                         "status": {
@@ -8738,6 +8745,7 @@
                                             "Degraded",
                                             "Inaccessible"
                                           ],
+                                          "minLength": 1,
                                           "type": "string"
                                         }
                                       },
@@ -8747,6 +8755,7 @@
                                       ],
                                       "type": "object"
                                     },
+                                    "maxItems": 16,
                                     "type": "array",
                                     "x-kubernetes-list-map-keys": [
                                       "status",

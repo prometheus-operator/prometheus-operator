@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/cespare/xxhash/v2"
 	"github.com/mitchellh/hashstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/model"
@@ -65,6 +66,8 @@ const (
 	applicationNameLabelValue = "alertmanager"
 
 	selectingAlertmanagerConfigResourcesAction = "SelectingAlertmanagerConfigResources"
+
+	slackBotAPIURL = "https://slack.com/api/chat.postMessage"
 )
 
 // Config defines the operator's parameters for the Alertmanager controller.
@@ -687,10 +690,10 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		return closure, fmt.Errorf("failed to synchronize the web config secret: %w", err)
 	}
 
-	// TODO(simonpasquier): the operator should take into account changes to
-	// the cluster TLS configuration to trigger a rollout of the pods (this
-	// configuration doesn't support live reload).
-	if err := c.createOrUpdateClusterTLSConfigSecret(ctx, am); err != nil {
+	// A change to the cluster TLS configuration triggers a rollout of the pods
+	// (this configuration doesn't support live reload).
+	clusterTLSConfigHash, err := c.createOrUpdateClusterTLSConfigSecret(ctx, am)
+	if err != nil {
 		return closure, fmt.Errorf("failed to synchronize the cluster TLS config secret: %w", err)
 	}
 
@@ -722,19 +725,19 @@ func (c *Operator) sync(ctx context.Context, key string) (func(context.Context) 
 		return closure, nil
 	}
 
-	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec)
+	newSSetInputHash, err := createSSetInputHash(*am, c.config, tlsShardedSecret, existingStatefulSet.Spec, clusterTLSConfigHash)
 	if err != nil {
 		return closure, err
 	}
 
-	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, tlsShardedSecret)
+	sset, err := makeStatefulSet(logger, am, c.config, newSSetInputHash, clusterTLSConfigHash, tlsShardedSecret)
 	if err != nil {
 		return closure, fmt.Errorf("failed to generate statefulset: %w", err)
 	}
 	operator.SanitizeSTS(sset)
 
-	if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-		logger.Debug("new statefulset generation inputs match current, skipping any actions")
+	if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, am) {
+		logger.Debug("statefulset is up to date, skipping any actions")
 		return closure, nil
 	}
 
@@ -892,7 +895,7 @@ func labelSelectorForStatefulSets() string {
 	)
 }
 
-func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec) (string, error) {
+func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *operator.ShardedSecret, s appsv1.StatefulSetSpec, clusterTLSConfigHash string) (string, error) {
 	var http2 *bool
 	if a.Spec.Web != nil && a.Spec.Web.HTTPConfig != nil {
 		http2 = a.Spec.Web.HTTPConfig.HTTP2
@@ -911,6 +914,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config                  Config
 		StatefulSetSpec         appsv1.StatefulSetSpec
 		ShardedSecret           *operator.ShardedSecret
+		ClusterTLSConfigHash    string
 	}{
 		AlertmanagerLabels:      a.Labels,
 		AlertmanagerAnnotations: a.Annotations,
@@ -919,6 +923,7 @@ func createSSetInputHash(a monitoringv1.Alertmanager, c Config, tlsAssets *opera
 		Config:                  c,
 		StatefulSetSpec:         s,
 		ShardedSecret:           tlsAssets,
+		ClusterTLSConfigHash:    clusterTLSConfigHash,
 	},
 		nil,
 	)
@@ -1095,7 +1100,7 @@ func (c *Operator) createOrUpdateGeneratedConfigSecret(ctx context.Context, am *
 	// Compress config to avoid 1mb secret limit for a while
 	var buf bytes.Buffer
 	if err := operator.GzipConfig(&buf, conf); err != nil {
-		return fmt.Errorf("couldnt gzip config: %w", err)
+		return fmt.Errorf("could not gzip config: %w", err)
 	}
 	generatedConfigSecret.Data[alertmanagerConfigFileCompressed] = buf.Bytes()
 
@@ -1176,7 +1181,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	eventRecorder := c.newEventRecorder(am)
 	for namespaceAndName, amc := range amConfigs {
 		var reason string
-		err := checkAlertmanagerConfigResource(ctx, amc, amVersion, store)
+		err := checkAlertmanagerConfigResource(ctx, am, amc, amVersion, store)
 		if err != nil {
 			rejected++
 			reason = operator.InvalidConfiguration
@@ -1204,11 +1209,81 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 	return res, nil
 }
 
+// isGlobalAlertmanagerConfig returns true when the AlertmanagerConfig object is
+// the one referenced by `.spec.alertmanagerConfiguration`.
+func isGlobalAlertmanagerConfig(am *monitoringv1.Alertmanager, amc *monitoringv1alpha1.AlertmanagerConfig) bool {
+	return am.Spec.AlertmanagerConfiguration != nil &&
+		amc.GetNamespace() == am.GetNamespace() &&
+		amc.GetName() == am.Spec.AlertmanagerConfiguration.Name
+}
+
+// denyAlertmanagerConfigFileSystemAccess returns true when the given
+// AlertmanagerConfig object isn't allowed to reference files from the
+// Alertmanager container's filesystem.
+func denyAlertmanagerConfigFileSystemAccess(am *monitoringv1.Alertmanager, amc *monitoringv1alpha1.AlertmanagerConfig) bool {
+	switch ptr.Deref(am.Spec.AlertmanagerConfigFileSystemMode, "") {
+	case monitoringv1.AllowAllAlertmanagerConfigFileSystemMode:
+		return false
+	case monitoringv1.DenyAllAlertmanagerConfigFileSystemMode:
+		return true
+	default: // FromAlertmanagerConfigMatcherStrategy
+		switch am.Spec.AlertmanagerConfigMatcherStrategy.Type {
+		case monitoringv1.NoneConfigMatcherStrategyType:
+			// All AlertmanagerConfig resources process every incoming alert,
+			// filesystem references are allowed.
+			return false
+		case monitoringv1.OnNamespaceExceptForAlertmanagerNamespaceConfigMatcherStrategyType:
+			// Only AlertmanagerConfig resources located in the Alertmanager's
+			// namespace are allowed to reference the filesystem.
+			return amc.GetNamespace() != am.GetNamespace()
+		default: // OnNamespace (default)
+			// Only the global AlertmanagerConfig resource is allowed to
+			// reference the filesystem.
+			return !isGlobalAlertmanagerConfig(am, amc)
+		}
+	}
+}
+
+var errFileSystemDenied = errors.New("it accesses the filesystem which the Alertmanager specification prohibits")
+
+// checkAlertmanagerConfigFileSystemAccess returns an error if the
+// AlertmanagerConfig object references files from the Alertmanager container's
+// filesystem while the Alertmanager's filesystem mode denies it.
+func checkAlertmanagerConfigFileSystemAccess(am *monitoringv1.Alertmanager, amc *monitoringv1alpha1.AlertmanagerConfig) error {
+	if !denyAlertmanagerConfigFileSystemAccess(am, amc) {
+		return nil
+	}
+
+	for _, receiver := range amc.Spec.Receivers {
+		for i, config := range receiver.PushoverConfigs {
+			if ptr.Deref(config.UserKeyFile, "") != "" {
+				return fmt.Errorf("receiver %q: pushoverConfigs[%d]: userKeyFile: %w", receiver.Name, i, errFileSystemDenied)
+			}
+			if ptr.Deref(config.TokenFile, "") != "" {
+				return fmt.Errorf("receiver %q: pushoverConfigs[%d]: tokenFile: %w", receiver.Name, i, errFileSystemDenied)
+			}
+		}
+		for i, config := range receiver.TelegramConfigs {
+			if ptr.Deref(config.BotTokenFile, "") != "" {
+				return fmt.Errorf("receiver %q: telegramConfigs[%d]: botTokenFile: %w", receiver.Name, i, errFileSystemDenied)
+			}
+		}
+	}
+
+	return nil
+}
+
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
-func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
+func checkAlertmanagerConfigResource(ctx context.Context, am *monitoringv1.Alertmanager, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.StoreBuilder) error {
 	// Perform semantic validation irrespective of the Alertmanager version.
 	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
+		return err
+	}
+
+	// Reject AlertmanagerConfig objects referencing the container's filesystem
+	// when the configured filesystem mode doesn't allow it.
+	if err := checkAlertmanagerConfigFileSystemAccess(am, amc); err != nil {
 		return err
 	}
 
@@ -1236,6 +1311,13 @@ func checkRoute(ctx context.Context, route *monitoringv1alpha1.Route, amVersion 
 		return fmt.Errorf(
 			`invalid syntax in route config for 'matchers' comparison based matching is supported in Alertmanager >= 0.22.0 only (matchers=%v) (receiver=%v)`,
 			route.Matchers, route.Receiver)
+	}
+
+	if len(route.Labels) > 0 && !amVersion.GTE(semver.MustParse("0.34.0")) {
+		return fmt.Errorf(
+			"'labels' config set in 'route' but supported in Alertmanager >= 0.34.0 only - current %s",
+			amVersion.String(),
+		)
 	}
 
 	childRoutes, err := route.ChildRoutes()
@@ -1454,8 +1536,9 @@ func checkDiscordConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`discordConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	version25 := semver.MustParse("0.25.0")
+	if amVersion.LT(version25) {
+		return unsupportedCRIntegrationErr("discord", amVersion, version25)
 	}
 
 	for _, config := range configs {
@@ -1465,6 +1548,19 @@ func checkDiscordConfigs(
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
+		}
+
+		version28 := semver.MustParse("0.28.0")
+		if amVersion.LT(version28) {
+			if ptr.Deref(config.Content, "") != "" {
+				return unsupportedCRFieldErr("content", amVersion, version28)
+			}
+			if ptr.Deref(config.Username, "") != "" {
+				return unsupportedCRFieldErr("username", amVersion, version28)
+			}
+			if ptr.Deref(config.AvatarURL, "") != "" {
+				return unsupportedCRFieldErr("avatarURL", amVersion, version28)
+			}
 		}
 
 		url, err := store.GetSecretKey(ctx, namespace, config.APIURL)
@@ -1490,8 +1586,9 @@ func checkRocketChatConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`rocketChatConfigs' is available in Alertmanager >= 0.28.0 only - current %s`, amVersion)
+	version28 := semver.MustParse("0.28.0")
+	if amVersion.LT(version28) {
+		return unsupportedCRIntegrationErr("rocketchat", amVersion, version28)
 	}
 
 	for _, config := range configs {
@@ -1509,6 +1606,11 @@ func checkRocketChatConfigs(
 
 		if _, err := store.GetSecretKey(ctx, namespace, config.TokenID); err != nil {
 			return fmt.Errorf("failed to retrieve RocketChat token ID: %w", err)
+		}
+
+		version35 := semver.MustParse("0.35.0")
+		if config.MessageText != nil && amVersion.LT(version35) {
+			return unsupportedCRFieldErr("messageText", amVersion, version35)
 		}
 	}
 
@@ -1539,24 +1641,38 @@ func checkSlackConfigs(
 			}
 		}
 
-		if config.MessageText != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`messageText' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		version31 := semver.MustParse("0.31.0")
+		if config.MessageText != nil && amVersion.LT(version31) {
+			return unsupportedCRFieldErr("messageText", amVersion, version31)
 		}
 
-		if config.UpdateMessage != nil {
-			if amVersion.LT(semver.MustParse("0.32.0")) {
-				return fmt.Errorf(`updateMessage' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
-			}
-			if *config.UpdateMessage && slackAPIURL != "" {
-				if slackAPIURL != "https://slack.com/api/chat.postMessage" {
-					return fmt.Errorf(`updateMessage' can only be used with bot tokens. API URL must be set to https://slack.com/api/chat.postMessage`)
-				}
-			}
+		if err := checkSlackBotTokenOption("updateMessage", config.UpdateMessage, "0.32.0", amVersion, slackAPIURL); err != nil {
+			return err
+		}
+
+		if err := checkSlackBotTokenOption("postUpdatesToThread", config.PostUpdatesToThread, "0.35.0", amVersion, slackAPIURL); err != nil {
+			return err
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func checkSlackBotTokenOption(name string, enabled *bool, minVersion string, amVersion semver.Version, slackAPIURL string) error {
+	if enabled == nil {
+		return nil
+	}
+
+	if v := semver.MustParse(minVersion); amVersion.LT(v) {
+		return unsupportedCRFieldErr(name, amVersion, v)
+	}
+
+	if *enabled && slackAPIURL != "" && slackAPIURL != slackBotAPIURL {
+		return fmt.Errorf("'%s' can only be used with bot tokens. API URL must be set to %s", name, slackBotAPIURL)
 	}
 
 	return nil
@@ -1585,8 +1701,9 @@ func checkWebhookConfigs(
 			}
 		}
 
-		if config.Payload != nil && amVersion.LT(semver.MustParse("0.32.0")) {
-			return fmt.Errorf(`payload' is available in Alertmanager >= 0.32.0 only - current %s`, amVersion)
+		version32 := semver.MustParse("0.32.0")
+		if config.Payload != nil && amVersion.LT(version32) {
+			return unsupportedCRFieldErr("payload", amVersion, version32)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1634,13 +1751,29 @@ func checkWebexConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.25.0")) {
-		return fmt.Errorf(`webexConfigs' is available in Alertmanager >= 0.25.0 only - current %s`, amVersion)
+	version25 := semver.MustParse("0.25.0")
+	if amVersion.LT(version25) {
+		return unsupportedCRIntegrationErr("webex", amVersion, version25)
 	}
 
 	for _, config := range configs {
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
+		}
+
+		// Alertmanager refuses a Webex receiver whose credentials are empty.
+		if config.HTTPConfig != nil {
+			if config.HTTPConfig.Authorization != nil {
+				if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.Authorization.Credentials, validation.NotEmpty); err != nil {
+					return fmt.Errorf("httpConfig.authorization: %w", err)
+				}
+			}
+
+			if config.HTTPConfig.BearerTokenSecret != nil {
+				if _, err := store.GetSecretKey(ctx, namespace, *config.HTTPConfig.BearerTokenSecret, validation.NotEmpty); err != nil {
+					return fmt.Errorf("httpConfig.bearerTokenSecret: %w", err)
+				}
+			}
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1674,12 +1807,14 @@ func checkEmailConfigs(
 			return err
 		}
 
-		if config.ForceImplicitTLS != nil && amVersion.LT(semver.MustParse("0.31.0")) {
-			return fmt.Errorf(`forceImplicitTLS' is available in Alertmanager >= 0.31.0 only - current %s`, amVersion)
+		version31 := semver.MustParse("0.31.0")
+		if config.ForceImplicitTLS != nil && amVersion.LT(version31) {
+			return unsupportedCRFieldErr("forceImplicitTLS", amVersion, version31)
 		}
 
-		if config.Threading != nil && amVersion.LT(semver.MustParse("0.30.0")) {
-			return fmt.Errorf(`threading' is available in Alertmanager >= 0.30.0 only - current %s`, amVersion)
+		version30 := semver.MustParse("0.30.0")
+		if config.Threading != nil && amVersion.LT(version30) {
+			return unsupportedCRFieldErr("threading", amVersion, version30)
 		}
 	}
 
@@ -1720,15 +1855,14 @@ func checkPushoverConfigs(
 ) error {
 	checkSecret := func(secret *corev1.SecretKeySelector, name string) error {
 		if secret == nil {
-			return fmt.Errorf("mandatory field %s is empty", name)
+			return nil
 		}
-		s, err := store.GetSecretKey(ctx, namespace, *secret)
+
+		_, err := store.GetSecretKey(ctx, namespace, *secret, validation.NotEmpty)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%s': %w", name, err)
 		}
-		if s == "" {
-			return errors.New("mandatory field userKey is empty")
-		}
+
 		return nil
 	}
 
@@ -1736,15 +1870,13 @@ func checkPushoverConfigs(
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
 			return err
 		}
+
 		if err := checkSecret(config.UserKey, "userKey"); err != nil {
 			return err
 		}
+
 		if err := checkSecret(config.Token, "token"); err != nil {
 			return err
-		}
-
-		if config.HTML != nil && *config.HTML && config.Monospace != nil && *config.Monospace {
-			return errors.New("html and monospace options are mutually exclusive")
 		}
 
 		if ptr.Deref(config.Expire, "") != "" {
@@ -1756,6 +1888,22 @@ func checkPushoverConfigs(
 		if ptr.Deref(config.Retry, "") != "" {
 			if _, err := model.ParseDuration(*config.Retry); err != nil {
 				return err
+			}
+		}
+
+		version26 := semver.MustParse("0.26.0")
+
+		if amVersion.LT(version26) {
+			if config.UserKeyFile != nil {
+				return unsupportedCRFieldErr("userKeyFile", amVersion, version26)
+			}
+
+			if config.TokenFile != nil {
+				return unsupportedCRFieldErr("tokenFile", amVersion, version26)
+			}
+
+			if config.Device != nil {
+				return unsupportedCRFieldErr("device", amVersion, version26)
 			}
 		}
 
@@ -1775,8 +1923,9 @@ func checkSnsConfigs(
 	amVersion semver.Version,
 ) error {
 	for _, config := range configs {
-		if amVersion.LT(semver.MustParse("0.33.0")) && config.UseAWSHTTPClient != nil {
-			return fmt.Errorf(`useAWSHTTPClient' is available in Alertmanager >= 0.33.0 only - current %s`, amVersion)
+		version33 := semver.MustParse("0.33.0")
+		if amVersion.LT(version33) && config.UseAWSHTTPClient != nil {
+			return unsupportedCRFieldErr("useAWSHTTPClient", amVersion, version33)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1805,13 +1954,15 @@ func checkTelegramConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.24.0")) {
-		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+	version24 := semver.MustParse("0.24.0")
+	if amVersion.LT(version24) {
+		return unsupportedCRIntegrationErr("telegram", amVersion, version24)
 	}
 
 	for _, config := range configs {
-		if amVersion.LT(semver.MustParse("0.26.0")) && config.BotTokenFile != nil {
-			return fmt.Errorf(`botTokenFile' is available in Alertmanager >= 0.26.0 only - current %s`, amVersion)
+		version26 := semver.MustParse("0.26.0")
+		if amVersion.LT(version26) && config.BotTokenFile != nil {
+			return unsupportedCRFieldErr("botTokenFile", amVersion, version26)
 		}
 
 		if err := checkHTTPConfig(config.HTTPConfig, amVersion); err != nil {
@@ -1843,8 +1994,9 @@ func checkMSTeamsConfigs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.26.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteams integration is only available in Alertmanager >= 0.26.0`)
+	version26 := semver.MustParse("0.26.0")
+	if amVersion.LT(version26) {
+		return unsupportedCRIntegrationErr("msteams", amVersion, version26)
 	}
 
 	for _, config := range configs {
@@ -1852,8 +2004,8 @@ func checkMSTeamsConfigs(
 			return err
 		}
 
-		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL); err != nil {
-			return err
+		if _, err := store.GetSecretKey(ctx, namespace, config.WebhookURL, validation.NotEmpty); err != nil {
+			return fmt.Errorf("webhookURL: %w", err)
 		}
 
 		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, store); err != nil {
@@ -1875,14 +2027,15 @@ func checkMSTeamsV2Configs(
 		return nil
 	}
 
-	if amVersion.LT(semver.MustParse("0.28.0")) {
-		return fmt.Errorf(`invalid syntax in receivers config; msteamsv2 integration is only available in Alertmanager >= 0.28.0`)
+	version28 := semver.MustParse("0.28.0")
+	if amVersion.LT(version28) {
+		return unsupportedCRIntegrationErr("msteamsv2", amVersion, version28)
 	}
 
 	for _, config := range configs {
 		if config.WebhookURL != nil {
-			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL); err != nil {
-				return err
+			if _, err := store.GetSecretKey(ctx, namespace, *config.WebhookURL, validation.NotEmpty); err != nil {
+				return fmt.Errorf("webhookURL: %w", err)
 			}
 		}
 
@@ -2008,15 +2161,15 @@ func (c *Operator) createOrUpdateWebConfigSecret(ctx context.Context, a *monitor
 	return nil
 }
 
-func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) error {
+func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *monitoringv1.Alertmanager) (string, error) {
 	clusterTLSConfig, err := clustertlsconfig.New(clusterTLSConfigDir, a)
 	if err != nil {
-		return fmt.Errorf("failed to initialize the configuration: %w", err)
+		return "", fmt.Errorf("failed to initialize the configuration: %w", err)
 	}
 
 	data, err := clusterTLSConfig.ClusterTLSConfiguration()
 	if err != nil {
-		return fmt.Errorf("failed to generate the configuration: %w", err)
+		return "", fmt.Errorf("failed to generate the configuration: %w", err)
 	}
 
 	s := &corev1.Secret{
@@ -2035,10 +2188,10 @@ func (c *Operator) createOrUpdateClusterTLSConfigSecret(ctx context.Context, a *
 	)
 
 	if err = k8s.CreateOrUpdateSecret(ctx, c.kclient.CoreV1().Secrets(a.Namespace), s); err != nil {
-		return fmt.Errorf("failed to reconcile secret: %w", err)
+		return "", fmt.Errorf("failed to reconcile secret: %w", err)
 	}
 
-	return nil
+	return fmt.Sprintf("%x", xxhash.Sum64(data)), nil
 }
 
 func (c *Operator) recordDeprecatedFields(key string, logger *slog.Logger, a *monitoringv1.Alertmanager) {
@@ -2090,4 +2243,16 @@ func ApplyConfigurationFromAlertmanager(a *monitoringv1.Alertmanager, updateScal
 	}
 
 	return monitoringv1ac.Alertmanager(a.Name, a.Namespace).WithStatus(asac)
+}
+
+func unsupportedCRFieldErr(fieldName string, currentVersion, supportedVersion semver.Version) error {
+	return fmt.Errorf("field '%s' requires Alertmanager version greater than or equal to %s, current version %s", fieldName, supportedVersion.String(), currentVersion.String())
+}
+
+// unsupportedCRIntegrationErr is a helper function for emitting error
+// when the integration is added in the unsupported version. The integrationName
+// in the input is the ingeration name, not integration field name.
+func unsupportedCRIntegrationErr(integrationName string, currentVersion, supportedVersion semver.Version) error {
+	// Integration field is the integration name, not the field name.
+	return fmt.Errorf("%s integration requires Alertmanager version greater than or equal to %s, current version %s", integrationName, supportedVersion, currentVersion)
 }

@@ -193,7 +193,7 @@ func ImagePullPolicy(imagePullPolicy corev1.PullPolicy) ReloaderOption {
 }
 
 // WithDaemonSetMode sets the options that work for DaemonSet mode.
-// Currently we set SHARD env equal to 0, eventhough DaemonSet doesn't use this env.
+// Currently we set SHARD env equal to 0, even though DaemonSet doesn't use this env.
 // TODO: Remove SHARD env for DaemonSet mode.
 func WithDaemonSetMode() ReloaderOption {
 	return func(c *ConfigReloader) {

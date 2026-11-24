@@ -40,8 +40,10 @@ type PodMonitorSpecApplyConfiguration struct {
 	JobLabel *string `json:"jobLabel,omitempty"`
 	// podTargetLabels defines the labels which are transferred from the
 	// associated Kubernetes `Pod` object onto the ingested metrics.
+	//
 	PodTargetLabels []string `json:"podTargetLabels,omitempty"`
 	// podMetricsEndpoints defines how to scrape metrics from the selected pods.
+	//
 	PodMetricsEndpoints []PodMetricsEndpointApplyConfiguration `json:"podMetricsEndpoints,omitempty"`
 	// selector defines the label selector to select the Kubernetes `Pod` objects to scrape metrics from.
 	Selector *metav1.LabelSelectorApplyConfiguration `json:"selector,omitempty"`
@@ -51,15 +53,18 @@ type PodMonitorSpecApplyConfiguration struct {
 	// Which strategy is best for your use case needs to be carefully evaluated.
 	//
 	// It requires Prometheus >= v2.17.0.
+	//
 	SelectorMechanism *monitoringv1.SelectorMechanism `json:"selectorMechanism,omitempty"`
 	// namespaceSelector defines in which namespace(s) Prometheus should discover the pods.
 	// By default, the pods are discovered in the same namespace as the `PodMonitor` object but it is possible to select pods across different/all namespaces.
 	NamespaceSelector *NamespaceSelectorApplyConfiguration `json:"namespaceSelector,omitempty"`
 	// sampleLimit defines a per-scrape limit on the number of scraped samples
 	// that will be accepted.
+	//
 	SampleLimit *int64 `json:"sampleLimit,omitempty"`
 	// targetLimit defines a limit on the number of scraped targets that will
 	// be accepted.
+	//
 	TargetLimit *int64 `json:"targetLimit,omitempty"`
 	// scrapeProtocols defines the protocols to negotiate during a scrape. It tells clients the
 	// protocols supported by Prometheus in order of preference (from most to least preferred).
@@ -67,33 +72,46 @@ type PodMonitorSpecApplyConfiguration struct {
 	// If unset, Prometheus uses its default value.
 	//
 	// It requires Prometheus >= v2.49.0.
+	//
 	ScrapeProtocols []monitoringv1.ScrapeProtocol `json:"scrapeProtocols,omitempty"`
 	// fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
 	//
 	// It requires Prometheus >= v3.0.0.
 	FallbackScrapeProtocol *monitoringv1.ScrapeProtocol `json:"fallbackScrapeProtocol,omitempty"`
+	// extraScrapeMetrics defines whether to store additional time series for each scrape:
+	// `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+	// These metrics help monitor how close targets are to their configured limits.
+	//
+	// It requires Prometheus >= v3.10.0.
+	//
+	ExtraScrapeMetrics *bool `json:"extraScrapeMetrics,omitempty"`
 	// labelLimit defines the per-scrape limit on number of labels that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
+	//
 	LabelLimit *int64 `json:"labelLimit,omitempty"`
 	// labelNameLengthLimit defines the per-scrape limit on length of labels name that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
+	//
 	LabelNameLengthLimit *int64 `json:"labelNameLengthLimit,omitempty"`
 	// labelValueLengthLimit defines the per-scrape limit on length of labels value that will be accepted for a sample.
 	//
 	// It requires Prometheus >= v2.27.0.
+	//
 	LabelValueLengthLimit                   *int64 `json:"labelValueLengthLimit,omitempty"`
 	NativeHistogramConfigApplyConfiguration `json:""`
 	// keepDroppedTargets defines the per-scrape limit on the number of targets dropped by relabeling
 	// that will be kept in memory. 0 means no limit.
 	//
 	// It requires Prometheus >= v2.47.0.
+	//
 	KeepDroppedTargets *int64 `json:"keepDroppedTargets,omitempty"`
 	// attachMetadata defines additional metadata which is added to the
 	// discovered targets.
 	//
 	// It requires Prometheus >= v2.35.0.
+	//
 	AttachMetadata *AttachMetadataApplyConfiguration `json:"attachMetadata,omitempty"`
 	// scrapeClass defines the scrape class to apply.
 	ScrapeClassName *string `json:"scrapeClass,omitempty"`
@@ -101,6 +119,7 @@ type PodMonitorSpecApplyConfiguration struct {
 	// of uncompressed response body that will be accepted by Prometheus.
 	//
 	// It requires Prometheus >= v2.28.0.
+	//
 	BodySizeLimit *monitoringv1.ByteSize `json:"bodySizeLimit,omitempty"`
 }
 
@@ -196,6 +215,14 @@ func (b *PodMonitorSpecApplyConfiguration) WithScrapeProtocols(values ...monitor
 // If called multiple times, the FallbackScrapeProtocol field is set to the value of the last call.
 func (b *PodMonitorSpecApplyConfiguration) WithFallbackScrapeProtocol(value monitoringv1.ScrapeProtocol) *PodMonitorSpecApplyConfiguration {
 	b.FallbackScrapeProtocol = &value
+	return b
+}
+
+// WithExtraScrapeMetrics sets the ExtraScrapeMetrics field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ExtraScrapeMetrics field is set to the value of the last call.
+func (b *PodMonitorSpecApplyConfiguration) WithExtraScrapeMetrics(value bool) *PodMonitorSpecApplyConfiguration {
+	b.ExtraScrapeMetrics = &value
 	return b
 }
 

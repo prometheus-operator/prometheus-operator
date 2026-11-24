@@ -40,9 +40,11 @@ type Sigv4ApplyConfiguration struct {
 	RoleArn *string `json:"roleArn,omitempty"`
 	// externalId defines the external ID used when assuming an AWS role. Can only be used with roleArn.
 	// It requires Prometheus >= v3.11.0 or Alertmanager >= v0.34.0. Currently not supported by Thanos.
+	//
 	ExternalID *string `json:"externalId,omitempty"`
 	// useFIPSSTSEndpoint defines the FIPS mode for the AWS STS endpoint.
 	// It requires Prometheus >= v2.54.0.
+	//
 	UseFIPSSTSEndpoint *bool `json:"useFIPSSTSEndpoint,omitempty"`
 }
 

@@ -1,6 +1,53 @@
 ## UNRELEASED
 
+* [FEATURE] Add `autoGomemlimit` field to the `Alertmanager` CRD to configure the `--auto-gomemlimit` command-line flags. It requires Alertmanager >= v0.35.0.
+
+## 0.95.2 / 2026-11-10
+
+* [BUGFIX] Fix container images for all platforms/architectures other than `linux/amd64`. #8971
+
+## 0.95.1 / 2026-11-05
+
+Maintenance release because the CI workflow failed to publish the `v0.95.0` container images.
+
+## 0.95.0 / 2026-11-04
+
+* [CHANGE] Add `alertmanagerConfigFileSystemMode` field to the `Alertmanager` CRD controlling how to process `AlertmanagerConfig` resources which have references to files from the Alertmanager container's filesystem.
+* [FEATURE] Add `extraScrapeMetrics` field to the `Prometheus` and `PrometheusAgent` CRDs. #8810
+* [FEATURE] Add `extraScrapeMetrics` field to the `ServiceMonitor`, `PodMonitor`, `Probe` and `ScrapeConfig` CRDs. #8892
+* [FEATURE] Reconcile `ScrapeConfig` status subresource when selected by `PrometheusAgent` custom resources (requires the `StatusForConfigurationResources` feature gate). #8910
+* [FEATURE] Reconcile `ServiceMonitor` status subresource when selected by `PrometheusAgent` custom resources (requires the `StatusForConfigurationResources` feature gate). #8860
+* [FEATURE] Reconcile `PodMonitor` status subresource when selected by `PrometheusAgent` custom resources (requires the `StatusForConfigurationResources` feature gate). #8859
+* [FEATURE] Reconcile `Probe` status subresource when selected by `PrometheusAgent` custom resources (requires the `StatusForConfigurationResources` feature gate). #8930
+* [FEATURE] Reconcile `AlertmanagerConfig` status subresource on `Alertmanager` reconciliations (requires the `StatusForConfigurationResources` feature gate). #8261
+* [FEATURE] Add `labels` field to the `AlertmanagerConfig` to manage route labels. #8761
+* [FEATURE] Add support for route `labels` in the Alertmanager configuration Secret. #8865
+* [FEATURE] Add `botToken` support for the global Telegram configuration in the `Alertmanager` CRD. #8403
+* [ENHANCEMENT] Add distroless images (available under the `<version>-distroless` tag). #8815
+* [ENHANCEMENT] Add `--disable-pprof` CLI argument. #8920
+* [ENHANCEMENT] Configure the log level via the runtime configuration section instead of the `--log.level` flag for Prometheus >= `3.15.0`. #8881
 * [BUGFIX] Reject AlertmanagerConfig resources where PagerDuty `routingKey` and `serviceKey` references resolve to empty strings. #8842
+* [BUGFIX] Rollout Alertmanager pods when the cluster TLS configuration is updated. #8840
+* [BUGFIX] Pass `imagePullPolicy` to the `ThanosRuler` config-reloader sidecar. #8916
+* [BUGFIX] Make the ordering of the `ts` and `level` keys consistent in the config-reloader logs (the `ts` key always comes first). #8913
+* [BUGFIX] Reject MSTeamsV2 receivers without a webhook URL. #8908
+* [BUGFIX] Add credentials validation for Webex receivers in the `AlertmanagerConfig` CRD. #8906 #8897
+* [BUGFIX] Preserve HTTP client configuration for Azure SD in the `ScrapeConfig` CRD. #8898
+* [BUGFIX] Reject `AlertmanagerConfig` custom resources with duplicated time interval names. #8896
+* [BUGFIX] Improve validation for the PagerDuty receiver in the `AlertmanagerConfig` CRD. #8842
+* [BUGFIX] Add validation for the `clientAuthType` field in `Prometheus`, `PrometheusAgent`, `Alertmanager` and `ThanosRuler` CRDs. #8823
+* [BUGFIX] Discard unsupported fields in remote-write configuration for the `ThanosRuler` CRD. #8813
+* [BUGFIX] Add zone information to the generated kubelet EndpointSlice. #8864
+* [BUGFIX] Preserve the Pushover `ttl` field when converting `AlertmanagerConfig` resources. #8866
+* [BUGFIX] Handle unset email threading fields when converting `AlertmanagerConfig` resources. #8858
+* [BUGFIX] Add URL validation for the PagerDuty receiver in the Alertmanager configuration Secret. #8221
+* [BUGFIX] Add URL validation for the RocketChat receiver in the Alertmanager configuration Secret. #8224
+* [BUGFIX] Log errors when namespace flags conflict. #8931
+
+## 0.94.2 / 2026-10-22
+
+* [SECURITY] Rebuild with latest `quay.io/prometheus/busybox` base images to remove the `Comodo AAA Services root` and `emSign ECC Root CA - G3` root CAs. #8907
+* [SECURITY] Rebuild with Go 1.27.3 to fix various vulnerabilities. #8907
 
 ## 0.94.1 / 2026-09-23
 

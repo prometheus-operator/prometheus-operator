@@ -508,7 +508,7 @@ func (i *instrumentedListerWatcher) List(options metav1.ListOptions) (runtime.Ob
 
 // IsWatchListSemanticsUnSupported calls the wrapped ListerWatcher if it
 // implements the function. Otherwise it returns false.
-// It is only required for the unpriviliged namespace ListerWatcher which
+// It is only required for the unprivileged namespace ListerWatcher which
 // doesn't support the new ListWatch semantics.
 func (i *instrumentedListerWatcher) IsWatchListSemanticsUnSupported() bool {
 	type unSupportedWatchListSemantics interface {

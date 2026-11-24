@@ -20,6 +20,7 @@ import (
 	"maps"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -71,6 +72,8 @@ const (
 	alertmanagerStorageDir = "/alertmanager"
 
 	defaultTerminationGracePeriodSeconds = int64(120)
+
+	clusterTLSRevisionHashKey = "operator.prometheus.io/cluster-tls-revision-hash"
 )
 
 var (
@@ -122,11 +125,7 @@ func getServiceName(a *monitoringv1.Alertmanager) string {
 	return ptr.Deref(a.Spec.ServiceName, defaultOperatedServiceName)
 }
 
-func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
-	// TODO(fabxc): is this the right point to inject defaults?
-	// Ideally we would do it before storing but that's currently not possible.
-	// Potentially an update handler on first insertion.
-
+func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config Config, inputHash string, clusterTLSConfigHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSet, error) {
 	if am.Spec.PortName == "" {
 		am.Spec.PortName = defaultPortName
 	}
@@ -148,7 +147,7 @@ func makeStatefulSet(logger *slog.Logger, am *monitoringv1.Alertmanager, config 
 		am.Spec.Resources.Requests[corev1.ResourceMemory] = resource.MustParse("200Mi")
 	}
 
-	spec, err := makeStatefulSetSpec(logger, am, config, tlsSecrets)
+	spec, err := makeStatefulSetSpec(logger, am, config, clusterTLSConfigHash, tlsSecrets)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +267,7 @@ func makeStatefulSetService(a *monitoringv1.Alertmanager, config Config) *corev1
 	return svc
 }
 
-func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, config Config, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
+func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, config Config, clusterTLSConfigHash string, tlsSecrets *operator.ShardedSecret) (*appsv1.StatefulSetSpec, error) {
 	amVersion := operator.StringValOrDefault(a.Spec.Version, operator.DefaultAlertmanagerVersion)
 	amImagePath, err := operator.BuildImagePath(
 		ptr.Deref(a.Spec.Image, ""),
@@ -331,6 +330,10 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		amArgs = append(amArgs, monitoringv1.Argument{Name: "web.timeout", Value: fmt.Sprintf("%d", *web.Timeout)})
 	}
 
+	if version.GTE(semver.MustParse("0.34.2")) && web != nil && web.CORSOrigin != nil {
+		amArgs = append(amArgs, monitoringv1.Argument{Name: "web.cors.origin", Value: *web.CORSOrigin})
+	}
+
 	limits := a.Spec.Limits
 	if version.GTE(semver.MustParse("0.28.0")) && limits != nil {
 		if limits.MaxSilences != nil {
@@ -340,6 +343,32 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 		if !limits.MaxPerSilenceBytes.IsEmpty() {
 			vBytes, _ := units.ParseBase2Bytes(string(*limits.MaxPerSilenceBytes))
 			amArgs = append(amArgs, monitoringv1.Argument{Name: "silences.max-per-silence-bytes", Value: fmt.Sprintf("%d", int64(vBytes))})
+		}
+	}
+
+	autoGomemlimit := a.Spec.AutoGomemlimit
+	if version.GTE(semver.MustParse("0.35.0")) && autoGomemlimit != nil {
+		switch {
+		case ptr.Deref(autoGomemlimit.Enabled, false):
+			// The boolean flag doesn't accept a value (kingpin rejects
+			// `--auto-gomemlimit=true`), hence the empty value which renders
+			// as `--auto-gomemlimit`.
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit", Value: ""})
+
+			if autoGomemlimit.Ratio != nil {
+				// Render the ratio as a plain decimal (e.g. "700m" -> "0.7").
+				ratio := autoGomemlimit.Ratio.AsDec().String()
+				if f, err := strconv.ParseFloat(ratio, 64); err == nil {
+					ratio = strconv.FormatFloat(f, 'f', -1, 64)
+				}
+				amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit.ratio", Value: ratio})
+			}
+
+			if autoGomemlimit.RefreshInterval != nil {
+				amArgs = append(amArgs, monitoringv1.Argument{Name: "auto-gomemlimit.refresh-interval", Value: string(*autoGomemlimit.RefreshInterval)})
+			}
+		case autoGomemlimit.Enabled != nil:
+			amArgs = append(amArgs, monitoringv1.Argument{Name: "no-auto-gomemlimit", Value: ""})
 		}
 	}
 
@@ -458,6 +487,7 @@ func makeStatefulSetSpec(logger *slog.Logger, a *monitoringv1.Alertmanager, conf
 	maps.Copy(podLabels, podSelectorLabels)
 
 	podAnnotations[operator.DefaultContainerAnnotationKey] = "alertmanager"
+	podAnnotations[clusterTLSRevisionHashKey] = clusterTLSConfigHash
 
 	var operatorInitContainers []corev1.Container
 

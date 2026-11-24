@@ -1,8 +1,8 @@
 ARG ARCH=amd64
 ARG OS=linux
-ARG GOLANG_BUILDER=1.26
+ARG GOLANG_BUILDER=1.27
 
-FROM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
+FROM --platform=$BUILDPLATFORM quay.io/prometheus/golang-builder:${GOLANG_BUILDER}-base AS builder
 WORKDIR /workspace
 
 COPY . .
@@ -20,5 +20,7 @@ FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
 COPY --from=builder workspace/prometheus-config-reloader /bin/prometheus-config-reloader
 
 USER nobody
+
+LABEL io.prometheus.image.variant="busybox"
 
 ENTRYPOINT ["/bin/prometheus-config-reloader"]

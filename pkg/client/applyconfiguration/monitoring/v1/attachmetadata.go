@@ -28,6 +28,7 @@ type AttachMetadataApplyConfiguration struct {
 	// Node metadata labels are not automatically added to scraped metrics. They are
 	// exposed as `__meta_kubernetes_node_*` labels and can be copied to timeseries
 	// with relabeling configuration.
+	//
 	Node *bool `json:"node,omitempty"`
 }
 

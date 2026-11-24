@@ -27,8 +27,10 @@ import (
 // GlobalVictorOpsConfig configures global VictorOps parameters.
 type GlobalVictorOpsConfigApplyConfiguration struct {
 	// apiURL defines the default VictorOps API URL.
+	//
 	APIURL *monitoringv1.URL `json:"apiURL,omitempty"`
 	// apiKey defines the default VictorOps API Key.
+	//
 	APIKey *corev1.SecretKeySelector `json:"apiKey,omitempty"`
 }
 

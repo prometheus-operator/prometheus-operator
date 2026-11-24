@@ -84,8 +84,8 @@ func NewLogger(c Config) (log.Logger, error) {
 		return nil, fmt.Errorf("log format %s unknown, %v are possible values", c.Format, AvailableLogFormats)
 	}
 
+	logger = log.WithPrefix(logger, "ts", log.DefaultTimestampUTC)
 	logger = loglevel.NewFilter(logger, lvlOption)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	return logger, nil

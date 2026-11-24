@@ -121,6 +121,17 @@ func (s *selectedConfigResources) Len() int {
 	return len(s.sMons) + len(s.pMons) + len(s.bMons) + len(s.scrapeConfigs)
 }
 
+// validResources returns the valid configuration resources used to generate
+// the configuration.
+func (s *selectedConfigResources) validResources() prompkg.ConfigResources {
+	return prompkg.ConfigResources{
+		ServiceMonitors: s.sMons.ValidResources(),
+		PodMonitors:     s.pMons.ValidResources(),
+		Probes:          s.bMons.ValidResources(),
+		ScrapeConfigs:   s.scrapeConfigs.ValidResources(),
+	}
+}
+
 // WithEndpointSlice tells that the Kubernetes API supports the Endpointslice resource.
 func WithEndpointSlice() ControllerOption {
 	return func(o *Operator) {
@@ -919,12 +930,12 @@ func (c *Operator) syncStatefulSet(ctx context.Context, key string, p *monitorin
 			continue
 		}
 
-		if newSSetInputHash == existingStatefulSet.Annotations[operator.InputHashAnnotationKey] {
-			logger.Debug("new statefulset generation inputs match current, skipping any actions")
+		if operator.IsStatefulSetUpToDate(existingStatefulSet, newSSetInputHash, p) {
+			logger.Debug("statefulset is up to date, skipping any actions")
 			continue
 		}
 
-		logger.Debug("updating current statefulset because of hash divergence",
+		logger.Debug("updating current statefulset",
 			"new_hash", newSSetInputHash,
 			"existing_hash", existingStatefulSet.Annotations[operator.InputHashAnnotationKey],
 		)
@@ -1030,10 +1041,7 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 
 	// Update secret based on the most recent configuration.
 	conf, err := cg.GenerateAgentConfiguration(
-		resources.sMons.ValidResources(),
-		resources.pMons.ValidResources(),
-		resources.bMons.ValidResources(),
-		resources.scrapeConfigs.ValidResources(),
+		resources.validResources(),
 		store,
 		additionalScrapeConfigs,
 	)
@@ -1051,8 +1059,8 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, logger
 	return k8s.CreateOrUpdateSecret(ctx, sClient, s)
 }
 
-// updateConfigResourcesStatus updates the status of ServiceMonitor and
-// PodMonitor resources selected by PrometheusAgent.
+// updateConfigResourcesStatus updates the status of ServiceMonitor,
+// PodMonitor, Probe and ScrapeConfig resources selected by PrometheusAgent.
 func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent, resources selectedConfigResources) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1072,6 +1080,18 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		}
 	}
 
+	for key, configResource := range resources.bMons {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update Probe %s status: %w", key, err)
+		}
+	}
+
+	for key, configResource := range resources.scrapeConfigs {
+		if err := configResourceSyncer.UpdateBinding(ctx, configResource.Resource(), configResource.Conditions()); err != nil {
+			return fmt.Errorf("failed to update ScrapeConfig %s status: %w", key, err)
+		}
+	}
+
 	if err := operator.CleanupBindings(ctx, c.smonInfs.ListAll, resources.sMons, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
@@ -1080,11 +1100,22 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
 
+	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, resources.bMons, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for probes: %w", err)
+	}
+
+	// sconInfs is nil when ScrapeConfig support is disabled.
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, resources.scrapeConfigs, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
+	}
+
 	return nil
 }
 
 // configResStatusCleanup removes the PrometheusAgent binding from all
-// ServiceMonitor and PodMonitor resources.
+// ServiceMonitor, PodMonitor, Probe and ScrapeConfig resources.
 func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1alpha1.PrometheusAgent) error {
 	if !c.configResourcesStatusEnabled {
 		return nil
@@ -1097,6 +1128,17 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1al
 
 	if err := operator.CleanupBindings(ctx, c.pmonInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.PodMonitor]{}, configResourceSyncer); err != nil {
 		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
+	}
+
+	if err := operator.CleanupBindings(ctx, c.probeInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1.Probe]{}, configResourceSyncer); err != nil {
+		return fmt.Errorf("failed to remove bindings for probes: %w", err)
+	}
+
+	// sconInfs is nil when ScrapeConfig support is disabled.
+	if c.sconInfs != nil {
+		if err := operator.CleanupBindings(ctx, c.sconInfs.ListAll, operator.TypedResourcesSelection[*monitoringv1alpha1.ScrapeConfig]{}, configResourceSyncer); err != nil {
+			return fmt.Errorf("failed to remove bindings for scrapeConfigs: %w", err)
+		}
 	}
 
 	return nil

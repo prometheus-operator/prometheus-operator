@@ -153,6 +153,15 @@ type Route struct {
 	// activeTimeIntervals is a list of TimeInterval names when this route should be active.
 	// +optional
 	ActiveTimeIntervals []string `json:"activeTimeIntervals,omitempty"`
+	// labels defines the list of labels that will be attached to the alerts matching this route.
+	// They can be inherited by child routes and can be overridden by child routes.
+	// The values support template expressions.
+	//
+	// It requires Alertmanager >= 0.34.0.
+	// +listType=map
+	// +listMapKey=key
+	// +optional
+	Labels []KeyValue `json:"labels,omitempty"`
 }
 
 // ChildRoutes extracts the child routes.
@@ -468,6 +477,12 @@ type SlackConfig struct {
 	// It requires Alertmanager >= v0.32.0.
 	// +optional
 	UpdateMessage *bool `json:"updateMessage,omitempty"` // nolint:kubeapilinter
+	// postUpdatesToThread posts subsequent notifications of an alert group as
+	// replies in the thread of the initial message instead of new channel messages.
+	// Please note that Webhook URLs do not support threads.
+	// It requires Alertmanager >= v0.35.0.
+	// +optional
+	PostUpdatesToThread *bool `json:"postUpdatesToThread,omitempty"` // nolint:kubeapilinter
 }
 
 // SlackAction configures a single Slack action that is sent with each
@@ -747,6 +762,7 @@ type HTTPConfig struct {
 
 // WebexConfig configures notification via Cisco Webex
 // See https://prometheus.io/docs/alerting/latest/configuration/#webex_config
+// +kubebuilder:validation:XValidation:rule="has(self.httpConfig) && (has(self.httpConfig.authorization) || has(self.httpConfig.bearerTokenSecret))",message="httpConfig.authorization or httpConfig.bearerTokenSecret is required"
 type WebexConfig struct {
 	// sendResolved defines whether or not to notify about resolved alerts.
 	// +optional
@@ -1305,6 +1321,13 @@ type RocketChatConfig struct {
 	// +kubebuilder:validation:MinItems=1
 	// +optional
 	Actions []RocketChatActionConfig `json:"actions,omitempty"`
+	// messageText is a top-level message text, shown above the attachment
+	// and used in desktop and push notifications.
+	// If unset, notifications show only a generic placeholder.
+	// It requires Alertmanager >= v0.35.0.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	MessageText *string `json:"messageText,omitempty"`
 	// httpConfig defines the HTTP client configuration for RocketChat API requests.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
