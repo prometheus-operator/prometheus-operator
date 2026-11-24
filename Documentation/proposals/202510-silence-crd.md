@@ -118,13 +118,13 @@ CEL validation: exactly one of `endsAt` or `duration` must be set; when both `st
 
 **Status fields.** `.status` reuses the convention from the [status subresource for config-based resources](accepted/202501-configuration-object-status-subresource.md) proposal — `ConfigResourceStatus` / `WorkloadBinding` / `ConfigResourceCondition`, as implemented for `ServiceMonitor`, `PodMonitor`, `Probe`, `PrometheusRule`, `ScrapeConfig` and `AlertmanagerConfig`. `.status.bindings[]` lists the Alertmanager resources for which the operator has written silence state:
 
-| Field          | Description                                                        |
-|----------------|--------------------------------------------------------------------|
-| `group`        | API group of the bound workload resource (`monitoring.coreos.com`) |
-| `resource`     | Resource type of the bound workload (`alertmanagers`)              |
-| `name`         | Name of the Alertmanager resource                                  |
-| `namespace`    | Namespace of the Alertmanager resource                             |
-| `conditions`   | Per-binding conditions, including `observedGeneration`             |
+| Field        | Description                                                        |
+|--------------|--------------------------------------------------------------------|
+| `group`      | API group of the bound workload resource (`monitoring.coreos.com`) |
+| `resource`   | Resource type of the bound workload (`alertmanagers`)              |
+| `name`       | Name of the Alertmanager resource                                  |
+| `namespace`  | Namespace of the Alertmanager resource                             |
+| `conditions` | Per-binding conditions, including `observedGeneration`             |
 
 There is no top-level `conditions` or `observedGeneration`: a Silence may be selected by several Alertmanager resources and its state can legitimately differ between them, so both belong at the binding level.
 
