@@ -22,8 +22,14 @@ import (
 	"text/template"
 
 	"github.com/prometheus/alertmanager/config/common"
+	amtemplate "github.com/prometheus/alertmanager/template"
 	"k8s.io/utils/ptr"
 )
+
+// amTemplateFuncs is the set of functions that Alertmanager provides when
+// rendering templated fields. Validation parses templates with the same
+// functions so that it accepts everything Alertmanager can render.
+var amTemplateFuncs = template.FuncMap(amtemplate.DefaultFuncs)
 
 // NotEmpty is a validator that returns an error if the provided value is empty.
 func NotEmpty(value string) error {
@@ -70,7 +76,7 @@ func ValidateTemplateURLPtr(url *string) error {
 // template expression.
 func ValidateLabelValueTemplate(value string) error {
 	if strings.Contains(value, "{{") {
-		if _, err := template.New("").Parse(value); err != nil {
+		if _, err := template.New("").Funcs(amTemplateFuncs).Parse(value); err != nil {
 			return fmt.Errorf("%q is not a valid template: %w", value, err)
 		}
 	}
@@ -83,7 +89,7 @@ func ValidateLabelValueTemplate(value string) error {
 // definition is valid.
 func ValidateTemplateURL(url string) error {
 	if strings.Contains(url, "{{") {
-		_, err := template.New("").Parse(url)
+		_, err := template.New("").Funcs(amTemplateFuncs).Parse(url)
 		if err != nil {
 			return err
 		}
