@@ -84,7 +84,6 @@ status:
       resource: alertmanagers
       name: main
       namespace: monitoring
-      lastSyncTime: "2024-01-15T10:01:00Z"
       conditions:
         - type: Accepted
           status: "True"
@@ -125,7 +124,6 @@ CEL validation: exactly one of `endsAt` or `duration` must be set; when both `st
 | `resource`     | Resource type of the bound workload (`alertmanagers`)              |
 | `name`         | Name of the Alertmanager resource                                  |
 | `namespace`    | Namespace of the Alertmanager resource                             |
-| `lastSyncTime` | When the operator last successfully wrote the Secret for this AM   |
 | `conditions`   | Per-binding conditions, including `observedGeneration`             |
 
 There is no top-level `conditions` or `observedGeneration`: a Silence may be selected by several Alertmanager resources and its state can legitimately differ between them, so both belong at the binding level.
