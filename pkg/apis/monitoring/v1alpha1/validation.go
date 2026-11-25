@@ -417,6 +417,10 @@ func (sa *SlackAction) Validate() error {
 
 // Validate ensures SlackConfig is valid.
 func (sc *SlackConfig) Validate() error {
+	if sc.APIURL != nil && sc.APIURLFile != nil {
+		return errors.New("only one of 'apiURL' or 'apiURLFile' must be configured")
+	}
+
 	for _, action := range sc.Actions {
 		if err := action.Validate(); err != nil {
 			return err
