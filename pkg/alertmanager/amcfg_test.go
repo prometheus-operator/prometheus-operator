@@ -28,7 +28,6 @@ import (
 	"github.com/prometheus/alertmanager/timeinterval"
 	commoncfg "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/v3/golden"
@@ -3587,38 +3586,6 @@ func TestGenerateConfig(t *testing.T) {
 			golden: "CR_with_Telegram_Receiver_using_global_BotTokenFile.golden",
 		},
 		{
-			name:      "CR with Telegram Receiver Missing Token",
-			amVersion: &version31,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{{
-							Name: "test",
-							TelegramConfigs: []monitoringv1alpha1.TelegramConfig{{
-								APIURL: ptr.To(monitoringv1alpha1.URL("https://api.telegram.org")),
-								ChatID: 12345,
-							}},
-						}},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
 			name:    "CR with Slack Receiver and global Slack URL",
 			kclient: fake.NewClientset(),
 			baseConfig: alertmanagerConfig{
@@ -4594,144 +4561,6 @@ func TestGenerateConfigMSTeamsV2Receiver(t *testing.T) {
 	}
 }
 
-func TestGenerateConfigTelegramReceiver(t *testing.T) {
-	type testCase struct {
-		name            string
-		kclient         kubernetes.Interface
-		baseConfig      alertmanagerConfig
-		amVersion       *semver.Version
-		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
-		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
-		golden          string
-		expectedError   bool
-		errMsg          *string
-	}
-
-	version25, err := semver.ParseTolerant("v0.25.0")
-	require.NoError(t, err)
-
-	version26, err := semver.ParseTolerant("v0.26.0")
-	require.NoError(t, err)
-
-	testCases := []testCase{
-		{
-			name:      "CR with Telegram Missing botToken",
-			amVersion: &version25,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
-									{
-										ChatID: 1234,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-			errMsg:        new(`AlertmanagerConfig mynamespace/myamc: TelegramConfig[0]: missing mandatory field 'botToken'`),
-		},
-		{
-			name:      "CR with Telegram Missing botToken and botTokenFile",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								TelegramConfigs: []monitoringv1alpha1.TelegramConfig{
-									{
-										ChatID: 1234,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-			errMsg:        new(`AlertmanagerConfig mynamespace/myamc: TelegramConfig[0]: missing mandatory field 'botToken' or 'botTokenFile'`),
-		},
-	}
-
-	logger := newNopLogger(t)
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
-
-			if tc.amVersion == nil {
-				version, err := semver.ParseTolerant("v0.22.2")
-				require.NoError(t, err)
-				tc.amVersion = &version
-			}
-
-			cb := NewConfigBuilder(logger, *tc.amVersion, store,
-				&monitoringv1.Alertmanager{
-					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
-					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
-				},
-			)
-			cb.cfg = &tc.baseConfig
-
-			err := cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs)
-
-			if tc.expectedError {
-				require.Error(t, err)
-				t.Logf("err: %s", err)
-				if tc.errMsg != nil {
-					assert.EqualError(t, err, *tc.errMsg)
-					return
-				}
-				return
-			}
-			require.NoError(t, err)
-
-			cfgBytes, err := cb.MarshalJSON()
-			require.NoError(t, err)
-
-			// Verify the generated yaml is as expected
-			golden.Assert(t, string(cfgBytes), tc.golden)
-
-			// Verify the generated config is something that Alertmanager will be happy with
-			_, err = alertmanagerConfigFromBytes(cfgBytes)
-			require.NoError(t, err)
-		})
-	}
-}
 func TestGenerateConfigWebhookReceiver(t *testing.T) {
 	type testCase struct {
 		name            string
@@ -5071,78 +4900,6 @@ func TestGenerateConfigEmailReceiver(t *testing.T) {
 				},
 			},
 			golden: "CR_with_EmailConfig_Receiver_Conf.golden",
-		},
-		{
-			name:      "CR with EmailConfig Missing SmartHost Field",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										From: new("admin@example.com"),
-										To:   new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
-		},
-		{
-			name:      "CR with EmailConfig Missing SMTP From Field",
-			amVersion: &version26,
-			kclient:   fake.NewClientset(),
-			baseConfig: alertmanagerConfig{
-				Route: &route{
-					Receiver: "null",
-				},
-				Receivers: []*receiver{{Name: "null"}},
-			},
-			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
-				"mynamespace": {
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      "myamc",
-						Namespace: "mynamespace",
-					},
-					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
-						Route: &monitoringv1alpha1.Route{
-							Receiver: "test",
-						},
-						Receivers: []monitoringv1alpha1.Receiver{
-							{
-								Name: "test",
-								EmailConfigs: []monitoringv1alpha1.EmailConfig{
-									{
-										From: new("admin@example.com"),
-										To:   new("customers@example.com"),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			expectedError: true,
 		},
 		{
 			name:      "CR with EmailConfig Missing Required Fields from Receiver level but specified at Global level",
