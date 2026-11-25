@@ -943,6 +943,86 @@ func TestSyncEndpointSliceWhenServiceSyncFails(t *testing.T) {
 	_ = listEndpointSlices(t, c.kclient.DiscoveryV1().EndpointSlices(c.kubeletObjectNamespace), 0)
 }
 
+func TestSyncEndpointSliceSkipsMirroringLegacyEndpoints(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		opts             []ControllerOption
+		endpoints        bool
+		expectSkipMirror bool
+	}{
+		{
+			name:             "endpointslice only, leftover endpoints",
+			opts:             []ControllerOption{WithEndpointSlice()},
+			endpoints:        true,
+			expectSkipMirror: true,
+		},
+		{
+			name: "endpointslice only, no endpoints",
+			opts: []ControllerOption{WithEndpointSlice()},
+		},
+		{
+			name:             "endpoints and endpointslice",
+			opts:             []ControllerOption{WithEndpoints(), WithEndpointSlice()},
+			endpoints:        true,
+			expectSkipMirror: true,
+		},
+		{
+			name:      "endpoints only",
+			opts:      []ControllerOption{WithEndpoints()},
+			endpoints: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			fakeClient := fake.NewClientset()
+			fakeClient.PrependReactor(
+				"create", "*",
+				func(action ktesting.Action) (bool, runtime.Object, error) {
+					if meta, ok := action.(ktesting.CreateAction).GetObject().(metav1.Object); ok && meta.GetName() == "" {
+						meta.SetName(names.SimpleNameGenerator.GenerateName(meta.GetGenerateName()))
+					}
+					return false, nil, nil
+				},
+			)
+
+			if tc.endpoints {
+				//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
+				_, err := fakeClient.CoreV1().Endpoints("test").Create(ctx, &corev1.Endpoints{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:   "kubelet",
+						Labels: map[string]string{"k8s-app": "kubelet"},
+					},
+				}, metav1.CreateOptions{})
+				require.NoError(t, err)
+			}
+
+			c, err := New(newLogger(), fakeClient, nil, "kubelet", "test", "", nil, nil, tc.opts...)
+			require.NoError(t, err)
+
+			_, err = c.kclient.CoreV1().Nodes().Create(ctx, newNode("node-0", "10.0.0.1"), metav1.CreateOptions{})
+			require.NoError(t, err)
+
+			c.sync(ctx)
+			// A second sync must not fail or change the outcome.
+			c.sync(ctx)
+
+			//nolint:staticcheck // Ignore SA1019 Endpoints is marked as deprecated.
+			eps, err := c.kclient.CoreV1().Endpoints("test").Get(ctx, "kubelet", metav1.GetOptions{})
+			if !tc.endpoints {
+				require.True(t, apierrors.IsNotFound(err), "the Endpoints object shouldn't be created")
+				return
+			}
+			require.NoError(t, err)
+
+			if tc.expectSkipMirror {
+				require.Equal(t, "true", eps.Labels[discoveryv1.LabelSkipMirror])
+			} else {
+				require.NotContains(t, eps.Labels, discoveryv1.LabelSkipMirror)
+			}
+		})
+	}
+}
+
 func newNode(name, address string) *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
