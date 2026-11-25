@@ -435,6 +435,9 @@
     "AWSHTTP",
     "nodev",
     "nosuid",
-    "distroless"
+    "amtool",
+    "coffeegoesincodecomesout",
+    "distroless",
+    "mcbenjemaa"
   ]
 }
