@@ -15,6 +15,7 @@
 package prometheus
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log/slog"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/common/model"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -225,6 +227,14 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		return err
 	}
 
+	if err := cg.validateQueueConfig(spec.QueueConfig); err != nil {
+		return fmt.Errorf("queueConfig: %w", err)
+	}
+
+	if err := validateMetadataConfig(spec); err != nil {
+		return fmt.Errorf("metadataConfig: %w", err)
+	}
+
 	return spec.Validate()
 }
 
@@ -266,6 +276,112 @@ func validateRemoteHeaders(headers map[string]string) error {
 		if reservedRemoteHeaders.Has(h) {
 			return fmt.Errorf("headers: %q is a reserved header and can't be set", header)
 		}
+	}
+
+	return nil
+}
+
+// Default values of the remote write queue configuration in Prometheus. They
+// apply to the fields which aren't written to the configuration.
+// Reference:
+// https://github.com/prometheus/prometheus/blob/v3.15.1/config/config.go#L238-L254
+const (
+	defaultQueueMinShards  = 1
+	defaultQueueMaxShards  = 50
+	defaultQueueMinBackoff = model.Duration(30 * time.Millisecond)
+	defaultQueueMaxBackoff = model.Duration(5 * time.Second)
+)
+
+// parseDuration parses the given duration and returns the default value if
+// the duration isn't set.
+func parseDuration(d *monitoringv1.Duration, defaultValue model.Duration) (model.Duration, error) {
+	if d == nil {
+		return defaultValue, nil
+	}
+
+	return model.ParseDuration(string(*d))
+}
+
+// validateQueueConfig returns an error if the queue configuration would make
+// Prometheus crash or fail to load its configuration.
+// The operator doesn't write the integer fields set to zero and Prometheus
+// uses the default values instead.
+func (cg *ConfigGenerator) validateQueueConfig(qc *monitoringv1.QueueConfig) error {
+	if qc == nil {
+		return nil
+	}
+
+	// Prometheus panics with negative values and rejects them since v3.12.0.
+	for _, f := range []struct {
+		name  string
+		value int
+	}{
+		{name: "capacity", value: qc.Capacity},
+		{name: "minShards", value: qc.MinShards},
+		{name: "maxShards", value: qc.MaxShards},
+		{name: "maxSamplesPerSend", value: qc.MaxSamplesPerSend},
+	} {
+		if f.value < 0 {
+			return fmt.Errorf("%s must not be negative, current = %d", f.name, f.value)
+		}
+	}
+
+	// Prometheus rejects these combinations since v3.12.0. The values are
+	// compared after applying the default values.
+	// Reference:
+	// https://github.com/prometheus/prometheus/blob/v3.15.1/config/config.go#L1658-L1678
+	if !cg.WithMinimumVersion("3.12.0").IsCompatible() {
+		return nil
+	}
+
+	minShards := cmp.Or(qc.MinShards, defaultQueueMinShards)
+	maxShards := cmp.Or(qc.MaxShards, defaultQueueMaxShards)
+	if minShards > maxShards {
+		return fmt.Errorf("minShards (%d) must not be greater than maxShards (%d)", minShards, maxShards)
+	}
+
+	minBackoff, err := parseDuration(qc.MinBackoff, defaultQueueMinBackoff)
+	if err != nil {
+		return fmt.Errorf("invalid minBackoff: %w", err)
+	}
+
+	maxBackoff, err := parseDuration(qc.MaxBackoff, defaultQueueMaxBackoff)
+	if err != nil {
+		return fmt.Errorf("invalid maxBackoff: %w", err)
+	}
+
+	if maxBackoff < minBackoff {
+		return fmt.Errorf("maxBackoff (%s) must not be less than minBackoff (%s)", maxBackoff, minBackoff)
+	}
+
+	return nil
+}
+
+// validateMetadataConfig returns an error if the metadata configuration would
+// make Prometheus crash or never send the metadata. Prometheus sends the
+// metadata on its own only when sending is enabled with Remote Write 1.0.
+func validateMetadataConfig(spec monitoringv1.RemoteWriteSpec) error {
+	mc := spec.MetadataConfig
+	if mc == nil || !mc.Send || ptr.Deref(spec.MessageVersion, "") == monitoringv1.RemoteWriteMessageVersion2_0 {
+		return nil
+	}
+
+	// The operator doesn't write an empty interval.
+	if mc.SendInterval != "" {
+		sendInterval, err := model.ParseDuration(string(mc.SendInterval))
+		if err != nil {
+			return fmt.Errorf("invalid sendInterval: %w", err)
+		}
+
+		// A zero interval makes Prometheus panic.
+		if sendInterval <= 0 {
+			return fmt.Errorf("sendInterval must be greater than 0")
+		}
+	}
+
+	// Prometheus never sends the metadata with a non-positive value.
+	if mc.MaxSamplesPerSend != nil && *mc.MaxSamplesPerSend <= 0 {
+		return fmt.Errorf("maxSamplesPerSend must be greater than 0, current = %d", *mc.MaxSamplesPerSend)
 	}
 
 	return nil
