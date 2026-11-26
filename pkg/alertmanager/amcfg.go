@@ -3106,6 +3106,7 @@ func (sc *snsConfig) sanitize(amVersion semver.Version, logger *slog.Logger) err
 func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger) error {
 	lessThanV0_26 := amVersion.LT(semver.MustParse("0.26.0"))
 	telegramAllowed := amVersion.GTE(semver.MustParse("0.24.0"))
+	lessThanV0_28 := amVersion.LT(semver.MustParse("0.28.0"))
 	lessThanV0_31 := amVersion.LT(semver.MustParse("0.31.0"))
 
 	if !telegramAllowed {
@@ -3142,8 +3143,8 @@ func (tc *telegramConfig) sanitize(amVersion semver.Version, logger *slog.Logger
 		return fmt.Errorf("missing mandatory field botToken or botTokenFile")
 	}
 
-	if tc.MessageThreadID != 0 && lessThanV0_26 {
-		warnUnsupportedField(logger, "message_thread_id", amVersion, semver.MustParse("0.26.0"))
+	if tc.MessageThreadID != 0 && lessThanV0_28 {
+		warnUnsupportedField(logger, "message_thread_id", amVersion, semver.MustParse("0.28.0"))
 		tc.MessageThreadID = 0
 	}
 

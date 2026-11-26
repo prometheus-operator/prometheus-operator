@@ -37893,7 +37893,7 @@ int64
 <em>(Optional)</em>
 <p>messageThreadID defines the Telegram Group Topic ID for threaded messages.
 This allows sending messages to specific topics within Telegram groups.
-It requires Alertmanager &gt;= 0.26.0.</p>
+It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
 <tr>
@@ -42619,7 +42619,7 @@ int64
 <em>(Optional)</em>
 <p>messageThreadID defines the Telegram Group Topic ID for threaded messages.
 This allows sending messages to specific topics within Telegram groups.
-It requires Alertmanager &gt;= 0.26.0.</p>
+It requires Alertmanager &gt;= 0.28.0.</p>
 </td>
 </tr>
 <tr>
