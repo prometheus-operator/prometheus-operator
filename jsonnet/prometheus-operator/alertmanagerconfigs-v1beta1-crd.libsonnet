@@ -7983,7 +7983,7 @@
                             type: 'string',
                           },
                           messageThreadID: {
-                            description: 'messageThreadID defines the Telegram Group Topic ID for threaded messages.\nThis allows sending messages to specific topics within Telegram groups.\nIt requires Alertmanager >= 0.26.0.',
+                            description: 'messageThreadID defines the Telegram Group Topic ID for threaded messages.\nThis allows sending messages to specific topics within Telegram groups.\nIt requires Alertmanager >= 0.28.0.',
                             format: 'int64',
                             type: 'integer',
                           },

@@ -5883,8 +5883,8 @@ func TestSanitizeConfig(t *testing.T) {
 	versionTelegramBotTokenFileAllowed := semver.Version{Major: 0, Minor: 26}
 	versionTelegramBotTokenFileNotAllowed := semver.Version{Major: 0, Minor: 25}
 
-	versionTelegramMessageThreadIDAllowed := semver.Version{Major: 0, Minor: 26}
-	versionTelegramMessageThreadIDNotAllowed := semver.Version{Major: 0, Minor: 25}
+	versionTelegramMessageThreadIDAllowed := semver.Version{Major: 0, Minor: 28}
+	versionTelegramMessageThreadIDNotAllowed := semver.Version{Major: 0, Minor: 27}
 
 	versionTelegramChatIDFileAllowed := semver.Version{Major: 0, Minor: 31}
 	versionTelegramChatIDFileNotAllowed := semver.Version{Major: 0, Minor: 30}
@@ -6582,12 +6582,13 @@ func TestSanitizeConfig(t *testing.T) {
 							{
 								ChatID:          12345,
 								MessageThreadID: 123,
+								BotToken:        "test",
 							},
 						},
 					},
 				},
 			},
-			expectErr: true,
+			golden: "message_thread_id_is_dropped_for_unsupported_versions.golden",
 		},
 		{
 			name:           "chat_id_file is presented along with chat_id",

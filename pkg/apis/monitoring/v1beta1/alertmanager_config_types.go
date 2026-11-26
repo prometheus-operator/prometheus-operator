@@ -1157,7 +1157,7 @@ type TelegramConfig struct {
 	ChatID int64 `json:"chatID,omitempty"`
 	// messageThreadID defines the Telegram Group Topic ID for threaded messages.
 	// This allows sending messages to specific topics within Telegram groups.
-	// It requires Alertmanager >= 0.26.0.
+	// It requires Alertmanager >= 0.28.0.
 	// +optional
 	MessageThreadID *int64 `json:"messageThreadID,omitempty"`
 	// message defines the message template for the Telegram notification.
