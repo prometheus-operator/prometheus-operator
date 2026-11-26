@@ -2896,6 +2896,19 @@ func toProtobufMessageVersion(mv monitoringv1.RemoteWriteMessageVersion) string 
 	return "prometheus.WriteRequest"
 }
 
+func toRemoteWriteMode(m monitoringv1.RemoteWriteMode) string {
+	switch m {
+	case monitoringv1.RemoteWriteModeStateless:
+		return "stateless"
+	case monitoringv1.RemoteWriteModeStatelessST:
+		return "stateless-st"
+	case monitoringv1.RemoteWriteModeNone:
+		return "none"
+	}
+
+	return "none"
+}
+
 // AddRemoteWriteToStore validates the remote-write configurations and loads
 // all secret/configmap references into the store.
 func (cg *ConfigGenerator) AddRemoteWriteToStore(ctx context.Context, store *assets.StoreBuilder, namespace string, rws []monitoringv1.RemoteWriteSpec) error {
@@ -2955,6 +2968,10 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(spec monitoringv1.RemoteWri
 
 	if spec.MessageVersion != nil {
 		cfg = cg.WithMinimumVersion("2.54.0").AppendMapItem(cfg, "protobuf_message", toProtobufMessageVersion(*spec.MessageVersion))
+	}
+
+	if spec.Mode != nil {
+		cfg = cg.WithMinimumVersion("3.17.0").AppendMapItem(cfg, "mode", toRemoteWriteMode(*spec.Mode))
 	}
 
 	if spec.SendExemplars != nil {

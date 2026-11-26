@@ -18780,6 +18780,31 @@ bool
 </td>
 </tr></tbody>
 </table>
+<h3 id="monitoring.coreos.com/v1.RemoteWriteMode">RemoteWriteMode
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+</p>
+<div>
+</div>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr><td><p>&#34;None&#34;</p></td>
+<td><p>RemoteWriteModeNone is the default baseline Remote Write 2.0 mode.</p>
+</td>
+</tr><tr><td><p>&#34;Stateless&#34;</p></td>
+<td><p>RemoteWriteModeStateless enables the stateless Remote Write 2.0 mode.</p>
+</td>
+</tr><tr><td><p>&#34;StatelessST&#34;</p></td>
+<td><p>RemoteWriteModeStatelessST enables the stateless-st Remote Write 2.0 mode.</p>
+</td>
+</tr></tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec
 </h3>
 <p>
@@ -18844,6 +18869,29 @@ configured to append the metadata of scraped metrics to the WAL.</p>
 <p>Before setting this field, consult with your remote storage provider
 what message version it supports.</p>
 <p>It requires Prometheus &gt;= v2.54.0 or Thanos &gt;= v0.37.0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>mode</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.RemoteWriteMode">
+RemoteWriteMode
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>mode defines the optional Remote Write 2.0 mode to use when writing to the endpoint.</p>
+<p><code>None</code> corresponds to <code>none</code> (default baseline Remote Write 2.0 behavior).
+<code>Stateless</code> corresponds to <code>stateless</code> and requires enabling <code>metadata-wal-records</code>
+or <code>type-and-unit-labels</code> via <code>spec.enableFeatures</code>.
+<code>StatelessST</code> corresponds to <code>stateless-st</code> and additionally requires enabling
+<code>st-storage</code> via <code>spec.enableFeatures</code>.</p>
+<p>Setting <code>Stateless</code> or <code>StatelessST</code> requires <code>messageVersion</code> to be <code>V2.0</code>
+and cannot be combined with <code>sendNativeHistograms: false</code>.</p>
+<p>See <a href="https://prometheus.io/docs/specs/prw/remote_write_spec_2_0/#modes">https://prometheus.io/docs/specs/prw/remote_write_spec_2_0/#modes</a> for details.</p>
+<p>It requires Prometheus &gt;= v3.17.0. Currently not supported by Thanos.</p>
 </td>
 </tr>
 <tr>

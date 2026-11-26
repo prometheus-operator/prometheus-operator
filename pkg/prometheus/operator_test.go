@@ -471,6 +471,67 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "with_mode_none",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:  monitoringv1.URL("http://example.com"),
+				Mode: new(monitoringv1.RemoteWriteModeNone),
+			},
+		},
+		{
+			name: "with_mode_stateless_and_v2",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:            monitoringv1.URL("http://example.com"),
+				MessageVersion: new(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:           new(monitoringv1.RemoteWriteModeStateless),
+			},
+		},
+		{
+			name: "with_mode_stateless_st_and_v2",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:                  monitoringv1.URL("http://example.com"),
+				MessageVersion:       new(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:                 new(monitoringv1.RemoteWriteModeStatelessST),
+				SendNativeHistograms: new(true),
+			},
+		},
+		{
+			name: "with_mode_stateless_without_message_version",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:  monitoringv1.URL("http://example.com"),
+				Mode: new(monitoringv1.RemoteWriteModeStateless),
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_mode_stateless_st_with_v1",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:            monitoringv1.URL("http://example.com"),
+				MessageVersion: new(monitoringv1.RemoteWriteMessageVersion1_0),
+				Mode:           new(monitoringv1.RemoteWriteModeStatelessST),
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_mode_stateless_with_sendNativeHistograms_false",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:                  monitoringv1.URL("http://example.com"),
+				MessageVersion:       new(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:                 new(monitoringv1.RemoteWriteModeStateless),
+				SendNativeHistograms: new(false),
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_mode_stateless_st_with_sendNativeHistograms_false",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:                  monitoringv1.URL("http://example.com"),
+				MessageVersion:       new(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:                 new(monitoringv1.RemoteWriteModeStatelessST),
+				SendNativeHistograms: new(false),
+			},
+			expectErr: true,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

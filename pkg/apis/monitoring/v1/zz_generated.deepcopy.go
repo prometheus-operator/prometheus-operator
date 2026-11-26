@@ -3212,6 +3212,11 @@ func (in *RemoteWriteSpec) DeepCopyInto(out *RemoteWriteSpec) {
 		*out = new(RemoteWriteMessageVersion)
 		**out = **in
 	}
+	if in.Mode != nil {
+		in, out := &in.Mode, &out.Mode
+		*out = new(RemoteWriteMode)
+		**out = **in
+	}
 	if in.SendExemplars != nil {
 		in, out := &in.SendExemplars, &out.SendExemplars
 		*out = new(bool)

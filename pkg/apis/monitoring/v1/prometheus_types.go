@@ -1771,6 +1771,8 @@ type ThanosSpec struct {
 
 // RemoteWriteSpec defines the configuration to write samples from Prometheus
 // to a remote endpoint.
+// +kubebuilder:validation:XValidation:rule="!has(self.mode) || self.mode == 'None' || (has(self.messageVersion) && self.messageVersion == 'V2.0')",message="mode 'Stateless' or 'StatelessST' requires messageVersion to be 'V2.0'"
+// +kubebuilder:validation:XValidation:rule="!has(self.mode) || self.mode == 'None' || !has(self.sendNativeHistograms) || self.sendNativeHistograms",message="sendNativeHistograms cannot be false when mode is 'Stateless' or 'StatelessST'"
 // +k8s:openapi-gen=true
 type RemoteWriteSpec struct {
 	// url defines the URL of the endpoint to send samples to.
@@ -1802,6 +1804,24 @@ type RemoteWriteSpec struct {
 	//
 	// +optional
 	MessageVersion *RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
+
+	// mode defines the optional Remote Write 2.0 mode to use when writing to the endpoint.
+	//
+	// `None` corresponds to `none` (default baseline Remote Write 2.0 behavior).
+	// `Stateless` corresponds to `stateless` and requires enabling `metadata-wal-records`
+	// or `type-and-unit-labels` via `spec.enableFeatures`.
+	// `StatelessST` corresponds to `stateless-st` and additionally requires enabling
+	// `st-storage` via `spec.enableFeatures`.
+	//
+	// Setting `Stateless` or `StatelessST` requires `messageVersion` to be `V2.0`
+	// and cannot be combined with `sendNativeHistograms: false`.
+	//
+	// See https://prometheus.io/docs/specs/prw/remote_write_spec_2_0/#modes for details.
+	//
+	// It requires Prometheus >= v3.17.0. Currently not supported by Thanos.
+	//
+	// +optional
+	Mode *RemoteWriteMode `json:"mode,omitempty"`
 
 	// sendExemplars enables sending of exemplars over remote write. Note that
 	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
@@ -1950,6 +1970,18 @@ const (
 	RemoteWriteMessageVersion1_0 = RemoteWriteMessageVersion("V1.0")
 	// Remote Write message's version 2.0.
 	RemoteWriteMessageVersion2_0 = RemoteWriteMessageVersion("V2.0")
+)
+
+// +kubebuilder:validation:Enum=None;Stateless;StatelessST
+type RemoteWriteMode string
+
+const (
+	// RemoteWriteModeNone is the default baseline Remote Write 2.0 mode.
+	RemoteWriteModeNone RemoteWriteMode = "None"
+	// RemoteWriteModeStateless enables the stateless Remote Write 2.0 mode.
+	RemoteWriteModeStateless RemoteWriteMode = "Stateless"
+	// RemoteWriteModeStatelessST enables the stateless-st Remote Write 2.0 mode.
+	RemoteWriteModeStatelessST RemoteWriteMode = "StatelessST"
 )
 
 // QueueConfig allows the tuning of remote write's queue_config parameters.

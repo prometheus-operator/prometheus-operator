@@ -4789,6 +4789,42 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_MessageVersion2_with_metadata.golden",
 		},
+		{
+			version: "v3.16.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:           new(monitoringv1.RemoteWriteModeStatelessST),
+			},
+			golden: "RemoteWriteConfig_Mode_v3.16.0.golden",
+		},
+		{
+			version: "v3.17.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:           new(monitoringv1.RemoteWriteModeNone),
+			},
+			golden: "v3.17/RemoteWriteConfig_ModeNone_v3.17.0.golden",
+		},
+		{
+			version: "v3.17.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:           new(monitoringv1.RemoteWriteModeStateless),
+			},
+			golden: "v3.17/RemoteWriteConfig_ModeStateless_v3.17.0.golden",
+		},
+		{
+			version: "v3.17.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:            "http://example.com",
+				MessageVersion: ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+				Mode:           new(monitoringv1.RemoteWriteModeStatelessST),
+			},
+			golden: "v3.17/RemoteWriteConfig_ModeStatelessST_v3.17.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()
