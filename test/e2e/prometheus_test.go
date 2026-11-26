@@ -4260,13 +4260,13 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 			// override label using the labeldrop action.
 			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Regex:  "namespace",
+					Regex:  new("namespace"),
 					Action: "labeldrop",
 				},
 			},
 			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Regex:  "namespace",
+					Regex:  new("namespace"),
 					Action: "labeldrop",
 				},
 			},
@@ -4312,12 +4312,12 @@ func testPromEnforcedNamespaceLabel(t *testing.T) {
 			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action:      "labelmap",
-					Regex:       "temp_namespace",
+					Regex:       new("temp_namespace"),
 					Replacement: new("namespace"),
 				},
 				{
 					Action: "labeldrop",
-					Regex:  "temp_namespace",
+					Regex:  new("temp_namespace"),
 				},
 			},
 		},
@@ -4417,13 +4417,13 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 			// override label using the labeldrop action.
 			relabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Regex:  "namespace",
+					Regex:  new("namespace"),
 					Action: "labeldrop",
 				},
 			},
 			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Regex:  "namespace",
+					Regex:  new("namespace"),
 					Action: "labeldrop",
 				},
 			},
@@ -4456,12 +4456,12 @@ func testPromNamespaceEnforcementExclusion(t *testing.T) {
 			metricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
 					Action:      "labelmap",
-					Regex:       "temp_namespace",
+					Regex:       new("temp_namespace"),
 					Replacement: new("namespace"),
 				},
 				{
 					Action: "labeldrop",
-					Regex:  "temp_namespace",
+					Regex:  new("temp_namespace"),
 				},
 			},
 			expectedNamespace: "ns1",
@@ -5163,7 +5163,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
 					Action:       "replace",
-					Regex:        "([^:]+)(?::\\d+)?",
+					Regex:        new("([^:]+)(?::\\d+)?"),
 					Replacement:  new("$1:80"),
 					TargetLabel:  "__address__",
 				},
@@ -5175,7 +5175,7 @@ func testRelabelConfigCRDValidation(t *testing.T) {
 				{
 					SourceLabels: []monitoringv1.LabelName{"__address__"},
 					Separator:    new(","),
-					Regex:        "([^:]+)(?::\\d+)?",
+					Regex:        new("([^:]+)(?::\\d+)?"),
 					Replacement:  new("$1:80"),
 					TargetLabel:  "__address__",
 				},

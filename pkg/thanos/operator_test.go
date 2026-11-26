@@ -191,7 +191,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 					WriteRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							SourceLabels: []monitoringv1.LabelName{"__name__"},
-							Regex:        "(ab",
+							Regex:        new("(ab"),
 							TargetLabel:  "job",
 							Action:       "replace",
 						},

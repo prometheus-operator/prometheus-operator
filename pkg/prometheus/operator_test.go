@@ -395,7 +395,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				WriteRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						SourceLabels: []monitoringv1.LabelName{"__name__"},
-						Regex:        "a(b|c)",
+						Regex:        new("a(b|c)"),
 						TargetLabel:  "job",
 						Action:       "replace",
 					},
@@ -409,7 +409,7 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 				WriteRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						SourceLabels: []monitoringv1.LabelName{"__name__"},
-						Regex:        "(ab",
+						Regex:        new("(ab"),
 						TargetLabel:  "job",
 						Action:       "replace",
 					},
