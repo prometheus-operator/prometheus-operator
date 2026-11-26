@@ -471,6 +471,232 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "with_empty_queueConfig",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{},
+			},
+		},
+		{
+			name: "with_valid_queueConfig",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					Capacity:          2500,
+					MinShards:         1,
+					MaxShards:         200,
+					MaxSamplesPerSend: 500,
+					MinBackoff:        new(monitoringv1.Duration("30ms")),
+					MaxBackoff:        new(monitoringv1.Duration("5s")),
+				},
+			},
+		},
+		{
+			name: "with_negative_queueConfig_capacity",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{Capacity: -1},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_negative_queueConfig_minShards",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{MinShards: -1},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_negative_queueConfig_maxShards",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{MaxShards: -1},
+			},
+			expectErr: true,
+		},
+		{
+			name:    "with_negative_queueConfig_maxSamplesPerSend_before_v3.12.0",
+			version: "v3.11.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{MaxSamplesPerSend: -1},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_empty_queueConfig_minBackoff",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinBackoff: new(monitoringv1.Duration("")),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_empty_queueConfig_maxBackoff",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MaxBackoff: new(monitoringv1.Duration("")),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_queueConfig_minShards_greater_than_maxShards",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinShards: 10,
+					MaxShards: 5,
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:    "with_queueConfig_minShards_greater_than_maxShards_before_v3.12.0",
+			version: "v3.11.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinShards: 10,
+					MaxShards: 5,
+				},
+			},
+		},
+		{
+			name: "with_queueConfig_minShards_greater_than_default_maxShards",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{MinShards: 100},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_queueConfig_maxShards_equal_to_default_minShards",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:         monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{MaxShards: 1},
+			},
+		},
+		{
+			name: "with_queueConfig_maxBackoff_less_than_minBackoff",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinBackoff: new(monitoringv1.Duration("1s")),
+					MaxBackoff: new(monitoringv1.Duration("500ms")),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:    "with_queueConfig_maxBackoff_less_than_minBackoff_before_v3.12.0",
+			version: "v3.11.0",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinBackoff: new(monitoringv1.Duration("1s")),
+					MaxBackoff: new(monitoringv1.Duration("500ms")),
+				},
+			},
+		},
+		{
+			name: "with_queueConfig_minBackoff_greater_than_default_maxBackoff",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MinBackoff: new(monitoringv1.Duration("10s")),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_queueConfig_maxBackoff_less_than_default_minBackoff",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				QueueConfig: &monitoringv1.QueueConfig{
+					MaxBackoff: new(monitoringv1.Duration("10ms")),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_metadataConfig_send_enabled_and_default_values",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send: true,
+				},
+			},
+		},
+		{
+			name: "with_valid_metadataConfig",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:              true,
+					SendInterval:      "1m",
+					MaxSamplesPerSend: new(int32(500)),
+				},
+			},
+		},
+		{
+			name: "with_metadataConfig_zero_sendInterval",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         true,
+					SendInterval: "0s",
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_metadataConfig_zero_sendInterval_and_send_disabled",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					SendInterval: "0s",
+				},
+			},
+		},
+		{
+			name: "with_metadataConfig_zero_sendInterval_and_remote_write_v2",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL:            monitoringv1.URL("http://example.com"),
+				MessageVersion: new(monitoringv1.RemoteWriteMessageVersion2_0),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:         true,
+					SendInterval: "0s",
+				},
+			},
+		},
+		{
+			name: "with_metadataConfig_zero_maxSamplesPerSend",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:              true,
+					MaxSamplesPerSend: new(int32(0)),
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_metadataConfig_negative_maxSamplesPerSend",
+			spec: monitoringv1.RemoteWriteSpec{
+				URL: monitoringv1.URL("http://example.com"),
+				MetadataConfig: &monitoringv1.MetadataConfig{
+					Send:              true,
+					MaxSamplesPerSend: new(int32(-1)),
+				},
+			},
+			expectErr: true,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
