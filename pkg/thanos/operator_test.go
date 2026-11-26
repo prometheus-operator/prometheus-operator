@@ -183,6 +183,34 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 			golden: "v0.36.0_remote_write_config_unsupported_fields.golden",
 		},
 		{
+			name:    "with v0.36.0 dropping googleIAM",
+			version: "v0.36.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:       "http://example.com",
+					GoogleIAM: &monitoringv1.GoogleIAM{},
+				},
+			},
+			golden: "v0.36.0_google_iam_remote_write_config.golden",
+		},
+		{
+			name:    "with v0.37.0 googleIAM",
+			version: "v0.37.0",
+			remoteWrite: []monitoringv1.RemoteWriteSpec{
+				{
+					URL:       "http://example.com",
+					GoogleIAM: &monitoringv1.GoogleIAM{},
+				},
+				{
+					URL: "http://example.com/with-file",
+					GoogleIAM: &monitoringv1.GoogleIAM{
+						CredentialsFile: new("/etc/thanos/secrets/gcp/key.json"),
+					},
+				},
+			},
+			golden: "v0.37.0_google_iam_remote_write_config.golden",
+		},
+		{
 			name:    "remote write with invalid write relabel config regex",
 			version: operator.DefaultThanosVersion,
 			remoteWrite: []monitoringv1.RemoteWriteSpec{

@@ -4678,7 +4678,7 @@
                       "description": "RemoteWriteSpec defines the configuration to write samples from Prometheus\nto a remote endpoint.",
                       "properties": {
                         "authorization": {
-                          "description": "authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "authorization section for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.",
                           "properties": {
                             "credentials": {
                               "description": "credentials defines a key of a Secret in the namespace that contains the credentials for authentication.",
@@ -4715,7 +4715,7 @@
                           "type": "object"
                         },
                         "azureAd": {
-                          "description": "azureAd for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.",
+                          "description": "azureAd for the URL.\n\nIt requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `googleIAM`.",
                           "properties": {
                             "cloud": {
                               "description": "cloud defines the Azure Cloud. Options are 'AzurePublic', 'AzureChina', or 'AzureGovernment'.",
@@ -4822,7 +4822,7 @@
                           "type": "object"
                         },
                         "basicAuth": {
-                          "description": "basicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.",
+                          "description": "basicAuth configuration for the URL.\n\nCannot be set at the same time as `sigv4`, `authorization`, `oauth2`, `azureAd`, or `googleIAM`.",
                           "properties": {
                             "password": {
                               "description": "password defines a key of a Secret containing the password for\nauthentication.",
@@ -4889,6 +4889,17 @@
                           "description": "followRedirects defines whether HTTP requests follow HTTP 3xx redirects.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.",
                           "type": "boolean"
                         },
+                        "googleIAM": {
+                          "description": "googleIAM defines Google Cloud IAM authentication for the URL.\n\nIt requires Prometheus >= v2.55.0 or Thanos >= v0.37.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `azureAd`.",
+                          "properties": {
+                            "credentialsFile": {
+                              "description": "credentialsFile defines the path to a Google Cloud service account\ncredentials JSON file with monitoring write permissions.\n\nIf omitted, Prometheus uses Application Default Credentials (for example,\nWorkload Identity Federation or the GOOGLE_APPLICATION_CREDENTIALS\nenvironment variable).",
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
                         "headers": {
                           "additionalProperties": {
                             "type": "string"
@@ -4934,7 +4945,7 @@
                           "type": "string"
                         },
                         "oauth2": {
-                          "description": "oauth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.",
+                          "description": "oauth2 configuration for the URL.\n\nIt requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, `azureAd`, or `googleIAM`.",
                           "properties": {
                             "clientId": {
                               "description": "clientId defines a key of a Secret or ConfigMap containing the\nOAuth2 client's ID.",
@@ -5351,7 +5362,7 @@
                           "type": "boolean"
                         },
                         "sigv4": {
-                          "description": "sigv4 defines the AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.",
+                          "description": "sigv4 defines the AWS's Signature Verification 4 for the URL.\n\nIt requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.\n\nCannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.",
                           "properties": {
                             "accessKey": {
                               "description": "accessKey defines the AWS API key. If not specified, the environment variable\n`AWS_ACCESS_KEY_ID` is used.",

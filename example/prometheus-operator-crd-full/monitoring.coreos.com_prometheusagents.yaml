@@ -5611,7 +5611,7 @@ spec:
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 
-                        Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
+                        Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
                       properties:
                         credentials:
                           description: credentials defines a key of a Secret in the
@@ -5657,7 +5657,7 @@ spec:
 
                         It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 
-                        Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+                        Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `googleIAM`.
                       properties:
                         cloud:
                           description: cloud defines the Azure Cloud. Options are
@@ -5778,7 +5778,7 @@ spec:
                       description: |-
                         basicAuth configuration for the URL.
 
-                        Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
+                        Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, `azureAd`, or `googleIAM`.
                       properties:
                         password:
                           description: |-
@@ -5854,6 +5854,25 @@ spec:
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
                       type: boolean
+                    googleIAM:
+                      description: |-
+                        googleIAM defines Google Cloud IAM authentication for the URL.
+
+                        It requires Prometheus >= v2.55.0 or Thanos >= v0.37.0.
+
+                        Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `azureAd`.
+                      properties:
+                        credentialsFile:
+                          description: |-
+                            credentialsFile defines the path to a Google Cloud service account
+                            credentials JSON file with monitoring write permissions.
+
+                            If omitted, Prometheus uses Application Default Credentials (for example,
+                            Workload Identity Federation or the GOOGLE_APPLICATION_CREDENTIALS
+                            environment variable).
+                          minLength: 1
+                          type: string
+                      type: object
                     headers:
                       additionalProperties:
                         type: string
@@ -5929,7 +5948,7 @@ spec:
 
                         It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 
-                        Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
+                        Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, `azureAd`, or `googleIAM`.
                       properties:
                         clientId:
                           description: |-
@@ -6398,7 +6417,7 @@ spec:
 
                         It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 
-                        Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
+                        Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
                       properties:
                         accessKey:
                           description: |-

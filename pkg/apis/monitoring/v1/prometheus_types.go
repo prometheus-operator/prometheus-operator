@@ -1841,13 +1841,13 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, `azureAd`, or `googleIAM`.
 	// +optional
 	OAuth2 *OAuth2 `json:"oauth2,omitempty"`
 
 	// basicAuth configuration for the URL.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	// +optional
 	BasicAuth *BasicAuth `json:"basicAuth,omitempty"`
@@ -1862,7 +1862,7 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	// +optional
 	Authorization *Authorization `json:"authorization,omitempty"`
@@ -1871,7 +1871,7 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	// +optional
 	Sigv4 *Sigv4 `json:"sigv4,omitempty"`
@@ -1880,10 +1880,19 @@ type RemoteWriteSpec struct {
 	//
 	// It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `googleIAM`.
 	//
 	// +optional
 	AzureAD *AzureAD `json:"azureAd,omitempty"`
+
+	// googleIAM defines Google Cloud IAM authentication for the URL.
+	//
+	// It requires Prometheus >= v2.55.0 or Thanos >= v0.37.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `azureAd`.
+	//
+	// +optional
+	GoogleIAM *GoogleIAM `json:"googleIAM,omitempty"`
 
 	// bearerToken is deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
@@ -2115,6 +2124,21 @@ type AzureWorkloadIdentity struct {
 	// +kubebuilder:validation:MinLength=1
 	// +required
 	TenantID string `json:"tenantId"`
+}
+
+// GoogleIAM defines Google Cloud IAM authentication for remote write.
+// +k8s:openapi-gen=true
+type GoogleIAM struct {
+	// credentialsFile defines the path to a Google Cloud service account
+	// credentials JSON file with monitoring write permissions.
+	//
+	// If omitted, Prometheus uses Application Default Credentials (for example,
+	// Workload Identity Federation or the GOOGLE_APPLICATION_CREDENTIALS
+	// environment variable).
+	//
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	CredentialsFile *string `json:"credentialsFile,omitempty"`
 }
 
 // RemoteReadSpec defines the configuration for Prometheus to read back samples

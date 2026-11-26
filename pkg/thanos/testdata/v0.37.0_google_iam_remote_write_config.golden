@@ -1,0 +1,6 @@
+remote_write:
+- url: http://example.com
+  google_iam: {}
+- url: http://example.com/with-file
+  google_iam:
+    credentials_file: /etc/thanos/secrets/gcp/key.json

@@ -78,11 +78,11 @@ type RemoteWriteSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.27.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `basicAuth`, `azureAd`, or `googleIAM`.
 	OAuth2 *OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 	// basicAuth configuration for the URL.
 	//
-	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `authorization`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	BasicAuth *BasicAuthApplyConfiguration `json:"basicAuth,omitempty"`
 	// bearerTokenFile defines the file from which to read bearer token for the URL.
@@ -93,23 +93,30 @@ type RemoteWriteSpecApplyConfiguration struct {
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `sigv4`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	Authorization *AuthorizationApplyConfiguration `json:"authorization,omitempty"`
 	// sigv4 defines the AWS's Signature Verification 4 for the URL.
 	//
 	// It requires Prometheus >= v2.26.0 or Thanos >= v0.24.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `azureAd`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `azureAd`, or `googleIAM`.
 	//
 	Sigv4 *Sigv4ApplyConfiguration `json:"sigv4,omitempty"`
 	// azureAd for the URL.
 	//
 	// It requires Prometheus >= v2.45.0 or Thanos >= v0.31.0.
 	//
-	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, or `sigv4`.
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `googleIAM`.
 	//
 	AzureAD *AzureADApplyConfiguration `json:"azureAd,omitempty"`
+	// googleIAM defines Google Cloud IAM authentication for the URL.
+	//
+	// It requires Prometheus >= v2.55.0 or Thanos >= v0.37.0.
+	//
+	// Cannot be set at the same time as `authorization`, `basicAuth`, `oauth2`, `sigv4`, or `azureAd`.
+	//
+	GoogleIAM *GoogleIAMApplyConfiguration `json:"googleIAM,omitempty"`
 	// bearerToken is deprecated: this will be removed in a future release.
 	// *Warning: this field shouldn't be used because the token value appears
 	// in clear-text. Prefer using `authorization`.*
@@ -278,6 +285,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithSigv4(value *Sigv4ApplyConfigura
 // If called multiple times, the AzureAD field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithAzureAD(value *AzureADApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
 	b.AzureAD = value
+	return b
+}
+
+// WithGoogleIAM sets the GoogleIAM field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the GoogleIAM field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithGoogleIAM(value *GoogleIAMApplyConfiguration) *RemoteWriteSpecApplyConfiguration {
+	b.GoogleIAM = value
 	return b
 }
 
