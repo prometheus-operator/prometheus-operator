@@ -51,6 +51,22 @@ type RemoteWriteSpecApplyConfiguration struct {
 	// It requires Prometheus >= v2.54.0 or Thanos >= v0.37.0.
 	//
 	MessageVersion *monitoringv1.RemoteWriteMessageVersion `json:"messageVersion,omitempty"`
+	// mode defines the optional Remote Write 2.0 mode to use when writing to the endpoint.
+	//
+	// `None` corresponds to `none` (default baseline Remote Write 2.0 behavior).
+	// `Stateless` corresponds to `stateless` and requires enabling `metadata-wal-records`
+	// or `type-and-unit-labels` via `spec.enableFeatures`.
+	// `StatelessST` corresponds to `stateless-st` and additionally requires enabling
+	// `st-storage` via `spec.enableFeatures`.
+	//
+	// Setting `Stateless` or `StatelessST` requires `messageVersion` to be `V2.0`
+	// and cannot be combined with `sendNativeHistograms: false`.
+	//
+	// See https://prometheus.io/docs/specs/prw/remote_write_spec_2_0/#modes for details.
+	//
+	// It requires Prometheus >= v3.17.0. Currently not supported by Thanos.
+	//
+	Mode *monitoringv1.RemoteWriteMode `json:"mode,omitempty"`
 	// sendExemplars enables sending of exemplars over remote write. Note that
 	// exemplar-storage itself must be enabled using the `spec.enableFeatures`
 	// option for exemplars to be scraped in the first place.
@@ -179,6 +195,14 @@ func (b *RemoteWriteSpecApplyConfiguration) WithName(value string) *RemoteWriteS
 // If called multiple times, the MessageVersion field is set to the value of the last call.
 func (b *RemoteWriteSpecApplyConfiguration) WithMessageVersion(value monitoringv1.RemoteWriteMessageVersion) *RemoteWriteSpecApplyConfiguration {
 	b.MessageVersion = &value
+	return b
+}
+
+// WithMode sets the Mode field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Mode field is set to the value of the last call.
+func (b *RemoteWriteSpecApplyConfiguration) WithMode(value monitoringv1.RemoteWriteMode) *RemoteWriteSpecApplyConfiguration {
+	b.Mode = &value
 	return b
 }
 

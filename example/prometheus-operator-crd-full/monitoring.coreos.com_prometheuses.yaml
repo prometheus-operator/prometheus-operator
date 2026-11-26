@@ -7534,6 +7534,27 @@ spec:
                           pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                           type: string
                       type: object
+                    mode:
+                      description: |-
+                        mode defines the optional Remote Write 2.0 mode to use when writing to the endpoint.
+
+                        `None` corresponds to `none` (default baseline Remote Write 2.0 behavior).
+                        `Stateless` corresponds to `stateless` and requires enabling `metadata-wal-records`
+                        or `type-and-unit-labels` via `spec.enableFeatures`.
+                        `StatelessST` corresponds to `stateless-st` and additionally requires enabling
+                        `st-storage` via `spec.enableFeatures`.
+
+                        Setting `Stateless` or `StatelessST` requires `messageVersion` to be `V2.0`
+                        and cannot be combined with `sendNativeHistograms: false`.
+
+                        See https://prometheus.io/docs/specs/prw/remote_write_spec_2_0/#modes for details.
+
+                        It requires Prometheus >= v3.17.0. Currently not supported by Thanos.
+                      enum:
+                      - None
+                      - Stateless
+                      - StatelessST
+                      type: string
                     name:
                       description: |-
                         name of the remote write queue, it must be unique if specified. The
@@ -8387,6 +8408,15 @@ spec:
                   required:
                   - url
                   type: object
+                  x-kubernetes-validations:
+                  - message: mode 'Stateless' or 'StatelessST' requires messageVersion
+                      to be 'V2.0'
+                    rule: '!has(self.mode) || self.mode == ''None'' || (has(self.messageVersion)
+                      && self.messageVersion == ''V2.0'')'
+                  - message: sendNativeHistograms cannot be false when mode is 'Stateless'
+                      or 'StatelessST'
+                    rule: '!has(self.mode) || self.mode == ''None'' || !has(self.sendNativeHistograms)
+                      || self.sendNativeHistograms'
                 type: array
               remoteWriteReceiverMessageVersions:
                 description: |-

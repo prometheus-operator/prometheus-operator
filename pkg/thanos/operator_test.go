@@ -51,6 +51,7 @@ func TestCreateOrUpdateRulerConfigSecret(t *testing.T) {
 				{
 					URL:                  "http://example.com",
 					MessageVersion:       ptr.To(monitoringv1.RemoteWriteMessageVersion2_0),
+					Mode:                 new(monitoringv1.RemoteWriteModeStatelessST),
 					SendNativeHistograms: new(true),
 					RoundRobinDNS:        new(true),
 				},

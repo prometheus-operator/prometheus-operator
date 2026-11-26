@@ -225,6 +225,16 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		return err
 	}
 
+	if spec.Mode != nil && *spec.Mode != monitoringv1.RemoteWriteModeNone {
+		if ptr.Deref(spec.MessageVersion, monitoringv1.RemoteWriteMessageVersion1_0) != monitoringv1.RemoteWriteMessageVersion2_0 {
+			return fmt.Errorf("mode %q requires messageVersion to be %q", *spec.Mode, monitoringv1.RemoteWriteMessageVersion2_0)
+		}
+
+		if spec.SendNativeHistograms != nil && !*spec.SendNativeHistograms {
+			return fmt.Errorf("sendNativeHistograms cannot be false when mode is %q", *spec.Mode)
+		}
+	}
+
 	return spec.Validate()
 }
 
