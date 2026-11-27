@@ -8648,6 +8648,25 @@ func TestSanitizePagerDutyConfig(t *testing.T) {
 			golden: "test_templated_urls_pass_validation_in_pagerduty_config.golden",
 		},
 		{
+			name:           "Test templated urls with functions pass validation",
+			againstVersion: semver.Version{Major: 0, Minor: 25},
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						PagerdutyConfigs: []*pagerdutyConfig{
+							{
+								ClientURL: `{{ .CommonLabels.namespace | toUpper }}`,
+								Links: []pagerdutyLink{
+									{Href: `{{ if match "^env-" .CommonLabels.namespace }}https://env.example.com{{ else }}https://example.com{{ end }}`},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "test_templated_urls_with_functions_pass_validation_in_pagerduty_config.golden",
+		},
+		{
 			name:           "Test invalid template in client_url returns error",
 			againstVersion: semver.Version{Major: 0, Minor: 25},
 			in: &alertmanagerConfig{

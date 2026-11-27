@@ -1,0 +1,8 @@
+receivers:
+- name: ""
+  pagerduty_configs:
+  - client_url: '{{ .CommonLabels.namespace | toUpper }}'
+    links:
+    - href: '{{ if match "^env-" .CommonLabels.namespace }}https://env.example.com{{
+        else }}https://example.com{{ end }}'
+templates: []

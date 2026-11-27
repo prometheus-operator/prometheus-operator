@@ -122,54 +122,66 @@ func TestValidateSecretUrl(t *testing.T) {
 	}
 }
 
-func TestValidateLabelValueTemplate(t *testing.T) {
+func TestValidateTemplateURL(t *testing.T) {
 	for _, tc := range []struct {
 		name string
-		tmpl string
+		url  string
 		err  bool
 	}{
 		{
-			name: "empty string",
-			tmpl: "",
+			name: "plain URL",
+			url:  "https://example.com",
 		},
 		{
-			name: "plain string without template",
-			tmpl: "critical",
+			name: "URL with credentials",
+			url:  "https://user:pass@example.com/path",
 		},
 		{
-			name: "valid template expression",
-			tmpl: "{{ .Labels.severity }}",
+			name: "template with field access",
+			url:  `{{ .CommonAnnotations.client }}`,
 		},
 		{
-			name: "valid template with mixed text",
-			tmpl: "prefix-{{ .Labels.env }}-suffix",
+			name: "template with toUpper",
+			url:  `https://example.com/{{ .CommonLabels.namespace | toUpper }}`,
 		},
 		{
-			name: "valid template with multiple expressions",
-			tmpl: "{{ .Labels.team }}/{{ .Labels.env }}",
+			name: "template with match",
+			url:  `{{ if match "^env-" .CommonLabels.namespace }}https://env.example.com{{ else }}https://example.com{{ end }}`,
 		},
 		{
-			name: "valid template accessing nested fields",
-			tmpl: "{{ .CommonAnnotations.summary }}",
+			name: "template with reReplaceAll",
+			url:  `https://example.com/{{ reReplaceAll "[^a-z]" "" .CommonLabels.env }}`,
+		},
+		{
+			name: "template with safeUrl",
+			url:  `{{ safeUrl "https://example.com" }}`,
+		},
+		{
+			name: "template with join",
+			url:  `https://example.com/{{ join "/" .CommonLabels.path }}`,
+		},
+		{
+			name: "template with routeLabels",
+			url:  `https://example.com/{{ routeLabels "severity" }}`,
+		},
+		{
+			name: "invalid URL",
+			url:  "not-a-valid-url",
+			err:  true,
 		},
 		{
 			name: "invalid template - unclosed action",
-			tmpl: "{{ .Labels.severity",
+			url:  `{{ .CommonAnnotations.client`,
 			err:  true,
 		},
 		{
-			name: "invalid template - bad function",
-			tmpl: "{{ nonexistentFunc .Labels.severity }}",
-			err:  true,
-		},
-		{
-			name: "invalid template - unclosed action at end",
-			tmpl: "text {{ .Labels.foo",
+			name: "invalid template - unknown function",
+			url:  `{{ nonexistentFunc .CommonAnnotations.client }}`,
 			err:  true,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateLabelValueTemplate(tc.tmpl)
+			err := ValidateTemplateURL(tc.url)
 			if tc.err {
 				if err == nil {
 					t.Fatal("expected error but got none")

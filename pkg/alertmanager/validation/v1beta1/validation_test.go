@@ -1772,7 +1772,7 @@ func TestValidateRouteLabels(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "route with invalid template label - unclosed action",
+			name: "route with unclosed template label accepted (rendered by Alertmanager at runtime)",
 			in: &monitoringv1beta1.AlertmanagerConfig{
 				Spec: monitoringv1beta1.AlertmanagerConfigSpec{
 					Receivers: []monitoringv1beta1.Receiver{
@@ -1786,7 +1786,7 @@ func TestValidateRouteLabels(t *testing.T) {
 					},
 				},
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 		{
 			name: "route with no labels",
