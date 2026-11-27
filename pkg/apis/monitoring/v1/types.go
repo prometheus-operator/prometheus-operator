@@ -38,6 +38,11 @@ const (
 // +kubebuilder:validation:Pattern:="^(http|https)://.+$"
 type URL string
 
+// NodeSelector is standard Kubernetes node selector format
+// +kubebuilder:validation:MaxProperties:=32
+// +kubebuilder:validation:XValidation:rule="self.all(key, key.size() <= 316 && self[key].size() <= 63)",message="nodeSelector must contain valid Kubernetes labels"
+type NodeSelector map[string]string
+
 // ByteSize is a valid memory size type based on powers-of-2, so 1KB is 1024B.
 // Supported units: B, KB, KiB, MB, MiB, GB, GiB, TB, TiB, PB, PiB, EB, EiB Ex: `512MB`.
 // +kubebuilder:validation:Pattern:="(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$"
