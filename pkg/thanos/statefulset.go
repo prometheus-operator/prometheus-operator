@@ -645,6 +645,10 @@ func rulerConfigSecretName(name string) string {
 // consumed by Thanos Query. The handler is registered at the root of the
 // HTTP server, hence spec.routePrefix doesn't apply. See
 // https://github.com/prometheus-operator/prometheus-operator/issues/9022.
+//
+// Only the readiness probe is added on purpose: issue 7096 collects the
+// reasons why the operators are not expected to define startup or liveness
+// probes, https://github.com/prometheus-operator/prometheus-operator/issues/7096.
 func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1.Probe {
 	probePath := "/-/ready"
 
