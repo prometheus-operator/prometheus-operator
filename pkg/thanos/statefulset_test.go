@@ -1630,3 +1630,103 @@ func TestStatefulSetUpdateStrategy(t *testing.T) {
 		})
 	}
 }
+
+func TestReadinessProbe(t *testing.T) {
+	for _, tc := range []struct {
+		scenario      string
+		portName      string
+		listenLocal   bool
+		tlsConfig     *monitoringv1.WebTLSConfig
+		expPortName   string
+		expScheme     corev1.URIScheme
+		expExecAction *corev1.ExecAction
+	}{
+		{
+			scenario:    "default port name",
+			expPortName: defaultPortName,
+		},
+		{
+			scenario:    "custom port name",
+			portName:    "custom-web",
+			expPortName: "custom-web",
+		},
+		{
+			scenario:    "HTTPS when the web TLS config is set",
+			tlsConfig:   &monitoringv1.WebTLSConfig{},
+			expPortName: defaultPortName,
+			expScheme:   corev1.URISchemeHTTPS,
+		},
+		{
+			scenario:      "exec probe when listenLocal is set",
+			listenLocal:   true,
+			expPortName:   defaultPortName,
+			expExecAction: operator.ExecAction("http://localhost:10902/-/ready"),
+		},
+	} {
+		t.Run(tc.scenario, func(t *testing.T) {
+			tr := &monitoringv1.ThanosRuler{
+				Spec: monitoringv1.ThanosRulerSpec{
+					QueryEndpoints: emptyQueryEndpoints,
+					PortName:       tc.portName,
+					ListenLocal:    tc.listenLocal,
+				},
+			}
+			if tc.tlsConfig != nil {
+				tr.Spec.Web = &monitoringv1.ThanosRulerWebSpec{
+					WebConfigFileFields: monitoringv1.WebConfigFileFields{TLSConfig: tc.tlsConfig},
+				}
+			}
+
+			sset, err := makeStatefulSet(tr, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+			require.NoError(t, err)
+
+			probe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+			require.NotNil(t, probe)
+			require.Equal(t, probeTimeoutSeconds, probe.TimeoutSeconds)
+			require.Equal(t, int32(5), probe.PeriodSeconds)
+			require.Equal(t, int32(3), probe.FailureThreshold)
+
+			if tc.expExecAction != nil {
+				require.NotNil(t, probe.Exec)
+				require.Equal(t, tc.expExecAction, probe.Exec)
+				require.Nil(t, probe.HTTPGet)
+
+				return
+			}
+
+			require.NotNil(t, probe.HTTPGet)
+			require.Nil(t, probe.Exec)
+			require.Equal(t, "/-/ready", probe.HTTPGet.Path)
+			require.Equal(t, intstr.FromString(tc.expPortName), probe.HTTPGet.Port)
+			require.Equal(t, tc.expScheme, probe.HTTPGet.Scheme)
+		})
+	}
+}
+
+func TestReadinessProbeIgnoresRoutePrefix(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+			RoutePrefix:    "/thanos",
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	probe := sset.Spec.Template.Spec.Containers[0].ReadinessProbe
+	require.NotNil(t, probe)
+	require.NotNil(t, probe.HTTPGet)
+	require.Equal(t, "/-/ready", probe.HTTPGet.Path)
+}
+
+func TestNoLivenessOrStartupProbe(t *testing.T) {
+	sset, err := makeStatefulSet(&monitoringv1.ThanosRuler{
+		Spec: monitoringv1.ThanosRulerSpec{
+			QueryEndpoints: emptyQueryEndpoints,
+		},
+	}, defaultTestConfig, nil, "", &operator.ShardedSecret{})
+	require.NoError(t, err)
+
+	container := sset.Spec.Template.Spec.Containers[0]
+	require.Nil(t, container.LivenessProbe)
+	require.Nil(t, container.StartupProbe)
+}

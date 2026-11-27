@@ -50,6 +50,10 @@ const (
 	defaultEvaluationInterval = "15s"
 	defaultReplicaLabelName   = "thanos_ruler_replica"
 
+	probeTimeoutSeconds int32 = 3
+
+	readinessProbePath = "/-/ready"
+
 	defaultTerminationGracePeriodSeconds = int64(120)
 )
 
@@ -212,6 +216,11 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "alert.label-drop", Value: lb})
 	}
 
+	portName := tr.Spec.PortName
+	if portName == "" {
+		portName = defaultPortName
+	}
+
 	ports := []corev1.ContainerPort{
 		{
 			Name:          "grpc",
@@ -224,7 +233,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	} else {
 		ports = append(ports,
 			corev1.ContainerPort{
-				Name:          tr.Spec.PortName,
+				Name:          portName,
 				ContainerPort: 10902,
 				Protocol:      corev1.ProtocolTCP,
 			})
@@ -306,6 +315,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 	if isHTTPS {
 		thanosrulerURIScheme = "https"
 	}
+
+	readinessProbe := makeReadinessProbe(tr.Spec.ListenLocal, portName, isHTTPS)
 
 	if tr.Spec.GRPCServerTLSConfig != nil {
 		tls := tr.Spec.GRPCServerTLSConfig
@@ -480,6 +491,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			VolumeMounts:             trVolumeMounts,
 			Resources:                tr.Spec.Resources,
 			Ports:                    ports,
+			ReadinessProbe:           readinessProbe, // only a readiness probe, see issue 7096.
 			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &corev1.SecurityContext{
 				AllowPrivilegeEscalation: new(false),
@@ -627,4 +639,42 @@ func mountSecretKey(vols []corev1.Volume, vmounts []corev1.VolumeMount, secretSe
 
 func rulerConfigSecretName(name string) string {
 	return fmt.Sprintf("%s-config", prefixedName(name))
+}
+
+// makeReadinessProbe returns the readiness probe for the thanos-ruler
+// container. Thanos Ruler reports readiness on /-/ready as soon as its gRPC
+// server is listening, so probing that endpoint also covers the gRPC API
+// consumed by Thanos Query. The handler is registered at the root of the
+// HTTP server, hence spec.routePrefix doesn't apply.
+func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1.Probe {
+	probe := &corev1.Probe{
+		TimeoutSeconds:   probeTimeoutSeconds,
+		PeriodSeconds:    5,
+		FailureThreshold: 3,
+	}
+
+	if listenLocal {
+		probe.ProbeHandler = corev1.ProbeHandler{
+			Exec: operator.ExecAction((&url.URL{
+				Scheme: "http",
+				Host:   "localhost:10902",
+				Path:   readinessProbePath,
+			}).String()),
+		}
+
+		return probe
+	}
+
+	probe.ProbeHandler = corev1.ProbeHandler{
+		HTTPGet: &corev1.HTTPGetAction{
+			Path: readinessProbePath,
+			Port: intstr.FromString(portName),
+		},
+	}
+
+	if isHTTPS {
+		probe.HTTPGet.Scheme = corev1.URISchemeHTTPS
+	}
+
+	return probe
 }
