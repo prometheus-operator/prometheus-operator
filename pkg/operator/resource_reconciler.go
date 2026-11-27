@@ -430,7 +430,7 @@ func (rr *ResourceReconciler) OnAdd(obj any, _ bool) {
 		return
 	}
 
-	rr.logger.Debug(fmt.Sprintf("%s added", rr.resourceKind), "key", key)
+	rr.logger.Debug("resource added", "resourceKind", rr.resourceKind, "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, AddEvent).Inc()
 
 	rr.reconcileQ.Add(key)
@@ -484,7 +484,7 @@ func (rr *ResourceReconciler) OnUpdate(old, cur any) {
 		return
 	}
 
-	rr.logger.Debug(fmt.Sprintf("%s updated", rr.resourceKind), "key", key)
+	rr.logger.Debug("resource updated", "resourceKind", rr.resourceKind, "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, UpdateEvent).Inc()
 
 	rr.reconcileQ.Add(key)
@@ -515,7 +515,7 @@ func (rr *ResourceReconciler) OnDelete(obj any) {
 		return
 	}
 
-	rr.logger.Debug(fmt.Sprintf("%s deleted", rr.resourceKind), "key", key)
+	rr.logger.Debug("resource deleted", "resourceKind", rr.resourceKind, "key", key)
 	rr.metrics.TriggerByCounter(rr.resourceKind, DeleteEvent).Inc()
 
 	rr.reconcileQ.Add(key)

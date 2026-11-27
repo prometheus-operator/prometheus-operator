@@ -171,12 +171,12 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 	for i := range promRuleSpec.Groups {
 		if promRuleSpec.Groups[i].Limit != nil && prs.version.LT(minVersionLimits) {
 			promRuleSpec.Groups[i].Limit = nil
-			logger.Warn(fmt.Sprintf("ignoring `limit` not supported by %s", component), "minimum_version", minVersionLimits)
+			logger.Warn("ignoring `limit` not supported by component", "component", component, "minimum_version", minVersionLimits)
 		}
 
 		if promRuleSpec.Groups[i].QueryOffset != nil && prs.version.LT(minVersionQueryOffset) {
 			promRuleSpec.Groups[i].QueryOffset = nil
-			logger.Warn(fmt.Sprintf("ignoring `query_offset` not supported by %s", component), "minimum_version", minVersionQueryOffset)
+			logger.Warn("ignoring `query_offset` not supported by component", "component", component, "minimum_version", minVersionQueryOffset)
 		}
 
 		if prs.ruleFormat == PrometheusFormat {
@@ -186,13 +186,13 @@ func (prs *PrometheusRuleSelector) sanitizePrometheusRulesSpec(promRuleSpec moni
 
 		if len(promRuleSpec.Groups[i].Labels) > 0 && prs.version.LT(minVersionRuleGroupLabels) {
 			promRuleSpec.Groups[i].Labels = nil
-			logger.Warn(fmt.Sprintf("ignoring group labels since not supported by %s", component), "minimum_version", minVersionRuleGroupLabels)
+			logger.Warn("ignoring group labels since not supported by component", "component", component, "minimum_version", minVersionRuleGroupLabels)
 		}
 
 		for j := range promRuleSpec.Groups[i].Rules {
 			if promRuleSpec.Groups[i].Rules[j].KeepFiringFor != nil && prs.version.LT(minVersionKeepFiringFor) {
 				promRuleSpec.Groups[i].Rules[j].KeepFiringFor = nil
-				logger.Warn(fmt.Sprintf("ignoring 'keep_firing_for' not supported by %s", component), "minimum_version", minVersionKeepFiringFor)
+				logger.Warn("ignoring 'keep_firing_for' not supported by component", "component", component, "minimum_version", minVersionKeepFiringFor)
 			}
 		}
 	}
