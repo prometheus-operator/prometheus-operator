@@ -314,9 +314,8 @@ type ThanosRulerSpec struct {
 	PrometheusRulesExcludedFromEnforce []PrometheusRuleExcludeConfig `json:"prometheusRulesExcludedFromEnforce,omitempty"`
 
 	// logLevel for ThanosRuler to be configured with.
-	// +kubebuilder:validation:Enum="";debug;info;warn;error
 	// +optional
-	LogLevel string `json:"logLevel,omitempty"`
+	LogLevel LogLevel `json:"logLevel,omitempty"`
 	// logFormat for ThanosRuler to be configured with.
 	// +kubebuilder:validation:Enum="";logfmt;json
 	// +optional

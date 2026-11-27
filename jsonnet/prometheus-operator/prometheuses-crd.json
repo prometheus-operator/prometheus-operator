@@ -4978,7 +4978,11 @@
                       "debug",
                       "info",
                       "warn",
-                      "error"
+                      "error",
+                      "Debug",
+                      "Info",
+                      "Warn",
+                      "Error"
                     ],
                     "type": "string"
                   },
@@ -9085,7 +9089,11 @@
                           "debug",
                           "info",
                           "warn",
-                          "error"
+                          "error",
+                          "Debug",
+                          "Info",
+                          "Warn",
+                          "Error"
                         ],
                         "type": "string"
                       },

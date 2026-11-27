@@ -230,8 +230,8 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			})
 	}
 
-	if tr.Spec.LogLevel != "" && tr.Spec.LogLevel != "info" {
-		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "log.level", Value: tr.Spec.LogLevel})
+	if tr.Spec.LogLevel != "" {
+		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "log.level", Value: strings.ToLower(string(tr.Spec.LogLevel))})
 	}
 	if tr.Spec.LogFormat != "" {
 		trCLIArgs = append(trCLIArgs, monitoringv1.Argument{Name: "log.format", Value: tr.Spec.LogFormat})
@@ -410,7 +410,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 				operator.ListenLocal(tr.Spec.ListenLocal),
 				operator.LocalHost(config.LocalHost),
 				operator.LogFormat(tr.Spec.LogFormat),
-				operator.LogLevel(tr.Spec.LogLevel),
+				operator.LogLevel(strings.ToLower(string(tr.Spec.LogLevel))),
 				operator.WatchedDirectories(watchedDirectories),
 				operator.VolumeMounts(configReloaderVolumeMounts),
 				operator.Shard(-1),

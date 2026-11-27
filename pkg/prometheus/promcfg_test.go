@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -6014,7 +6015,7 @@ func TestBuildCommonPrometheusArgsLogLevel(t *testing.T) {
 		{version: "v3.15.0", logLevelFlag: false},
 		{version: "v3.16.0", logLevelFlag: false},
 	} {
-		for _, logLevel := range []string{"", "debug", "info", "warn", "error"} {
+		for _, logLevel := range []monitoringv1.LogLevel{"", "debug", "info", "warn", "error", monitoringv1.LogLevelDebug, monitoringv1.LogLevelInfo, monitoringv1.LogLevelWarn, monitoringv1.LogLevelError} {
 			t.Run(fmt.Sprintf("%s/logLevel=%s", tc.version, logLevel), func(t *testing.T) {
 				p := defaultPrometheus()
 				p.Spec.Version = tc.version
@@ -6029,7 +6030,7 @@ func TestBuildCommonPrometheusArgsLogLevel(t *testing.T) {
 				}
 
 				if tc.logLevelFlag && logLevel != "" {
-					require.Equal(t, []monitoringv1.Argument{{Name: "log.level", Value: logLevel}}, logLevelArgs)
+					require.Equal(t, []monitoringv1.Argument{{Name: "log.level", Value: strings.ToLower(string(logLevel))}}, logLevelArgs)
 				} else {
 					require.Empty(t, logLevelArgs)
 				}
@@ -6042,7 +6043,7 @@ func TestLogLevelVersionSwitch(t *testing.T) {
 	for _, tc := range []struct {
 		Scenario     string
 		Version      string
-		LogLevel     string
+		LogLevel     monitoringv1.LogLevel
 		Golden       string
 		Runtime      *monitoringv1.RuntimeConfig
 		LogLevelFlag bool
@@ -6064,7 +6065,7 @@ func TestLogLevelVersionSwitch(t *testing.T) {
 		{
 			Scenario:     "Prometheus 3.15.0 preserves other runtime options",
 			Version:      "v3.15.0",
-			LogLevel:     "debug",
+			LogLevel:     monitoringv1.LogLevelDebug,
 			Runtime:      &monitoringv1.RuntimeConfig{GoGC: new(int32(25))},
 			Golden:       "LogLevel_Runtime_Debug_With_GoGC.golden",
 			LogLevelFlag: false,
@@ -6096,7 +6097,7 @@ func TestLogLevelVersionSwitch(t *testing.T) {
 			hasLogLevelFlag := false
 			args := cg.BuildCommonPrometheusArgs()
 			for _, arg := range args {
-				if arg.Name == "log.level" && arg.Value == tc.LogLevel {
+				if arg.Name == "log.level" && arg.Value == string(tc.LogLevel) {
 					hasLogLevelFlag = true
 					break
 				}
