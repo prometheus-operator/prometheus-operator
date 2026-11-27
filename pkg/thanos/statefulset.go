@@ -52,6 +52,8 @@ const (
 
 	probeTimeoutSeconds int32 = 3
 
+	readinessProbePath = "/-/ready"
+
 	defaultTerminationGracePeriodSeconds = int64(120)
 )
 
@@ -489,7 +491,7 @@ func makeStatefulSetSpec(tr *monitoringv1.ThanosRuler, config Config, ruleConfig
 			VolumeMounts:             trVolumeMounts,
 			Resources:                tr.Spec.Resources,
 			Ports:                    ports,
-			ReadinessProbe:           readinessProbe,
+			ReadinessProbe:           readinessProbe, // only a readiness probe, see issue 7096.
 			TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
 			SecurityContext: &corev1.SecurityContext{
 				AllowPrivilegeEscalation: new(false),
@@ -643,15 +645,8 @@ func rulerConfigSecretName(name string) string {
 // container. Thanos Ruler reports readiness on /-/ready as soon as its gRPC
 // server is listening, so probing that endpoint also covers the gRPC API
 // consumed by Thanos Query. The handler is registered at the root of the
-// HTTP server, hence spec.routePrefix doesn't apply. See
-// https://github.com/prometheus-operator/prometheus-operator/issues/9022.
-//
-// Only the readiness probe is added on purpose: issue 7096 collects the
-// reasons why the operators are not expected to define startup or liveness
-// probes, https://github.com/prometheus-operator/prometheus-operator/issues/7096.
+// HTTP server, hence spec.routePrefix doesn't apply.
 func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1.Probe {
-	probePath := "/-/ready"
-
 	probe := &corev1.Probe{
 		TimeoutSeconds:   probeTimeoutSeconds,
 		PeriodSeconds:    5,
@@ -663,7 +658,7 @@ func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1
 			Exec: operator.ExecAction((&url.URL{
 				Scheme: "http",
 				Host:   "localhost:10902",
-				Path:   probePath,
+				Path:   readinessProbePath,
 			}).String()),
 		}
 
@@ -672,7 +667,7 @@ func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1
 
 	probe.ProbeHandler = corev1.ProbeHandler{
 		HTTPGet: &corev1.HTTPGetAction{
-			Path: probePath,
+			Path: readinessProbePath,
 			Port: intstr.FromString(portName),
 		},
 	}
