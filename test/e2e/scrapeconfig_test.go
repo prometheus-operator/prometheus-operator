@@ -658,7 +658,10 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 }
 
 func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCase) {
-	const authMutualExclusionMsg = "at most one of basicAuth, authorization, or oauth2 can be configured"
+	// Covers both CEL messages:
+	// - "at most one of basicAuth, authorization, or oauth2 can be configured"
+	// - "at most one of authorization or oauth2 can be configured"
+	const authMutualExclusionMsg = "at most one of"
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -682,6 +685,14 @@ func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCas
 
 			require.NoError(t, err)
 		})
+	}
+}
+
+func authMutualExclusionOAuth2() *monitoringv1.OAuth2 {
+	return &monitoringv1.OAuth2{
+		ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+		ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+		TokenURL:     "https://example.com/token",
 	}
 }
 
@@ -1904,14 +1915,14 @@ var ScrapeConfigCRDTestCases = []scrapeCRDTestCase{
 
 var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
 	{
-		name: "single auth method",
+		name: "spec: single auth method",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			BasicAuth: &monitoringv1.BasicAuth{},
 		},
 		expectedError: false,
 	},
 	{
-		name: "basicAuth and authorization",
+		name: "spec: basicAuth and authorization",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			BasicAuth:     &monitoringv1.BasicAuth{},
 			Authorization: &monitoringv1.SafeAuthorization{},
@@ -1919,38 +1930,112 @@ var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
 		expectedError: true,
 	},
 	{
-		name: "basicAuth and oauth2",
+		name: "spec: basicAuth and oauth2",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			BasicAuth: &monitoringv1.BasicAuth{},
-			OAuth2: &monitoringv1.OAuth2{
-				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
-				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
-				TokenURL:     "https://example.com/token",
-			},
+			OAuth2:    authMutualExclusionOAuth2(),
 		},
 		expectedError: true,
 	},
 	{
-		name: "authorization and oauth2",
+		name: "spec: authorization and oauth2",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			Authorization: &monitoringv1.SafeAuthorization{},
-			OAuth2: &monitoringv1.OAuth2{
-				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
-				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
-				TokenURL:     "https://example.com/token",
-			},
+			OAuth2:        authMutualExclusionOAuth2(),
 		},
 		expectedError: true,
 	},
 	{
-		name: "all three set",
+		name: "spec: all three set",
 		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
 			BasicAuth:     &monitoringv1.BasicAuth{},
 			Authorization: &monitoringv1.SafeAuthorization{},
-			OAuth2: &monitoringv1.OAuth2{
-				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
-				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
-				TokenURL:     "https://example.com/token",
+			OAuth2:        authMutualExclusionOAuth2(),
+		},
+		expectedError: true,
+	},
+	{
+		name: "httpSD: single auth method",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL:       "https://valid-url",
+					BasicAuth: &monitoringv1.BasicAuth{},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "httpSD: basicAuth and authorization",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL:           "https://valid-url",
+					BasicAuth:     &monitoringv1.BasicAuth{},
+					Authorization: &monitoringv1.SafeAuthorization{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "httpSD: basicAuth and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			HTTPSDConfigs: []monitoringv1alpha1.HTTPSDConfig{
+				{
+					URL:       "https://valid-url",
+					BasicAuth: &monitoringv1.BasicAuth{},
+					OAuth2:    authMutualExclusionOAuth2(),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "kubernetesSD: basicAuth and authorization",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			KubernetesSDConfigs: []monitoringv1alpha1.KubernetesSDConfig{
+				{
+					Role:          monitoringv1alpha1.KubernetesRolePod,
+					BasicAuth:     &monitoringv1.BasicAuth{},
+					Authorization: &monitoringv1.SafeAuthorization{},
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "digitalOceanSD: authorization only",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					Authorization: &monitoringv1.SafeAuthorization{},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "digitalOceanSD: authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			DigitalOceanSDConfigs: []monitoringv1alpha1.DigitalOceanSDConfig{
+				{
+					Authorization: &monitoringv1.SafeAuthorization{},
+					OAuth2:        authMutualExclusionOAuth2(),
+				},
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "linodeSD: authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			LinodeSDConfigs: []monitoringv1alpha1.LinodeSDConfig{
+				{
+					Authorization: &monitoringv1.SafeAuthorization{},
+					OAuth2:        authMutualExclusionOAuth2(),
+				},
 			},
 		},
 		expectedError: true,
