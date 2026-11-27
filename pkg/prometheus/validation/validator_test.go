@@ -384,6 +384,27 @@ func TestValidateRelabelConfig(t *testing.T) {
 				},
 			},
 		},
+		// Test keepequal relabel config with an explicitly empty regex:
+		// Prometheus rejects any explicitly set regex for the equal actions
+		// (its own validation compares against the default regex), so the
+		// operator validator rejects it too.
+		{
+			scenario: "keepequal config with empty regex",
+			relabelConfig: monitoringv1.RelabelConfig{
+				SourceLabels: []monitoringv1.LabelName{"__tmp_port"},
+				TargetLabel:  "__port1",
+				Regex:        new(""),
+				Action:       "keepequal",
+			},
+			prometheus: monitoringv1.Prometheus{
+				Spec: monitoringv1.PrometheusSpec{
+					CommonPrometheusFields: monitoringv1.CommonPrometheusFields{
+						Version: "v2.41.0",
+					},
+				},
+			},
+			expectedErr: true,
+		},
 		{
 			scenario: "valid labelmap config with replacement containing template variable",
 			relabelConfig: monitoringv1.RelabelConfig{

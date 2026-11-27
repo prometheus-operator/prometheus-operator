@@ -109,7 +109,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 	}
 
 	if _, err := relabel.NewRegexp(regex); err != nil {
-		return fmt.Errorf("invalid regex %s for relabel configuration: %w", regex, err)
+		return fmt.Errorf("invalid regex %q for relabel configuration: %w", regex, err)
 	}
 
 	if rc.Modulus == 0 && action == string(relabel.HashMod) {
@@ -145,7 +145,7 @@ func (lcv *LabelConfigValidator) ValidateRelabelConfig(rc monitoringv1.RelabelCo
 	}
 
 	if action == string(relabel.KeepEqual) || action == string(relabel.DropEqual) {
-		if (rc.Regex != nil && *rc.Regex != "" && *rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
+		if (rc.Regex != nil && *rc.Regex != relabel.DefaultRelabelConfig.Regex.String()) ||
 			(rc.Modulus != 0 &&
 				rc.Modulus != int64(relabel.DefaultRelabelConfig.Modulus)) ||
 			(rc.Separator != nil &&
