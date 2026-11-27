@@ -160,12 +160,12 @@ We have observed in the past that if we create a draft release and publish it la
 
 Go to https://github.com/prometheus-operator/prometheus-operator/releases/new, associate the new release with the before pushed tag, paste in changes made to `CHANGELOG.md` and click "Publish release".
 
-Once release is published, [release job](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/release.yaml) will be triggered to upload assets to the newly created release.
+Once release is published, the [release workflow](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/release.yaml) uploads assets to the newly created release. The [update website workflow](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/update-website.yaml) opens a pull request to publish that version on the website.
 
 For patch releases, submit a pull request to merge back the release branch into the `main` branch.
 
 ## Update website
 
-Bump the operator's version in the [website](https://github.com/prometheus-operator/website/blob/main/data/prometheusOperator.json) repository.
+Review and merge the website pull request opened by the [update website](https://github.com/prometheus-operator/prometheus-operator/actions/workflows/update-website.yaml) workflow. If it did not run, trigger it manually with the release version.
 
 Take a breath. You're done releasing.
