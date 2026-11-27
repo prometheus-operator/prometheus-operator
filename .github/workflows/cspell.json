@@ -424,6 +424,7 @@
     "selfsigned",
     "FIPS",
     "FIPSSTS",
+    "AWSSD",
     "checkmark",
     "STARTTLS",
     "MLKEM",
