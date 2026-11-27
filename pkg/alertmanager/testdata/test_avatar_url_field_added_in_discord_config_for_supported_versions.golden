@@ -1,6 +1,0 @@
-receivers:
-- name: ""
-  discord_configs:
-  - webhook_url: http://example.com
-    avatar_url: http://example.com/discord_avatar
-templates: []

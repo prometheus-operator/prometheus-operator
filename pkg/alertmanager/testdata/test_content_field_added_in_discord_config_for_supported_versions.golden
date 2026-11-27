@@ -1,6 +1,0 @@
-receivers:
-- name: ""
-  discord_configs:
-  - webhook_url: http://example.com
-    content: content added for supported version
-templates: []

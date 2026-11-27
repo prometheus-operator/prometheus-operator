@@ -5871,12 +5871,6 @@ func TestSanitizeConfig(t *testing.T) {
 	versionOpsGenieAPIKeyFileAllowed := semver.Version{Major: 0, Minor: 24}
 	versionOpsGenieAPIKeyFileNotAllowed := semver.Version{Major: 0, Minor: 23}
 
-	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
-	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
-
-	versionDiscordMessageFieldsAllowed := semver.Version{Major: 0, Minor: 28}
-	versionDiscordMessageFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
-
 	versionWebexAllowed := semver.Version{Major: 0, Minor: 25}
 	versionWebexNotAllowed := semver.Version{Major: 0, Minor: 24}
 
@@ -6228,189 +6222,6 @@ func TestSanitizeConfig(t *testing.T) {
 				},
 			},
 			golden: "api_key_file_is_dropped_for_unsupported_versions.golden",
-		},
-		{
-			name:           "discord_config for supported versions",
-			againstVersion: versionDiscordAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			golden: "discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "discord_config returns error for unsupported versions",
-			againstVersion: versionDiscordNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "Test content is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Content:    "content added for unsupported version",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_content_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test content is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Content:    "content added for supported version",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_content_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test username is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Username:   "discord_admin",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_username_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test username is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								Username:   "discord_admin",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_username_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "Test avatar_url is dropped in discord config for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								AvatarURL:  "http://example.com/discord_avatar",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_avatar_url_field_dropped_in_discord_config_for_unsupported_versions.golden",
-		},
-		{
-			name:           "Test avatar_url is added in discord config for supported versions",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL: "http://example.com",
-								AvatarURL:  "http://example.com/discord_avatar",
-							},
-						},
-					},
-				},
-			},
-			golden: "test_avatar_url_field_added_in_discord_config_for_supported_versions.golden",
-		},
-		{
-			name:           "discord_config with webhook url file set",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			golden: "discord_config_with_webhook_url_file_set.golden",
-		},
-		{
-			name:           "discord_config both webhook url and webhook url file set",
-			againstVersion: versionDiscordMessageFieldsAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURL:     "http://example.com",
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name:           "discord_config webhook url file dropped for unsupported versions",
-			againstVersion: versionDiscordMessageFieldsNotAllowed,
-			in: &alertmanagerConfig{
-				Receivers: []*receiver{
-					{
-						DiscordConfigs: []*discordConfig{
-							{
-								WebhookURLFile: "/var/secrets/webhook-url-file",
-							},
-						},
-					},
-				},
-			},
-			expectErr: true,
 		},
 		{
 			name:           "webex_config for supported versions",
@@ -8859,15 +8670,55 @@ func TestSanitizeJiraConfig(t *testing.T) {
 func TestSanitizeDiscordConfig(t *testing.T) {
 	logger := newNopLogger(t)
 
+	versionDiscordAllowed := semver.Version{Major: 0, Minor: 25}
+	versionDiscordNotAllowed := semver.Version{Major: 0, Minor: 24}
+
+	// Username, Content, WebhookURLFile and AvatarURL supported in the same version
+	versionDiscordContentFieldsAllowed := semver.Version{Major: 0, Minor: 28}
+	versionDiscordContentFieldsNotAllowed := semver.Version{Major: 0, Minor: 27}
+
 	for _, tc := range []struct {
 		name           string
 		againstVersion semver.Version
 		in             *alertmanagerConfig
 		golden         string
+		expectErr      bool
 	}{
 		{
+			name:           "discord_config for supported versions",
+			againstVersion: versionDiscordAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_for_supported_versions.golden",
+		},
+		{
+			name:           "discord_config returns error for unsupported versions",
+			againstVersion: versionDiscordNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL: "http://example.com",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
 			name:           "Test Username field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8886,7 +8737,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Username field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8905,7 +8756,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test AvatarURL field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8924,7 +8775,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test AvatarURL field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8943,7 +8794,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Content field is dropped in discord config for unsupported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 27},
+			againstVersion: versionDiscordContentFieldsNotAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8962,7 +8813,7 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 		},
 		{
 			name:           "Test Content field add in discord config for supported versions",
-			againstVersion: semver.Version{Major: 0, Minor: 28},
+			againstVersion: versionDiscordContentFieldsAllowed,
 			in: &alertmanagerConfig{
 				Receivers: []*receiver{
 					{
@@ -8979,9 +8830,63 @@ func TestSanitizeDiscordConfig(t *testing.T) {
 			},
 			golden: "Discord_content_add_in_supported_versions_config.golden",
 		},
+		{
+			name:           "discord_config with webhook url file set",
+			againstVersion: versionDiscordContentFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			golden: "discord_config_with_webhook_url_file_set.golden",
+		},
+		{
+			name:           "discord_config both webhook url and webhook url file set",
+			againstVersion: versionDiscordContentFieldsAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURL:     "http://example.com",
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
+		{
+			name:           "discord_config webhook url file dropped for unsupported versions",
+			againstVersion: versionDiscordContentFieldsNotAllowed,
+			in: &alertmanagerConfig{
+				Receivers: []*receiver{
+					{
+						DiscordConfigs: []*discordConfig{
+							{
+								WebhookURLFile: "/var/secrets/webhook-url-file",
+							},
+						},
+					},
+				},
+			},
+			expectErr: true,
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.in.sanitize(tc.againstVersion, logger)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+
 			require.NoError(t, err)
 
 			amConfigs, err := yaml.Marshal(tc.in)
