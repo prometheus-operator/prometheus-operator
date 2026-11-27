@@ -658,7 +658,10 @@ func testScrapeConfigCRDValidations(t *testing.T) {
 }
 
 func runAuthMutualExclusionValidation(t *testing.T, testCases []scrapeCRDTestCase) {
-	const authMutualExclusionMsg = "at most one of basicAuth, authorization, or oauth2 can be configured"
+	// Covers both CEL messages:
+	// - "at most one of basicAuth, authorization, or oauth2 can be configured"
+	// - "at most one of authorization or oauth2 can be configured"
+	const authMutualExclusionMsg = "at most one of"
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
@@ -1951,6 +1954,51 @@ var AuthMutualExclusionTestCases = []scrapeCRDTestCase{
 				ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
 				ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
 				TokenURL:     "https://example.com/token",
+			},
+		},
+		expectedError: true,
+	},
+	{
+		name: "ionosSD: authorization only",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID:  "11111111-1111-1111-1111-111111111111",
+					Authorization: &monitoringv1.SafeAuthorization{},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ionosSD: oauth2 only",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID: "11111111-1111-1111-1111-111111111111",
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+						ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+						TokenURL:     "https://example.com/token",
+					},
+				},
+			},
+		},
+		expectedError: false,
+	},
+	{
+		name: "ionosSD: authorization and oauth2",
+		scrapeConfigSpec: monitoringv1alpha1.ScrapeConfigSpec{
+			IonosSDConfigs: []monitoringv1alpha1.IonosSDConfig{
+				{
+					DataCenterID:  "11111111-1111-1111-1111-111111111111",
+					Authorization: &monitoringv1.SafeAuthorization{},
+					OAuth2: &monitoringv1.OAuth2{
+						ClientID:     monitoringv1.SecretOrConfigMap{Secret: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-id"}},
+						ClientSecret: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "client-secret"},
+						TokenURL:     "https://example.com/token",
+					},
+				},
 			},
 		},
 		expectedError: true,

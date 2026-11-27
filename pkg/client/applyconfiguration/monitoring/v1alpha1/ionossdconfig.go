@@ -37,7 +37,8 @@ type IonosSDConfigApplyConfiguration struct {
 	RefreshInterval *v1.Duration `json:"refreshInterval,omitempty"`
 	// authorization defines the header configuration to authenticate against the IONOS API.
 	// Cannot be set at the same time as `oauth2`.
-	Authorization                              *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	Authorization *monitoringv1.SafeAuthorizationApplyConfiguration `json:"authorization,omitempty"`
+	// ProxyConfig allows customizing the proxy behaviour for this scrape config.
 	monitoringv1.ProxyConfigApplyConfiguration `json:""`
 	// tlsConfig defines the TLS configuration to connect to the IONOS API.
 	TLSConfig *monitoringv1.SafeTLSConfigApplyConfiguration `json:"tlsConfig,omitempty"`
@@ -46,6 +47,7 @@ type IonosSDConfigApplyConfiguration struct {
 	// enableHTTP2 defines whether to enable HTTP2.
 	EnableHTTP2 *bool `json:"enableHTTP2,omitempty"`
 	// oauth2 defines the configuration to use on every scrape request.
+	// Cannot be set at the same time as `authorization`.
 	OAuth2 *monitoringv1.OAuth2ApplyConfiguration `json:"oauth2,omitempty"`
 }
 
