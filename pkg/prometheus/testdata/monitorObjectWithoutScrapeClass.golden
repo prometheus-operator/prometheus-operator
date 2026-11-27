@@ -79,6 +79,9 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(SHARD);|.+;.+
     action: keep
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
 - job_name: podMonitor/default/defaultPodMonitor/0
   honor_labels: false
   kubernetes_sd_configs:
@@ -134,6 +137,9 @@ scrape_configs:
     - __tmp_disable_sharding
     regex: $(SHARD);|.+;.+
     action: keep
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
 - job_name: probe/default/defaultProbe
   honor_timestamps: true
   metrics_path: /probe
@@ -180,6 +186,8 @@ scrape_configs:
   metric_relabel_configs:
   - regex: noisy_labels.*
     action: labeldrop
+  - target_label: enforced_label
+    replacement: enforced_value
 - job_name: scrapeConfig/default/defaultScrapeConfig
   http_sd_configs:
   - proxy_url: http://no-proxy.com
@@ -191,6 +199,9 @@ scrape_configs:
   - source_labels:
     - job
     target_label: __tmp_prometheus_job_name
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

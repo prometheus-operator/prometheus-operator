@@ -19,6 +19,9 @@ scrape_configs:
     regex: (.+)(?::d+)
     replacement: $1:9537
     action: replace
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
 storage:
   tsdb:
     retention:

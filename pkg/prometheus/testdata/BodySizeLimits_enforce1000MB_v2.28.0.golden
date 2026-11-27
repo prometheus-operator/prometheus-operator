@@ -75,3 +75,6 @@ scrape_configs:
     regex: $(SHARD);|.+;.+
     action: keep
   body_size_limit: 1000MB
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value

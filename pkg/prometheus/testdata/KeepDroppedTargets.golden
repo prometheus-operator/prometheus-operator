@@ -76,3 +76,6 @@ scrape_configs:
     regex: $(SHARD);|.+;.+
     action: keep
   keep_dropped_targets: 500
+  metric_relabel_configs:
+  - target_label: enforced_label
+    replacement: enforced_value
