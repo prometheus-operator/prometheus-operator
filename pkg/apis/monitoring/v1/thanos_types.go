@@ -296,6 +296,19 @@ type ThanosRulerSpec struct {
 	// +optional
 	RuleNamespaceSelector *metav1.LabelSelector `json:"ruleNamespaceSelector,omitempty"`
 
+	// ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+	// mounted in each Thanos Ruler Pod. Unused volumes reference ConfigMaps that do
+	// not exist and are mounted with optional: true.
+	// Reserving volumes avoids a Pod rollout when the number of generated rule
+	// ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+	// are still deleted.
+	// All generated rule ConfigMaps are mounted even if their count exceeds this
+	// value. Changing the number of mounted volumes triggers a Pod rollout.
+	// Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	RuleConfigMapsMinimumCount *int32 `json:"ruleConfigMapsMinimumCount,omitempty"`
+
 	// enforcedNamespaceLabel enforces adding a namespace label of origin for each alert
 	// and metric that is user created. The label value will always be the namespace of the object that is
 	// being created.

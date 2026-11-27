@@ -5419,6 +5419,26 @@ the same namespace as the ThanosRuler object is in is used.</p>
 </tr>
 <tr>
 <td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Thanos Ruler Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>enforcedNamespaceLabel</code><br/>
 <em>
 string
@@ -21716,6 +21736,26 @@ Kubernetes meta/v1.LabelSelector
 <em>(Optional)</em>
 <p>ruleNamespaceSelector defines the namespaces to be selected for Rules discovery. If unspecified, only
 the same namespace as the ThanosRuler object is in is used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ruleConfigMapsMinimumCount</code><br/>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes
+mounted in each Thanos Ruler Pod. Unused volumes reference ConfigMaps that do
+not exist and are mounted with optional: true.
+Reserving volumes avoids a Pod rollout when the number of generated rule
+ConfigMaps changes within this minimum. ConfigMaps that are no longer needed
+are still deleted.
+All generated rule ConfigMaps are mounted even if their count exceeds this
+value. Changing the number of mounted volumes triggers a Pod rollout.
+Defaults to 3. Set to 0 to mount only the generated rule ConfigMaps.</p>
 </td>
 </tr>
 <tr>

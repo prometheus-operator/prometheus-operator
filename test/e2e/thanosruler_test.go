@@ -16,7 +16,10 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,9 +29,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
+	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	testFramework "github.com/prometheus-operator/prometheus-operator/test/framework"
 )
 
@@ -167,6 +172,152 @@ func testThanosRulerPrometheusRuleInDifferentNamespace(t *testing.T) {
 	if err != nil {
 		t.Fatalf("waiting for alert %q to stop firing: %v: %v", testAlert, err, loopError)
 	}
+}
+
+// testThanosRulerRulesConfigMapLifecycle grows and shrinks the rule ConfigMaps,
+// waiting for rules to be loaded or removed before checking the StatefulSet
+// generation. Only changes beyond the reserved capacity should cause a rollout.
+func testThanosRulerRulesConfigMapLifecycle(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		minimumCount *int32
+		ruleCount    int
+		wantRollout  bool
+	}{
+		{name: "unset reservation", ruleCount: 2},
+		{name: "no reservation", minimumCount: new(int32(0)), ruleCount: 2, wantRollout: true},
+		{name: "exceed positive reservation", minimumCount: new(int32(1)), ruleCount: 2, wantRollout: true},
+		{name: "custom reservation", minimumCount: new(int32(5)), ruleCount: 4},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := context.Background()
+			testCtx := framework.NewTestCtx(t)
+			defer testCtx.Cleanup(t)
+			ns := framework.CreateNamespace(ctx, t, testCtx)
+			framework.SetupPrometheusRBAC(ctx, t, testCtx, ns)
+
+			// Prometheus provides the query API; only Thanos Ruler evaluates rules.
+			name := "test"
+			p := framework.MakeBasicPrometheus(ns, name, name, 1)
+			p.Spec.RuleSelector = nil
+			p, err := framework.CreatePrometheusAndWaitUntilReady(ctx, ns, p)
+			require.NoError(t, err)
+			pSVC := framework.MakePrometheusService(p.Name, name, corev1.ServiceTypeClusterIP)
+			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, pSVC)
+			require.NoError(t, err)
+
+			tr := framework.MakeBasicThanosRuler(name, 1, fmt.Sprintf("http://%s:%d/", pSVC.Name, pSVC.Spec.Ports[0].Port))
+			tr.Spec.EvaluationInterval = "1s"
+			tr.Spec.RuleConfigMapsMinimumCount = tc.minimumCount
+			tr, err = framework.CreateThanosRulerAndWaitUntilReady(ctx, ns, tr)
+			require.NoError(t, err)
+			svc := framework.MakeThanosRulerService(tr.Name, "not-relevant", corev1.ServiceTypeClusterIP)
+			_, err = framework.CreateOrUpdateServiceAndWaitUntilReady(ctx, ns, svc)
+			require.NoError(t, err)
+
+			rule, err := framework.CreateRule(ctx, ns, generateHugeThanosRulerRule(ns, "0"))
+			require.NoError(t, err)
+			prometheusRules := []*monitoringv1.PrometheusRule{rule}
+			require.NoError(t, framework.WaitForThanosFiringAlert(ctx, ns, svc.Name, rule.Spec.Groups[0].Rules[0].Alert))
+
+			// Reserved volumes must not create extra ConfigMaps.
+			listOptions := metav1.ListOptions{LabelSelector: "thanos-ruler-name=" + tr.Name}
+			configMaps, err := framework.KubeClient.CoreV1().ConfigMaps(ns).List(ctx, listOptions)
+			require.NoError(t, err)
+			require.Len(t, configMaps.Items, 1)
+			sts, err := framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, "thanos-ruler-"+tr.Name, metav1.GetOptions{})
+			require.NoError(t, err)
+			generation := sts.Generation
+
+			// Grow beyond the default reservation in the custom case.
+			for i := 1; i < tc.ruleCount; i++ {
+				rule, err := framework.CreateRule(ctx, ns, generateHugeThanosRulerRule(ns, strconv.Itoa(i)))
+				require.NoError(t, err)
+				prometheusRules = append(prometheusRules, rule)
+			}
+			for _, rule := range prometheusRules {
+				require.NoError(t, framework.WaitForThanosFiringAlert(ctx, ns, svc.Name, rule.Spec.Groups[0].Rules[0].Alert))
+			}
+			configMaps, err = framework.KubeClient.CoreV1().ConfigMaps(ns).List(ctx, listOptions)
+			require.NoError(t, err)
+			require.Len(t, configMaps.Items, tc.ruleCount)
+			sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, "thanos-ruler-"+tr.Name, metav1.GetOptions{})
+			require.NoError(t, err)
+			if tc.wantRollout {
+				require.Greater(t, sts.Generation, generation)
+			} else {
+				require.Equal(t, generation, sts.Generation)
+			}
+			generation = sts.Generation
+
+			// Wait for deleted rules' alerts and obsolete ConfigMaps to disappear.
+			for _, rule := range prometheusRules[1:] {
+				require.NoError(t, framework.DeleteRule(ctx, ns, rule.Name))
+			}
+			var loopError error
+			err = wait.PollUntilContextTimeout(ctx, time.Second, 5*framework.DefaultTimeout, true, func(ctx context.Context) (bool, error) {
+				response, err := framework.ThanosSVCGetRequest(ctx, ns, svc.Name, "/api/v1/alerts", nil)
+				if err != nil {
+					loopError = err
+					return false, nil
+				}
+				var alerts testFramework.ThanosAlertsAPIResponse
+				if loopError = json.Unmarshal(response, &alerts); loopError != nil {
+					return false, nil
+				}
+				if alerts.Status != "success" || alerts.Data == nil {
+					loopError = fmt.Errorf("unexpected Thanos alerts response: %s", response)
+					return false, nil
+				}
+				for _, rule := range prometheusRules[1:] {
+					for _, alert := range alerts.Data.Alerts {
+						if alert.Labels["alertname"] == rule.Spec.Groups[0].Rules[0].Alert {
+							loopError = fmt.Errorf("deleted rule %q still has alerts", rule.Name)
+							return false, nil
+						}
+					}
+				}
+				configMaps, loopError = framework.KubeClient.CoreV1().ConfigMaps(ns).List(ctx, listOptions)
+				if loopError != nil {
+					return false, nil
+				}
+				if len(configMaps.Items) != 1 {
+					loopError = fmt.Errorf("expected 1 rule ConfigMap, got %d", len(configMaps.Items))
+					return false, nil
+				}
+				return true, nil
+			})
+			require.NoError(t, err, "waiting for deleted rules and obsolete ConfigMaps to be removed: %v", loopError)
+			require.NoError(t, framework.WaitForThanosFiringAlert(ctx, ns, svc.Name, prometheusRules[0].Spec.Groups[0].Rules[0].Alert))
+			sts, err = framework.KubeClient.AppsV1().StatefulSets(ns).Get(ctx, "thanos-ruler-"+tr.Name, metav1.GetOptions{})
+			require.NoError(t, err)
+			if tc.wantRollout {
+				require.Greater(t, sts.Generation, generation)
+			} else {
+				require.Equal(t, generation, sts.Generation)
+			}
+		})
+	}
+}
+
+// generateHugeThanosRulerRule fills more than half a rule ConfigMap with a single
+// alert, avoiding thousands of remote queries when Thanos Ruler evaluates it.
+func generateHugeThanosRulerRule(ns, identifier string) *monitoringv1.PrometheusRule {
+	return framework.MakeBasicRule(ns, "prometheus-rule-"+identifier, []monitoringv1.RuleGroup{
+		{
+			Name: "rules-group",
+			Rules: []monitoringv1.Rule{
+				{
+					Alert: "alert-" + identifier,
+					Expr:  intstr.FromString("vector(1)"),
+					Annotations: map[string]string{
+						"padding": strings.Repeat("a", operator.MaxConfigMapDataSize/2),
+					},
+				},
+			},
+		},
+	})
 }
 
 func testTRPreserveUserAddedMetadata(t *testing.T) {

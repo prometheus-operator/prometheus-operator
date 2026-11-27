@@ -102,5 +102,5 @@ func (o *Operator) createOrUpdateRuleConfigMaps(ctx context.Context, t *monitori
 		return nil, err
 	}
 
-	return configMaps, nil
+	return prs.AppendConfigMapNames(configMaps, int(ptr.Deref(t.Spec.RuleConfigMapsMinimumCount, 3))), nil
 }

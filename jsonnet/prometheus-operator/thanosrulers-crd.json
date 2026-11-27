@@ -5339,6 +5339,12 @@
                     "minimum": 1,
                     "type": "integer"
                   },
+                  "ruleConfigMapsMinimumCount": {
+                    "description": "ruleConfigMapsMinimumCount defines the minimum number of rule ConfigMap volumes\nmounted in each Thanos Ruler Pod. Unused volumes reference ConfigMaps that do\nnot exist and are mounted with optional: true.\nReserving volumes avoids a Pod rollout when the number of generated rule\nConfigMaps changes within this minimum. ConfigMaps that are no longer needed\nare still deleted.\nAll generated rule ConfigMaps are mounted even if their count exceeds this\nvalue. Changing the number of mounted volumes triggers a Pod rollout.\nDefaults to 3. Set to 0 to mount only the generated rule ConfigMaps.",
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
                   "ruleGracePeriod": {
                     "description": "ruleGracePeriod defines the minimum duration between alert and restored \"for\" state.\nThis is maintained only for alerts with configured \"for\" time greater than grace period.\nIt requires Thanos >= v0.30.0.",
                     "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
