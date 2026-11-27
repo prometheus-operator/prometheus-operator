@@ -694,7 +694,7 @@ func TestProbeStaticTargetsConfigGenerationWithLabelEnforce(t *testing.T) {
 						},
 						MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 							{
-								Regex:  "noisy_labels.*",
+								Regex:  new("noisy_labels.*"),
 								Action: "labeldrop",
 							},
 						},
@@ -1551,7 +1551,7 @@ func TestAlertmanagerRelabelConfigs(t *testing.T) {
 						},
 						{
 							Action:       "replace",
-							Regex:        "(.+)(?::d+)",
+							Regex:        new("(.+)(?::d+)"),
 							Replacement:  new("$1:9537"),
 							SourceLabels: []monitoringv1.LabelName{"__address__"},
 							TargetLabel:  "__address__",
@@ -1778,14 +1778,14 @@ func TestNoEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "drop",
-										Regex:        "container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)",
+										Regex:        new("container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)"),
 										SourceLabels: []monitoringv1.LabelName{"__name__"},
 									},
 								},
 								RelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "replace",
-										Regex:        "(.+)(?::d+)",
+										Regex:        new("(.+)(?::d+)"),
 										Replacement:  new("$1:9537"),
 										SourceLabels: []monitoringv1.LabelName{"__address__"},
 										TargetLabel:  "__address__",
@@ -1925,7 +1925,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "drop",
-										Regex:        "my-job-pod-.+",
+										Regex:        new("my-job-pod-.+"),
 										SourceLabels: []monitoringv1.LabelName{"pod_name"},
 										TargetLabel:  "my-ns",
 									},
@@ -1933,7 +1933,7 @@ func TestEnforcedNamespaceLabelPodMonitor(t *testing.T) {
 								RelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "replace",
-										Regex:        "(.*)",
+										Regex:        new("(.*)"),
 										Replacement:  new("$1"),
 										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 										TargetLabel:  "pod_ready",
@@ -1992,7 +1992,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "drop",
-										Regex:        "my-job-pod-.+",
+										Regex:        new("my-job-pod-.+"),
 										SourceLabels: []monitoringv1.LabelName{"pod_name"},
 										TargetLabel:  "my-ns",
 									},
@@ -2000,7 +2000,7 @@ func TestEnforcedNamespaceLabelOnExcludedPodMonitor(t *testing.T) {
 								RelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "replace",
-										Regex:        "(.*)",
+										Regex:        new("(.*)"),
 										Replacement:  new("$1"),
 										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 										TargetLabel:  "pod_ready",
@@ -2056,7 +2056,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "drop",
-										Regex:        "my-job-pod-.+",
+										Regex:        new("my-job-pod-.+"),
 										SourceLabels: []monitoringv1.LabelName{"pod_name"},
 										TargetLabel:  "ns-key",
 									},
@@ -2064,7 +2064,7 @@ func TestEnforcedNamespaceLabelServiceMonitor(t *testing.T) {
 								RelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "replace",
-										Regex:        "(.*)",
+										Regex:        new("(.*)"),
 										Replacement:  new("$1"),
 										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 										TargetLabel:  "pod_ready",
@@ -2127,7 +2127,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "drop",
-										Regex:        "my-job-pod-.+",
+										Regex:        new("my-job-pod-.+"),
 										SourceLabels: []monitoringv1.LabelName{"pod_name"},
 										TargetLabel:  "ns-key",
 									},
@@ -2135,7 +2135,7 @@ func TestEnforcedNamespaceLabelOnExcludedServiceMonitor(t *testing.T) {
 								RelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "replace",
-										Regex:        "(.*)",
+										Regex:        new("(.*)"),
 										Replacement:  new("$1"),
 										SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 										TargetLabel:  "pod_ready",
@@ -3321,12 +3321,12 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
-							Regex:        "my-job-pod-.+",
+							Regex:        new("my-job-pod-.+"),
 							SourceLabels: []monitoringv1.LabelName{"pod_name"},
 						},
 						{
 							Action:       "drop",
-							Regex:        "test",
+							Regex:        new("test"),
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 						},
 					},
@@ -3357,14 +3357,14 @@ func makeServiceMonitors() map[string]*monitoringv1.ServiceMonitor {
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
-							Regex:        "(.*)",
+							Regex:        new("(.*)"),
 							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
-							Regex:        "(.*)",
+							Regex:        new("(.*)"),
 							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
@@ -3476,12 +3476,12 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 					MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "drop",
-							Regex:        "my-job-pod-.+",
+							Regex:        new("my-job-pod-.+"),
 							SourceLabels: []monitoringv1.LabelName{"pod_name"},
 						},
 						{
 							Action:       "drop",
-							Regex:        "test",
+							Regex:        new("test"),
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
 						},
 					},
@@ -3512,14 +3512,14 @@ func makePodMonitors() map[string]*monitoringv1.PodMonitor {
 					RelabelConfigs: []monitoringv1.RelabelConfig{
 						{
 							Action:       "replace",
-							Regex:        "(.*)",
+							Regex:        new("(.*)"),
 							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_ready"},
 							TargetLabel:  "pod_ready",
 						},
 						{
 							Action:       "replace",
-							Regex:        "(.*)",
+							Regex:        new("(.*)"),
 							Replacement:  new("$1"),
 							SourceLabels: []monitoringv1.LabelName{"__meta_kubernetes_pod_node_name"},
 							TargetLabel:  "nodename",
@@ -4788,6 +4788,21 @@ func TestRemoteWriteConfig(t *testing.T) {
 				},
 			},
 			golden: "RemoteWriteConfig_MessageVersion2_with_metadata.golden",
+		},
+		{
+			// An explicit empty regex must be preserved in the generated
+			// write_relabel_configs instead of being dropped.
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				WriteRelabelConfigs: []monitoringv1.RelabelConfig{
+					{
+						SourceLabels: []monitoringv1.LabelName{"__name__"},
+						Regex:        new(""),
+						Action:       "keep",
+					},
+				},
+			},
+			golden: "RemoteWriteConfig_EmptyRegex.golden",
 		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
@@ -6637,7 +6652,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 								MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 									{
 										Action:       "Drop",
-										Regex:        "container_fs*",
+										Regex:        new("container_fs*"),
 										SourceLabels: []monitoringv1.LabelName{"__name__"},
 									},
 									{
@@ -6655,7 +6670,7 @@ func TestGenerateRelabelConfig(t *testing.T) {
 									},
 									{
 										Action:       "Replace",
-										Regex:        "(.+)(?::d+)",
+										Regex:        new("(.+)(?::d+)"),
 										Replacement:  new("$1:9537"),
 										SourceLabels: []monitoringv1.LabelName{"__address__"},
 										TargetLabel:  "__address__",
@@ -6670,6 +6685,12 @@ func TestGenerateRelabelConfig(t *testing.T) {
 										Action:      "Replace",
 										Replacement: new(""),
 										TargetLabel: "job",
+									},
+									{
+										// Test empty regex
+										Action:       "Keep",
+										Regex:        new(""),
+										SourceLabels: []monitoringv1.LabelName{"__name__"},
 									},
 								},
 							},
@@ -6892,7 +6913,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
-						Regex:        "(.+)(?::d+)",
+						Regex:        new("(.+)(?::d+)"),
 						Replacement:  new("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
@@ -6941,7 +6962,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 					},
 					{
 						SourceLabels: []monitoringv1.LabelName{"__tmp_hash", "__tmp_disable_sharding"},
-						Regex:        "$(SHARD);|.+;.+",
+						Regex:        new("$(SHARD);|.+;.+"),
 						Action:       "keep",
 					},
 				},
@@ -7021,7 +7042,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 				RelabelConfigs: []monitoringv1.RelabelConfig{
 					{
 						Action:       "Replace",
-						Regex:        "(.+)(?::d+)",
+						Regex:        new("(.+)(?::d+)"),
 						Replacement:  new("$1:9537"),
 						SourceLabels: []monitoringv1.LabelName{"__address__"},
 						TargetLabel:  "__address__",
@@ -7283,7 +7304,7 @@ func TestScrapeConfigSpecConfig(t *testing.T) {
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 					{
-						Regex:  "noisy_labels.*",
+						Regex:  new("noisy_labels.*"),
 						Action: "labeldrop",
 					},
 				},
@@ -11160,7 +11181,7 @@ func defaultProbe() *monitoringv1.Probe {
 			},
 			MetricRelabelConfigs: []monitoringv1.RelabelConfig{
 				{
-					Regex:  "noisy_labels.*",
+					Regex:  new("noisy_labels.*"),
 					Action: "labeldrop",
 				},
 			},
@@ -13408,13 +13429,13 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
-							Regex:        "tenant1-.*",
+							Regex:        new("tenant1-.*"),
 							TargetLabel:  "tenant",
 							Replacement:  new("tenant1"),
 						},
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
-							Regex:        "tenant2-.*",
+							Regex:        new("tenant2-.*"),
 							TargetLabel:  "tenant",
 							Replacement:  new("tenant2"),
 						},
@@ -13458,13 +13479,13 @@ func TestScrapeClassMetricRelabelings(t *testing.T) {
 					MetricRelabelings: []monitoringv1.RelabelConfig{
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
-							Regex:        "tenant1-.*",
+							Regex:        new("tenant1-.*"),
 							TargetLabel:  "tenant",
 							Replacement:  new("tenant1"),
 						},
 						{
 							SourceLabels: []monitoringv1.LabelName{"namespace"},
-							Regex:        "tenant2-.*",
+							Regex:        new("tenant2-.*"),
 							TargetLabel:  "tenant",
 							Replacement:  new("tenant2"),
 						},
