@@ -471,6 +471,64 @@ func TestValidateRemoteWriteConfig(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "with_GoogleIAM",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+			},
+		},
+		{
+			name: "with_GoogleIAM_and_credentialsFile",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{
+					CredentialsFile: new("/etc/prometheus/secrets/gcp/key.json"),
+				},
+			},
+		},
+		{
+			name: "with_GoogleIAM_and_BasicAuth",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+				BasicAuth: &monitoringv1.BasicAuth{},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_GoogleIAM_and_OAuth2",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+				OAuth2:    &monitoringv1.OAuth2{},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_GoogleIAM_and_Authorization",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM:     &monitoringv1.GoogleIAM{},
+				Authorization: &monitoringv1.Authorization{},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_GoogleIAM_and_SigV4",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+				Sigv4:     &monitoringv1.Sigv4{},
+			},
+			expectErr: true,
+		},
+		{
+			name: "with_GoogleIAM_and_AzureAD",
+			spec: monitoringv1.RemoteWriteSpec{
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+				AzureAD: &monitoringv1.AzureAD{
+					ManagedIdentity: &monitoringv1.ManagedIdentity{
+						ClientID: new("client-id"),
+					},
+				},
+			},
+			expectErr: true,
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

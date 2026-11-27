@@ -134,6 +134,7 @@ func (cg *ConfigGenerator) validateRemoteWriteSpec(spec monitoringv1.RemoteWrite
 		"authorization": spec.Authorization,
 		"sigv4":         spec.Sigv4,
 		"azureAd":       spec.AzureAD,
+		"googleIAM":     spec.GoogleIAM,
 	} {
 		if reflect.ValueOf(v).IsNil() {
 			continue
@@ -260,7 +261,7 @@ func validateRemoteHeaders(headers map[string]string) error {
 		h := strings.ToLower(header)
 
 		if h == "authorization" {
-			return fmt.Errorf("headers: %q can't be set, use the basicAuth, authorization, oauth2, sigv4 or azureAd fields instead", header)
+			return fmt.Errorf("headers: %q can't be set, use the basicAuth, authorization, oauth2, sigv4, azureAd or googleIAM fields instead", header)
 		}
 
 		if reservedRemoteHeaders.Has(h) {

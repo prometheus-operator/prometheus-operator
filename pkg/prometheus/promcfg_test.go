@@ -4789,6 +4789,32 @@ func TestRemoteWriteConfig(t *testing.T) {
 			},
 			golden: "RemoteWriteConfig_MessageVersion2_with_metadata.golden",
 		},
+		{
+			version: "v2.54.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:       "http://example.com",
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+			},
+			golden: "RemoteWriteConfig_GoogleIAM_v2.54.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL:       "http://example.com",
+				GoogleIAM: &monitoringv1.GoogleIAM{},
+			},
+			golden: "RemoteWriteConfig_GoogleIAM_v2.55.0.golden",
+		},
+		{
+			version: "v2.55.0",
+			remoteWrite: monitoringv1.RemoteWriteSpec{
+				URL: "http://example.com",
+				GoogleIAM: &monitoringv1.GoogleIAM{
+					CredentialsFile: new("/etc/prometheus/secrets/gcp/key.json"),
+				},
+			},
+			golden: "RemoteWriteConfig_GoogleIAM_CredentialsFile_v2.55.0.golden",
+		},
 	} {
 		t.Run(fmt.Sprintf("i=%d,version=%s", i, tc.version), func(t *testing.T) {
 			p := defaultPrometheus()

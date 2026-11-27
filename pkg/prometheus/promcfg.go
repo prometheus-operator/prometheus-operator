@@ -3081,6 +3081,15 @@ func (cg *ConfigGenerator) generateRemoteWriteConfig(spec monitoringv1.RemoteWri
 		cfg = cg.WithMinimumVersion("2.45.0").AppendMapItem(cfg, "azuread", azureAd)
 	}
 
+	if spec.GoogleIAM != nil {
+		googleIAM := yaml.MapSlice{}
+		if credentialsFile := ptr.Deref(spec.GoogleIAM.CredentialsFile, ""); credentialsFile != "" {
+			googleIAM = append(googleIAM, yaml.MapItem{Key: "credentials_file", Value: credentialsFile})
+		}
+
+		cfg = cg.WithMinimumVersion("2.55.0").AppendMapItem(cfg, "google_iam", googleIAM)
+	}
+
 	if spec.FollowRedirects != nil {
 		cfg = cg.WithMinimumVersion("2.26.0").AppendMapItem(cfg, "follow_redirects", spec.FollowRedirects)
 	}

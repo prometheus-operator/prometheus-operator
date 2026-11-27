@@ -12476,6 +12476,40 @@ URL
 Supported units: h, m, s, ms
 Examples: <code>45ms</code>, <code>30s</code>, <code>1m</code>, <code>1h20m15s</code></p>
 </div>
+<h3 id="monitoring.coreos.com/v1.GoogleIAM">GoogleIAM
+</h3>
+<p>
+(<em>Appears on:</em><a href="#monitoring.coreos.com/v1.RemoteWriteSpec">RemoteWriteSpec</a>)
+</p>
+<div>
+<p>GoogleIAM defines Google Cloud IAM authentication for remote write.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentialsFile</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>credentialsFile defines the path to a Google Cloud service account
+credentials JSON file with monitoring write permissions.</p>
+<p>If omitted, Prometheus uses Application Default Credentials (for example,
+Workload Identity Federation or the GOOGLE_APPLICATION_CREDENTIALS
+environment variable).</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="monitoring.coreos.com/v1.HTTPConfig">HTTPConfig
 </h3>
 <p>
@@ -18930,7 +18964,7 @@ OAuth2
 <em>(Optional)</em>
 <p>oauth2 configuration for the URL.</p>
 <p>It requires Prometheus &gt;= v2.27.0 or Thanos &gt;= v0.24.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, or <code>azureAd</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>basicAuth</code>, <code>azureAd</code>, or <code>googleIAM</code>.</p>
 </td>
 </tr>
 <tr>
@@ -18945,7 +18979,7 @@ BasicAuth
 <td>
 <em>(Optional)</em>
 <p>basicAuth configuration for the URL.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>authorization</code>, <code>oauth2</code>, <code>azureAd</code>, or <code>googleIAM</code>.</p>
 </td>
 </tr>
 <tr>
@@ -18974,7 +19008,7 @@ Authorization
 <em>(Optional)</em>
 <p>authorization section for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
-<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+<p>Cannot be set at the same time as <code>sigv4</code>, <code>basicAuth</code>, <code>oauth2</code>, <code>azureAd</code>, or <code>googleIAM</code>.</p>
 </td>
 </tr>
 <tr>
@@ -18990,7 +19024,7 @@ Sigv4
 <em>(Optional)</em>
 <p>sigv4 defines the AWS&rsquo;s Signature Verification 4 for the URL.</p>
 <p>It requires Prometheus &gt;= v2.26.0 or Thanos &gt;= v0.24.0.</p>
-<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>azureAd</code>.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, <code>azureAd</code>, or <code>googleIAM</code>.</p>
 </td>
 </tr>
 <tr>
@@ -19006,7 +19040,23 @@ AzureAD
 <em>(Optional)</em>
 <p>azureAd for the URL.</p>
 <p>It requires Prometheus &gt;= v2.45.0 or Thanos &gt;= v0.31.0.</p>
-<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, or <code>sigv4</code>.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, <code>sigv4</code>, or <code>googleIAM</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>googleIAM</code><br/>
+<em>
+<a href="#monitoring.coreos.com/v1.GoogleIAM">
+GoogleIAM
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>googleIAM defines Google Cloud IAM authentication for the URL.</p>
+<p>It requires Prometheus &gt;= v2.55.0 or Thanos &gt;= v0.37.0.</p>
+<p>Cannot be set at the same time as <code>authorization</code>, <code>basicAuth</code>, <code>oauth2</code>, <code>sigv4</code>, or <code>azureAd</code>.</p>
 </td>
 </tr>
 <tr>
