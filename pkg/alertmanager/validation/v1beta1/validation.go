@@ -626,12 +626,6 @@ func validateRoute(r *monitoringv1beta1.Route, receivers, timeIntervals map[stri
 		}
 	}
 
-	for _, kv := range r.Labels {
-		if err := validation.ValidateLabelValueTemplate(kv.Value); err != nil {
-			return fmt.Errorf("labels[%v]: %w", kv.Key, err)
-		}
-	}
-
 	// Unmarshal the child routes and validate them recursively.
 	children, err := r.ChildRoutes()
 	if err != nil {
