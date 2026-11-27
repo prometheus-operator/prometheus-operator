@@ -4222,6 +4222,196 @@ func TestGenerateConfig(t *testing.T) {
 	}
 }
 
+func TestGenerateConfigDiscordReceiver(t *testing.T) {
+	type testCase struct {
+		name            string
+		kclient         kubernetes.Interface
+		baseConfig      alertmanagerConfig
+		amVersion       *semver.Version
+		matcherStrategy monitoringv1.AlertmanagerConfigMatcherStrategy
+		amConfigs       map[string]*monitoringv1alpha1.AlertmanagerConfig
+		golden          string
+		expectedError   bool
+	}
+
+	version25, err := semver.ParseTolerant("v0.25.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	discordSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "discord-secret",
+			Namespace: "mynamespace",
+		},
+		Data: map[string][]byte{
+			"url": []byte("https://discord.com/api/webhooks/id/token"),
+		},
+	}
+
+	amBaseConfig := func() alertmanagerConfig {
+		return alertmanagerConfig{
+			Route: &route{
+				Receiver: "null",
+			},
+			Receivers: []*receiver{{Name: "null"}},
+		}
+	}
+
+	testCases := []testCase{
+		{
+			name:       "CR with Discord Receiver",
+			amVersion:  &version25,
+			kclient:    fake.NewClientset(discordSecret),
+			baseConfig: amBaseConfig(),
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+										Title:   new("test title"),
+										Message: new("test message"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver.golden",
+		},
+		{
+			name:       "CR with Discord Receiver with Content, Username and AvatarURL",
+			amVersion:  &version28,
+			kclient:    fake.NewClientset(discordSecret),
+			baseConfig: amBaseConfig(),
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+										Title:     new("test title"),
+										Message:   new("test message"),
+										Content:   new("test content"),
+										Username:  new("test username"),
+										AvatarURL: ptr.To(monitoringv1alpha1.URL("https://example.com/avatar.png")),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver_Content_Username_AvatarURL.golden",
+		},
+		{
+			name:       "CR with Discord Receiver with Partial Conf",
+			amVersion:  &version25,
+			kclient:    fake.NewClientset(discordSecret),
+			baseConfig: amBaseConfig(),
+			amConfigs: map[string]*monitoringv1alpha1.AlertmanagerConfig{
+				"mynamespace": {
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "myamc",
+						Namespace: "mynamespace",
+					},
+					Spec: monitoringv1alpha1.AlertmanagerConfigSpec{
+						Route: &monitoringv1alpha1.Route{
+							Receiver: "test",
+						},
+						Receivers: []monitoringv1alpha1.Receiver{
+							{
+								Name: "test",
+								DiscordConfigs: []monitoringv1alpha1.DiscordConfig{
+									{
+										APIURL: corev1.SecretKeySelector{
+											Key: "url",
+											LocalObjectReference: corev1.LocalObjectReference{
+												Name: "discord-secret",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			golden: "CR_with_Discord_Receiver_Partial_Conf.golden",
+		},
+	}
+
+	logger := newNopLogger(t)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := assets.NewStoreBuilder(tc.kclient.CoreV1(), tc.kclient.CoreV1())
+
+			if tc.amVersion == nil {
+				version, err := semver.ParseTolerant("v0.22.2")
+				require.NoError(t, err)
+				tc.amVersion = &version
+			}
+
+			cb := NewConfigBuilder(logger, *tc.amVersion, store,
+				&monitoringv1.Alertmanager{
+					ObjectMeta: metav1.ObjectMeta{Namespace: "alertmanager-namespace"},
+					Spec:       monitoringv1.AlertmanagerSpec{AlertmanagerConfigMatcherStrategy: tc.matcherStrategy},
+				},
+			)
+			cb.cfg = &tc.baseConfig
+
+			if tc.expectedError {
+				require.Error(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+				return
+			}
+			require.NoError(t, cb.AddAlertmanagerConfigs(context.Background(), tc.amConfigs))
+
+			cfgBytes, err := cb.MarshalJSON()
+			require.NoError(t, err)
+
+			// Verify the generated yaml is as expected
+			golden.Assert(t, string(cfgBytes), tc.golden)
+
+			// Verify the generated config is something that Alertmanager will be happy with
+			_, err = alertmanagerConfigFromBytes(cfgBytes)
+			require.NoError(t, err)
+		})
+	}
+}
+
 func TestGenerateConfigMSTeamsReceiver(t *testing.T) {
 	type testCase struct {
 		name            string
