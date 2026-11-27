@@ -1,0 +1,9 @@
+receivers:
+- name: ""
+  jira_configs:
+  - api_url: http://issues.example.com
+    project: Monitoring
+    description:
+      template: '{{ template "jira.default.description" . }}'
+    issue_type: Bug
+templates: []
