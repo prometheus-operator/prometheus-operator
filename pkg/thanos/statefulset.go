@@ -674,7 +674,7 @@ func makeReadinessProbe(listenLocal bool, portName string, isHTTPS bool) *corev1
 	}
 
 	if isHTTPS {
-		probe.ProbeHandler.HTTPGet.Scheme = corev1.URISchemeHTTPS
+		probe.HTTPGet.Scheme = corev1.URISchemeHTTPS
 	}
 
 	return probe
