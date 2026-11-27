@@ -172,7 +172,7 @@ type ObjectReference struct {
 	// +optional
 	// +kubebuilder:default:="monitoring.coreos.com"
 	// +kubebuilder:validation:Enum=monitoring.coreos.com
-	Group string `json:"group"`
+	Group string `json:"group,omitempty"`
 	// resource of the referent.
 	// +required
 	// +kubebuilder:validation:Enum=prometheusrules;servicemonitors;podmonitors;probes;scrapeconfigs
