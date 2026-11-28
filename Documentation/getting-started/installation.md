@@ -110,3 +110,26 @@ Install the [Kube-Prometheus-Stack](https://github.com/prometheus-community/helm
 To see more details, please check the [chart's README](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack#kube-prometheus-stack).
 
 > This Helm chart is no longer part of Prometheus-Operator and is now maintained by [Prometheus Community Helm Charts](https://github.com/prometheus-community/helm-charts).
+
+### Verify the container images
+
+Since v0.64.0, the container images of each release are signed with [cosign](https://github.com/sigstore/cosign) keyless signing. This covers the `prometheus-operator`, `prometheus-config-reloader` and `admission-webhook` images, including their `-distroless` variants, on both `quay.io` and `ghcr.io`.
+
+The certificate identity is the `publish` GitHub Actions workflow running for the release tag, and the OIDC issuer is `https://token.actions.githubusercontent.com`. For example, to verify the operator image of the latest release:
+
+```bash
+LATEST=$(curl -s https://api.github.com/repos/prometheus-operator/prometheus-operator/releases/latest | jq -cr .tag_name)
+cosign verify quay.io/prometheus-operator/prometheus-operator:${LATEST} \
+  --certificate-identity=https://github.com/prometheus-operator/prometheus-operator/.github/workflows/publish.yaml@refs/tags/${LATEST} \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+```
+
+To accept the signature of any release tag, match the identity with a regular expression instead:
+
+```bash
+cosign verify ghcr.io/prometheus-operator/prometheus-config-reloader:${LATEST}-distroless \
+  --certificate-identity-regexp='^https://github\.com/prometheus-operator/prometheus-operator/\.github/workflows/publish\.yaml@refs/tags/v' \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+```
+
+> Note: Starting with v0.86.2, the signatures use the Sigstore bundle format and verifying them requires cosign v2.6.3 or later.
