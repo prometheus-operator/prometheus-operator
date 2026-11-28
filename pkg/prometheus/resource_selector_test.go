@@ -2460,6 +2460,58 @@ func TestSelectScrapeConfigs(t *testing.T) {
 			promVersion: "3.11.1",
 		},
 		{
+			scenario: "Consul SD config with path prefix",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:     "example.com",
+						PathPrefix: new("/consul"),
+					},
+				}
+			},
+			valid:       true,
+			promVersion: "2.45.0",
+		},
+		{
+			scenario: "Consul SD config with path prefix unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:     "example.com",
+						PathPrefix: new("/consul"),
+					},
+				}
+			},
+			valid:       false,
+			promVersion: "2.44.0",
+		},
+		{
+			scenario: "Consul SD config with namespace",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:    "example.com",
+						Namespace: new("site-a-consul"),
+					},
+				}
+			},
+			valid:       true,
+			promVersion: "2.28.0",
+		},
+		{
+			scenario: "Consul SD config with namespace unsupported prometheus version",
+			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
+				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{
+					{
+						Server:    "example.com",
+						Namespace: new("site-a-consul"),
+					},
+				}
+			},
+			valid:       false,
+			promVersion: "2.27.0",
+		},
+		{
 			scenario: "Consul SD config with valid OAuth2",
 			updateSpec: func(sc *monitoringv1alpha1.ScrapeConfigSpec) {
 				sc.ConsulSDConfigs = []monitoringv1alpha1.ConsulSDConfig{

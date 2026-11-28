@@ -8455,19 +8455,6 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			golden:  "ConsulScrapeConfigPathPrefix.golden",
 		},
 		{
-			name: "Consul SD config with PathPrefix but unsupported version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
-					{
-						Server:     "server",
-						PathPrefix: new("example-path-prefix"),
-					},
-				},
-			},
-			version: "2.35.0",
-			golden:  "ConsulScrapeConfigPathPrefix_unsupported_version.golden",
-		},
-		{
 			name: "Consul SD config with Namespace",
 			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
 				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
@@ -8479,19 +8466,6 @@ func TestScrapeConfigSpecConfigWithConsulSD(t *testing.T) {
 			},
 			version: "2.31.0",
 			golden:  "ConsulScrapeConfigNamespace.golden",
-		},
-		{
-			name: "Consul SD config with Namespace but unsupported version",
-			scSpec: monitoringv1alpha1.ScrapeConfigSpec{
-				ConsulSDConfigs: []monitoringv1alpha1.ConsulSDConfig{
-					{
-						Server:    "server",
-						Namespace: new("example-namespace"),
-					},
-				},
-			},
-			version: "2.21.0",
-			golden:  "ConsulScrapeConfigNamespace_unsupported_version.golden",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
