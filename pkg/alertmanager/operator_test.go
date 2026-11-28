@@ -2888,62 +2888,6 @@ func TestCheckWebhookAlertmanagerConfig(t *testing.T) {
 	}
 }
 
-<<<<<<< HEAD
-func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
-	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
-	require.NoError(t, err)
-
-	version27, err := semver.ParseTolerant("v0.27.0")
-	require.NoError(t, err)
-
-	version28, err := semver.ParseTolerant("v0.28.0")
-	require.NoError(t, err)
-
-	for _, tc := range []struct {
-		name       string
-		httpConfig *monitoringv1alpha1.HTTPConfig
-		version    *semver.Version
-		ok         bool
-	}{
-		{
-			name: "http-headers-unsupported-version",
-			httpConfig: &monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1.HTTPHeader{
-					{
-						Name: "foo",
-						Secrets: []corev1.SecretKeySelector{
-							{
-								Key:                  "secret",
-								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
-							},
-						},
-					},
-				},
-			},
-			version: &version27,
-			ok:      false,
-		},
-		{
-			name: "http-headers-supported-version",
-			httpConfig: &monitoringv1alpha1.HTTPConfig{
-				HTTPHeaders: []monitoringv1.HTTPHeader{
-					{
-						Name: "foo",
-						Secrets: []corev1.SecretKeySelector{
-							{
-								Key:                  "secret",
-								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
-							},
-						},
-					},
-				},
-			},
-			version: &version28,
-			ok:      true,
-		},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-=======
 func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
 	require.NoError(t, err)
@@ -3080,29 +3024,91 @@ func TestCheckSNSAlertmanagerConfig(t *testing.T) {
 		t.Run(tc.amConfig.Name, func(t *testing.T) {
 			store := assets.NewStoreBuilder(c.CoreV1(), c.CoreV1())
 
->>>>>>> main
 			amVersion := defaultVersion
 			if tc.version != nil {
 				amVersion = *tc.version
 			}
-<<<<<<< HEAD
-			err := checkHTTPConfig(tc.httpConfig, amVersion)
-=======
 			err := checkAlertmanagerConfigResource(context.Background(), allowAllFileSystemAM(), tc.amConfig, amVersion, store)
->>>>>>> main
 			if tc.ok {
 				require.NoError(t, err)
 				return
 			}
 
 			t.Logf("err: %s", err)
-<<<<<<< HEAD
-=======
 			if tc.errMsg != nil {
 				assert.EqualError(t, err, *tc.errMsg)
 				return
 			}
->>>>>>> main
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestCheckHTTPConfigAlertmanagerConfig(t *testing.T) {
+	defaultVersion, err := semver.ParseTolerant(operator.DefaultAlertmanagerVersion)
+	require.NoError(t, err)
+
+	version27, err := semver.ParseTolerant("v0.27.0")
+	require.NoError(t, err)
+
+	version28, err := semver.ParseTolerant("v0.28.0")
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		name       string
+		httpConfig *monitoringv1alpha1.HTTPConfig
+		version    *semver.Version
+		ok         bool
+	}{
+		{
+			name: "http-headers-unsupported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1.HTTPHeader{
+					{
+						Name: "foo",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key:                  "secret",
+								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
+							},
+						},
+					},
+				},
+			},
+			version: &version27,
+			ok:      false,
+		},
+		{
+			name: "http-headers-supported-version",
+			httpConfig: &monitoringv1alpha1.HTTPConfig{
+				HTTPHeaders: []monitoringv1.HTTPHeader{
+					{
+						Name: "foo",
+						Secrets: []corev1.SecretKeySelector{
+							{
+								Key:                  "secret",
+								LocalObjectReference: corev1.LocalObjectReference{Name: "header"},
+							},
+						},
+					},
+				},
+			},
+			version: &version28,
+			ok:      true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			amVersion := defaultVersion
+			if tc.version != nil {
+				amVersion = *tc.version
+			}
+			err := checkHTTPConfig(tc.httpConfig, amVersion)
+			if tc.ok {
+				require.NoError(t, err)
+				return
+			}
+
+			t.Logf("err: %s", err)
 			require.Error(t, err)
 		})
 	}
