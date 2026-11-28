@@ -2162,7 +2162,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 					},
 					Key: "secret",
 				},
-				RequireTLS: new(true),
+				RequireTLS:       new(true),
+				ForceImplicitTLS: new(true),
 			},
 			ResolveTimeout: "30s",
 			HTTPConfigWithProxy: &monitoringv1.HTTPConfigWithProxy{
@@ -2214,6 +2215,12 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			PagerdutyURL: ptr.To(monitoringv1.URL("https://pagerduty.url")),
 			TelegramConfig: &monitoringv1.GlobalTelegramConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://telegram.api.url")),
+				BotToken: &corev1.SecretKeySelector{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "telegram",
+					},
+					Key: "bottoken",
+				},
 			},
 			WeChatConfig: &monitoringv1.GlobalWeChatConfig{
 				APIURL: ptr.To(monitoringv1.URL("https://wechat.api.url")),
@@ -2378,6 +2385,14 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 			"apikey": []byte(`abcdef1234567890`),
 		},
 	}
+	telegram := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "telegram",
+		},
+		Data: map[string][]byte{
+			"bottoken": []byte(`123456:abcdef1234567890`),
+		},
+	}
 
 	ctx := context.Background()
 	_, err = framework.KubeClient.CoreV1().ConfigMaps(ns).Create(ctx, &cm, metav1.CreateOptions{})
@@ -2401,6 +2416,8 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &slack, metav1.CreateOptions{})
 	require.NoError(t, err)
 	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &opsgenie, metav1.CreateOptions{})
+	require.NoError(t, err)
+	_, err = framework.KubeClient.CoreV1().Secrets(ns).Create(ctx, &telegram, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	_, err = framework.CreateAlertmanagerAndWaitUntilReady(ctx, alertmanager)
@@ -2426,6 +2443,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   smtp_auth_secret: secret
   smtp_auth_identity: dev@smtp.example.org
   smtp_require_tls: true
+  smtp_force_implicit_tls: true
   slack_api_url: https://slack.api.url
   pagerduty_url: https://pagerduty.url
   opsgenie_api_url: https://opsgenie.api.url
@@ -2436,6 +2454,7 @@ func testUserDefinedAlertmanagerConfigFromCustomResource(t *testing.T) {
   victorops_api_url: https://victorops.api.url
   victorops_api_key: abcdef1234567890
   telegram_api_url: https://telegram.api.url
+  telegram_bot_token: 123456:abcdef1234567890
   webex_api_url: https://webex.api.url
   jira_api_url: https://jira.api.url
   rocketchat_api_url: https://rocketchat.api.url
